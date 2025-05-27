@@ -6,14 +6,38 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
+  role: text("role").notNull().default("student"), // "student" or "teacher"
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  email: text("email").notNull().unique(),
+});
+
+export const assignments = pgTable("assignments", {
+  id: serial("id").primaryKey(),
+  teacherId: integer("teacher_id").notNull(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  dueDate: timestamp("due_date"),
+  aiPermissions: text("ai_permissions").notNull().default("full"), // "full", "limited", "none"
+  allowBrainstorming: boolean("allow_brainstorming").notNull().default(true),
+  allowOutlining: boolean("allow_outlining").notNull().default(true),
+  allowGrammarCheck: boolean("allow_grammar_check").notNull().default(true),
+  allowResearchHelp: boolean("allow_research_help").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 export const writingSessions = pgTable("writing_sessions", {
   id: serial("id").primaryKey(),
   userId: integer("user_id"),
+  assignmentId: integer("assignment_id"), // Links to specific assignment
   title: text("title").notNull(),
   content: text("content").notNull().default(""),
   wordCount: integer("word_count").notNull().default(0),
+  status: text("status").notNull().default("draft"), // "draft", "submitted", "graded"
+  submittedAt: timestamp("submitted_at"),
+  teacherFeedback: text("teacher_feedback"),
+  grade: text("grade"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -30,12 +54,23 @@ export const aiInteractions = pgTable("ai_interactions", {
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
+  role: true,
+  firstName: true,
+  lastName: true,
+  email: true,
+});
+
+export const insertAssignmentSchema = createInsertSchema(assignments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
 });
 
 export const insertWritingSessionSchema = createInsertSchema(writingSessions).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+  submittedAt: true,
 });
 
 export const insertAiInteractionSchema = createInsertSchema(aiInteractions).omit({
@@ -45,6 +80,8 @@ export const insertAiInteractionSchema = createInsertSchema(aiInteractions).omit
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+export type Assignment = typeof assignments.$inferSelect;
+export type InsertAssignment = z.infer<typeof insertAssignmentSchema>;
 export type WritingSession = typeof writingSessions.$inferSelect;
 export type InsertWritingSession = z.infer<typeof insertWritingSessionSchema>;
 export type AiInteraction = typeof aiInteractions.$inferSelect;
