@@ -1,12 +1,10 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import WritingWorkspace from "@/components/writing-workspace";
 import AiAssistant from "@/components/ai-assistant";
-import IntegrityBanner from "@/components/integrity-banner";
 import IntegrityGuidelines from "@/components/integrity-guidelines";
 import { Button } from "@/components/ui/button";
-import { PenTool, Shield, HelpCircle } from "lucide-react";
+import { PenTool, Shield } from "lucide-react";
 import type { WritingSession } from "@shared/schema";
 
 export default function Home() {
@@ -15,16 +13,20 @@ export default function Home() {
   // Get or create writing session
   const { data: session, isLoading } = useQuery<WritingSession>({
     queryKey: ["/api/session"],
-    onSuccess: (data) => {
-      setCurrentSession(data);
-    },
   });
+
+  // Update current session when data changes
+  React.useEffect(() => {
+    if (session) {
+      setCurrentSession(session);
+    }
+  }, [session]);
 
   // Update session mutation
   const updateSessionMutation = useMutation({
     mutationFn: async (updates: Partial<WritingSession>) => {
-      if (!session) throw new Error("No session available");
-      const response = await apiRequest("PATCH", `/api/session/${session.id}`, updates);
+      if (!currentSession) throw new Error("No session available");
+      const response = await apiRequest("PATCH", `/api/session/${currentSession.id}`, updates);
       return response.json();
     },
     onSuccess: (updatedSession) => {
@@ -53,71 +55,111 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-edu-light">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-edu-blue rounded-lg flex items-center justify-center">
-                <PenTool className="h-5 w-5 text-white" />
+    <div className="min-h-screen bg-white flex flex-col">
+      {/* Google Docs-style Header */}
+      <header className="bg-white border-b border-gray-200 px-4 py-3">
+        <div className="flex items-center justify-between">
+          {/* Left: Logo and Document Name */}
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-edu-blue rounded flex items-center justify-center">
+                <PenTool className="h-4 w-4 text-white" />
               </div>
-              <h1 className="text-xl font-semibold text-edu-neutral">EduWrite AI</h1>
-              <span className="text-sm text-gray-500 hidden sm:inline">Academic Writing Assistant</span>
+              <span className="text-lg font-medium text-gray-700">ZOEEDU</span>
             </div>
-            <div className="flex items-center space-x-4">
-              <div className="hidden md:flex items-center space-x-2 text-sm text-gray-600">
-                <Shield className="h-4 w-4 text-edu-success" />
-                <span>Academic Integrity Protected</span>
+            <input
+              type="text"
+              value={currentSession?.title || "Untitled Document"}
+              onChange={(e) => handleTitleUpdate(e.target.value)}
+              className="text-lg text-gray-900 bg-transparent border-none focus:outline-none focus:bg-gray-50 px-2 py-1 rounded"
+            />
+          </div>
+
+          {/* Right: Tools and User */}
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 text-sm text-gray-600">
+              <Shield className="h-4 w-4 text-edu-success" />
+              <span className="hidden md:inline">AI Integrity Protected</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-gray-500">Alex Smith</span>
+              <div className="w-8 h-8 bg-edu-success rounded-full flex items-center justify-center text-white text-sm font-medium">
+                A
               </div>
-              <Button variant="ghost" size="sm">
-                <HelpCircle className="h-5 w-5" />
-              </Button>
             </div>
+          </div>
+        </div>
+
+        {/* Google Docs-style Toolbar */}
+        <div className="flex items-center space-x-1 mt-3 pt-3 border-t border-gray-100">
+          <Button variant="ghost" size="sm" className="text-xs">File</Button>
+          <Button variant="ghost" size="sm" className="text-xs">Edit</Button>
+          <Button variant="ghost" size="sm" className="text-xs">View</Button>
+          <Button variant="ghost" size="sm" className="text-xs">Insert</Button>
+          <Button variant="ghost" size="sm" className="text-xs">Format</Button>
+          <Button variant="ghost" size="sm" className="text-xs">Tools</Button>
+          <div className="h-4 w-px bg-gray-300 mx-2"></div>
+          <div className="flex items-center space-x-1">
+            <Button variant="ghost" size="sm">B</Button>
+            <Button variant="ghost" size="sm">I</Button>
+            <Button variant="ghost" size="sm">U</Button>
+            <select className="text-sm border border-gray-300 rounded px-2 py-1">
+              <option>Arial</option>
+              <option>Times New Roman</option>
+              <option>Calibri</option>
+            </select>
+            <select className="text-sm border border-gray-300 rounded px-2 py-1">
+              <option>11</option>
+              <option>12</option>
+              <option>14</option>
+            </select>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <IntegrityBanner />
-        
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-6">
-            <WritingWorkspace
-              session={currentSession}
-              onContentUpdate={handleContentUpdate}
-              onTitleUpdate={handleTitleUpdate}
-              isUpdating={updateSessionMutation.isPending}
-            />
+      {/* Main Document Area */}
+      <div className="flex-1 flex">
+        {/* Document Editor - Google Docs style */}
+        <div className="flex-1 bg-gray-100 p-6 overflow-y-auto">
+          <div className="max-w-4xl mx-auto">
+            {/* Document Paper */}
+            <div className="bg-white shadow-lg min-h-[800px] p-12 rounded-sm" style={{ width: '8.5in', margin: '0 auto' }}>
+              <textarea
+                value={currentSession?.content || ""}
+                onChange={(e) => handleContentUpdate(e.target.value)}
+                placeholder="Start writing your document here..."
+                className="w-full h-full min-h-[700px] border-none outline-none resize-none text-gray-900 leading-relaxed text-base font-serif"
+                style={{ fontFamily: 'Times New Roman, serif', lineHeight: '1.6' }}
+              />
+            </div>
+            
+            {/* Document Stats */}
+            <div className="flex items-center justify-between mt-4 text-sm text-gray-500">
+              <span>{currentSession?.wordCount || 0} words</span>
+              <span>Last saved: {currentSession?.updatedAt ? new Date(currentSession.updatedAt).toLocaleTimeString() : 'Never'}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* AI Assistant Sidebar */}
+        <div className="w-80 bg-white border-l border-gray-200 flex flex-col">
+          <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-purple-500 to-purple-600 text-white">
+            <h3 className="font-semibold flex items-center">
+              <PenTool className="h-5 w-5 mr-2" />
+              AI Writing Assistant
+            </h3>
+            <p className="text-sm text-purple-100 mt-1">Get ethical help with your writing</p>
           </div>
           
-          <div className="space-y-6">
+          <div className="flex-1 overflow-y-auto">
             <AiAssistant sessionId={currentSession?.id} />
-            <IntegrityGuidelines />
-          </div>
-        </div>
-      </main>
-
-      {/* Footer */}
-      <footer className="mt-16 bg-white border-t border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <div className="flex items-center space-x-6 text-sm text-gray-500">
-              <span>© 2024 EduWrite AI</span>
-              <a href="#" className="hover:text-edu-blue transition-colors">Privacy Policy</a>
-              <a href="#" className="hover:text-edu-blue transition-colors">Terms of Use</a>
-              <a href="#" className="hover:text-edu-blue transition-colors">Academic Guidelines</a>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-500">Need help?</span>
-              <Button size="sm" className="bg-edu-blue hover:bg-blue-700">
-                <HelpCircle className="h-4 w-4 mr-2" />
-                Support
-              </Button>
+            
+            <div className="p-4 border-t border-gray-200">
+              <IntegrityGuidelines />
             </div>
           </div>
         </div>
-      </footer>
+      </div>
     </div>
   );
 }
