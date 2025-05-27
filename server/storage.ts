@@ -1,4 +1,7 @@
 import { users, writingSessions, aiInteractions, assignments, type User, type InsertUser, type WritingSession, type InsertWritingSession, type AiInteraction, type InsertAiInteraction, type Assignment, type InsertAssignment } from "@shared/schema";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { eq } from "drizzle-orm";
+import { Pool } from "pg";
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
@@ -20,6 +23,181 @@ export interface IStorage {
   getSessionInteractions(sessionId: number): Promise<AiInteraction[]>;
 }
 
+// Database connection
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+
+const db = drizzle(pool);
+
+export class DatabaseStorage implements IStorage {
+  async initializeDatabase() {
+    // Create default users if they don't exist
+    try {
+      const existingTeacher = await this.getUserByUsername("teacher");
+      if (!existingTeacher) {
+        await this.createUser({
+          username: "teacher",
+          password: "password123",
+          role: "teacher",
+          firstName: "Sarah",
+          lastName: "Johnson",
+          email: "teacher@zoeedu.com"
+        });
+      }
+
+      const existingStudent = await this.getUserByUsername("student");
+      if (!existingStudent) {
+        await this.createUser({
+          username: "student",
+          password: "password123",
+          role: "student",
+          firstName: "Alex",
+          lastName: "Smith",
+          email: "student@zoeedu.com"
+        });
+      }
+    } catch (error) {
+      console.log("Note: Database tables will be created when running migrations");
+    }
+  }
+
+  async getUser(id: number): Promise<User | undefined> {
+    try {
+      const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
+      return result[0];
+    } catch (error) {
+      return undefined;
+    }
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    try {
+      const result = await db.select().from(users).where(eq(users.username, username)).limit(1);
+      return result[0];
+    } catch (error) {
+      return undefined;
+    }
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const result = await db.insert(users).values(insertUser).returning();
+    return result[0];
+  }
+
+  async getAssignment(id: number): Promise<Assignment | undefined> {
+    return this.assignments.get(id);
+  }
+
+  async createAssignment(insertAssignment: InsertAssignment): Promise<Assignment> {
+    const id = this.currentAssignmentId++;
+    const now = new Date();
+    const assignment: Assignment = {
+      dueDate: null,
+      aiPermissions: "full",
+      allowBrainstorming: true,
+      allowOutlining: true,
+      allowGrammarCheck: true,
+      allowResearchHelp: true,
+      ...insertAssignment,
+      id,
+      createdAt: now,
+      updatedAt: now,
+    };
+    this.assignments.set(id, assignment);
+    return assignment;
+  }
+
+  async updateAssignment(id: number, updates: Partial<InsertAssignment>): Promise<Assignment | undefined> {
+    const assignment = this.assignments.get(id);
+    if (!assignment) return undefined;
+
+    const updatedAssignment: Assignment = {
+      ...assignment,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.assignments.set(id, updatedAssignment);
+    return updatedAssignment;
+  }
+
+  async getTeacherAssignments(teacherId: number): Promise<Assignment[]> {
+    return Array.from(this.assignments.values()).filter(
+      (assignment) => assignment.teacherId === teacherId
+    );
+  }
+
+  async getWritingSession(id: number): Promise<WritingSession | undefined> {
+    return this.writingSessions.get(id);
+  }
+
+  async createWritingSession(insertSession: InsertWritingSession): Promise<WritingSession> {
+    const id = this.currentSessionId++;
+    const now = new Date();
+    const session: WritingSession = {
+      userId: null,
+      assignmentId: null,
+      content: "",
+      wordCount: 0,
+      status: "draft",
+      submittedAt: null,
+      teacherFeedback: null,
+      grade: null,
+      ...insertSession,
+      id,
+      createdAt: now,
+      updatedAt: now,
+    };
+    this.writingSessions.set(id, session);
+    return session;
+  }
+
+  async updateWritingSession(id: number, updates: Partial<InsertWritingSession>): Promise<WritingSession | undefined> {
+    const session = this.writingSessions.get(id);
+    if (!session) return undefined;
+
+    const updatedSession: WritingSession = {
+      ...session,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.writingSessions.set(id, updatedSession);
+    return updatedSession;
+  }
+
+  async getUserWritingSessions(userId: number): Promise<WritingSession[]> {
+    return Array.from(this.writingSessions.values()).filter(
+      (session) => session.userId === userId
+    );
+  }
+
+  async getAssignmentSubmissions(assignmentId: number): Promise<WritingSession[]> {
+    return Array.from(this.writingSessions.values()).filter(
+      (session) => session.assignmentId === assignmentId
+    );
+  }
+
+  async createAiInteraction(insertInteraction: InsertAiInteraction): Promise<AiInteraction> {
+    const id = this.currentInteractionId++;
+    const interaction: AiInteraction = {
+      sessionId: null,
+      isRestricted: false,
+      ...insertInteraction,
+      id,
+      createdAt: new Date(),
+    };
+    this.aiInteractions.set(id, interaction);
+    return interaction;
+  }
+
+  async getSessionInteractions(sessionId: number): Promise<AiInteraction[]> {
+    return Array.from(this.aiInteractions.values()).filter(
+      (interaction) => interaction.sessionId === sessionId
+    );
+  }
+}
+
+// Keep using in-memory storage for now while database is being set up
 export class MemStorage implements IStorage {
   private users: Map<number, User>;
   private assignments: Map<number, Assignment>;
@@ -40,11 +218,10 @@ export class MemStorage implements IStorage {
     this.currentSessionId = 1;
     this.currentInteractionId = 1;
 
-    // Create default teacher and student accounts
     this.initializeDefaultUsers();
   }
 
-  private async initializeDefaultUsers() {
+  private initializeDefaultUsers() {
     // Default teacher
     const teacher: User = {
       id: 1,
