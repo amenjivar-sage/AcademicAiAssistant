@@ -52,11 +52,26 @@ export default function Login() {
   };
 
   const quickLogin = (role: "teacher" | "student") => {
-    const credentials = role === "teacher" 
-      ? { username: "teacher", password: "password123" }
-      : { username: "student", password: "password123" };
+    // For demo purposes, directly navigate to the appropriate page
+    localStorage.setItem("user", JSON.stringify({
+      id: role === "teacher" ? 1 : 2,
+      username: role,
+      firstName: role === "teacher" ? "Sarah" : "Alex",
+      lastName: role === "teacher" ? "Johnson" : "Smith",
+      email: `${role}@zoeedu.com`,
+      role: role
+    }));
     
-    loginMutation.mutate(credentials);
+    if (role === "teacher") {
+      setLocation("/teacher");
+    } else {
+      setLocation("/student");
+    }
+    
+    toast({
+      title: "Welcome back!",
+      description: `Logged in as ${role === "teacher" ? "Sarah Johnson" : "Alex Smith"}`,
+    });
   };
 
   return (
