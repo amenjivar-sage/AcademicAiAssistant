@@ -97,6 +97,12 @@ export class MemStorage implements IStorage {
     const id = this.currentAssignmentId++;
     const now = new Date();
     const assignment: Assignment = {
+      dueDate: null,
+      aiPermissions: "full",
+      allowBrainstorming: true,
+      allowOutlining: true,
+      allowGrammarCheck: true,
+      allowResearchHelp: true,
       ...insertAssignment,
       id,
       createdAt: now,
@@ -178,6 +184,8 @@ export class MemStorage implements IStorage {
   async createAiInteraction(insertInteraction: InsertAiInteraction): Promise<AiInteraction> {
     const id = this.currentInteractionId++;
     const interaction: AiInteraction = {
+      sessionId: null,
+      isRestricted: false,
       ...insertInteraction,
       id,
       createdAt: new Date(),

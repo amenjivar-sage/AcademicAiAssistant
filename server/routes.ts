@@ -1,11 +1,70 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertWritingSessionSchema, insertAiInteractionSchema } from "@shared/schema";
+import { insertWritingSessionSchema, insertAiInteractionSchema, insertAssignmentSchema } from "@shared/schema";
 import { z } from "zod";
 import { checkRestrictedPrompt, generateAiResponse } from "./openai";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+
+  // Authentication routes
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      
+      if (!username || !password) {
+        return res.status(400).json({ message: "Username and password are required" });
+      }
+
+      const user = await storage.getUserByUsername(username);
+      
+      if (!user || user.password !== password) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+
+      // Remove password from response
+      const { password: _, ...userWithoutPassword } = user;
+      
+      res.json({
+        user: userWithoutPassword,
+        message: "Login successful"
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Login failed" });
+    }
+  });
+
+  // Teacher routes
+  app.get("/api/teacher/assignments", async (req, res) => {
+    try {
+      // For demo, use teacher ID 1
+      const teacherId = 1;
+      const assignments = await storage.getTeacherAssignments(teacherId);
+      res.json(assignments);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get assignments" });
+    }
+  });
+
+  app.post("/api/teacher/assignments", async (req, res) => {
+    try {
+      const assignmentData = insertAssignmentSchema.parse(req.body);
+      const assignment = await storage.createAssignment(assignmentData);
+      res.json(assignment);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create assignment" });
+    }
+  });
+
+  app.get("/api/teacher/assignments/:id/submissions", async (req, res) => {
+    try {
+      const assignmentId = parseInt(req.params.id);
+      const submissions = await storage.getAssignmentSubmissions(assignmentId);
+      res.json(submissions);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get submissions" });
+    }
+  });
   
   // Get or create a default writing session
   app.get("/api/session", async (req, res) => {
