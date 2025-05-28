@@ -303,7 +303,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/teacher/:id/classrooms", async (req, res) => {
     try {
       const teacherId = parseInt(req.params.id);
+      console.log("Fetching classrooms for teacher:", teacherId);
       const teacherClassrooms = await storage.getTeacherClassrooms(teacherId);
+      console.log("Found classrooms:", teacherClassrooms);
       res.json(teacherClassrooms);
     } catch (error) {
       console.error("Error fetching classrooms:", error);
