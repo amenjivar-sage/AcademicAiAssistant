@@ -55,7 +55,8 @@ export default function WritingWorkspace({ sessionId, assignmentId }: WritingWor
   // Update session mutation
   const updateSessionMutation = useMutation({
     mutationFn: async (data: { title: string; content: string; pastedContent: PastedContent[] }) => {
-      const response = await apiRequest("PATCH", `/api/writing-sessions/${sessionId}`, {
+      const actualSessionId = session?.id || sessionId;
+      const response = await apiRequest("PATCH", `/api/writing-sessions/${actualSessionId}`, {
         title: data.title,
         content: data.content,
         pastedContent: data.pastedContent,
@@ -121,15 +122,20 @@ export default function WritingWorkspace({ sessionId, assignmentId }: WritingWor
     },
   });
 
-  // Load session data
+  // Load session data and update sessionId if a new session was created
   useEffect(() => {
     if (session) {
       setTitle(session.title);
       setContent(session.content);
       setPastedContents(session.pastedContent as PastedContent[] || []);
       setWordCount(session.wordCount);
+      
+      // If we got a new session with a different ID, update our URLs
+      if (sessionId === 0 && session.id && session.id !== 0) {
+        window.history.replaceState({}, '', `/assignment/${assignmentId}/session/${session.id}`);
+      }
     }
-  }, [session]);
+  }, [session, sessionId, assignmentId]);
 
   // Auto-save functionality
   useEffect(() => {
