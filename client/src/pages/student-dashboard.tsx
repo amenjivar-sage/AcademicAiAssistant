@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookOpen, PenTool, Target, Trophy, Clock, Users, Plus, MessageSquare } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import SageLogo from "@/components/sage-logo";
 import WritingWorkspace from "@/components/writing-workspace";
 import AiAssistant from "@/components/ai-assistant";
@@ -17,6 +19,8 @@ import type { Assignment, WritingSession, Classroom } from "@shared/schema";
 export default function StudentDashboard() {
   const [activeTab, setActiveTab] = useState("assignments");
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Get student's assignments across all classes
   const { data: assignments, isLoading: assignmentsLoading } = useQuery<Assignment[]>({
@@ -32,6 +36,33 @@ export default function StudentDashboard() {
   const { data: classes } = useQuery<Classroom[]>({
     queryKey: ["/api/student/classes"],
   });
+
+  // Unsubmit mutation
+  const unsubmitMutation = useMutation({
+    mutationFn: async (sessionId: number) => {
+      const response = await apiRequest("PATCH", `/api/writing-sessions/${sessionId}/unsubmit`, {});
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Assignment unsubmitted",
+        description: "You can now continue editing your work.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/student/writing-sessions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/student/assignments'] });
+    },
+    onError: () => {
+      toast({
+        title: "Failed to unsubmit",
+        description: "There was an error unsubmitting your assignment. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleUnsubmit = (sessionId: number) => {
+    unsubmitMutation.mutate(sessionId);
+  };
 
   // Calculate stats
   const totalWordCount = writingSessions?.reduce((sum, session) => sum + session.wordCount, 0) || 0;
@@ -240,13 +271,13 @@ export default function StudentDashboard() {
                                 </div>
                                 <div className="flex items-center gap-2 ml-4">
                                   {session ? (
-                                    session.status === "submitted" ? (
-                                      <Badge variant="default" className="bg-blue-100 text-blue-800">
-                                        Submitted
-                                      </Badge>
-                                    ) : session.status === "graded" ? (
+                                    session.status === "graded" ? (
                                       <Badge variant="default" className="bg-green-100 text-green-800">
                                         Graded: {session.grade}
+                                      </Badge>
+                                    ) : session.status === "submitted" ? (
+                                      <Badge variant="default" className="bg-blue-100 text-blue-800">
+                                        Submitted
                                       </Badge>
                                     ) : (session.content && session.content.trim().length > 0) || (session.title && session.title.trim().length > 0) ? (
                                       <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
@@ -275,12 +306,32 @@ export default function StudentDashboard() {
                                     AI: {assignment.aiPermissions}
                                   </Badge>
                                 </div>
-                                <Button 
-                                  onClick={() => setSelectedAssignment(assignment)}
-                                  size="sm"
-                                >
-                                  {session && ((session.content && session.content.trim().length > 0) || (session.title && session.title.trim().length > 0)) ? "Resume Work" : session ? "Continue Writing" : "Start Writing"}
-                                </Button>
+                                <div className="flex gap-2">
+                                  {session?.status === "submitted" ? (
+                                    <Button 
+                                      onClick={() => handleUnsubmit(session.id)}
+                                      variant="outline"
+                                      size="sm"
+                                    >
+                                      Unsubmit & Edit
+                                    </Button>
+                                  ) : session?.status === "graded" ? (
+                                    <Button 
+                                      onClick={() => setSelectedAssignment(assignment)}
+                                      variant="outline"
+                                      size="sm"
+                                    >
+                                      View Feedback
+                                    </Button>
+                                  ) : (
+                                    <Button 
+                                      onClick={() => setSelectedAssignment(assignment)}
+                                      size="sm"
+                                    >
+                                      {session && ((session.content && session.content.trim().length > 0) || (session.title && session.title.trim().length > 0)) ? "Resume Work" : session ? "Continue Writing" : "Start Writing"}
+                                    </Button>
+                                  )}
+                                </div>
                               </div>
                             </CardHeader>
                           </Card>
