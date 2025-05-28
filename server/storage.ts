@@ -66,7 +66,7 @@ export class MemStorage implements IStorage {
       role: "teacher",
       firstName: "Sarah",
       lastName: "Johnson",
-      email: "teacher@zoeedu.com"
+      email: "teacher@sage.com"
     };
     this.users.set(1, teacher);
 
@@ -78,7 +78,7 @@ export class MemStorage implements IStorage {
       role: "student",
       firstName: "Alex",
       lastName: "Smith",
-      email: "student@zoeedu.com"
+      email: "student@sage.com"
     };
     this.users.set(2, student);
 
