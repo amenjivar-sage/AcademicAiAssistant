@@ -547,6 +547,32 @@ export default function StudentDashboard() {
               </Card>
             )}
           </TabsContent>
+
+          <TabsContent value="achievements" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-gray-900">Achievements & Goals</h2>
+              <Badge variant="outline">Level up your writing!</Badge>
+            </div>
+            
+            <AchievementSystem 
+              userId={1} 
+              totalWordCount={totalWordCount}
+              completedAssignments={completedAssignments}
+            />
+          </TabsContent>
+
+          <TabsContent value="analytics" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-gray-900">Writing Analytics</h2>
+              <Badge variant="outline">Track your improvement</Badge>
+            </div>
+            
+            <WritingAnalytics 
+              userId={1} 
+              userRole="student"
+              timeframe="month"
+            />
+          </TabsContent>
         </Tabs>
       </main>
     </div>
