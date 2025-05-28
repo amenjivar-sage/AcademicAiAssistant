@@ -38,13 +38,14 @@ interface AssignmentFormProps {
   children?: React.ReactNode;
   assignment?: any; // For editing existing assignments
   mode?: "create" | "edit";
+  classroomId?: number; // Pre-select classroom when creating from class view
 }
 
 const formSchema = insertAssignmentSchema.extend({
   dueDate: insertAssignmentSchema.shape.dueDate.nullable(),
 });
 
-export default function AssignmentForm({ teacherId, children, assignment, mode = "create" }: AssignmentFormProps) {
+export default function AssignmentForm({ teacherId, children, assignment, mode = "create", classroomId }: AssignmentFormProps) {
   const [open, setOpen] = React.useState(false);
   const [showTemplates, setShowTemplates] = React.useState(false);
   const { toast } = useToast();
@@ -59,7 +60,7 @@ export default function AssignmentForm({ teacherId, children, assignment, mode =
     resolver: zodResolver(formSchema),
     defaultValues: {
       teacherId,
-      classroomId: assignment?.classroomId || null,
+      classroomId: assignment?.classroomId || classroomId || null,
       title: assignment?.title || "",
       description: assignment?.description || "",
       dueDate: assignment?.dueDate ? new Date(assignment.dueDate) : null,

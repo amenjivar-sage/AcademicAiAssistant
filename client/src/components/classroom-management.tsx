@@ -254,7 +254,7 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold">Class Assignments</h2>
-                <AssignmentForm teacherId={teacherId}>
+                <AssignmentForm teacherId={teacherId} classroomId={selectedClassroom.id}>
                   <Button>
                     <PlusCircle className="h-4 w-4 mr-2" />
                     Create Assignment for {selectedClassroom.name}
@@ -268,7 +268,7 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
                     <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">No assignments yet</h3>
                     <p className="text-gray-500 mb-6">Create your first assignment for this class</p>
-                    <AssignmentForm teacherId={teacherId}>
+                    <AssignmentForm teacherId={teacherId} classroomId={selectedClassroom.id}>
                       <Button>
                         <PlusCircle className="h-4 w-4 mr-2" />
                         Create First Assignment
