@@ -127,6 +127,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = 1; // Default student user for demo
       const sessions = await storage.getUserWritingSessions(userId);
+      console.log('Student sessions for user', userId, ':', sessions.map(s => ({ id: s.id, assignmentId: s.assignmentId, hasContent: !!(s.content && s.content.trim()) })));
       res.json(sessions);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch sessions" });
