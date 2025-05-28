@@ -128,6 +128,11 @@ export default function WritingWorkspace({ sessionId, assignmentId }: WritingWor
     }
   };
 
+  const handleContentChange = (e: React.FormEvent<HTMLDivElement>) => {
+    const newContent = e.currentTarget.textContent || '';
+    setContent(newContent);
+  };
+
   const handlePasteDetected = (pastedContent: PastedContent) => {
     setPastedContents(prev => [...prev, pastedContent]);
     
@@ -164,10 +169,7 @@ export default function WritingWorkspace({ sessionId, assignmentId }: WritingWor
     submitSessionMutation.mutate();
   };
 
-  const handleContentChange = (e: React.FormEvent<HTMLDivElement>) => {
-    const newContent = e.currentTarget.textContent || "";
-    setContent(newContent);
-  };
+
 
   if (sessionLoading) {
     return (
@@ -243,9 +245,10 @@ export default function WritingWorkspace({ sessionId, assignmentId }: WritingWor
                 fontSize: '16px',
                 lineHeight: '1.6',
               }}
-              dangerouslySetInnerHTML={{ __html: content }}
-              placeholder="Start writing your assignment here..."
-            />
+              suppressContentEditableWarning={true}
+            >
+              {content || "Start writing your assignment here..."}
+            </div>
           </CopyPasteDetector>
         </div>
 
