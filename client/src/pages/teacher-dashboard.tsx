@@ -163,6 +163,10 @@ export default function TeacherDashboard() {
             <TabsTrigger value="settings">Communication</TabsTrigger>
           </TabsList>
 
+          <TabsContent value="classes" className="space-y-6">
+            <ClassroomManagement teacherId={1} />
+          </TabsContent>
+
           <TabsContent value="assignments" className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold text-gray-900">Assignments</h2>
