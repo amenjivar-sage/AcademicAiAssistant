@@ -299,6 +299,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create classroom
+  app.post("/api/classrooms", async (req, res) => {
+    try {
+      const classroomData = req.body;
+      // Generate a simple join code for now
+      const joinCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+      const classroom = { ...classroomData, joinCode, id: Date.now() };
+      res.json(classroom);
+    } catch (error) {
+      console.error("Error creating classroom:", error);
+      res.status(500).json({ message: "Failed to create classroom" });
+    }
+  });
+
+  // Update classroom
+  app.patch("/api/classrooms/:id", async (req, res) => {
+    try {
+      const classroomId = parseInt(req.params.id);
+      const updates = req.body;
+      const classroom = { ...updates, id: classroomId };
+      res.json(classroom);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update classroom" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
