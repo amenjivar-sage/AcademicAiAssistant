@@ -214,7 +214,7 @@ export default function GradingInterface({ assignmentId, children }: GradingInte
                     <div>
                       <CardTitle className="text-base">{submission.title}</CardTitle>
                       <p className="text-sm text-gray-600 mt-1">
-                        by {submission.student.firstName} {submission.student.lastName}
+                        by {submission.student.firstName} {submission.student.lastName} ({submission.student.email})
                       </p>
                     </div>
                     {getSubmissionStatus(submission)}
@@ -247,7 +247,7 @@ export default function GradingInterface({ assignmentId, children }: GradingInte
                   <div className="bg-gray-50 p-4 rounded-lg mb-4">
                     <h4 className="font-medium mb-2">{selectedSubmission.title}</h4>
                     <p className="text-sm text-blue-600 mb-2">
-                      Student: {selectedSubmission.student.firstName} {selectedSubmission.student.lastName}
+                      Student: {selectedSubmission.student.firstName} {selectedSubmission.student.lastName} ({selectedSubmission.student.email})
                     </p>
                     <div className="text-sm text-gray-600 mb-3">
                       {selectedSubmission.wordCount} words • Submitted {selectedSubmission.submittedAt ? new Date(selectedSubmission.submittedAt).toLocaleDateString() : 'Not submitted'}
