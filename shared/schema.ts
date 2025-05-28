@@ -23,6 +23,7 @@ export const assignments = pgTable("assignments", {
   title: text("title").notNull(),
   description: text("description").notNull(),
   dueDate: timestamp("due_date"),
+  status: text("status").notNull().default("active"), // "active", "completed", "overdue"
   aiPermissions: text("ai_permissions").notNull().default("full"), // "full", "limited", "none"
   allowBrainstorming: boolean("allow_brainstorming").notNull().default(true),
   allowOutlining: boolean("allow_outlining").notNull().default(true),

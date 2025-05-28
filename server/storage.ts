@@ -14,6 +14,8 @@ export interface IStorage {
   createAssignment(assignment: InsertAssignment): Promise<Assignment>;
   updateAssignment(id: number, updates: Partial<InsertAssignment>): Promise<Assignment | undefined>;
   getTeacherAssignments(teacherId: number): Promise<Assignment[]>;
+  markAssignmentComplete(id: number): Promise<Assignment | undefined>;
+  checkOverdueAssignments(): Promise<Assignment[]>;
   
   getWritingSession(id: number): Promise<WritingSession | undefined>;
   createWritingSession(session: InsertWritingSession): Promise<WritingSession>;
@@ -128,6 +130,7 @@ export class MemStorage implements IStorage {
     const now = new Date();
     const assignment: Assignment = {
       dueDate: null,
+      status: "active",
       aiPermissions: "full",
       allowBrainstorming: true,
       allowOutlining: true,
@@ -159,6 +162,35 @@ export class MemStorage implements IStorage {
     return Array.from(this.assignments.values()).filter(
       (assignment) => assignment.teacherId === teacherId
     );
+  }
+
+  async markAssignmentComplete(id: number): Promise<Assignment | undefined> {
+    const assignment = this.assignments.get(id);
+    if (!assignment) return undefined;
+
+    const updatedAssignment: Assignment = {
+      ...assignment,
+      status: "completed",
+      updatedAt: new Date(),
+    };
+    this.assignments.set(id, updatedAssignment);
+    return updatedAssignment;
+  }
+
+  async checkOverdueAssignments(): Promise<Assignment[]> {
+    const now = new Date();
+    const assignments = Array.from(this.assignments.values());
+    
+    // Update overdue assignments
+    assignments.forEach(assignment => {
+      if (assignment.dueDate && assignment.status === "active" && assignment.dueDate < now) {
+        assignment.status = "overdue";
+        assignment.updatedAt = new Date();
+        this.assignments.set(assignment.id, assignment);
+      }
+    });
+
+    return assignments.filter(assignment => assignment.status === "overdue");
   }
 
   async getWritingSession(id: number): Promise<WritingSession | undefined> {

@@ -67,6 +67,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/assignments/:id/complete", async (req, res) => {
+    try {
+      const assignmentId = parseInt(req.params.id);
+      const assignment = await storage.markAssignmentComplete(assignmentId);
+      if (!assignment) {
+        return res.status(404).json({ message: "Assignment not found" });
+      }
+      res.json(assignment);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to mark assignment as complete" });
+    }
+  });
+
+  app.get("/api/assignments/overdue", async (req, res) => {
+    try {
+      const overdueAssignments = await storage.checkOverdueAssignments();
+      res.json(overdueAssignments);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to check overdue assignments" });
+    }
+  });
+
   app.get("/api/teacher/assignments/:id/submissions", async (req, res) => {
     try {
       const assignmentId = parseInt(req.params.id);
