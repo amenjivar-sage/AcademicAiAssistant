@@ -15,46 +15,13 @@ interface ClassroomManagementProps {
 export default function ClassroomManagement({ teacherId }: ClassroomManagementProps) {
   const { toast } = useToast();
 
-  const { data: classrooms, isLoading, error } = useQuery<Classroom[]>({
+  const { data: classrooms, isLoading } = useQuery<Classroom[]>({
     queryKey: [`/api/teacher/${teacherId}/classrooms`],
-    queryFn: async () => {
-      try {
-        const response = await fetch(`/api/teacher/${teacherId}/classrooms`, {
-          credentials: "include",
-        });
-        console.log("Response status:", response.status);
-        console.log("Response ok:", response.ok);
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.log("Error response:", errorText);
-          throw new Error(`Failed to fetch classrooms: ${response.status} ${errorText}`);
-        }
-        
-        const responseText = await response.text();
-        console.log("Raw response text:", responseText);
-        
-        let data;
-        try {
-          data = JSON.parse(responseText);
-          console.log("Parsed classroom API response:", data);
-        } catch (parseError) {
-          console.error("JSON parse error:", parseError);
-          console.log("Response was not valid JSON");
-          throw new Error("Server returned invalid JSON");
-        }
-        return data;
-      } catch (error) {
-        console.error("Fetch error:", error);
-        throw error;
-      }
-    },
   });
 
   // Debug logging
   console.log("Classroom data:", classrooms);
   console.log("Is loading:", isLoading);
-  console.log("Error:", error);
   console.log("Classroom count:", classrooms?.length);
 
   const copyJoinCode = (joinCode: string, className: string) => {
