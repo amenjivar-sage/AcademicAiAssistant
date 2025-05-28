@@ -112,9 +112,10 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
   return (
     <div className="h-full flex flex-col">
       <Tabs defaultValue="assistant" className="flex-1 flex flex-col">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="assistant">AI Assistant</TabsTrigger>
           <TabsTrigger value="prompts">Quick Help</TabsTrigger>
+          <TabsTrigger value="citations">Citations</TabsTrigger>
           <TabsTrigger value="history">History</TabsTrigger>
         </TabsList>
 
@@ -219,6 +220,77 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
                   <li>• AI suggestions are starting points, not final answers</li>
                   <li>• Verify all information and add your own insights</li>
                 </ul>
+              </div>
+            </div>
+          </ScrollArea>
+        </TabsContent>
+
+        <TabsContent value="citations" className="flex-1">
+          <ScrollArea className="h-full">
+            <div className="p-4">
+              <h4 className="font-medium text-gray-700 mb-4 flex items-center">
+                <BookOpen className="h-5 w-5 mr-2" />
+                Citation & Plagiarism Tools
+              </h4>
+              
+              <div className="space-y-4">
+                <CitationAssistant sessionId={sessionId}>
+                  <Button 
+                    className="w-full justify-start h-auto p-4 text-left bg-purple-50 hover:bg-purple-100 border-purple-200"
+                    variant="outline"
+                  >
+                    <div className="flex items-start">
+                      <BookOpen className="h-5 w-5 mr-3 mt-1 text-purple-600" />
+                      <div>
+                        <div className="font-medium text-purple-900">Citation Generator</div>
+                        <div className="text-sm text-purple-700 mt-1">
+                          Generate proper APA citations for books, articles, websites, and more
+                        </div>
+                      </div>
+                    </div>
+                  </Button>
+                </CitationAssistant>
+
+                <CitationAssistant sessionId={sessionId}>
+                  <Button 
+                    className="w-full justify-start h-auto p-4 text-left bg-blue-50 hover:bg-blue-100 border-blue-200"
+                    variant="outline"
+                  >
+                    <div className="flex items-start">
+                      <Search className="h-5 w-5 mr-3 mt-1 text-blue-600" />
+                      <div>
+                        <div className="font-medium text-blue-900">Plagiarism Checker</div>
+                        <div className="text-sm text-blue-700 mt-1">
+                          Check your text for originality and get suggestions for improvement
+                        </div>
+                      </div>
+                    </div>
+                  </Button>
+                </CitationAssistant>
+
+                <div className="mt-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                  <h5 className="text-sm font-medium text-amber-900 mb-2 flex items-center">
+                    <AlertTriangle className="h-4 w-4 mr-2" />
+                    Academic Integrity Guidelines
+                  </h5>
+                  <ul className="text-xs text-amber-800 space-y-1">
+                    <li>• Always cite sources for ideas, quotes, and data that aren't your own</li>
+                    <li>• Paraphrase in your own words and cite the original source</li>
+                    <li>• Use quotation marks for direct quotes and include citations</li>
+                    <li>• Check originality before submitting your work</li>
+                    <li>• When in doubt, cite it out!</li>
+                  </ul>
+                </div>
+
+                <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
+                  <h5 className="text-sm font-medium text-green-900 mb-2">Citation Quick Tips</h5>
+                  <ul className="text-xs text-green-800 space-y-1">
+                    <li>• Books: Author (Year). <em>Title</em>. Publisher.</li>
+                    <li>• Websites: Author (Year). Title. Retrieved from URL</li>
+                    <li>• Journals: Author (Year). Title. <em>Journal</em>, Volume(Issue), pages.</li>
+                    <li>• Keep track of sources as you research</li>
+                  </ul>
+                </div>
               </div>
             </div>
           </ScrollArea>
