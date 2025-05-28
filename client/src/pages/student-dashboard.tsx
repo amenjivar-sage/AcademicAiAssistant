@@ -17,7 +17,8 @@ import WritingAnalytics from "@/components/writing-analytics";
 import type { Assignment, WritingSession, Classroom } from "@shared/schema";
 
 export default function StudentDashboard() {
-  const [activeTab, setActiveTab] = useState("assignments");
+  const [activeTab, setActiveTab] = useState("coursework");
+  const [courseworkTab, setCourseworkTab] = useState("assignments");
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -251,19 +252,27 @@ export default function StudentDashboard() {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="assignments">Assignments</TabsTrigger>
-            <TabsTrigger value="classes">Classes</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="coursework">Coursework</TabsTrigger>
             <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
             <TabsTrigger value="progress">Progress</TabsTrigger>
             <TabsTrigger value="achievements">Achievements</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="assignments" className="space-y-6">
+          <TabsContent value="coursework" className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-900">My Assignments</h2>
+              <h2 className="text-2xl font-bold text-gray-900">Coursework</h2>
             </div>
+            
+            {/* Sub-navigation for Coursework */}
+            <Tabs value={courseworkTab} onValueChange={setCourseworkTab} className="space-y-4">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="assignments">Assignments</TabsTrigger>
+                <TabsTrigger value="classes">My Classes</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="assignments" className="space-y-4">
             
             {assignments?.length === 0 ? (
               <Card>
