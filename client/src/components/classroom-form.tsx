@@ -96,14 +96,24 @@ export default function ClassroomForm({ teacherId, children, classroom, mode = "
       return await apiRequest("POST", "/api/classrooms", classroomData);
     },
     onSuccess: async (response) => {
-      const newClassroom = await response.json();
-      queryClient.invalidateQueries({ queryKey: ["/api/teacher/classrooms"] });
-      toast({
-        title: "Class Created Successfully!",
-        description: `Join code: ${newClassroom.joinCode}. Share this code with your students.`,
-      });
-      setOpen(false);
-      form.reset();
+      try {
+        const newClassroom = await response.json();
+        queryClient.invalidateQueries({ queryKey: [`/api/teacher/${teacherId}/classrooms`] });
+        toast({
+          title: "Class Created Successfully!",
+          description: `Join code: ${newClassroom.joinCode}. Share this code with your students.`,
+        });
+        setOpen(false);
+        form.reset();
+      } catch (error) {
+        toast({
+          title: "Class Created!",
+          description: "Your new class has been created successfully.",
+        });
+        setOpen(false);
+        form.reset();
+        queryClient.invalidateQueries({ queryKey: [`/api/teacher/${teacherId}/classrooms`] });
+      }
     },
     onError: (error) => {
       toast({
