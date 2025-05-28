@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { GraduationCap, Users, BookOpen, Shield } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import SageLogo from "@/components/sage-logo";
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -84,7 +85,7 @@ export default function Login() {
         {/* Logo and Header */}
         <div className="text-center text-white">
           <div className="w-16 h-16 bg-white bg-opacity-20 rounded-xl flex items-center justify-center mx-auto mb-4">
-            <GraduationCap className="h-8 w-8" />
+            <SageLogo size={32} className="text-white" />
           </div>
           <h1 className="text-3xl font-bold mb-2">Sage</h1>
           <p className="text-blue-100">AI Writing Platform for Ethical Student Learning</p>
