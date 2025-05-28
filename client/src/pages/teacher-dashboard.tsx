@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import AssignmentForm from "@/components/assignment-form";
 import { PlusCircle, Users, FileText, BarChart3, Settings, Eye } from "lucide-react";
 import type { Assignment, WritingSession } from "@shared/schema";
 
@@ -43,10 +44,12 @@ export default function TeacherDashboard() {
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <Button className="bg-edu-blue hover:bg-blue-700">
-                <PlusCircle className="h-4 w-4 mr-2" />
-                New Assignment
-              </Button>
+              <AssignmentForm teacherId={1}>
+                <Button className="bg-edu-blue hover:bg-blue-700">
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  New Assignment
+                </Button>
+              </AssignmentForm>
             </div>
           </div>
         </div>
@@ -116,10 +119,12 @@ export default function TeacherDashboard() {
           <TabsContent value="assignments" className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold text-gray-900">Assignments</h2>
-              <Button className="bg-edu-blue hover:bg-blue-700">
-                <PlusCircle className="h-4 w-4 mr-2" />
-                Create Assignment
-              </Button>
+              <AssignmentForm teacherId={1}>
+                <Button className="bg-edu-blue hover:bg-blue-700">
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  Create Assignment
+                </Button>
+              </AssignmentForm>
             </div>
             
             <div className="grid gap-6">
@@ -153,10 +158,12 @@ export default function TeacherDashboard() {
                     <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">No assignments yet</h3>
                     <p className="text-gray-500 mb-6">Create your first assignment to get started with ZOEEDU.</p>
-                    <Button className="bg-edu-blue hover:bg-blue-700">
-                      <PlusCircle className="h-4 w-4 mr-2" />
-                      Create Your First Assignment
-                    </Button>
+                    <AssignmentForm teacherId={1}>
+                      <Button className="bg-edu-blue hover:bg-blue-700">
+                        <PlusCircle className="h-4 w-4 mr-2" />
+                        Create Your First Assignment
+                      </Button>
+                    </AssignmentForm>
                   </CardContent>
                 </Card>
               )}
