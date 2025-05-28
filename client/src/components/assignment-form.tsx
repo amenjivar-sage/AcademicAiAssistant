@@ -28,9 +28,10 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CalendarIcon, Plus, FileText, Settings } from "lucide-react";
+import { CalendarIcon, Plus, FileText, Settings, Sparkles } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import AssignmentTemplates from "./assignment-templates";
 
 interface AssignmentFormProps {
   teacherId: number;
@@ -88,6 +89,21 @@ export default function AssignmentForm({ teacherId, children }: AssignmentFormPr
     createAssignmentMutation.mutate(data);
   };
 
+  const handleTemplateSelect = (template: any) => {
+    form.setValue("title", template.title);
+    form.setValue("description", template.prompt);
+    form.setValue("aiPermissions", template.aiPermissions);
+    
+    // Set AI permissions based on template
+    const allowAll = template.aiPermissions === "full";
+    const allowLimited = template.aiPermissions === "limited" || allowAll;
+    
+    form.setValue("allowBrainstorming", allowAll);
+    form.setValue("allowOutlining", allowAll);
+    form.setValue("allowGrammarCheck", allowLimited);
+    form.setValue("allowResearchHelp", allowAll);
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -100,10 +116,18 @@ export default function AssignmentForm({ teacherId, children }: AssignmentFormPr
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            Create New Assignment
-          </DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Create New Assignment
+            </DialogTitle>
+            <AssignmentTemplates onSelectTemplate={handleTemplateSelect}>
+              <Button variant="outline" size="sm" className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4" />
+                Use Template
+              </Button>
+            </AssignmentTemplates>
+          </div>
         </DialogHeader>
 
         <Form {...form}>
