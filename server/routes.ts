@@ -152,8 +152,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get or create writing session for specific assignment
+  app.get("/api/writing-sessions/:sessionId", async (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.sessionId);
+      const { assignmentId } = req.query;
+      
+      // If sessionId is 0, create a new session for the assignment
+      if (sessionId === 0 && assignmentId) {
+        const userId = 1; // Default student user for demo
+        const newSession = await storage.createWritingSession({
+          userId,
+          assignmentId: parseInt(assignmentId as string),
+          title: "",
+          content: "",
+          wordCount: 0,
+          status: "draft"
+        });
+        res.json(newSession);
+      } else {
+        const session = await storage.getWritingSession(sessionId);
+        if (!session) {
+          return res.status(404).json({ message: "Session not found" });
+        }
+        res.json(session);
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get writing session" });
+    }
+  });
+
   // Update writing session content
-  app.patch("/api/session/:id", async (req, res) => {
+  app.patch("/api/writing-sessions/:id", async (req, res) => {
     try {
       const sessionId = parseInt(req.params.id);
       const updateData = req.body;

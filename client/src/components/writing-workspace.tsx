@@ -39,6 +39,11 @@ export default function WritingWorkspace({ sessionId, assignmentId }: WritingWor
   // Get session data
   const { data: session, isLoading: sessionLoading } = useQuery<WritingSession>({
     queryKey: ['/api/writing-sessions', sessionId],
+    queryFn: async () => {
+      const response = await fetch(`/api/writing-sessions/${sessionId}?assignmentId=${assignmentId}`);
+      if (!response.ok) throw new Error('Failed to fetch session');
+      return response.json();
+    },
   });
 
   // Get assignment data to check copy-paste permissions
