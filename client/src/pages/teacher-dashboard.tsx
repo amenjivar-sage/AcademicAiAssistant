@@ -13,7 +13,7 @@ import TeacherInsights from "@/components/teacher-insights";
 import { PlusCircle, Users, FileText, BarChart3, Settings, Eye, Edit, CheckCircle, Clock, AlertTriangle, GraduationCap, MessageSquare, Target, Trophy } from "lucide-react";
 import SageLogo from "@/components/sage-logo";
 import GradingInterface from "@/components/grading-interface";
-import type { Assignment, WritingSession } from "@shared/schema";
+import type { Assignment, WritingSession, Classroom } from "@shared/schema";
 
 export default function TeacherDashboard() {
   const [activeTab, setActiveTab] = useState("assignments");
@@ -22,6 +22,24 @@ export default function TeacherDashboard() {
   const { data: assignments, isLoading: assignmentsLoading } = useQuery<Assignment[]>({
     queryKey: ["/api/teacher/assignments"],
   });
+
+  // Get teacher's classrooms
+  const { data: classrooms, isLoading: classroomsLoading } = useQuery<Classroom[]>({
+    queryKey: ["/api/teacher/classrooms"],
+  });
+
+  // Organize assignments by classroom
+  const organizeAssignmentsByClass = () => {
+    if (!assignments || !classrooms) return { generalAssignments: [], classroomAssignments: [] };
+    
+    const generalAssignments = assignments.filter(assignment => !assignment.classroomId);
+    const classroomAssignments = classrooms.map(classroom => ({
+      classroom,
+      assignments: assignments.filter(assignment => assignment.classroomId === classroom.id)
+    })).filter(group => group.assignments.length > 0);
+    
+    return { generalAssignments, classroomAssignments };
+  };
 
   // Mark assignment as complete mutation
   const markCompleteMutation = useMutation({
@@ -181,75 +199,168 @@ export default function TeacherDashboard() {
                 <h2 className="text-2xl font-bold text-gray-900">Assignments</h2>
               </div>
               
-              <div className="grid gap-6">
-                {assignments?.map((assignment) => (
-                  <Card key={assignment.id}>
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
+              {(() => {
+                const { generalAssignments, classroomAssignments } = organizeAssignmentsByClass();
+                
+                return (
+                  <div className="space-y-8">
+                    {/* Class-specific assignments */}
+                    {classroomAssignments.map(({ classroom, assignments: classAssignments }) => (
+                      <div key={classroom.id} className="space-y-4">
                         <div className="flex items-center space-x-3">
-                          {getStatusIcon(assignment.status || "active", assignment.dueDate)}
-                          <CardTitle className="text-lg">{assignment.title}</CardTitle>
+                          <div className="bg-edu-primary/10 p-2 rounded-lg">
+                            <Users className="h-5 w-5 text-edu-primary" />
+                          </div>
+                          <div>
+                            <h3 className="text-xl font-semibold text-gray-900">{classroom.name}</h3>
+                            <p className="text-sm text-gray-500">{classroom.subject} • {classroom.gradeLevel}</p>
+                          </div>
+                          <Badge variant="outline">{classAssignments.length} assignment{classAssignments.length !== 1 ? 's' : ''}</Badge>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          {getStatusBadge(assignment.status || "active", assignment.dueDate)}
-                          <Badge variant={assignment.aiPermissions === "full" ? "default" : "secondary"}>
-                            AI: {assignment.aiPermissions}
-                          </Badge>
-                          {assignment.status !== "completed" && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => markCompleteMutation.mutate(assignment.id)}
-                              disabled={markCompleteMutation.isPending}
-                            >
-                              <CheckCircle className="h-4 w-4 mr-1" />
-                              {markCompleteMutation.isPending ? "Marking..." : "Mark Complete"}
-                            </Button>
-                          )}
-                          <AssignmentForm teacherId={1} assignment={assignment} mode="edit">
-                            <Button variant="outline" size="sm">
-                              <Edit className="h-4 w-4 mr-1" />
-                              Edit
+                        
+                        <div className="grid gap-4 ml-8">
+                          {classAssignments.map((assignment) => (
+                            <Card key={assignment.id}>
+                              <CardHeader>
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center space-x-3">
+                                    {getStatusIcon(assignment.status || "active", assignment.dueDate)}
+                                    <CardTitle className="text-lg">{assignment.title}</CardTitle>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    {getStatusBadge(assignment.status || "active", assignment.dueDate)}
+                                    <Badge variant={assignment.aiPermissions === "full" ? "default" : "secondary"}>
+                                      AI: {assignment.aiPermissions}
+                                    </Badge>
+                                    {assignment.status !== "completed" && (
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => markCompleteMutation.mutate(assignment.id)}
+                                        disabled={markCompleteMutation.isPending}
+                                      >
+                                        <CheckCircle className="h-4 w-4 mr-1" />
+                                        {markCompleteMutation.isPending ? "Marking..." : "Mark Complete"}
+                                      </Button>
+                                    )}
+                                    <AssignmentForm teacherId={1} assignment={assignment} mode="edit">
+                                      <Button variant="outline" size="sm">
+                                        <Edit className="h-4 w-4 mr-1" />
+                                        Edit
+                                      </Button>
+                                    </AssignmentForm>
+                                    <GradingInterface assignmentId={assignment.id}>
+                                      <Button variant="outline" size="sm">
+                                        <GraduationCap className="h-4 w-4 mr-1" />
+                                        Grade
+                                      </Button>
+                                    </GradingInterface>
+                                  </div>
+                                </div>
+                              </CardHeader>
+                              <CardContent>
+                                <p className="text-gray-600 mb-4">{assignment.description}</p>
+                                <div className="flex items-center justify-between text-sm text-gray-500">
+                                  <span>Created: {new Date(assignment.createdAt).toLocaleDateString()}</span>
+                                  {assignment.dueDate && (
+                                    <span>Due: {new Date(assignment.dueDate).toLocaleDateString()}</span>
+                                  )}
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {/* General assignments not tied to any class */}
+                    {generalAssignments.length > 0 && (
+                      <div className="space-y-4">
+                        <div className="flex items-center space-x-3">
+                          <div className="bg-gray-100 p-2 rounded-lg">
+                            <FileText className="h-5 w-5 text-gray-600" />
+                          </div>
+                          <div>
+                            <h3 className="text-xl font-semibold text-gray-900">General Assignments</h3>
+                            <p className="text-sm text-gray-500">Not assigned to any specific class</p>
+                          </div>
+                          <Badge variant="outline">{generalAssignments.length} assignment{generalAssignments.length !== 1 ? 's' : ''}</Badge>
+                        </div>
+                        
+                        <div className="grid gap-4 ml-8">
+                          {generalAssignments.map((assignment) => (
+                            <Card key={assignment.id}>
+                              <CardHeader>
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center space-x-3">
+                                    {getStatusIcon(assignment.status || "active", assignment.dueDate)}
+                                    <CardTitle className="text-lg">{assignment.title}</CardTitle>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    {getStatusBadge(assignment.status || "active", assignment.dueDate)}
+                                    <Badge variant={assignment.aiPermissions === "full" ? "default" : "secondary"}>
+                                      AI: {assignment.aiPermissions}
+                                    </Badge>
+                                    {assignment.status !== "completed" && (
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => markCompleteMutation.mutate(assignment.id)}
+                                        disabled={markCompleteMutation.isPending}
+                                      >
+                                        <CheckCircle className="h-4 w-4 mr-1" />
+                                        {markCompleteMutation.isPending ? "Marking..." : "Mark Complete"}
+                                      </Button>
+                                    )}
+                                    <AssignmentForm teacherId={1} assignment={assignment} mode="edit">
+                                      <Button variant="outline" size="sm">
+                                        <Edit className="h-4 w-4 mr-1" />
+                                        Edit
+                                      </Button>
+                                    </AssignmentForm>
+                                    <GradingInterface assignmentId={assignment.id}>
+                                      <Button variant="outline" size="sm">
+                                        <GraduationCap className="h-4 w-4 mr-1" />
+                                        Grade
+                                      </Button>
+                                    </GradingInterface>
+                                  </div>
+                                </div>
+                              </CardHeader>
+                              <CardContent>
+                                <p className="text-gray-600 mb-4">{assignment.description}</p>
+                                <div className="flex items-center justify-between text-sm text-gray-500">
+                                  <span>Created: {new Date(assignment.createdAt).toLocaleDateString()}</span>
+                                  {assignment.dueDate && (
+                                    <span>Due: {new Date(assignment.dueDate).toLocaleDateString()}</span>
+                                  )}
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Empty state when no assignments exist */}
+                    {assignments?.length === 0 && (
+                      <Card>
+                        <CardContent className="p-12 text-center">
+                          <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                          <h3 className="text-lg font-medium text-gray-900 mb-2">No assignments yet</h3>
+                          <p className="text-gray-500 mb-6">Create your first assignment to get started</p>
+                          <AssignmentForm teacherId={1}>
+                            <Button>
+                              <PlusCircle className="h-4 w-4 mr-2" />
+                              Create Your First Assignment
                             </Button>
                           </AssignmentForm>
-                          <GradingInterface assignmentId={assignment.id}>
-                            <Button variant="outline" size="sm">
-                              <GraduationCap className="h-4 w-4 mr-1" />
-                              Grade
-                            </Button>
-                          </GradingInterface>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-gray-600 mb-4">{assignment.description}</p>
-                      <div className="flex items-center justify-between text-sm text-gray-500">
-                        <span>Created: {new Date(assignment.createdAt).toLocaleDateString()}</span>
-                        {assignment.dueDate && (
-                          <span>Due: {new Date(assignment.dueDate).toLocaleDateString()}</span>
-                        )}
-                        <span>Word Count: {assignment.requiredWordCount || "Not specified"}</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-                
-                {assignments?.length === 0 && (
-                  <Card>
-                    <CardContent className="p-12 text-center">
-                      <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">No assignments yet</h3>
-                      <p className="text-gray-500 mb-6">Create your first assignment to get started</p>
-                      <AssignmentForm teacherId={1}>
-                        <Button>
-                          <PlusCircle className="h-4 w-4 mr-2" />
-                          Create Your First Assignment
-                        </Button>
-                      </AssignmentForm>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           </TabsContent>
 
