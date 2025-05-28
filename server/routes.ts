@@ -58,6 +58,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create writing session
+  app.post("/api/writing-sessions", async (req, res) => {
+    try {
+      const sessionData = insertWritingSessionSchema.parse(req.body);
+      const session = await storage.createWritingSession(sessionData);
+      res.json(session);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create writing session" });
+    }
+  });
+
   app.post("/api/assignments", async (req, res) => {
     try {
       const assignmentData = insertAssignmentSchema.parse(req.body);
