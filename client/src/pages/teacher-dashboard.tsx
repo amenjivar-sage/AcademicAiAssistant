@@ -9,7 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import AssignmentForm from "@/components/assignment-form";
 import ClassroomManagement from "@/components/classroom-management";
 import MessagingSystem from "@/components/messaging-system";
-import { PlusCircle, Users, FileText, BarChart3, Settings, Eye, Edit, CheckCircle, Clock, AlertTriangle, GraduationCap, MessageSquare } from "lucide-react";
+import TeacherInsights from "@/components/teacher-insights";
+import { PlusCircle, Users, FileText, BarChart3, Settings, Eye, Edit, CheckCircle, Clock, AlertTriangle, GraduationCap, MessageSquare, Target } from "lucide-react";
 import SageLogo from "@/components/sage-logo";
 import GradingInterface from "@/components/grading-interface";
 import type { Assignment, WritingSession } from "@shared/schema";
