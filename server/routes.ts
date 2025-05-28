@@ -306,7 +306,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/teacher/:id/classrooms", async (req, res) => {
     try {
       const teacherId = parseInt(req.params.id);
-      const teacherClassrooms = classrooms.filter(classroom => classroom.teacherId === teacherId);
+      let teacherClassrooms = classrooms.filter(classroom => classroom.teacherId === teacherId);
+      
+      // Add sample data if no classrooms exist yet
+      if (teacherClassrooms.length === 0 && teacherId === 1) {
+        const sampleClassroom = {
+          id: 1,
+          name: "English 101",
+          subject: "English",
+          gradeLevel: "9",
+          classSize: 25,
+          description: "Introduction to English Literature and Writing",
+          joinCode: "ENG101",
+          teacherId: 1,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+        classrooms.push(sampleClassroom);
+        teacherClassrooms = [sampleClassroom];
+      }
+      
       res.json(teacherClassrooms);
     } catch (error) {
       res.status(500).json({ message: "Failed to get classrooms" });
