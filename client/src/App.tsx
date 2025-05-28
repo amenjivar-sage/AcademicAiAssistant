@@ -9,6 +9,7 @@ import TeacherDashboard from "@/pages/teacher-dashboard";
 import StudentDashboard from "@/pages/student-dashboard";
 import AdminDashboard from "@/pages/admin-dashboard";
 import NotFound from "@/pages/not-found";
+import WritingWorkspace from "@/components/writing-workspace";
 
 function Router() {
   return (
@@ -17,6 +18,14 @@ function Router() {
       <Route path="/student" component={StudentDashboard} />
       <Route path="/teacher" component={TeacherDashboard} />
       <Route path="/admin" component={AdminDashboard} />
+      <Route path="/assignment/:assignmentId/session/:sessionId">
+        {(params) => (
+          <WritingWorkspace 
+            assignmentId={parseInt(params.assignmentId)} 
+            sessionId={parseInt(params.sessionId)} 
+          />
+        )}
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );
