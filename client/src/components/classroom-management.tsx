@@ -19,6 +19,11 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
     queryKey: [`/api/teacher/${teacherId}/classrooms`],
   });
 
+  // Debug logging
+  console.log("Classroom data:", classrooms);
+  console.log("Is loading:", isLoading);
+  console.log("Classroom count:", classrooms?.length);
+
   const copyJoinCode = (joinCode: string, className: string) => {
     navigator.clipboard.writeText(joinCode);
     toast({
