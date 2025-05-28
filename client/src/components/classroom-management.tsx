@@ -7,6 +7,7 @@ import { Users, Copy, Settings, Eye, MoreHorizontal, ArrowRight, ArrowLeft, File
 import { useToast } from "@/hooks/use-toast";
 import ClassroomForm from "./classroom-form";
 import AssignmentForm from "./assignment-form";
+import GradingInterface from "./grading-interface";
 import type { Classroom, Assignment } from "@shared/schema";
 
 interface ClassroomManagementProps {
@@ -335,9 +336,11 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
                                 Mark Complete
                               </Button>
                             )}
-                            <Button variant="outline" size="sm">
-                              Grade
-                            </Button>
+                            <GradingInterface assignmentId={assignment.id}>
+                              <Button variant="outline" size="sm">
+                                Grade
+                              </Button>
+                            </GradingInterface>
                             <AssignmentForm teacherId={teacherId} assignment={assignment} mode="edit">
                               <Button variant="outline" size="sm">
                                 <Settings className="h-4 w-4 mr-1" />
