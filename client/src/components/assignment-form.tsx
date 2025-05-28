@@ -76,7 +76,17 @@ export default function AssignmentForm({ teacherId, children, assignment, mode =
         description: "Your assignment has been created successfully!",
       });
       setOpen(false);
-      form.reset();
+      form.reset({
+        teacherId,
+        title: "",
+        description: "",
+        dueDate: null,
+        aiPermissions: "full",
+        allowBrainstorming: true,
+        allowOutlining: true,
+        allowGrammarCheck: true,
+        allowResearchHelp: true,
+      });
     },
     onError: () => {
       toast({
