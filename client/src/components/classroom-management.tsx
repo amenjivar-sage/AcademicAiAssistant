@@ -1,12 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, Copy, Settings, Eye, MoreHorizontal } from "lucide-react";
+import { Users, Copy, Settings, Eye, MoreHorizontal, ArrowRight, ArrowLeft, FileText, PlusCircle, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ClassroomForm from "./classroom-form";
-import type { Classroom } from "@shared/schema";
+import AssignmentForm from "./assignment-form";
+import type { Classroom, Assignment } from "@shared/schema";
 
 interface ClassroomManagementProps {
   teacherId: number;
@@ -14,10 +15,21 @@ interface ClassroomManagementProps {
 
 export default function ClassroomManagement({ teacherId }: ClassroomManagementProps) {
   const { toast } = useToast();
+  const [selectedClassroom, setSelectedClassroom] = useState<Classroom | null>(null);
 
   const { data: classrooms, isLoading } = useQuery<Classroom[]>({
     queryKey: ["/api/teacher/classrooms"],
   });
+
+  // Get assignments for the selected classroom
+  const { data: assignments } = useQuery<Assignment[]>({
+    queryKey: ["/api/teacher/assignments"],
+  });
+
+  // Filter assignments for the selected classroom
+  const classroomAssignments = selectedClassroom 
+    ? assignments?.filter(assignment => assignment.classroomId === selectedClassroom.id) || []
+    : [];
 
   // Debug logging
   console.log("Classroom data:", classrooms);
@@ -145,9 +157,13 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
                         Created {new Date(classroom.createdAt).toLocaleDateString()}
                       </div>
                       <div className="flex gap-2">
-                        <Button variant="outline" size="sm">
-                          <Eye className="h-4 w-4 mr-1" />
-                          View Students
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => setSelectedClassroom(classroom)}
+                        >
+                          <ArrowRight className="h-4 w-4 mr-1" />
+                          View Class
                         </Button>
                         <ClassroomForm teacherId={teacherId} classroom={classroom} mode="edit">
                           <Button variant="outline" size="sm">
@@ -162,6 +178,153 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
               </Card>
             );
           })}
+        </div>
+      )}
+
+      {/* Detailed Classroom View */}
+      {selectedClassroom && (
+        <div className="fixed inset-0 bg-white z-50 overflow-y-auto">
+          <div className="max-w-6xl mx-auto p-6">
+            {/* Header with back button */}
+            <div className="flex items-center gap-4 mb-6">
+              <Button 
+                variant="outline" 
+                onClick={() => setSelectedClassroom(null)}
+                className="flex items-center gap-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to All Classes
+              </Button>
+              <div className="flex-1">
+                <h1 className="text-2xl font-bold">{selectedClassroom.name}</h1>
+                <div className="flex items-center gap-2 mt-1">
+                  <Badge variant="outline">{selectedClassroom.subject}</Badge>
+                  <Badge variant="outline">{selectedClassroom.gradeLevel}</Badge>
+                  <Badge variant="secondary">Join Code: {selectedClassroom.joinCode}</Badge>
+                </div>
+              </div>
+            </div>
+
+            {/* Class description */}
+            {selectedClassroom.description && (
+              <Card className="mb-6">
+                <CardContent className="p-4">
+                  <p className="text-gray-700">{selectedClassroom.description}</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Class stats */}
+            <div className="grid grid-cols-4 gap-4 mb-6">
+              <Card>
+                <CardContent className="p-4 text-center">
+                  <Users className="h-8 w-8 mx-auto mb-2 text-blue-500" />
+                  <div className="text-2xl font-bold">{getClassroomStats(selectedClassroom).enrolledStudents}</div>
+                  <p className="text-sm text-gray-600">Students</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4 text-center">
+                  <FileText className="h-8 w-8 mx-auto mb-2 text-green-500" />
+                  <div className="text-2xl font-bold">{classroomAssignments.length}</div>
+                  <p className="text-sm text-gray-600">Assignments</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4 text-center">
+                  <Calendar className="h-8 w-8 mx-auto mb-2 text-orange-500" />
+                  <div className="text-2xl font-bold">
+                    {classroomAssignments.filter(a => a.status === 'active').length}
+                  </div>
+                  <p className="text-sm text-gray-600">Active</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4 text-center">
+                  <BarChart3 className="h-8 w-8 mx-auto mb-2 text-purple-500" />
+                  <div className="text-2xl font-bold">
+                    {getClassroomStats(selectedClassroom).pendingSubmissions}
+                  </div>
+                  <p className="text-sm text-gray-600">Pending Reviews</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Assignments Section */}
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold">Class Assignments</h2>
+                <AssignmentForm teacherId={teacherId}>
+                  <Button>
+                    <PlusCircle className="h-4 w-4 mr-2" />
+                    Create Assignment for {selectedClassroom.name}
+                  </Button>
+                </AssignmentForm>
+              </div>
+
+              {classroomAssignments.length === 0 ? (
+                <Card>
+                  <CardContent className="p-12 text-center">
+                    <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No assignments yet</h3>
+                    <p className="text-gray-500 mb-6">Create your first assignment for this class</p>
+                    <AssignmentForm teacherId={teacherId}>
+                      <Button>
+                        <PlusCircle className="h-4 w-4 mr-2" />
+                        Create First Assignment
+                      </Button>
+                    </AssignmentForm>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid gap-4">
+                  {classroomAssignments.map((assignment) => (
+                    <Card key={assignment.id} className="border-l-4 border-l-blue-500">
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <CardTitle className="text-lg">{assignment.title}</CardTitle>
+                            <p className="text-gray-600 mt-1">{assignment.description}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge 
+                              variant={assignment.status === 'active' ? 'default' : 
+                                     assignment.status === 'completed' ? 'secondary' : 'destructive'}
+                            >
+                              {assignment.status}
+                            </Badge>
+                            {assignment.dueDate && (
+                              <Badge variant="outline">
+                                Due: {new Date(assignment.dueDate).toLocaleDateString()}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm text-gray-500">
+                            Created {new Date(assignment.createdAt).toLocaleDateString()}
+                          </div>
+                          <div className="flex gap-2">
+                            <Button variant="outline" size="sm">
+                              View Submissions
+                            </Button>
+                            <AssignmentForm teacherId={teacherId} assignment={assignment} mode="edit">
+                              <Button variant="outline" size="sm">
+                                <Settings className="h-4 w-4 mr-1" />
+                                Edit
+                              </Button>
+                            </AssignmentForm>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>
