@@ -132,6 +132,12 @@ export default function TeacherDashboard() {
                         <Badge variant={assignment.aiPermissions === "full" ? "default" : "secondary"}>
                           AI: {assignment.aiPermissions}
                         </Badge>
+                        <AssignmentForm teacherId={1} assignment={assignment} mode="edit">
+                          <Button variant="outline" size="sm">
+                            <Edit className="h-4 w-4 mr-1" />
+                            Edit
+                          </Button>
+                        </AssignmentForm>
                         <Button variant="outline" size="sm">
                           <Eye className="h-4 w-4 mr-1" />
                           View
