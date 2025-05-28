@@ -16,7 +16,7 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
   const { toast } = useToast();
 
   const { data: classrooms, isLoading } = useQuery<Classroom[]>({
-    queryKey: [`/api/teacher/${teacherId}/classrooms`],
+    queryKey: ["/api/teacher/classrooms"],
   });
 
   // Debug logging

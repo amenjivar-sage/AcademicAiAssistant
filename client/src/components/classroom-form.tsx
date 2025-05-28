@@ -98,7 +98,7 @@ export default function ClassroomForm({ teacherId, children, classroom, mode = "
     onSuccess: async (response) => {
       try {
         const newClassroom = await response.json();
-        queryClient.invalidateQueries({ queryKey: [`/api/teacher/${teacherId}/classrooms`] });
+        queryClient.invalidateQueries({ queryKey: ["/api/teacher/classrooms"] });
         toast({
           title: "Class Created Successfully!",
           description: `Join code: ${newClassroom.joinCode}. Share this code with your students.`,
@@ -112,7 +112,7 @@ export default function ClassroomForm({ teacherId, children, classroom, mode = "
         });
         setOpen(false);
         form.reset();
-        queryClient.invalidateQueries({ queryKey: [`/api/teacher/${teacherId}/classrooms`] });
+        queryClient.invalidateQueries({ queryKey: ["/api/teacher/classrooms"] });
       }
     },
     onError: (error) => {

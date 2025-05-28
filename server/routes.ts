@@ -299,10 +299,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get teacher's classrooms  
-  app.get("/api/teacher/:id/classrooms", async (req, res) => {
+  // Get teacher's classrooms (using same pattern as assignments)
+  app.get("/api/teacher/classrooms", async (req, res) => {
     try {
-      const teacherId = parseInt(req.params.id);
+      // For demo, use teacher ID 1 (same as assignments)
+      const teacherId = 1;
       console.log("Fetching classrooms for teacher:", teacherId);
       const teacherClassrooms = await storage.getTeacherClassrooms(teacherId);
       console.log("Found classrooms:", teacherClassrooms);
