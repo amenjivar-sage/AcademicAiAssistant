@@ -85,7 +85,52 @@ export default function Login() {
         {/* Logo and Header */}
         <div className="text-center text-white">
           <div className="w-16 h-16 bg-white bg-opacity-20 rounded-xl flex items-center justify-center mx-auto mb-4">
-            <SageLogo size={32} className="text-white" />
+            <svg
+              width="32"
+              height="32"
+              viewBox="0 0 32 32"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="text-white"
+            >
+              {/* Tree Trunk */}
+              <rect
+                x="14"
+                y="20"
+                width="4"
+                height="8"
+                rx="2"
+                fill="white"
+                opacity="0.9"
+              />
+              
+              {/* Main Branches - Geometric diamond/leaf shapes */}
+              <path
+                d="M16 4L20 8L16 12L12 8L16 4Z"
+                fill="white"
+                opacity="1"
+              />
+              
+              {/* Left Branch */}
+              <path
+                d="M8 12L12 16L8 20L4 16L8 12Z"
+                fill="white"
+                opacity="0.8"
+              />
+              
+              {/* Right Branch */}
+              <path
+                d="M24 12L28 16L24 20L20 16L24 12Z"
+                fill="white"
+                opacity="0.8"
+              />
+              
+              {/* Small accent leaves */}
+              <circle cx="10" cy="10" r="2" fill="white" opacity="0.7" />
+              <circle cx="22" cy="10" r="2" fill="white" opacity="0.7" />
+              <circle cx="6" cy="18" r="1.5" fill="white" opacity="0.6" />
+              <circle cx="26" cy="18" r="1.5" fill="white" opacity="0.6" />
+            </svg>
           </div>
           <h1 className="text-3xl font-bold mb-2">Sage</h1>
           <p className="text-blue-100">AI Writing Platform for Ethical Student Learning</p>
