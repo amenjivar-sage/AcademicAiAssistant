@@ -175,7 +175,7 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
           )}
         </TabsContent>
 
-        <TabsContent value="prompts" className="flex-1 p-3 overflow-y-auto">
+        <TabsContent value="prompts" className="p-3">
           <h4 className="font-medium text-gray-700 mb-3 text-sm">Quick Writing Help</h4>
           <div className="space-y-2">
             {quickPrompts.map((quickPrompt, index) => {
