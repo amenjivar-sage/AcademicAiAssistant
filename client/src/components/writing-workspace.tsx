@@ -38,8 +38,8 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   const [, setLocation] = useLocation();
 
   // Get session data
-  const { data: session, isLoading: sessionLoading } = useQuery<WritingSession>({
-    queryKey: ['/api/writing-sessions', sessionId],
+  const { data: session, isLoading: sessionLoading, refetch: refetchSession } = useQuery<WritingSession>({
+    queryKey: ['/api/writing-sessions', sessionId, assignmentId],
     queryFn: async () => {
       const response = await fetch(`/api/writing-sessions/${sessionId}?assignmentId=${assignmentId}`);
       if (!response.ok) throw new Error('Failed to fetch session');
@@ -56,8 +56,10 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   // Update session mutation
   const updateSessionMutation = useMutation({
     mutationFn: async (data: { title: string; content: string; pastedContent: PastedContent[] }) => {
-      const actualSessionId = session?.id || sessionId;
-      const response = await apiRequest("PATCH", `/api/writing-sessions/${actualSessionId}`, {
+      // Always use the session ID from the current session data if available
+      const currentSessionId = session?.id || sessionId;
+      console.log('Saving to session ID:', currentSessionId);
+      const response = await apiRequest("PATCH", `/api/writing-sessions/${currentSessionId}`, {
         title: data.title,
         content: data.content,
         pastedContent: data.pastedContent,
@@ -135,9 +137,11 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       if (sessionId === 0 && session.id && session.id !== 0) {
         setSessionId(session.id);
         window.history.replaceState({}, '', `/assignment/${assignmentId}/session/${session.id}`);
+        // Invalidate queries to use new session ID
+        queryClient.invalidateQueries({ queryKey: ['/api/writing-sessions'] });
       }
     }
-  }, [session, sessionId, assignmentId]);
+  }, [session, sessionId, assignmentId, queryClient]);
 
   // Auto-save functionality
   useEffect(() => {
