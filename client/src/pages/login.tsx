@@ -84,52 +84,47 @@ export default function Login() {
       <div className="w-full max-w-md space-y-6">
         {/* Logo and Header */}
         <div className="text-center text-white">
-          <div className="w-16 h-16 bg-white bg-opacity-20 rounded-xl flex items-center justify-center mx-auto mb-4">
+          <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg">
             <svg
-              width="32"
-              height="32"
-              viewBox="0 0 32 32"
+              width="48"
+              height="48"
+              viewBox="0 0 48 48"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
-              className="text-white"
             >
-              {/* Tree Trunk */}
+              {/* Tree Trunk - darker and more visible */}
               <rect
-                x="14"
-                y="20"
-                width="4"
-                height="8"
-                rx="2"
-                fill="white"
-                opacity="0.9"
+                x="21"
+                y="30"
+                width="6"
+                height="12"
+                rx="3"
+                fill="#2563eb"
               />
               
-              {/* Main Branches - Geometric diamond/leaf shapes */}
+              {/* Main Branches - Larger diamond shapes */}
               <path
-                d="M16 4L20 8L16 12L12 8L16 4Z"
-                fill="white"
-                opacity="1"
+                d="M24 6L30 12L24 18L18 12L24 6Z"
+                fill="#1d4ed8"
               />
               
               {/* Left Branch */}
               <path
-                d="M8 12L12 16L8 20L4 16L8 12Z"
-                fill="white"
-                opacity="0.8"
+                d="M12 18L18 24L12 30L6 24L12 18Z"
+                fill="#3b82f6"
               />
               
               {/* Right Branch */}
               <path
-                d="M24 12L28 16L24 20L20 16L24 12Z"
-                fill="white"
-                opacity="0.8"
+                d="M36 18L42 24L36 30L30 24L36 18Z"
+                fill="#3b82f6"
               />
               
-              {/* Small accent leaves */}
-              <circle cx="10" cy="10" r="2" fill="white" opacity="0.7" />
-              <circle cx="22" cy="10" r="2" fill="white" opacity="0.7" />
-              <circle cx="6" cy="18" r="1.5" fill="white" opacity="0.6" />
-              <circle cx="26" cy="18" r="1.5" fill="white" opacity="0.6" />
+              {/* Accent leaves - more visible */}
+              <circle cx="15" cy="15" r="3" fill="#60a5fa" />
+              <circle cx="33" cy="15" r="3" fill="#60a5fa" />
+              <circle cx="9" cy="27" r="2" fill="#93c5fd" />
+              <circle cx="39" cy="27" r="2" fill="#93c5fd" />
             </svg>
           </div>
           <h1 className="text-3xl font-bold mb-2">Sage</h1>
