@@ -4,7 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import EnhancedToolbar from "@/components/enhanced-toolbar";
-import { Save, Download, Clock, CheckCircle, Lightbulb, List, Search, Share, Users } from "lucide-react";
+import CitationAssistant from "@/components/citation-assistant";
+import { Save, Download, Clock, CheckCircle, Lightbulb, List, Search, Share, Users, BookOpen } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { WritingSession } from "@shared/schema";
 
@@ -124,6 +125,27 @@ export default function WritingWorkspace({
                 </div>
               )}
               <span className="text-sm text-gray-500">{wordCount} words</span>
+              <CitationAssistant
+                sessionId={session?.id}
+                onCitationAdded={(citation) => {
+                  const newContent = content + "\n\n" + citation;
+                  setContent(newContent);
+                  handleContentChange(newContent);
+                  toast({
+                    title: "Citation Added!",
+                    description: "Citation has been added to your document.",
+                  });
+                }}
+              >
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className="text-purple-600 hover:text-purple-700"
+                >
+                  <BookOpen className="h-4 w-4 mr-1" />
+                  Citations
+                </Button>
+              </CitationAssistant>
               <Button 
                 variant="ghost" 
                 size="sm"

@@ -306,26 +306,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/teacher/:id/classrooms", async (req, res) => {
     try {
       const teacherId = parseInt(req.params.id);
-      let teacherClassrooms = classrooms.filter(classroom => classroom.teacherId === teacherId);
-      
-      // Add sample data if no classrooms exist yet
-      if (teacherClassrooms.length === 0 && teacherId === 1) {
-        const sampleClassroom = {
-          id: 1,
-          name: "English 101",
-          subject: "English",
-          gradeLevel: "9",
-          classSize: 25,
-          description: "Introduction to English Literature and Writing",
-          joinCode: "ENG101",
-          teacherId: 1,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        };
-        classrooms.push(sampleClassroom);
-        teacherClassrooms = [sampleClassroom];
-      }
-      
+      const teacherClassrooms = classrooms.filter(classroom => classroom.teacherId === teacherId);
       res.json(teacherClassrooms);
     } catch (error) {
       res.status(500).json({ message: "Failed to get classrooms" });
@@ -362,6 +343,110 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(classroom);
     } catch (error) {
       res.status(500).json({ message: "Failed to update classroom" });
+    }
+  });
+
+  // Citation generation endpoint
+  app.post("/api/citations/generate", async (req, res) => {
+    try {
+      const { type, title, author, publicationDate, publisher, url, accessDate, journal, volume, issue, pages } = req.body;
+      
+      let citation = "";
+      
+      // Generate APA style citations based on source type
+      switch (type) {
+        case "book":
+          citation = `${author} (${publicationDate}). *${title}*. ${publisher || "Publisher"}.`;
+          break;
+        case "journal":
+          citation = `${author} (${publicationDate}). ${title}. *${journal}*, ${volume}${issue ? `(${issue})` : ""}, ${pages || "pp. 1-10"}.`;
+          break;
+        case "website":
+          citation = `${author} (${publicationDate}). ${title}. Retrieved ${accessDate || "Date"}, from ${url || "URL"}`;
+          break;
+        case "newspaper":
+          citation = `${author} (${publicationDate}). ${title}. *${publisher || "Newspaper Name"}*.`;
+          break;
+        default:
+          citation = `${author} (${publicationDate}). *${title}*.`;
+      }
+      
+      res.json({ citation });
+    } catch (error) {
+      console.error("Error generating citation:", error);
+      res.status(500).json({ message: "Failed to generate citation" });
+    }
+  });
+
+  // Plagiarism checking endpoint
+  app.post("/api/plagiarism/check", async (req, res) => {
+    try {
+      const { text, sessionId } = req.body;
+      
+      if (!text || text.trim().length < 10) {
+        return res.status(400).json({ message: "Text must be at least 10 characters long" });
+      }
+      
+      // Simulate plagiarism checking with realistic results
+      const wordCount = text.trim().split(/\s+/).length;
+      const baseOriginalityScore = Math.max(60, Math.min(95, 100 - (wordCount * 0.1) + Math.random() * 20));
+      
+      // Detect potential issues based on text patterns
+      const concerns = [];
+      const sources = [];
+      
+      // Check for common plagiarism indicators
+      if (text.includes("according to") || text.includes("research shows")) {
+        concerns.push({
+          type: "missing_citation",
+          text: text.substring(0, 100) + "...",
+          suggestion: "This statement appears to reference research or other sources. Consider adding a proper citation."
+        });
+      }
+      
+      // Check for repetitive phrases (basic detection)
+      const sentences = text.split(/[.!?]+/);
+      const repeatedPhrases = sentences.filter((sentence, index) => 
+        sentences.findIndex(s => s.trim().toLowerCase() === sentence.trim().toLowerCase()) !== index
+      );
+      
+      if (repeatedPhrases.length > 0) {
+        concerns.push({
+          type: "improper_paraphrase",
+          text: repeatedPhrases[0].trim(),
+          suggestion: "This text appears to be repeated. Consider paraphrasing or using quotations with proper citations."
+        });
+      }
+      
+      // Generate mock similar sources for demonstration
+      if (baseOriginalityScore < 80) {
+        sources.push(
+          {
+            url: "https://example-academic-source.edu/article1",
+            title: "Academic Research on Similar Topics",
+            similarity: Math.floor(Math.random() * 20) + 10,
+            snippet: text.substring(0, 80) + "..."
+          },
+          {
+            url: "https://scholarly-journal.org/paper2",
+            title: "Related Academic Publication",
+            similarity: Math.floor(Math.random() * 15) + 8,
+            snippet: text.substring(20, 100) + "..."
+          }
+        );
+      }
+      
+      const result = {
+        similarity: Math.floor(100 - baseOriginalityScore),
+        sources,
+        originalityScore: Math.floor(baseOriginalityScore),
+        concerns
+      };
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Error checking plagiarism:", error);
+      res.status(500).json({ message: "Failed to check plagiarism" });
     }
   });
 
