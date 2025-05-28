@@ -57,6 +57,28 @@ export const aiInteractions = pgTable("ai_interactions", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const classrooms = pgTable("classrooms", {
+  id: serial("id").primaryKey(),
+  teacherId: integer("teacher_id").notNull(),
+  name: text("name").notNull(),
+  subject: text("subject").notNull(),
+  gradeLevel: text("grade_level"),
+  classSize: integer("class_size").default(30),
+  joinCode: text("join_code").notNull().unique(),
+  description: text("description"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const classroomEnrollments = pgTable("classroom_enrollments", {
+  id: serial("id").primaryKey(),
+  classroomId: integer("classroom_id").notNull(),
+  studentId: integer("student_id").notNull(),
+  enrolledAt: timestamp("enrolled_at").notNull().defaultNow(),
+  isActive: boolean("is_active").notNull().default(true),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -86,6 +108,18 @@ export const insertAiInteractionSchema = createInsertSchema(aiInteractions).omit
   createdAt: true,
 });
 
+export const insertClassroomSchema = createInsertSchema(classrooms).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  joinCode: true, // Auto-generated
+});
+
+export const insertClassroomEnrollmentSchema = createInsertSchema(classroomEnrollments).omit({
+  id: true,
+  enrolledAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type Assignment = typeof assignments.$inferSelect;
@@ -94,3 +128,7 @@ export type WritingSession = typeof writingSessions.$inferSelect;
 export type InsertWritingSession = z.infer<typeof insertWritingSessionSchema>;
 export type AiInteraction = typeof aiInteractions.$inferSelect;
 export type InsertAiInteraction = z.infer<typeof insertAiInteractionSchema>;
+export type Classroom = typeof classrooms.$inferSelect;
+export type InsertClassroom = z.infer<typeof insertClassroomSchema>;
+export type ClassroomEnrollment = typeof classroomEnrollments.$inferSelect;
+export type InsertClassroomEnrollment = z.infer<typeof insertClassroomEnrollmentSchema>;
