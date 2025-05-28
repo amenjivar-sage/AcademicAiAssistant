@@ -25,6 +25,8 @@ export interface IStorage {
   
   createAiInteraction(interaction: InsertAiInteraction): Promise<AiInteraction>;
   getSessionInteractions(sessionId: number): Promise<AiInteraction[]>;
+  
+  gradeWritingSession(sessionId: number, gradeData: { grade: string; teacherFeedback: string; status: string }): Promise<WritingSession | undefined>;
 }
 
 // Database connection

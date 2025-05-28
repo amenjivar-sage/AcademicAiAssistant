@@ -204,6 +204,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get assignment submissions (for teachers)
+  app.get("/api/assignments/:id/submissions", async (req, res) => {
+    try {
+      const assignmentId = parseInt(req.params.id);
+      const submissions = await storage.getAssignmentSubmissions(assignmentId);
+      res.json(submissions);
+    } catch (error) {
+      console.error("Error fetching submissions:", error);
+      res.status(500).json({ message: "Failed to fetch submissions" });
+    }
+  });
+
+  // Submit grade and feedback for a writing session
+  app.post("/api/sessions/:id/grade", async (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.id);
+      const { grade, feedback } = req.body;
+      
+      if (!grade || !feedback) {
+        return res.status(400).json({ message: "Grade and feedback are required" });
+      }
+
+      const updatedSession = await storage.gradeWritingSession(sessionId, {
+        grade,
+        teacherFeedback: feedback,
+        status: "graded",
+      });
+
+      if (!updatedSession) {
+        return res.status(404).json({ message: "Writing session not found" });
+      }
+
+      res.json(updatedSession);
+    } catch (error) {
+      console.error("Error submitting grade:", error);
+      res.status(500).json({ message: "Failed to submit grade" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
