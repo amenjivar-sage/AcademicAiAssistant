@@ -34,6 +34,11 @@ export interface IStorage {
   getUserSentMessages(userId: number): Promise<(Message & { receiver: User })[]>;
   markMessageAsRead(messageId: number): Promise<void>;
   getAvailableRecipients(userRole: string): Promise<User[]>;
+  
+  // Classroom operations
+  createClassroom(classroom: InsertClassroom): Promise<Classroom>;
+  getTeacherClassrooms(teacherId: number): Promise<Classroom[]>;
+  updateClassroom(id: number, updates: Partial<InsertClassroom>): Promise<Classroom | undefined>;
 }
 
 // Database connection
@@ -51,11 +56,13 @@ export class MemStorage implements IStorage {
   private writingSessions: Map<number, WritingSession>;
   private aiInteractions: Map<number, AiInteraction>;
   private messages: Map<number, Message>;
+  private classrooms: Map<number, Classroom>;
   private currentUserId: number;
   private currentAssignmentId: number;
   private currentSessionId: number;
   private currentInteractionId: number;
   private currentMessageId: number;
+  private currentClassroomId: number;
 
   constructor() {
     this.users = new Map();

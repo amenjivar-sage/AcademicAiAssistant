@@ -93,10 +93,7 @@ export default function ClassroomForm({ teacherId, children, classroom, mode = "
         ...data,
         teacherId,
       };
-      return await apiRequest("/api/classrooms", {
-        method: "POST",
-        body: JSON.stringify(classroomData),
-      });
+      return await apiRequest("/api/classrooms", "POST", classroomData);
     },
     onSuccess: (newClassroom) => {
       queryClient.invalidateQueries({ queryKey: ["/api/teacher/classrooms"] });
@@ -118,10 +115,7 @@ export default function ClassroomForm({ teacherId, children, classroom, mode = "
 
   const updateClassroomMutation = useMutation({
     mutationFn: async (data: ClassroomForm) => {
-      return await apiRequest(`/api/classrooms/${classroom.id}`, {
-        method: "PATCH",
-        body: JSON.stringify(data),
-      });
+      return await apiRequest(`/api/classrooms/${classroom.id}`, "PATCH", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/teacher/classrooms"] });
