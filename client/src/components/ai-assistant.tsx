@@ -175,41 +175,39 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
           )}
         </TabsContent>
 
-        <TabsContent value="prompts" className="flex-1 overflow-hidden">
-          <div className="h-full p-3">
-            <h4 className="font-medium text-gray-700 mb-3 text-sm">Quick Writing Help</h4>
-            <div className="space-y-2 mb-4">
-              {quickPrompts.map((quickPrompt, index) => {
-                const Icon = quickPrompt.icon;
-                return (
-                  <Button
-                    key={index}
-                    variant="outline"
-                    size="sm"
-                    className="w-full justify-start h-auto p-2 text-left text-xs"
-                    onClick={() => {
-                      setPrompt(quickPrompt.text);
-                      // Switch to assistant tab
-                      const assistantTab = document.querySelector('[value="assistant"]') as HTMLElement;
-                      assistantTab?.click();
-                    }}
-                  >
-                    <Icon className="h-3 w-3 mr-2 flex-shrink-0" />
-                    <span className="text-wrap leading-tight">{quickPrompt.text}</span>
-                  </Button>
-                );
-              })}
-            </div>
-            
-            <div className="p-2 bg-blue-50 rounded text-xs">
-              <h5 className="font-medium text-blue-900 mb-1">Writing Tips</h5>
-              <ul className="text-blue-700 space-y-0.5 text-xs">
-                <li>• Use ZoË for brainstorming</li>
-                <li>• Write in your own voice</li>
-                <li>• Verify all information</li>
-                <li>• Add your own insights</li>
-              </ul>
-            </div>
+        <TabsContent value="prompts" className="flex-1 p-3 overflow-y-auto">
+          <h4 className="font-medium text-gray-700 mb-3 text-sm">Quick Writing Help</h4>
+          <div className="space-y-2">
+            {quickPrompts.map((quickPrompt, index) => {
+              const Icon = quickPrompt.icon;
+              return (
+                <Button
+                  key={index}
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-start h-auto p-2 text-left text-xs"
+                  onClick={() => {
+                    setPrompt(quickPrompt.text);
+                    // Switch to assistant tab
+                    const assistantTab = document.querySelector('[value="assistant"]') as HTMLElement;
+                    assistantTab?.click();
+                  }}
+                >
+                  <Icon className="h-3 w-3 mr-2 flex-shrink-0" />
+                  <span className="text-wrap leading-tight">{quickPrompt.text}</span>
+                </Button>
+              );
+            })}
+          </div>
+          
+          <div className="mt-4 p-2 bg-blue-50 rounded text-xs">
+            <h5 className="font-medium text-blue-900 mb-1">Writing Tips</h5>
+            <ul className="text-blue-700 space-y-0.5 text-xs">
+              <li>• Use ZoË for brainstorming</li>
+              <li>• Write in your own voice</li>
+              <li>• Verify all information</li>
+              <li>• Add your own insights</li>
+            </ul>
           </div>
         </TabsContent>
 
