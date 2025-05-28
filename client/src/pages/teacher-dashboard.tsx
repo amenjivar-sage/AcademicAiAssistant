@@ -48,7 +48,7 @@ export default function TeacherDashboard() {
               <AssignmentForm teacherId={1}>
                 <Button className="bg-edu-blue hover:bg-blue-700">
                   <PlusCircle className="h-4 w-4 mr-2" />
-                  New Assignment
+                  Create Assignment
                 </Button>
               </AssignmentForm>
             </div>
@@ -120,12 +120,6 @@ export default function TeacherDashboard() {
           <TabsContent value="assignments" className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold text-gray-900">Assignments</h2>
-              <AssignmentForm teacherId={1}>
-                <Button className="bg-edu-blue hover:bg-blue-700">
-                  <PlusCircle className="h-4 w-4 mr-2" />
-                  Create Assignment
-                </Button>
-              </AssignmentForm>
             </div>
             
             <div className="grid gap-6">
@@ -158,7 +152,7 @@ export default function TeacherDashboard() {
                   <CardContent className="p-12 text-center">
                     <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">No assignments yet</h3>
-                    <p className="text-gray-500 mb-6">Create your first assignment to get started with ZOEEDU.</p>
+                    <p className="text-gray-500 mb-6">Create your first assignment to get started with Sage.</p>
                     <AssignmentForm teacherId={1}>
                       <Button className="bg-edu-blue hover:bg-blue-700">
                         <PlusCircle className="h-4 w-4 mr-2" />
