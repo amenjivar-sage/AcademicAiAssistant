@@ -112,7 +112,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       // Redirect to dashboard after 2 seconds
       setTimeout(() => {
         console.log('Redirecting to student dashboard...');
-        window.location.href = '/';
+        window.location.href = '/student';
       }, 2000);
     },
     onError: (error) => {
