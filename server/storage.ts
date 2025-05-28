@@ -21,7 +21,7 @@ export interface IStorage {
   createWritingSession(session: InsertWritingSession): Promise<WritingSession>;
   updateWritingSession(id: number, updates: Partial<InsertWritingSession>): Promise<WritingSession | undefined>;
   getUserWritingSessions(userId: number): Promise<WritingSession[]>;
-  getAssignmentSubmissions(assignmentId: number): Promise<WritingSession[]>;
+  getAssignmentSubmissions(assignmentId: number): Promise<(WritingSession & { student: User })[]>;
   
   createAiInteraction(interaction: InsertAiInteraction): Promise<AiInteraction>;
   getSessionInteractions(sessionId: number): Promise<AiInteraction[]>;

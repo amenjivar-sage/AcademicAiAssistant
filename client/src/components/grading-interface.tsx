@@ -59,7 +59,7 @@ const gradeOptions = [
 
 export default function GradingInterface({ assignmentId, children }: GradingInterfaceProps) {
   const [open, setOpen] = useState(false);
-  const [selectedSubmission, setSelectedSubmission] = useState<WritingSession | null>(null);
+  const [selectedSubmission, setSelectedSubmission] = useState<(WritingSession & { student: User }) | null>(null);
   const [viewMode, setViewMode] = useState<"list" | "document">("list");
   const { toast } = useToast();
 
@@ -97,7 +97,7 @@ export default function GradingInterface({ assignmentId, children }: GradingInte
     },
   });
 
-  const handleSelectSubmission = (submission: WritingSession) => {
+  const handleSelectSubmission = (submission: WritingSession & { student: User }) => {
     setSelectedSubmission(submission);
     // Pre-fill form if already graded
     if (submission.grade) {
@@ -247,7 +247,7 @@ export default function GradingInterface({ assignmentId, children }: GradingInte
                   <div className="bg-gray-50 p-4 rounded-lg mb-4">
                     <h4 className="font-medium mb-2">{selectedSubmission.title}</h4>
                     <p className="text-sm text-blue-600 mb-2">
-                      Student: {(selectedSubmission as any).student?.firstName} {(selectedSubmission as any).student?.lastName}
+                      Student: {selectedSubmission.student.firstName} {selectedSubmission.student.lastName}
                     </p>
                     <div className="text-sm text-gray-600 mb-3">
                       {selectedSubmission.wordCount} words • Submitted {selectedSubmission.submittedAt ? new Date(selectedSubmission.submittedAt).toLocaleDateString() : 'Not submitted'}
