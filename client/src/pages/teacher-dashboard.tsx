@@ -6,8 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AssignmentForm from "@/components/assignment-form";
-import { PlusCircle, Users, FileText, BarChart3, Settings, Eye, Edit, CheckCircle, Clock, AlertTriangle } from "lucide-react";
+import { PlusCircle, Users, FileText, BarChart3, Settings, Eye, Edit, CheckCircle, Clock, AlertTriangle, GraduationCap } from "lucide-react";
 import SageLogo from "@/components/sage-logo";
+import GradingInterface from "@/components/grading-interface";
 import type { Assignment, WritingSession } from "@shared/schema";
 
 export default function TeacherDashboard() {
@@ -190,6 +191,12 @@ export default function TeacherDashboard() {
                             Edit
                           </Button>
                         </AssignmentForm>
+                        <GradingInterface assignmentId={assignment.id}>
+                          <Button variant="outline" size="sm">
+                            <GraduationCap className="h-4 w-4 mr-1" />
+                            Grade
+                          </Button>
+                        </GradingInterface>
                         <Button variant="outline" size="sm">
                           <Eye className="h-4 w-4 mr-1" />
                           View

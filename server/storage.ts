@@ -59,6 +59,7 @@ export class MemStorage implements IStorage {
     this.currentInteractionId = 1;
 
     this.initializeDefaultUsers();
+    this.initializeSampleSubmissions();
   }
 
   private initializeDefaultUsers() {
@@ -262,6 +263,24 @@ export class MemStorage implements IStorage {
     return Array.from(this.aiInteractions.values()).filter(
       (interaction) => interaction.sessionId === sessionId
     );
+  }
+
+  async gradeWritingSession(sessionId: number, gradeData: { grade: string; teacherFeedback: string; status: string }): Promise<WritingSession | undefined> {
+    const session = this.writingSessions.get(sessionId);
+    if (!session) {
+      return undefined;
+    }
+
+    const updatedSession: WritingSession = {
+      ...session,
+      grade: gradeData.grade,
+      teacherFeedback: gradeData.teacherFeedback,
+      status: gradeData.status,
+      updatedAt: new Date(),
+    };
+
+    this.writingSessions.set(sessionId, updatedSession);
+    return updatedSession;
   }
 }
 
