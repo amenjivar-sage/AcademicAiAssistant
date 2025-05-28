@@ -26,7 +26,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { GraduationCap, FileText, Clock, CheckCircle, Star } from "lucide-react";
+import { GraduationCap, FileText, Clock, CheckCircle, Star, BookOpen } from "lucide-react";
+import DocumentReviewer from "./document-reviewer";
 import type { WritingSession } from "@shared/schema";
 
 interface GradingInterfaceProps {
@@ -59,6 +60,7 @@ const gradeOptions = [
 export default function GradingInterface({ assignmentId, children }: GradingInterfaceProps) {
   const [open, setOpen] = useState(false);
   const [selectedSubmission, setSelectedSubmission] = useState<WritingSession | null>(null);
+  const [viewMode, setViewMode] = useState<"list" | "document">("list");
   const { toast } = useToast();
 
   // Get all submissions for this assignment
@@ -145,15 +147,50 @@ export default function GradingInterface({ assignmentId, children }: GradingInte
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <GraduationCap className="h-5 w-5" />
-            Grade Student Submissions
-          </DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="flex items-center gap-2">
+              <GraduationCap className="h-5 w-5" />
+              Grade Student Submissions
+            </DialogTitle>
+            {selectedSubmission && viewMode === "list" && (
+              <Button
+                variant="outline"
+                onClick={() => setViewMode("document")}
+                className="flex items-center gap-2"
+              >
+                <BookOpen className="h-4 w-4" />
+                Review Document
+              </Button>
+            )}
+            {viewMode === "document" && (
+              <Button
+                variant="outline"
+                onClick={() => setViewMode("list")}
+                className="flex items-center gap-2"
+              >
+                <GraduationCap className="h-4 w-4" />
+                Back to Grading
+              </Button>
+            )}
+          </div>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Submissions List */}
-          <div className="space-y-4">
+        {viewMode === "document" && selectedSubmission ? (
+          <DocumentReviewer
+            session={selectedSubmission}
+            onGradeSubmit={(grade, feedback) => {
+              submitGradeMutation.mutate({
+                grade,
+                feedback,
+                sessionId: selectedSubmission.id,
+              });
+            }}
+            isSubmitting={submitGradeMutation.isPending}
+          />
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Submissions List */}
+            <div className="space-y-4">
             <h3 className="text-lg font-semibold">Student Submissions</h3>
             
             {submissions?.length === 0 && (
@@ -293,6 +330,7 @@ export default function GradingInterface({ assignmentId, children }: GradingInte
             )}
           </div>
         </div>
+        )}
       </DialogContent>
     </Dialog>
   );
