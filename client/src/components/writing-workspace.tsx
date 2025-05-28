@@ -103,7 +103,7 @@ export default function WritingWorkspace({ sessionId, assignmentId }: WritingWor
       // Redirect to dashboard after 2 seconds
       setTimeout(() => {
         console.log('Redirecting to student dashboard...');
-        setLocation('/student');
+        window.location.href = '/';
       }, 2000);
     },
     onError: (error) => {
