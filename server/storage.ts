@@ -270,7 +270,83 @@ This experience changed how I approach challenges in all areas of my life. Now, 
     this.writingSessions.set(1, submission1);
     this.writingSessions.set(2, submission2);
     this.writingSessions.set(3, submission3);
-    this.currentSessionId = 4;
+
+    // Add submissions for the newer assignments (ID 2, 3, 4)
+    const submission4: WritingSession = {
+      id: 4,
+      userId: 3,
+      assignmentId: 2,
+      title: "Climate Change Solutions",
+      content: `Climate change is one of the biggest challenges facing our planet today. Rising temperatures, melting ice caps, and extreme weather events are becoming more frequent and severe. However, there are many solutions we can implement to address this crisis.
+
+Renewable energy is perhaps the most important solution. Solar panels, wind turbines, and hydroelectric power can replace fossil fuels that release carbon dioxide into the atmosphere. Many countries are already making significant investments in clean energy infrastructure.
+
+Individual actions also matter. We can reduce our carbon footprint by using public transportation, recycling, eating less meat, and being more conscious about our energy consumption at home. Small changes by millions of people can have a big impact.
+
+Governments need to implement policies that encourage sustainable practices and penalize companies that pollute excessively. Carbon taxes and emissions standards can help drive the transition to cleaner technologies.
+
+Education is crucial too. The more people understand about climate science and environmental issues, the more likely they are to support necessary changes and make better choices in their daily lives.`,
+      wordCount: 178,
+      status: "submitted",
+      submittedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+      teacherFeedback: null,
+      grade: null,
+      createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+      updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+    };
+
+    const submission5: WritingSession = {
+      id: 5,
+      userId: 4,
+      assignmentId: 2,
+      title: "My Plan to Save the Environment",
+      content: `I think the environment is very important and we need to do something about pollution and global warming. There are many things we can do to help save our planet.
+
+First, we should recycle more. I always try to put my bottles and cans in the recycling bin instead of the trash. My family also tries to use less plastic bags when we go shopping.
+
+Cars make a lot of pollution so we should drive less. I ride my bike to school when the weather is nice instead of having my mom drive me. Walking is good too and its good exercise.
+
+We should also save energy at home. I try to turn off lights when I leave a room and my mom says we should unplug things when we're not using them because they still use electricity.
+
+Trees are important because they clean the air. We planted a tree in our backyard last year and it's already getting bigger. I think more people should plant trees.
+
+If everyone does their part we can make the Earth a better place for future generations.`,
+      wordCount: 171,
+      status: "submitted",
+      submittedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+      teacherFeedback: null,
+      grade: null,
+      createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
+      updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+    };
+
+    const submission6: WritingSession = {
+      id: 6,
+      userId: 2,
+      assignmentId: 4,
+      title: "The Future of Renewable Energy",
+      content: `As we stand at the crossroads of environmental crisis and technological innovation, renewable energy emerges as our most promising path toward a sustainable future. The transition from fossil fuels to clean energy sources represents not just an environmental necessity, but an economic opportunity that could reshape global markets.
+
+Solar energy has experienced remarkable growth over the past decade. The cost of solar panels has plummeted by over 80% since 2010, making solar power competitive with traditional energy sources in many regions. Countries like Germany and Denmark have demonstrated that it's possible to generate significant portions of national energy needs from renewable sources without compromising economic stability.
+
+Wind energy presents another compelling opportunity. Offshore wind farms can generate enormous amounts of electricity without taking up valuable land space. The consistency of ocean winds makes offshore installations particularly efficient, and advancing turbine technology continues to improve energy capture rates.
+
+However, the transition to renewable energy faces significant challenges. Energy storage remains a critical bottleneck – we need better battery technology to store solar and wind energy for use during periods when the sun isn't shining or the wind isn't blowing. Additionally, upgrading electrical grids to handle distributed energy sources requires substantial infrastructure investment.
+
+Despite these challenges, the momentum toward renewable energy appears unstoppable. Government incentives, corporate sustainability commitments, and growing public awareness are driving unprecedented investment in clean energy technologies. The question is no longer whether we will transition to renewable energy, but how quickly we can make it happen.`,
+      wordCount: 267,
+      status: "submitted",
+      submittedAt: new Date(Date.now() - 12 * 60 * 60 * 1000),
+      teacherFeedback: null,
+      grade: null,
+      createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+      updatedAt: new Date(Date.now() - 12 * 60 * 60 * 1000),
+    };
+
+    this.writingSessions.set(4, submission4);
+    this.writingSessions.set(5, submission5);
+    this.writingSessions.set(6, submission6);
+    this.currentSessionId = 7;
   }
 
   async getUser(id: number): Promise<User | undefined> {
