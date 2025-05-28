@@ -135,6 +135,55 @@ export const insertMessageSchema = createInsertSchema(messages).omit({
   createdAt: true,
 });
 
+// Writing streaks and achievements
+export const writingStreaks = pgTable("writing_streaks", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  currentStreak: integer("current_streak").notNull().default(0),
+  longestStreak: integer("longest_streak").notNull().default(0),
+  lastWritingDate: timestamp("last_writing_date"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const achievements = pgTable("achievements", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  type: text("type").notNull(), // "streak", "wordcount", "assignment", "improvement"
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  badgeIcon: text("badge_icon").notNull(),
+  unlockedAt: timestamp("unlocked_at").notNull().defaultNow(),
+});
+
+export const writingGoals = pgTable("writing_goals", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  type: text("type").notNull(), // "daily", "weekly", "assignment"
+  targetWords: integer("target_words").notNull(),
+  currentProgress: integer("current_progress").notNull().default(0),
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date"),
+  isCompleted: boolean("is_completed").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertWritingStreakSchema = createInsertSchema(writingStreaks).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertAchievementSchema = createInsertSchema(achievements).omit({
+  id: true,
+  unlockedAt: true,
+});
+
+export const insertWritingGoalSchema = createInsertSchema(writingGoals).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type Assignment = typeof assignments.$inferSelect;
@@ -149,3 +198,9 @@ export type ClassroomEnrollment = typeof classroomEnrollments.$inferSelect;
 export type InsertClassroomEnrollment = z.infer<typeof insertClassroomEnrollmentSchema>;
 export type Message = typeof messages.$inferSelect;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
+export type WritingStreak = typeof writingStreaks.$inferSelect;
+export type InsertWritingStreak = z.infer<typeof insertWritingStreakSchema>;
+export type Achievement = typeof achievements.$inferSelect;
+export type InsertAchievement = z.infer<typeof insertAchievementSchema>;
+export type WritingGoal = typeof writingGoals.$inferSelect;
+export type InsertWritingGoal = z.infer<typeof insertWritingGoalSchema>;

@@ -10,6 +10,8 @@ import WritingWorkspace from "@/components/writing-workspace";
 import AiAssistant from "@/components/ai-assistant";
 import JoinClass from "@/components/join-class";
 import MessagingSystem from "@/components/messaging-system";
+import AchievementSystem from "@/components/achievement-system";
+import WritingAnalytics from "@/components/writing-analytics";
 import type { Assignment, WritingSession, Classroom } from "@shared/schema";
 
 export default function StudentDashboard() {
@@ -193,11 +195,13 @@ export default function StudentDashboard() {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="assignments">My Assignments</TabsTrigger>
-            <TabsTrigger value="classes">My Classes</TabsTrigger>
-            <TabsTrigger value="portfolio">Writing Portfolio</TabsTrigger>
-            <TabsTrigger value="progress">My Progress</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-6">
+            <TabsTrigger value="assignments">Assignments</TabsTrigger>
+            <TabsTrigger value="classes">Classes</TabsTrigger>
+            <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
+            <TabsTrigger value="progress">Progress</TabsTrigger>
+            <TabsTrigger value="achievements">Achievements</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
 
           <TabsContent value="assignments" className="space-y-6">

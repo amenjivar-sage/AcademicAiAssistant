@@ -12,6 +12,8 @@ import { useToast } from "@/hooks/use-toast";
 
 interface AiAssistantProps {
   sessionId?: number;
+  assignmentType?: string;
+  currentContent?: string;
 }
 
 interface AiResponse {
