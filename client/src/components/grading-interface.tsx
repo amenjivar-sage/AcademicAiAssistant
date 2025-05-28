@@ -63,7 +63,7 @@ export default function GradingInterface({ assignmentId, children }: GradingInte
 
   // Get all submissions for this assignment
   const { data: submissions, isLoading } = useQuery<WritingSession[]>({
-    queryKey: ["/api/assignments", assignmentId, "submissions"],
+    queryKey: [`/api/assignments/${assignmentId}/submissions`],
     enabled: open,
   });
 
@@ -85,7 +85,7 @@ export default function GradingInterface({ assignmentId, children }: GradingInte
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/assignments", assignmentId, "submissions"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/assignments/${assignmentId}/submissions`] });
       toast({
         title: "Grade Submitted",
         description: "Student feedback has been saved successfully!",
