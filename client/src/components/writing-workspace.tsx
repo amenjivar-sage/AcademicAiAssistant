@@ -72,6 +72,7 @@ export default function WritingWorkspace({ sessionId, assignmentId }: WritingWor
   // Submit session mutation
   const submitSessionMutation = useMutation({
     mutationFn: async () => {
+      console.log('Making submit API call...');
       const response = await apiRequest("PATCH", `/api/writing-sessions/${sessionId}`, {
         status: "submitted",
         submittedAt: new Date().toISOString(),
@@ -80,9 +81,11 @@ export default function WritingWorkspace({ sessionId, assignmentId }: WritingWor
         pastedContent: pastedContents,
         wordCount,
       });
+      console.log('Submit response:', response);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('Submit successful:', data);
       toast({
         title: "Submission Successful! 🎉",
         description: "Your assignment has been delivered to your teacher for review.",
@@ -94,6 +97,14 @@ export default function WritingWorkspace({ sessionId, assignmentId }: WritingWor
       setTimeout(() => {
         window.location.href = '/';
       }, 2000);
+    },
+    onError: (error) => {
+      console.log('Submit error:', error);
+      toast({
+        title: "Submission failed",
+        description: "There was an error submitting your work. Please try again.",
+        variant: "destructive",
+      });
     },
   });
 
