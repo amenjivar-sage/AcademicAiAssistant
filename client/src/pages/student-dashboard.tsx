@@ -228,6 +228,7 @@ export default function StudentDashboard() {
                       {assignments?.filter(a => a.classroomId === null).map((assignment) => {
                         const session = writingSessions?.find(s => s.assignmentId === assignment.id);
                         const isOverdue = assignment.dueDate && new Date() > new Date(assignment.dueDate);
+                        console.log('Assignment', assignment.id, 'session:', session, 'content length:', session?.content?.length || 0);
                         
                         return (
                           <Card key={assignment.id} className="hover:shadow-md transition-shadow">
