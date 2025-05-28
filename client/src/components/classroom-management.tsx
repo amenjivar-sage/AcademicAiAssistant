@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, Copy, Settings, Eye, MoreHorizontal, ArrowRight, ArrowLeft, FileText, PlusCircle, Calendar } from "lucide-react";
+import { Users, Copy, Settings, Eye, MoreHorizontal, ArrowRight, ArrowLeft, FileText, PlusCircle, Calendar, BarChart3 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ClassroomForm from "./classroom-form";
 import AssignmentForm from "./assignment-form";
