@@ -46,6 +46,7 @@ const formSchema = insertAssignmentSchema.extend({
 
 export default function AssignmentForm({ teacherId, children, assignment, mode = "create" }: AssignmentFormProps) {
   const [open, setOpen] = React.useState(false);
+  const [showTemplates, setShowTemplates] = React.useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -63,6 +64,8 @@ export default function AssignmentForm({ teacherId, children, assignment, mode =
       allowResearchHelp: assignment?.allowResearchHelp ?? true,
     },
   });
+
+
 
   const createAssignmentMutation = useMutation({
     mutationFn: async (data: InsertAssignment) => {
@@ -131,6 +134,7 @@ export default function AssignmentForm({ teacherId, children, assignment, mode =
   };
 
   const handleTemplateSelect = (template: any) => {
+    // Fill form with template data
     form.setValue("title", template.title);
     form.setValue("description", template.prompt);
     form.setValue("aiPermissions", template.aiPermissions);
@@ -143,6 +147,10 @@ export default function AssignmentForm({ teacherId, children, assignment, mode =
     form.setValue("allowOutlining", allowAll);
     form.setValue("allowGrammarCheck", allowLimited);
     form.setValue("allowResearchHelp", allowAll);
+    
+    // Close template picker and show assignment form
+    setShowTemplates(false);
+    setOpen(true);
   };
 
   return (

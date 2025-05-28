@@ -145,11 +145,17 @@ const templates: Template[] = [
 interface AssignmentTemplatesProps {
   onSelectTemplate: (template: Template) => void;
   children: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export default function AssignmentTemplates({ onSelectTemplate, children }: AssignmentTemplatesProps) {
+export default function AssignmentTemplates({ onSelectTemplate, children, open, onOpenChange }: AssignmentTemplatesProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
+  const [internalOpen, setInternalOpen] = useState(false);
+  
+  const isOpen = open !== undefined ? open : internalOpen;
+  const setOpen = onOpenChange || setInternalOpen;
 
   const filteredTemplates = selectedCategory === "all" 
     ? templates 
@@ -182,7 +188,7 @@ export default function AssignmentTemplates({ onSelectTemplate, children }: Assi
   };
 
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
@@ -290,7 +296,10 @@ export default function AssignmentTemplates({ onSelectTemplate, children }: Assi
                       </Button>
                       <Button
                         size="sm"
-                        onClick={() => onSelectTemplate(template)}
+                        onClick={() => {
+                          onSelectTemplate(template);
+                          setOpen(false);
+                        }}
                         className="bg-edu-blue hover:bg-blue-700"
                       >
                         Use Template
