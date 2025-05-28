@@ -154,8 +154,19 @@ export default function AssignmentForm({ teacherId, children, assignment, mode =
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
+    <>
+      {/* Assignment Templates Dialog */}
+      <AssignmentTemplates 
+        onSelectTemplate={handleTemplateSelect}
+        open={showTemplates}
+        onOpenChange={setShowTemplates}
+      >
+        <div></div>
+      </AssignmentTemplates>
+
+      {/* Assignment Form Dialog */}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
         {children || (
           <Button className="gap-2">
             <Plus className="h-4 w-4" />
@@ -171,12 +182,15 @@ export default function AssignmentForm({ teacherId, children, assignment, mode =
               {mode === "edit" ? "Edit Assignment" : "Create New Assignment"}
             </DialogTitle>
             {mode === "create" && (
-              <AssignmentTemplates onSelectTemplate={handleTemplateSelect}>
-                <Button variant="outline" size="sm" className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4" />
-                  Use Template
-                </Button>
-              </AssignmentTemplates>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex items-center gap-2"
+                onClick={() => setShowTemplates(true)}
+              >
+                <Sparkles className="h-4 w-4" />
+                Use Template
+              </Button>
             )}
           </div>
         </DialogHeader>
@@ -396,5 +410,6 @@ export default function AssignmentForm({ teacherId, children, assignment, mode =
         </Form>
       </DialogContent>
     </Dialog>
+    </>
   );
 }
