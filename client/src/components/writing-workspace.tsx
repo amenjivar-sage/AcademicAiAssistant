@@ -98,9 +98,11 @@ export default function WritingWorkspace({ sessionId, assignmentId }: WritingWor
       });
       queryClient.invalidateQueries({ queryKey: ['/api/writing-sessions', sessionId] });
       queryClient.invalidateQueries({ queryKey: ['/api/student/writing-sessions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/student/assignments'] });
       
       // Redirect to dashboard after 2 seconds
       setTimeout(() => {
+        console.log('Redirecting to student dashboard...');
         setLocation('/student');
       }, 2000);
     },
