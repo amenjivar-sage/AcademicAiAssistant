@@ -66,9 +66,17 @@ export default function StudentDashboard() {
   const handleUnsubmit = async (sessionId: number) => {
     console.log("Button clicked, calling unsubmit for session:", sessionId);
     try {
-      const response = await fetch(`/api/writing-sessions/${sessionId}/unsubmit`, {
+      // Get the current session first and manually update its status
+      const currentSession = writingSessions?.find(s => s.id === sessionId);
+      if (!currentSession) {
+        throw new Error('Session not found');
+      }
+
+      // Make the API call to update on server
+      const response = await fetch(`/api/writing-sessions/${sessionId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'draft', submittedAt: null })
       });
       
       if (response.ok) {
