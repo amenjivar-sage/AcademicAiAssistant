@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -33,6 +34,7 @@ export default function WritingWorkspace({ sessionId, assignmentId }: WritingWor
   const contentRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
 
   // Get session data
   const { data: session, isLoading: sessionLoading } = useQuery<WritingSession>({
@@ -99,7 +101,7 @@ export default function WritingWorkspace({ sessionId, assignmentId }: WritingWor
       
       // Redirect to dashboard after 2 seconds
       setTimeout(() => {
-        window.location.href = '/#/student';
+        setLocation('/student');
       }, 2000);
     },
     onError: (error) => {
