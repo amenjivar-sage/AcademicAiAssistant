@@ -291,7 +291,10 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
                               variant={assignment.status === 'active' ? 'default' : 
                                      assignment.status === 'completed' ? 'secondary' : 'destructive'}
                             >
-                              {assignment.status}
+                              {assignment.status.charAt(0).toUpperCase() + assignment.status.slice(1)}
+                            </Badge>
+                            <Badge variant="outline">
+                              AI: {assignment.aiPermissions}
                             </Badge>
                             {assignment.dueDate && (
                               <Badge variant="outline">
@@ -300,6 +303,22 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
                             )}
                           </div>
                         </div>
+                        
+                        {/* AI Permissions Details */}
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {assignment.allowBrainstorming && (
+                            <Badge variant="secondary" className="text-xs">Brainstorming</Badge>
+                          )}
+                          {assignment.allowOutlining && (
+                            <Badge variant="secondary" className="text-xs">Outlining</Badge>
+                          )}
+                          {assignment.allowGrammarCheck && (
+                            <Badge variant="secondary" className="text-xs">Grammar Check</Badge>
+                          )}
+                          {assignment.allowResearchHelp && (
+                            <Badge variant="secondary" className="text-xs">Research Help</Badge>
+                          )}
+                        </div>
                       </CardHeader>
                       <CardContent>
                         <div className="flex items-center justify-between">
@@ -307,8 +326,17 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
                             Created {new Date(assignment.createdAt).toLocaleDateString()}
                           </div>
                           <div className="flex gap-2">
+                            {assignment.status === 'active' && (
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                className="text-green-600 hover:text-green-700"
+                              >
+                                Mark Complete
+                              </Button>
+                            )}
                             <Button variant="outline" size="sm">
-                              View Submissions
+                              Grade
                             </Button>
                             <AssignmentForm teacherId={teacherId} assignment={assignment} mode="edit">
                               <Button variant="outline" size="sm">
