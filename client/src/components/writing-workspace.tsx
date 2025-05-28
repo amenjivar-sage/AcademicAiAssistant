@@ -60,6 +60,7 @@ export default function WritingWorkspace({ sessionId, assignmentId }: WritingWor
       setLastSaved(new Date());
       setIsSaving(false);
       queryClient.invalidateQueries({ queryKey: ['/api/writing-sessions', sessionId] });
+      // Success toast removed to avoid clutter - auto-save should be silent
     },
     onError: () => {
       setIsSaving(false);
