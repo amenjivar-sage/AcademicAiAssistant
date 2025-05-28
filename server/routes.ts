@@ -157,6 +157,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const sessionId = parseInt(req.params.sessionId);
       const { assignmentId } = req.query;
+      console.log('GET session request - sessionId:', sessionId, 'assignmentId:', assignmentId);
       
       // If sessionId is 0, check if session exists for this assignment, or create new one
       if (sessionId === 0 && assignmentId) {
