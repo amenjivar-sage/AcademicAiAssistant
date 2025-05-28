@@ -105,7 +105,7 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
     <div className="h-full flex flex-col">
       <Tabs defaultValue="assistant" className="flex-1 flex flex-col">
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="assistant">AI Assistant</TabsTrigger>
+          <TabsTrigger value="assistant">ZoË Assistant</TabsTrigger>
           <TabsTrigger value="prompts">Quick Help</TabsTrigger>
           <TabsTrigger value="citations">Citations</TabsTrigger>
           <TabsTrigger value="history">History</TabsTrigger>
@@ -116,7 +116,7 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
           <div className="p-4 space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Ask for help with your writing:
+                Ask ZoË for help with your writing:
               </label>
               <Textarea
                 value={prompt}
