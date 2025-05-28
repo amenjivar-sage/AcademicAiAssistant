@@ -9,8 +9,6 @@ import AssignmentForm from "@/components/assignment-form";
 import { PlusCircle, Users, FileText, BarChart3, Settings, Eye, Edit, CheckCircle, Clock, AlertTriangle } from "lucide-react";
 import SageLogo from "@/components/sage-logo";
 import type { Assignment, WritingSession } from "@shared/schema";
-import { useMutation } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export default function TeacherDashboard() {
   const [activeTab, setActiveTab] = useState("assignments");
@@ -19,6 +17,43 @@ export default function TeacherDashboard() {
   const { data: assignments, isLoading: assignmentsLoading } = useQuery<Assignment[]>({
     queryKey: ["/api/teacher/assignments"],
   });
+
+  // Mark assignment as complete mutation
+  const markCompleteMutation = useMutation({
+    mutationFn: async (assignmentId: number) => {
+      const response = await apiRequest("POST", `/api/assignments/${assignmentId}/complete`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/teacher/assignments"] });
+    },
+  });
+
+  const getStatusIcon = (status: string, dueDate: Date | null) => {
+    const now = new Date();
+    const isOverdue = dueDate && new Date(dueDate) < now && status === "active";
+    
+    if (status === "completed") {
+      return <CheckCircle className="h-4 w-4 text-green-600" />;
+    }
+    if (isOverdue || status === "overdue") {
+      return <AlertTriangle className="h-4 w-4 text-red-600" />;
+    }
+    return <Clock className="h-4 w-4 text-blue-600" />;
+  };
+
+  const getStatusBadge = (status: string, dueDate: Date | null) => {
+    const now = new Date();
+    const isOverdue = dueDate && new Date(dueDate) < now && status === "active";
+    
+    if (status === "completed") {
+      return <Badge className="bg-green-100 text-green-800">Completed</Badge>;
+    }
+    if (isOverdue || status === "overdue") {
+      return <Badge className="bg-red-100 text-red-800">Overdue</Badge>;
+    }
+    return <Badge className="bg-blue-100 text-blue-800">Active</Badge>;
+  };
 
   if (assignmentsLoading) {
     return (
@@ -129,11 +164,26 @@ export default function TeacherDashboard() {
                 <Card key={assignment.id}>
                   <CardHeader>
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">{assignment.title}</CardTitle>
+                      <div className="flex items-center space-x-3">
+                        {getStatusIcon(assignment.status || "active", assignment.dueDate)}
+                        <CardTitle className="text-lg">{assignment.title}</CardTitle>
+                      </div>
                       <div className="flex items-center space-x-2">
+                        {getStatusBadge(assignment.status || "active", assignment.dueDate)}
                         <Badge variant={assignment.aiPermissions === "full" ? "default" : "secondary"}>
                           AI: {assignment.aiPermissions}
                         </Badge>
+                        {assignment.status !== "completed" && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => markCompleteMutation.mutate(assignment.id)}
+                            disabled={markCompleteMutation.isPending}
+                          >
+                            <CheckCircle className="h-4 w-4 mr-1" />
+                            {markCompleteMutation.isPending ? "Marking..." : "Mark Complete"}
+                          </Button>
+                        )}
                         <AssignmentForm teacherId={1} assignment={assignment} mode="edit">
                           <Button variant="outline" size="sm">
                             <Edit className="h-4 w-4 mr-1" />
