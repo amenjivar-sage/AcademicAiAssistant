@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import AiAssistant from "@/components/ai-assistant";
@@ -11,6 +11,8 @@ import type { WritingSession } from "@shared/schema";
 
 export default function Home() {
   const [currentSession, setCurrentSession] = useState<WritingSession | null>(null);
+  const [localContent, setLocalContent] = useState("");
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Get or create writing session
   const { data: session, isLoading } = useQuery<WritingSession>({
@@ -21,6 +23,7 @@ export default function Home() {
   React.useEffect(() => {
     if (session) {
       setCurrentSession(session);
+      setLocalContent(session.content || "");
     }
   }, [session]);
 
@@ -37,9 +40,20 @@ export default function Home() {
     },
   });
 
-  const handleContentUpdate = (content: string) => {
-    updateSessionMutation.mutate({ content });
-  };
+  // Debounced content update - only saves after user stops typing
+  const handleContentUpdate = useCallback((content: string) => {
+    setLocalContent(content);
+    
+    // Clear existing timeout
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    
+    // Set new timeout to save after 1 second of no typing
+    saveTimeoutRef.current = setTimeout(() => {
+      updateSessionMutation.mutate({ content });
+    }, 1000);
+  }, [updateSessionMutation]);
 
   const handleTitleUpdate = (title: string) => {
     updateSessionMutation.mutate({ title });
@@ -86,7 +100,7 @@ export default function Home() {
                 <span>Auto-saved</span>
               </div>
               <WritingMilestone 
-                wordCount={currentSession?.content ? currentSession.content.split(' ').filter(word => word.trim().length > 0).length : 0}
+                wordCount={localContent ? localContent.split(' ').filter(word => word.trim().length > 0).length : 0}
                 onMilestone={(milestone) => console.log(`Milestone reached: ${milestone} words!`)}
               />
             </div>
@@ -134,7 +148,7 @@ export default function Home() {
 
       {/* Milestone Celebrations */}
       <WritingMilestone 
-        wordCount={currentSession?.content ? currentSession.content.split(' ').filter(word => word.trim().length > 0).length : 0}
+        wordCount={localContent ? localContent.split(' ').filter(word => word.trim().length > 0).length : 0}
         onMilestone={(milestone) => console.log(`Celebration: ${milestone} words achieved!`)}
       />
 
@@ -146,7 +160,7 @@ export default function Home() {
             {/* Document Paper */}
             <div className="bg-white shadow-lg min-h-[800px] p-12 rounded-sm" style={{ width: '8.5in', margin: '0 auto' }}>
               <textarea
-                value={currentSession?.content || ""}
+                value={localContent}
                 onChange={(e) => handleContentUpdate(e.target.value)}
                 placeholder="Start writing your document here..."
                 className="w-full h-full min-h-[700px] border-none outline-none resize-none text-gray-900 leading-relaxed text-base font-serif"
