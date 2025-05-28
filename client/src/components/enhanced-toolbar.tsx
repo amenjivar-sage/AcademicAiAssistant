@@ -38,16 +38,12 @@ import {
 interface EnhancedToolbarProps {
   onFormatting?: (command: string, value?: string) => void;
   onSave?: () => void;
-  onShare?: () => void;
-  onDownload?: () => void;
   isSaving?: boolean;
 }
 
 export default function EnhancedToolbar({ 
   onFormatting, 
   onSave, 
-  onShare, 
-  onDownload,
   isSaving = false 
 }: EnhancedToolbarProps) {
   const handleFormat = (command: string, value?: string) => {
@@ -90,14 +86,7 @@ export default function EnhancedToolbar({
           <Save className="h-4 w-4 mr-1" />
           {isSaving ? "Saving..." : "Save"}
         </Button>
-        <Button variant="ghost" size="sm" onClick={onShare} className="text-xs">
-          <Share className="h-4 w-4 mr-1" />
-          Share
-        </Button>
-        <Button variant="ghost" size="sm" onClick={onDownload} className="text-xs">
-          <Download className="h-4 w-4 mr-1" />
-          Download
-        </Button>
+
       </div>
 
       <Separator orientation="vertical" className="h-6" />

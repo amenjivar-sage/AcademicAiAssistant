@@ -217,7 +217,7 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
             Citation Tools
           </h4>
           
-          <div className="space-y-3">
+          <div className="space-y-2">
             <CitationAssistant sessionId={sessionId}>
               <Button 
                 className="w-full justify-start h-auto p-2 text-left text-xs"
@@ -239,16 +239,16 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
                 <span>Plagiarism Checker</span>
               </Button>
             </CitationAssistant>
-
-            <div className="mt-4 p-2 bg-amber-50 rounded text-xs">
-              <h5 className="font-medium text-amber-900 mb-1">Academic Integrity</h5>
-              <ul className="text-amber-800 space-y-0.5 text-xs">
-                <li>• Always cite your sources</li>
-                <li>• Use quotation marks for direct quotes</li>
-                <li>• Paraphrase in your own words</li>
-                <li>• When in doubt, cite it out!</li>
-              </ul>
-            </div>
+          </div>
+          
+          <div className="mt-2 p-2 bg-amber-50 rounded text-xs">
+            <h5 className="font-medium text-amber-900 mb-1">Academic Integrity</h5>
+            <ul className="text-amber-800 space-y-0.5 text-xs">
+              <li>• Always cite your sources</li>
+              <li>• Use quotation marks for direct quotes</li>
+              <li>• Paraphrase in your own words</li>
+              <li>• When in doubt, cite it out!</li>
+            </ul>
           </div>
         </TabsContent>
 
