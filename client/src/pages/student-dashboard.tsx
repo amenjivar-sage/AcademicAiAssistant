@@ -51,14 +51,8 @@ export default function StudentDashboard() {
         title: "Assignment unsubmitted",
         description: "You can now continue editing your work.",
       });
-      // Force complete cache refresh
-      queryClient.removeQueries({ queryKey: ['/api/student/writing-sessions'] });
-      queryClient.removeQueries({ queryKey: ['/api/student/assignments'] });
-      // Trigger immediate refetch
-      setTimeout(() => {
-        queryClient.refetchQueries({ queryKey: ['/api/student/writing-sessions'] });
-        queryClient.refetchQueries({ queryKey: ['/api/student/assignments'] });
-      }, 100);
+      // Force page reload as a reliable fallback
+      window.location.reload();
     },
     onError: () => {
       toast({
