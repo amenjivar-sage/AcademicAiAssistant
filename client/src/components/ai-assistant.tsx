@@ -151,33 +151,28 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
             </p>
           </div>
 
-          {/* AI Response */}
-          <ScrollArea className="flex-1">
+          {/* AI Response (inline after sending) */}
+          {aiHelpMutation.isPending && (
             <div className="p-4 border-t border-gray-200">
-              <h4 className="font-medium text-gray-700 mb-3">AI Response</h4>
-              {aiHelpMutation.isPending ? (
-                <Alert>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <AlertDescription>
-                    AI is analyzing your request and preparing a helpful response...
-                  </AlertDescription>
-                </Alert>
-              ) : lastResponse ? (
-                <Alert variant={getResponseVariant(lastResponse.isRestricted)}>
-                  {getResponseIcon(lastResponse.isRestricted)}
-                  <AlertDescription className="whitespace-pre-line">
-                    {lastResponse.response}
-                  </AlertDescription>
-                </Alert>
-              ) : (
-                <div className="text-center text-gray-500 py-8">
-                  <Bot className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                  <p>Ask a question above to get AI assistance with your writing!</p>
-                  <p className="text-sm mt-2">I can help with brainstorming, outlining, feedback, and more.</p>
-                </div>
-              )}
+              <Alert>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <AlertDescription>
+                  ZoË is thinking...
+                </AlertDescription>
+              </Alert>
             </div>
-          </ScrollArea>
+          )}
+          
+          {lastResponse && (
+            <div className="p-4 border-t border-gray-200">
+              <Alert variant={getResponseVariant(lastResponse.isRestricted)}>
+                {getResponseIcon(lastResponse.isRestricted)}
+                <AlertDescription className="whitespace-pre-line text-sm">
+                  {lastResponse.response}
+                </AlertDescription>
+              </Alert>
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="prompts" className="flex-1">
