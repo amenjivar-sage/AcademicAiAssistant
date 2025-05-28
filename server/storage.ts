@@ -1,4 +1,4 @@
-import { users, writingSessions, aiInteractions, assignments, type User, type InsertUser, type WritingSession, type InsertWritingSession, type AiInteraction, type InsertAiInteraction, type Assignment, type InsertAssignment } from "@shared/schema";
+import { users, writingSessions, aiInteractions, assignments, messages, type User, type InsertUser, type WritingSession, type InsertWritingSession, type AiInteraction, type InsertAiInteraction, type Assignment, type InsertAssignment, type Message, type InsertMessage } from "@shared/schema";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { eq } from "drizzle-orm";
 import { Pool } from "pg";
@@ -27,6 +27,13 @@ export interface IStorage {
   getSessionInteractions(sessionId: number): Promise<AiInteraction[]>;
   
   gradeWritingSession(sessionId: number, gradeData: { grade: string; teacherFeedback: string; status: string }): Promise<WritingSession | undefined>;
+  
+  // Message operations
+  createMessage(message: InsertMessage): Promise<Message>;
+  getUserInboxMessages(userId: number): Promise<(Message & { sender: User })[]>;
+  getUserSentMessages(userId: number): Promise<(Message & { receiver: User })[]>;
+  markMessageAsRead(messageId: number): Promise<void>;
+  getAvailableRecipients(userRole: string): Promise<User[]>;
 }
 
 // Database connection
@@ -43,10 +50,12 @@ export class MemStorage implements IStorage {
   private assignments: Map<number, Assignment>;
   private writingSessions: Map<number, WritingSession>;
   private aiInteractions: Map<number, AiInteraction>;
+  private messages: Map<number, Message>;
   private currentUserId: number;
   private currentAssignmentId: number;
   private currentSessionId: number;
   private currentInteractionId: number;
+  private currentMessageId: number;
 
   constructor() {
     this.users = new Map();
@@ -443,6 +452,53 @@ This experience changed how I approach challenges in all areas of my life. Now, 
 
     this.writingSessions.set(sessionId, updatedSession);
     return updatedSession;
+  }
+
+  // Message operations
+  async createMessage(insertMessage: InsertMessage): Promise<Message> {
+    const message: Message = {
+      id: this.currentMessageId++,
+      ...insertMessage,
+      isRead: false,
+      createdAt: new Date(),
+    };
+
+    this.messages.set(message.id, message);
+    return message;
+  }
+
+  async getUserInboxMessages(userId: number): Promise<(Message & { sender: User })[]> {
+    const userMessages = Array.from(this.messages.values())
+      .filter(message => message.receiverId === userId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+    return userMessages.map(message => ({
+      ...message,
+      sender: this.users.get(message.senderId)!,
+    }));
+  }
+
+  async getUserSentMessages(userId: number): Promise<(Message & { receiver: User })[]> {
+    const sentMessages = Array.from(this.messages.values())
+      .filter(message => message.senderId === userId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+    return sentMessages.map(message => ({
+      ...message,
+      receiver: this.users.get(message.receiverId)!,
+    }));
+  }
+
+  async markMessageAsRead(messageId: number): Promise<void> {
+    const message = this.messages.get(messageId);
+    if (message) {
+      this.messages.set(messageId, { ...message, isRead: true });
+    }
+  }
+
+  async getAvailableRecipients(userRole: string): Promise<User[]> {
+    const targetRole = userRole === "teacher" ? "student" : "teacher";
+    return Array.from(this.users.values()).filter(user => user.role === targetRole);
   }
 }
 
