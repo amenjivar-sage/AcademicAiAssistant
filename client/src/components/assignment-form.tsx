@@ -36,13 +36,15 @@ import AssignmentTemplates from "./assignment-templates";
 interface AssignmentFormProps {
   teacherId: number;
   children?: React.ReactNode;
+  assignment?: any; // For editing existing assignments
+  mode?: "create" | "edit";
 }
 
 const formSchema = insertAssignmentSchema.extend({
   dueDate: insertAssignmentSchema.shape.dueDate.nullable(),
 });
 
-export default function AssignmentForm({ teacherId, children }: AssignmentFormProps) {
+export default function AssignmentForm({ teacherId, children, assignment, mode = "create" }: AssignmentFormProps) {
   const [open, setOpen] = React.useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -51,14 +53,14 @@ export default function AssignmentForm({ teacherId, children }: AssignmentFormPr
     resolver: zodResolver(formSchema),
     defaultValues: {
       teacherId,
-      title: "",
-      description: "",
-      dueDate: null,
-      aiPermissions: "full",
-      allowBrainstorming: true,
-      allowOutlining: true,
-      allowGrammarCheck: true,
-      allowResearchHelp: true,
+      title: assignment?.title || "",
+      description: assignment?.description || "",
+      dueDate: assignment?.dueDate ? new Date(assignment.dueDate) : null,
+      aiPermissions: assignment?.aiPermissions || "full",
+      allowBrainstorming: assignment?.allowBrainstorming ?? true,
+      allowOutlining: assignment?.allowOutlining ?? true,
+      allowGrammarCheck: assignment?.allowGrammarCheck ?? true,
+      allowResearchHelp: assignment?.allowResearchHelp ?? true,
     },
   });
 
@@ -85,8 +87,34 @@ export default function AssignmentForm({ teacherId, children }: AssignmentFormPr
     },
   });
 
+  const updateAssignmentMutation = useMutation({
+    mutationFn: async (data: InsertAssignment) => {
+      const response = await apiRequest("PATCH", `/api/assignments/${assignment.id}`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/teacher/assignments"] });
+      toast({
+        title: "Assignment Updated",
+        description: "Your assignment has been updated successfully!",
+      });
+      setOpen(false);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update assignment. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const onSubmit = (data: InsertAssignment) => {
-    createAssignmentMutation.mutate(data);
+    if (mode === "edit") {
+      updateAssignmentMutation.mutate(data);
+    } else {
+      createAssignmentMutation.mutate(data);
+    }
   };
 
   const handleTemplateSelect = (template: any) => {
@@ -119,14 +147,16 @@ export default function AssignmentForm({ teacherId, children }: AssignmentFormPr
           <div className="flex items-center justify-between">
             <DialogTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
-              Create New Assignment
+              {mode === "edit" ? "Edit Assignment" : "Create New Assignment"}
             </DialogTitle>
-            <AssignmentTemplates onSelectTemplate={handleTemplateSelect}>
-              <Button variant="outline" size="sm" className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4" />
-                Use Template
-              </Button>
-            </AssignmentTemplates>
+            {mode === "create" && (
+              <AssignmentTemplates onSelectTemplate={handleTemplateSelect}>
+                <Button variant="outline" size="sm" className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4" />
+                  Use Template
+                </Button>
+              </AssignmentTemplates>
+            )}
           </div>
         </DialogHeader>
 
@@ -332,10 +362,13 @@ export default function AssignmentForm({ teacherId, children }: AssignmentFormPr
               </Button>
               <Button
                 type="submit"
-                disabled={createAssignmentMutation.isPending}
+                disabled={createAssignmentMutation.isPending || updateAssignmentMutation.isPending}
                 className="flex-1"
               >
-                {createAssignmentMutation.isPending ? "Creating..." : "Create Assignment"}
+                {mode === "edit" 
+                  ? (updateAssignmentMutation.isPending ? "Updating..." : "Update Assignment")
+                  : (createAssignmentMutation.isPending ? "Creating..." : "Create Assignment")
+                }
               </Button>
             </div>
           </form>

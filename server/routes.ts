@@ -46,13 +46,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/teacher/assignments", async (req, res) => {
+  app.post("/api/assignments", async (req, res) => {
     try {
       const assignmentData = insertAssignmentSchema.parse(req.body);
       const assignment = await storage.createAssignment(assignmentData);
       res.json(assignment);
     } catch (error) {
       res.status(500).json({ message: "Failed to create assignment" });
+    }
+  });
+
+  app.patch("/api/assignments/:id", async (req, res) => {
+    try {
+      const assignmentId = parseInt(req.params.id);
+      const assignmentData = insertAssignmentSchema.parse(req.body);
+      const assignment = await storage.updateAssignment(assignmentId, assignmentData);
+      res.json(assignment);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update assignment" });
     }
   });
 

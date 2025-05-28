@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AssignmentForm from "@/components/assignment-form";
-import { PlusCircle, Users, FileText, BarChart3, Settings, Eye } from "lucide-react";
+import { PlusCircle, Users, FileText, BarChart3, Settings, Eye, Edit } from "lucide-react";
 import SageLogo from "@/components/sage-logo";
 import type { Assignment, WritingSession } from "@shared/schema";
 
