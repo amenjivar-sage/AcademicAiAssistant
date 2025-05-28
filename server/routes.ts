@@ -243,6 +243,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Messaging Routes
+  app.post("/api/messages", async (req, res) => {
+    try {
+      const messageData = insertMessageSchema.parse(req.body);
+      const message = await storage.createMessage(messageData);
+      res.json(message);
+    } catch (error) {
+      console.error("Error creating message:", error);
+      res.status(400).json({ error: "Failed to send message" });
+    }
+  });
+
+  app.get("/api/messages/inbox/:userId", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const messages = await storage.getUserInboxMessages(userId);
+      res.json(messages);
+    } catch (error) {
+      console.error("Error fetching inbox:", error);
+      res.status(500).json({ error: "Failed to fetch messages" });
+    }
+  });
+
+  app.get("/api/messages/sent/:userId", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const messages = await storage.getUserSentMessages(userId);
+      res.json(messages);
+    } catch (error) {
+      console.error("Error fetching sent messages:", error);
+      res.status(500).json({ error: "Failed to fetch sent messages" });
+    }
+  });
+
+  app.patch("/api/messages/:messageId/read", async (req, res) => {
+    try {
+      const messageId = parseInt(req.params.messageId);
+      await storage.markMessageAsRead(messageId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error marking message as read:", error);
+      res.status(500).json({ error: "Failed to mark message as read" });
+    }
+  });
+
+  app.get("/api/users/recipients/:userRole", async (req, res) => {
+    try {
+      const userRole = req.params.userRole;
+      const recipients = await storage.getAvailableRecipients(userRole);
+      res.json(recipients);
+    } catch (error) {
+      console.error("Error fetching recipients:", error);
+      res.status(500).json({ error: "Failed to fetch recipients" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
