@@ -228,8 +228,8 @@ export default function AssignmentForm({ teacherId, children, assignment, mode =
                   <FormItem>
                     <FormLabel>Class</FormLabel>
                     <Select 
-                      onValueChange={(value) => field.onChange(value ? parseInt(value) : null)}
-                      value={field.value?.toString() || ""}
+                      onValueChange={(value) => field.onChange(value === "0" ? null : parseInt(value))}
+                      value={field.value?.toString() || "0"}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -237,7 +237,7 @@ export default function AssignmentForm({ teacherId, children, assignment, mode =
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">No class (general assignment)</SelectItem>
+                        <SelectItem value="0">No class (general assignment)</SelectItem>
                         {classrooms?.map((classroom) => (
                           <SelectItem key={classroom.id} value={classroom.id.toString()}>
                             {classroom.name} - {classroom.subject} ({classroom.gradeLevel})
