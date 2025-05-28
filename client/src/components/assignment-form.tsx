@@ -69,8 +69,7 @@ export default function AssignmentForm({ teacherId, children, assignment, mode =
       const response = await apiRequest("POST", "/api/assignments", data);
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/teacher/assignments"] });
+    onSuccess: async (data) => {
       toast({
         title: "Assignment Created",
         description: "Your assignment has been created successfully!",
@@ -87,6 +86,10 @@ export default function AssignmentForm({ teacherId, children, assignment, mode =
         allowGrammarCheck: true,
         allowResearchHelp: true,
       });
+      
+      // Force refresh the assignments list
+      await queryClient.invalidateQueries({ queryKey: ["/api/teacher/assignments"] });
+      window.location.reload();
     },
     onError: () => {
       toast({
