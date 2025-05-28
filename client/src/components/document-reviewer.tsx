@@ -43,7 +43,7 @@ const commentSchema = z.object({
 type CommentForm = z.infer<typeof commentSchema>;
 
 export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting }: DocumentReviewerProps) {
-  const [selectedText, setSelectedText] = useState<{ text: string; start: number; end: number } | null>(null);
+  const [selectedText, setSelectedText] = useState<{ text: string; start: number; end: number; x: number; y: number } | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [showCommentForm, setShowCommentForm] = useState(false);
   const [activeComment, setActiveComment] = useState<string | null>(null);
@@ -64,6 +64,10 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
       const range = selection.getRangeAt(0);
       const selectedText = selection.toString();
       
+      // Get position of selection for floating comment form
+      const rect = range.getBoundingClientRect();
+      const containerRect = contentRef.current!.getBoundingClientRect();
+      
       // Calculate position relative to the content
       const preCaretRange = range.cloneRange();
       preCaretRange.selectNodeContents(contentRef.current!);
@@ -75,6 +79,8 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
         text: selectedText,
         start: startIndex,
         end: endIndex,
+        x: rect.right - containerRect.left + 10, // Position to the right of selection
+        y: rect.top - containerRect.top,
       });
       setShowCommentForm(true);
     }
@@ -191,67 +197,74 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
               </p>
             </CardHeader>
             <CardContent>
-              <div
-                ref={contentRef}
-                className="bg-gray-50 p-4 rounded-lg min-h-96 cursor-text"
-                onMouseUp={handleTextSelection}
-                style={{ userSelect: 'text' }}
-              >
-                {renderContentWithHighlights()}
-              </div>
+              <div className="relative">
+                <div
+                  ref={contentRef}
+                  className="bg-gray-50 p-4 rounded-lg min-h-96 cursor-text"
+                  onMouseUp={handleTextSelection}
+                  style={{ userSelect: 'text' }}
+                >
+                  {renderContentWithHighlights()}
+                </div>
 
-              {/* Comment Form */}
-              {showCommentForm && selectedText && (
-                <Card className="mt-4 border-blue-200">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base">
-                      Add Feedback Comment
-                    </CardTitle>
-                    <div className="bg-blue-50 p-2 rounded text-sm">
-                      <strong>Selected text:</strong> "{selectedText.text}"
+                {/* Floating Comment Form */}
+                {showCommentForm && selectedText && (
+                  <div 
+                    className="absolute z-10 bg-white border border-blue-200 rounded-lg shadow-lg p-4 w-80"
+                    style={{
+                      left: `${selectedText.x}px`,
+                      top: `${selectedText.y}px`,
+                      transform: selectedText.x > 400 ? 'translateX(-100%)' : 'translateX(0)'
+                    }}
+                  >
+                    <div className="space-y-3">
+                      <div className="bg-blue-50 p-2 rounded text-sm">
+                        <strong>Selected:</strong> "{selectedText.text}"
+                      </div>
+                      
+                      <Form {...commentForm}>
+                        <form onSubmit={commentForm.handleSubmit(handleAddComment)} className="space-y-3">
+                          <FormField
+                            control={commentForm.control}
+                            name="comment"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormControl>
+                                  <Textarea
+                                    placeholder="Add your feedback here..."
+                                    className="min-h-16 text-sm"
+                                    autoFocus
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <div className="flex gap-2">
+                            <Button type="submit" size="sm" className="flex-1">
+                              <Plus className="h-3 w-3 mr-1" />
+                              Save
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setShowCommentForm(false);
+                                setSelectedText(null);
+                                window.getSelection()?.removeAllRanges();
+                              }}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </form>
+                      </Form>
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    <Form {...commentForm}>
-                      <form onSubmit={commentForm.handleSubmit(handleAddComment)} className="space-y-3">
-                        <FormField
-                          control={commentForm.control}
-                          name="comment"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormControl>
-                                <Textarea
-                                  placeholder="Provide specific feedback about this section..."
-                                  className="min-h-20"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <div className="flex gap-2">
-                          <Button type="submit" size="sm">
-                            <Plus className="h-4 w-4 mr-1" />
-                            Add Comment
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setShowCommentForm(false);
-                              setSelectedText(null);
-                            }}
-                          >
-                            Cancel
-                          </Button>
-                        </div>
-                      </form>
-                    </Form>
-                  </CardContent>
-                </Card>
-              )}
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
         </div>
