@@ -84,11 +84,16 @@ export default function WritingWorkspace({ sessionId, assignmentId }: WritingWor
     },
     onSuccess: () => {
       toast({
-        title: "Assignment submitted!",
-        description: "Your work has been submitted for review.",
+        title: "Submission Successful! 🎉",
+        description: "Your assignment has been delivered to your teacher for review.",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/writing-sessions', sessionId] });
       queryClient.invalidateQueries({ queryKey: ['/api/student/writing-sessions'] });
+      
+      // Redirect to dashboard after 2 seconds
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 2000);
     },
   });
 
