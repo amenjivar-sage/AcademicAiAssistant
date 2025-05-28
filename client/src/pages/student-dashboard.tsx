@@ -247,8 +247,12 @@ export default function StudentDashboard() {
                                       <Badge variant="default" className="bg-green-100 text-green-800">
                                         Graded: {session.grade}
                                       </Badge>
+                                    ) : (session.content && session.content.trim().length > 0) || (session.title && session.title.trim().length > 0) ? (
+                                      <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                                        In Progress - Resume Work
+                                      </Badge>
                                     ) : (
-                                      <Badge variant="outline">In Progress</Badge>
+                                      <Badge variant="outline">Draft Started</Badge>
                                     )
                                   ) : (
                                     <Badge variant="secondary">Not Started</Badge>
@@ -274,7 +278,7 @@ export default function StudentDashboard() {
                                   onClick={() => setSelectedAssignment(assignment)}
                                   size="sm"
                                 >
-                                  {session ? "Continue Writing" : "Start Writing"}
+                                  {session && ((session.content && session.content.trim().length > 0) || (session.title && session.title.trim().length > 0)) ? "Resume Work" : session ? "Continue Writing" : "Start Writing"}
                                 </Button>
                               </div>
                             </CardHeader>
