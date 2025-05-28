@@ -235,24 +235,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const sessionId = parseInt(req.params.sessionId);
       
-      // Get the current session and manually clear the submittedAt field
-      const currentSession = await storage.getWritingSession(sessionId);
-      if (!currentSession) {
+      const session = await storage.updateWritingSession(sessionId, {
+        status: "draft",
+      });
+      
+      if (!session) {
         return res.status(404).json({ message: "Session not found" });
       }
       
-      // Create updated session with cleared submission data
-      const updatedSession = {
-        ...currentSession,
-        status: "draft",
-        submittedAt: null,
-        updatedAt: new Date(),
-      };
-      
-      // Manually update the session in storage
-      await storage.updateWritingSession(sessionId, { status: "draft" });
-      
-      res.json(updatedSession);
+      res.json(session);
     } catch (error) {
       res.status(500).json({ message: "Failed to unsubmit session" });
     }

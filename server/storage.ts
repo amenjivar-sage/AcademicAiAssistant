@@ -484,9 +484,15 @@ Despite these challenges, the momentum toward renewable energy appears unstoppab
     const session = this.writingSessions.get(id);
     if (!session) return undefined;
 
+    // Handle special case for unsubmitting - clear submittedAt when status changes to draft
+    let finalUpdates: any = { ...updates };
+    if (updates.status === "draft") {
+      finalUpdates.submittedAt = null;
+    }
+
     const updatedSession: WritingSession = {
       ...session,
-      ...updates,
+      ...finalUpdates,
       updatedAt: new Date(),
     };
     this.writingSessions.set(id, updatedSession);
