@@ -165,8 +165,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const existingSession = existingSessions.find(s => s.assignmentId === parseInt(assignmentId as string));
         
         if (existingSession) {
+          console.log('Found existing session:', existingSession.id, 'for assignment:', assignmentId);
           res.json(existingSession);
         } else {
+          console.log('Creating new session for assignment:', assignmentId);
           const newSession = await storage.createWritingSession({
             userId,
             assignmentId: parseInt(assignmentId as string),
@@ -175,6 +177,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             wordCount: 0,
             status: "draft"
           });
+          console.log('Created new session:', newSession.id);
           res.json(newSession);
         }
       } else {
