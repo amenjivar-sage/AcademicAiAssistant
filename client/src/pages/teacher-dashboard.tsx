@@ -164,9 +164,8 @@ export default function TeacherDashboard() {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="classes">My Classes</TabsTrigger>
-            <TabsTrigger value="assignments">Assignments</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="classes">Classes & Assignments</TabsTrigger>
             <TabsTrigger value="submissions">Students</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="settings">Communication</TabsTrigger>
