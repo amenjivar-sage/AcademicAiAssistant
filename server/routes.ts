@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertWritingSessionSchema, insertAiInteractionSchema, insertAssignmentSchema } from "@shared/schema";
+import { insertWritingSessionSchema, insertAiInteractionSchema, insertAssignmentSchema, insertMessageSchema } from "@shared/schema";
 import { z } from "zod";
 import { checkRestrictedPrompt, generateAiResponse } from "./openai";
 
