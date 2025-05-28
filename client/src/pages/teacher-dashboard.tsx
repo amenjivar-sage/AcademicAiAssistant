@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import AssignmentForm from "@/components/assignment-form";
 import { PlusCircle, Users, FileText, BarChart3, Settings, Eye, Edit, CheckCircle, Clock, AlertTriangle, GraduationCap } from "lucide-react";
 import SageLogo from "@/components/sage-logo";
@@ -197,10 +198,62 @@ export default function TeacherDashboard() {
                             Grade
                           </Button>
                         </GradingInterface>
-                        <Button variant="outline" size="sm">
-                          <Eye className="h-4 w-4 mr-1" />
-                          View
-                        </Button>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button variant="outline" size="sm">
+                              <Eye className="h-4 w-4 mr-1" />
+                              View
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-2xl">
+                            <DialogHeader>
+                              <DialogTitle className="flex items-center gap-2">
+                                <FileText className="h-5 w-5" />
+                                Assignment Details
+                              </DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                              <div>
+                                <h3 className="font-semibold text-lg mb-2">{assignment.title}</h3>
+                                <p className="text-gray-600 mb-4">{assignment.description}</p>
+                              </div>
+                              
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <label className="text-sm font-medium text-gray-500">Due Date</label>
+                                  <p className="text-sm">{assignment.dueDate ? new Date(assignment.dueDate).toLocaleDateString() : "No due date"}</p>
+                                </div>
+                                <div>
+                                  <label className="text-sm font-medium text-gray-500">AI Permissions</label>
+                                  <p className="text-sm capitalize">{assignment.aiPermissions}</p>
+                                </div>
+                                <div>
+                                  <label className="text-sm font-medium text-gray-500">AI Permissions</label>
+                                  <p className="text-sm capitalize">{assignment.aiPermissions}</p>
+                                </div>
+                                <div>
+                                  <label className="text-sm font-medium text-gray-500">Status</label>
+                                  <p className="text-sm capitalize">{assignment.status || "active"}</p>
+                                </div>
+                              </div>
+
+                              <div>
+                                <label className="text-sm font-medium text-gray-500">AI Features Enabled</label>
+                                <div className="text-sm space-y-1 mt-1">
+                                  <div>• Brainstorming: {assignment.allowBrainstorming ? "Allowed" : "Disabled"}</div>
+                                  <div>• Outlining: {assignment.allowOutlining ? "Allowed" : "Disabled"}</div>
+                                  <div>• Grammar Check: {assignment.allowGrammarCheck ? "Allowed" : "Disabled"}</div>
+                                  <div>• Research Help: {assignment.allowResearchHelp ? "Allowed" : "Disabled"}</div>
+                                </div>
+                              </div>
+
+                              <div>
+                                <label className="text-sm font-medium text-gray-500">Created</label>
+                                <p className="text-sm">{new Date(assignment.createdAt).toLocaleDateString()}</p>
+                              </div>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
                       </div>
                     </div>
                   </CardHeader>
