@@ -92,39 +92,39 @@ export default function Login() {
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
             >
-              {/* Tree Trunk - darker and more visible */}
+              {/* Tree Trunk - much darker */}
               <rect
                 x="21"
                 y="30"
                 width="6"
                 height="12"
                 rx="3"
-                fill="#2563eb"
+                fill="#1e3a8a"
               />
               
-              {/* Main Branches - Larger diamond shapes */}
+              {/* Main Branches - Darker diamond shapes */}
               <path
                 d="M24 6L30 12L24 18L18 12L24 6Z"
-                fill="#1d4ed8"
+                fill="#1e40af"
               />
               
               {/* Left Branch */}
               <path
                 d="M12 18L18 24L12 30L6 24L12 18Z"
-                fill="#3b82f6"
+                fill="#2563eb"
               />
               
               {/* Right Branch */}
               <path
                 d="M36 18L42 24L36 30L30 24L36 18Z"
-                fill="#3b82f6"
+                fill="#2563eb"
               />
               
-              {/* Accent leaves - more visible */}
-              <circle cx="15" cy="15" r="3" fill="#60a5fa" />
-              <circle cx="33" cy="15" r="3" fill="#60a5fa" />
-              <circle cx="9" cy="27" r="2" fill="#93c5fd" />
-              <circle cx="39" cy="27" r="2" fill="#93c5fd" />
+              {/* Accent leaves - darker */}
+              <circle cx="15" cy="15" r="3" fill="#3b82f6" />
+              <circle cx="33" cy="15" r="3" fill="#3b82f6" />
+              <circle cx="9" cy="27" r="2" fill="#1d4ed8" />
+              <circle cx="39" cy="27" r="2" fill="#1d4ed8" />
             </svg>
           </div>
           <h1 className="text-4xl font-bold mb-2 text-white drop-shadow-lg">Sage</h1>
