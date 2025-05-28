@@ -122,6 +122,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get student's writing sessions
+  app.get("/api/student/writing-sessions", async (req, res) => {
+    try {
+      const userId = 1; // Default student user for demo
+      const sessions = await storage.getUserWritingSessions(userId);
+      res.json(sessions);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch sessions" });
+    }
+  });
+
   // Get or create a default writing session
   app.get("/api/session", async (req, res) => {
     try {
