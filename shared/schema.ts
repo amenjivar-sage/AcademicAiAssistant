@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, json } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -30,6 +30,7 @@ export const assignments = pgTable("assignments", {
   allowOutlining: boolean("allow_outlining").notNull().default(true),
   allowGrammarCheck: boolean("allow_grammar_check").notNull().default(true),
   allowResearchHelp: boolean("allow_research_help").notNull().default(true),
+  allowCopyPaste: boolean("allow_copy_paste").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -40,6 +41,7 @@ export const writingSessions = pgTable("writing_sessions", {
   assignmentId: integer("assignment_id"), // Links to specific assignment
   title: text("title").notNull(),
   content: text("content").notNull().default(""),
+  pastedContent: json("pasted_content").default([]), // Array of {text, startIndex, endIndex, timestamp}
   wordCount: integer("word_count").notNull().default(0),
   status: text("status").notNull().default("draft"), // "draft", "submitted", "graded"
   submittedAt: timestamp("submitted_at"),

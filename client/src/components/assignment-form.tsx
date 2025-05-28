@@ -422,6 +422,24 @@ export default function AssignmentForm({ teacherId, children, assignment, mode =
                     </FormItem>
                   )}
                 />
+
+                <FormField
+                  control={form.control}
+                  name="allowCopyPaste"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 border-red-200">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base text-red-700">Copy & Paste</FormLabel>
+                        <FormDescription className="text-red-600">
+                          Allow students to copy and paste content (tracked for teachers)
+                        </FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
               </div>
             </div>
 
