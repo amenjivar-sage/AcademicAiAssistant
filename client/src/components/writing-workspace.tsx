@@ -128,11 +128,6 @@ export default function WritingWorkspace({ sessionId, assignmentId }: WritingWor
     }
   };
 
-  const handleContentChange = (e: React.FormEvent<HTMLDivElement>) => {
-    const newContent = e.currentTarget.textContent || '';
-    setContent(newContent);
-  };
-
   const handlePasteDetected = (pastedContent: PastedContent) => {
     setPastedContents(prev => [...prev, pastedContent]);
     
@@ -234,21 +229,20 @@ export default function WritingWorkspace({ sessionId, assignmentId }: WritingWor
             onPasteDetected={handlePasteDetected}
             className="h-full"
           >
-            <div
+            <textarea
               ref={contentRef}
-              contentEditable={!isSubmitted}
-              onInput={handleContentChange}
-              className="h-full p-8 focus:outline-none resize-none text-gray-900 leading-relaxed"
+              disabled={isSubmitted}
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Start writing your assignment here..."
+              className="h-full w-full p-8 focus:outline-none resize-none text-gray-900 leading-relaxed border-none bg-transparent"
               style={{
                 minHeight: '100%',
                 fontFamily: 'Georgia, serif',
                 fontSize: '16px',
                 lineHeight: '1.6',
               }}
-              suppressContentEditableWarning={true}
-            >
-              {content || "Start writing your assignment here..."}
-            </div>
+            />
           </CopyPasteDetector>
         </div>
 
