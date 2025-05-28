@@ -4,11 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpen, PenTool, Target, Trophy, Clock, Users, Plus } from "lucide-react";
+import { BookOpen, PenTool, Target, Trophy, Clock, Users, Plus, MessageSquare } from "lucide-react";
 import SageLogo from "@/components/sage-logo";
 import WritingWorkspace from "@/components/writing-workspace";
 import AiAssistant from "@/components/ai-assistant";
 import JoinClass from "@/components/join-class";
+import MessagingSystem from "@/components/messaging-system";
 import type { Assignment, WritingSession, Classroom } from "@shared/schema";
 
 export default function StudentDashboard() {
@@ -116,6 +117,13 @@ export default function StudentDashboard() {
               </div>
             </div>
             <div className="flex items-center space-x-4">
+              <MessagingSystem currentUserId={1} currentUserRole="student">
+                <Button variant="outline" className="relative">
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Messages
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full text-xs"></div>
+                </Button>
+              </MessagingSystem>
               <JoinClass studentId={1}>
                 <Button variant="outline">
                   <Plus className="h-4 w-4 mr-2" />

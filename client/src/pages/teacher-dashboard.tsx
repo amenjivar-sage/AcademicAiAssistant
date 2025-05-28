@@ -8,7 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import AssignmentForm from "@/components/assignment-form";
 import ClassroomManagement from "@/components/classroom-management";
-import { PlusCircle, Users, FileText, BarChart3, Settings, Eye, Edit, CheckCircle, Clock, AlertTriangle, GraduationCap } from "lucide-react";
+import MessagingSystem from "@/components/messaging-system";
+import { PlusCircle, Users, FileText, BarChart3, Settings, Eye, Edit, CheckCircle, Clock, AlertTriangle, GraduationCap, MessageSquare } from "lucide-react";
 import SageLogo from "@/components/sage-logo";
 import GradingInterface from "@/components/grading-interface";
 import type { Assignment, WritingSession } from "@shared/schema";
@@ -85,6 +86,13 @@ export default function TeacherDashboard() {
               </div>
             </div>
             <div className="flex items-center space-x-4">
+              <MessagingSystem currentUserId={1} currentUserRole="teacher">
+                <Button variant="outline" className="relative">
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Messages
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full text-xs"></div>
+                </Button>
+              </MessagingSystem>
               <AssignmentForm teacherId={1}>
                 <Button className="bg-edu-blue hover:bg-blue-700">
                   <PlusCircle className="h-4 w-4 mr-2" />

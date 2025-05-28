@@ -120,6 +120,21 @@ export const insertClassroomEnrollmentSchema = createInsertSchema(classroomEnrol
   enrolledAt: true,
 });
 
+export const messages = pgTable("messages", {
+  id: serial("id").primaryKey(),
+  senderId: integer("sender_id").notNull(),
+  receiverId: integer("receiver_id").notNull(),
+  subject: text("subject").notNull(),
+  content: text("content").notNull(),
+  isRead: boolean("is_read").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertMessageSchema = createInsertSchema(messages).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type Assignment = typeof assignments.$inferSelect;
@@ -132,3 +147,5 @@ export type Classroom = typeof classrooms.$inferSelect;
 export type InsertClassroom = z.infer<typeof insertClassroomSchema>;
 export type ClassroomEnrollment = typeof classroomEnrollments.$inferSelect;
 export type InsertClassroomEnrollment = z.infer<typeof insertClassroomEnrollmentSchema>;
+export type Message = typeof messages.$inferSelect;
+export type InsertMessage = z.infer<typeof insertMessageSchema>;
