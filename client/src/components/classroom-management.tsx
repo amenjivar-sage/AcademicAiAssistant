@@ -18,15 +18,26 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
   const { data: classrooms, isLoading, error } = useQuery<Classroom[]>({
     queryKey: [`/api/teacher/${teacherId}/classrooms`],
     queryFn: async () => {
-      const response = await fetch(`/api/teacher/${teacherId}/classrooms`, {
-        credentials: "include",
-      });
-      if (!response.ok) {
-        throw new Error('Failed to fetch classrooms');
+      try {
+        const response = await fetch(`/api/teacher/${teacherId}/classrooms`, {
+          credentials: "include",
+        });
+        console.log("Response status:", response.status);
+        console.log("Response ok:", response.ok);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.log("Error response:", errorText);
+          throw new Error(`Failed to fetch classrooms: ${response.status} ${errorText}`);
+        }
+        
+        const data = await response.json();
+        console.log("Raw classroom API response:", data);
+        return data;
+      } catch (error) {
+        console.error("Fetch error:", error);
+        throw error;
       }
-      const data = await response.json();
-      console.log("Raw classroom API response:", data);
-      return data;
     },
   });
 
