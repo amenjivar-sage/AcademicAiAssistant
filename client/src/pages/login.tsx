@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { GraduationCap, Users, BookOpen } from "lucide-react";
+import { GraduationCap, Users, BookOpen, Shield } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -51,26 +51,30 @@ export default function Login() {
     loginMutation.mutate(formData);
   };
 
-  const quickLogin = (role: "teacher" | "student") => {
+  const quickLogin = (role: "teacher" | "student" | "admin") => {
     // For demo purposes, directly navigate to the appropriate page
+    const userData = {
+      teacher: { id: 1, username: "teacher", firstName: "Sarah", lastName: "Johnson", email: "teacher@zoeedu.com" },
+      student: { id: 2, username: "student", firstName: "Alex", lastName: "Smith", email: "student@zoeedu.com" },
+      admin: { id: 0, username: "admin", firstName: "System", lastName: "Administrator", email: "admin@zoeedu.com" }
+    };
+
     localStorage.setItem("user", JSON.stringify({
-      id: role === "teacher" ? 1 : 2,
-      username: role,
-      firstName: role === "teacher" ? "Sarah" : "Alex",
-      lastName: role === "teacher" ? "Johnson" : "Smith",
-      email: `${role}@zoeedu.com`,
+      ...userData[role],
       role: role
     }));
     
     if (role === "teacher") {
       setLocation("/teacher");
+    } else if (role === "admin") {
+      setLocation("/admin");
     } else {
       setLocation("/student");
     }
     
     toast({
       title: "Welcome back!",
-      description: `Logged in as ${role === "teacher" ? "Sarah Johnson" : "Alex Smith"}`,
+      description: `Logged in as ${userData[role].firstName} ${userData[role].lastName}`,
     });
   };
 
@@ -136,33 +140,44 @@ export default function Login() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-2">
               <Button
                 variant="outline"
                 onClick={() => quickLogin("teacher")}
                 disabled={loginMutation.isPending}
-                className="flex flex-col items-center py-6 h-auto"
+                className="flex flex-col items-center py-4 h-auto"
               >
-                <Users className="h-6 w-6 mb-2 text-edu-blue" />
-                <span className="text-sm font-medium">Teacher</span>
-                <span className="text-xs text-gray-500">Demo Login</span>
+                <Users className="h-5 w-5 mb-1 text-edu-blue" />
+                <span className="text-xs font-medium">Teacher</span>
+                <span className="text-xs text-gray-500">Demo</span>
               </Button>
               
               <Button
                 variant="outline"
                 onClick={() => quickLogin("student")}
                 disabled={loginMutation.isPending}
-                className="flex flex-col items-center py-6 h-auto"
+                className="flex flex-col items-center py-4 h-auto"
               >
-                <BookOpen className="h-6 w-6 mb-2 text-edu-success" />
-                <span className="text-sm font-medium">Student</span>
-                <span className="text-xs text-gray-500">Demo Login</span>
+                <BookOpen className="h-5 w-5 mb-1 text-edu-success" />
+                <span className="text-xs font-medium">Student</span>
+                <span className="text-xs text-gray-500">Demo</span>
+              </Button>
+              
+              <Button
+                variant="outline"
+                onClick={() => quickLogin("admin")}
+                disabled={loginMutation.isPending}
+                className="flex flex-col items-center py-4 h-auto"
+              >
+                <Shield className="h-5 w-5 mb-1 text-red-600" />
+                <span className="text-xs font-medium">Admin</span>
+                <span className="text-xs text-gray-500">Demo</span>
               </Button>
             </div>
 
             <Alert>
               <AlertDescription className="text-center text-sm">
-                Use the demo accounts above to explore ZOEEDU's features for teachers and students.
+                Use the demo accounts above to explore ZOEEDU's features for teachers, students, and administrators.
               </AlertDescription>
             </Alert>
           </CardContent>
