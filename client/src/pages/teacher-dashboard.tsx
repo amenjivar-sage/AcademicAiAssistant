@@ -171,8 +171,86 @@ export default function TeacherDashboard() {
             <TabsTrigger value="settings">Communication</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="classes" className="space-y-6">
+          <TabsContent value="classes" className="space-y-8">
+            {/* Classes Section */}
             <ClassroomManagement teacherId={1} />
+            
+            {/* Assignments Section */}
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-gray-900">Assignments</h2>
+              </div>
+              
+              <div className="grid gap-6">
+                {assignments?.map((assignment) => (
+                  <Card key={assignment.id}>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          {getStatusIcon(assignment.status || "active", assignment.dueDate)}
+                          <CardTitle className="text-lg">{assignment.title}</CardTitle>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          {getStatusBadge(assignment.status || "active", assignment.dueDate)}
+                          <Badge variant={assignment.aiPermissions === "full" ? "default" : "secondary"}>
+                            AI: {assignment.aiPermissions}
+                          </Badge>
+                          {assignment.status !== "completed" && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => markCompleteMutation.mutate(assignment.id)}
+                              disabled={markCompleteMutation.isPending}
+                            >
+                              <CheckCircle className="h-4 w-4 mr-1" />
+                              {markCompleteMutation.isPending ? "Marking..." : "Mark Complete"}
+                            </Button>
+                          )}
+                          <AssignmentForm teacherId={1} assignment={assignment} mode="edit">
+                            <Button variant="outline" size="sm">
+                              <Edit className="h-4 w-4 mr-1" />
+                              Edit
+                            </Button>
+                          </AssignmentForm>
+                          <GradingInterface assignmentId={assignment.id}>
+                            <Button variant="outline" size="sm">
+                              <GraduationCap className="h-4 w-4 mr-1" />
+                              Grade
+                            </Button>
+                          </GradingInterface>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-gray-600 mb-4">{assignment.description}</p>
+                      <div className="flex items-center justify-between text-sm text-gray-500">
+                        <span>Created: {new Date(assignment.createdAt).toLocaleDateString()}</span>
+                        {assignment.dueDate && (
+                          <span>Due: {new Date(assignment.dueDate).toLocaleDateString()}</span>
+                        )}
+                        <span>Word Count: {assignment.requiredWordCount || "Not specified"}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+                
+                {assignments?.length === 0 && (
+                  <Card>
+                    <CardContent className="p-12 text-center">
+                      <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No assignments yet</h3>
+                      <p className="text-gray-500 mb-6">Create your first assignment to get started</p>
+                      <AssignmentForm teacherId={1}>
+                        <Button>
+                          <PlusCircle className="h-4 w-4 mr-2" />
+                          Create Your First Assignment
+                        </Button>
+                      </AssignmentForm>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </div>
           </TabsContent>
 
           <TabsContent value="assignments" className="space-y-6">
