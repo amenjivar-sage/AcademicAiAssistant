@@ -177,9 +177,9 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
         </CardHeader>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Document Content */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-3">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -256,16 +256,17 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
           </Card>
         </div>
 
-        {/* Comments Panel */}
-        <div className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MessageCircle className="h-5 w-5" />
-                Feedback Comments ({comments.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+        {/* Fixed Comments Sidebar */}
+        <div className="lg:col-span-2">
+          <div className="sticky top-0 space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageCircle className="h-5 w-5" />
+                  Feedback Comments ({comments.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="max-h-96 overflow-y-auto">
               {comments.length === 0 ? (
                 <div className="text-center py-6 text-gray-500">
                   <MessageCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
@@ -307,6 +308,51 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
               )}
             </CardContent>
           </Card>
+
+          {/* Grading Form in Sidebar */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Submit Grade & Overall Feedback</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium">Grade</label>
+                  <select className="w-full mt-1 p-2 border rounded">
+                    <option value="">Select a grade</option>
+                    <option value="A+">A+ (97-100)</option>
+                    <option value="A">A (93-96)</option>
+                    <option value="A-">A- (90-92)</option>
+                    <option value="B+">B+ (87-89)</option>
+                    <option value="B">B (83-86)</option>
+                    <option value="B-">B- (80-82)</option>
+                    <option value="C+">C+ (77-79)</option>
+                    <option value="C">C (73-76)</option>
+                    <option value="C-">C- (70-72)</option>
+                    <option value="D">D (60-66)</option>
+                    <option value="F">F (Below 60)</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium">Overall Feedback</label>
+                  <textarea 
+                    className="w-full mt-1 p-2 border rounded min-h-24"
+                    placeholder="Provide comprehensive feedback about the student's work..."
+                  />
+                </div>
+
+                <Button 
+                  className="w-full"
+                  onClick={() => onGradeSubmit("A", "Great work!")}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Submitting..." : "Submit Grade & Feedback"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+          </div>
         </div>
       </div>
     </div>
