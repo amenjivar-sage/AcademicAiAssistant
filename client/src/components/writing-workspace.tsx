@@ -1,232 +1,312 @@
-import { useState, useEffect, useRef } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import EnhancedToolbar from "@/components/enhanced-toolbar";
-import CitationAssistant from "@/components/citation-assistant";
-import { Save, Download, Clock, CheckCircle, Lightbulb, List, Search, Share, Users, BookOpen } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import type { WritingSession } from "@shared/schema";
+import React, { useState, useEffect, useRef } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
+import { Save, Send, Clock, FileText, Shield, AlertTriangle } from 'lucide-react';
+import AiAssistant from './ai-assistant';
+import CopyPasteDetector from './copy-paste-detector';
+import EnhancedToolbar from './enhanced-toolbar';
+import type { WritingSession, Assignment } from '@shared/schema';
 
-interface WritingWorkspaceProps {
-  session: WritingSession | null;
-  onContentUpdate: (content: string) => void;
-  onTitleUpdate: (title: string) => void;
-  isUpdating: boolean;
+interface PastedContent {
+  text: string;
+  startIndex: number;
+  endIndex: number;
+  timestamp: Date;
 }
 
-export default function WritingWorkspace({ 
-  session, 
-  onContentUpdate, 
-  onTitleUpdate, 
-  isUpdating 
-}: WritingWorkspaceProps) {
-  const [content, setContent] = useState("");
-  const [title, setTitle] = useState("");
-  const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const [isCollaborating, setIsCollaborating] = useState(false);
-  const editorRef = useRef<HTMLDivElement>(null);
-  const { toast } = useToast();
+interface WritingWorkspaceProps {
+  sessionId: number;
+  assignmentId?: number;
+}
 
+export default function WritingWorkspace({ sessionId, assignmentId }: WritingWorkspaceProps) {
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [pastedContents, setPastedContents] = useState<PastedContent[]>([]);
+  const [wordCount, setWordCount] = useState(0);
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Get session data
+  const { data: session, isLoading: sessionLoading } = useQuery<WritingSession>({
+    queryKey: ['/api/writing-sessions', sessionId],
+  });
+
+  // Get assignment data to check copy-paste permissions
+  const { data: assignment } = useQuery<Assignment>({
+    queryKey: ['/api/assignments', assignmentId],
+    enabled: !!assignmentId,
+  });
+
+  // Update session mutation
+  const updateSessionMutation = useMutation({
+    mutationFn: async (data: { title: string; content: string; pastedContent: PastedContent[] }) => {
+      const response = await apiRequest("PATCH", `/api/writing-sessions/${sessionId}`, {
+        title: data.title,
+        content: data.content,
+        pastedContent: data.pastedContent,
+        wordCount: data.content.split(/\s+/).filter(word => word.length > 0).length,
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      setLastSaved(new Date());
+      setIsSaving(false);
+      queryClient.invalidateQueries({ queryKey: ['/api/writing-sessions', sessionId] });
+    },
+    onError: () => {
+      setIsSaving(false);
+      toast({
+        title: "Save failed",
+        description: "Unable to save your work. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Submit session mutation
+  const submitSessionMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("PATCH", `/api/writing-sessions/${sessionId}`, {
+        status: "submitted",
+        submittedAt: new Date().toISOString(),
+        title,
+        content,
+        pastedContent: pastedContents,
+        wordCount,
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Assignment submitted!",
+        description: "Your work has been submitted for review.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/writing-sessions', sessionId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/student/writing-sessions'] });
+    },
+  });
+
+  // Load session data
   useEffect(() => {
     if (session) {
-      setContent(session.content);
       setTitle(session.title);
-      setLastSaved(new Date(session.updatedAt));
+      setContent(session.content);
+      setPastedContents(session.pastedContent as PastedContent[] || []);
+      setWordCount(session.wordCount);
     }
   }, [session]);
 
-  const handleContentChange = (newContent: string) => {
-    setContent(newContent);
-    onContentUpdate(newContent);
-  };
+  // Auto-save functionality
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (title || content) {
+        handleSave();
+      }
+    }, 2000);
 
-  const handleTitleChange = (newTitle: string) => {
-    setTitle(newTitle);
-    onTitleUpdate(newTitle);
-  };
+    return () => clearTimeout(timer);
+  }, [title, content]);
 
-  const handleFormatting = (command: string, value?: string) => {
-    if (editorRef.current) {
-      document.execCommand(command, false, value);
-      const newContent = editorRef.current.innerHTML;
-      handleContentChange(newContent);
+  // Update word count
+  useEffect(() => {
+    const words = content.split(/\s+/).filter(word => word.length > 0).length;
+    setWordCount(words);
+  }, [content]);
+
+  const handleSave = () => {
+    if (!isSaving && (title !== session?.title || content !== session?.content || pastedContents.length !== (session?.pastedContent as PastedContent[] || []).length)) {
+      setIsSaving(true);
+      updateSessionMutation.mutate({ title, content, pastedContent: pastedContents });
     }
   };
 
-  const handleSave = () => {
-    toast({
-      title: "Document Saved",
-      description: "Your work has been saved successfully!",
-    });
+  const handlePasteDetected = (pastedContent: PastedContent) => {
+    setPastedContents(prev => [...prev, pastedContent]);
+    
+    // Highlight pasted content in red for teacher view
+    if (contentRef.current) {
+      // This would be enhanced with proper text highlighting
+      toast({
+        title: "Content Pasted",
+        description: `Pasted ${pastedContent.text.length} characters - tracked for teacher review`,
+        variant: "default",
+      });
+    }
   };
 
-  const handleShare = () => {
-    setIsCollaborating(!isCollaborating);
-    toast({
-      title: isCollaborating ? "Collaboration Disabled" : "Collaboration Enabled",
-      description: isCollaborating 
-        ? "Document is now private" 
-        : "Others can now view and comment on your document",
-    });
+  const handleSubmit = () => {
+    if (!title.trim()) {
+      toast({
+        title: "Title required",
+        description: "Please add a title to your work before submitting.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (wordCount < 50) {
+      toast({
+        title: "Work incomplete",
+        description: "Please write at least 50 words before submitting.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    submitSessionMutation.mutate();
   };
 
-  const handleDownload = () => {
-    const element = document.createElement('a');
-    const file = new Blob([content], { type: 'text/plain' });
-    element.href = URL.createObjectURL(file);
-    element.download = `${title || 'document'}.txt`;
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
-    
-    toast({
-      title: "Download Started",
-      description: "Your document is being downloaded!",
-    });
+  const handleContentChange = (e: React.FormEvent<HTMLDivElement>) => {
+    const newContent = e.currentTarget.textContent || "";
+    setContent(newContent);
   };
 
-  const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
+  if (sessionLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <Clock className="h-8 w-8 animate-spin mx-auto mb-2" />
+          <p>Loading your work...</p>
+        </div>
+      </div>
+    );
+  }
 
-  const formatLastSaved = (date: Date) => {
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    
-    if (diffMins < 1) return "Just now";
-    if (diffMins === 1) return "1 minute ago";
-    if (diffMins < 60) return `${diffMins} minutes ago`;
-    
-    const diffHours = Math.floor(diffMins / 60);
-    if (diffHours === 1) return "1 hour ago";
-    if (diffHours < 24) return `${diffHours} hours ago`;
-    
-    return date.toLocaleDateString();
-  };
+  const allowCopyPaste = assignment?.allowCopyPaste || false;
+  const isSubmitted = session?.status === "submitted";
 
   return (
-    <div className="space-y-4">
-      {/* Document Header */}
-      <Card className="overflow-hidden">
-        <CardHeader className="border-b border-gray-200 p-4">
-          <div className="flex items-center justify-between">
-            <Input
-              value={title}
-              onChange={(e) => handleTitleChange(e.target.value)}
-              className="text-lg font-medium border-none p-0 focus-visible:ring-0 focus-visible:ring-offset-0"
-              placeholder="Enter your assignment title..."
-            />
-            <div className="flex items-center space-x-3">
-              {isCollaborating && (
-                <div className="flex items-center text-sm text-green-600">
-                  <Users className="h-4 w-4 mr-1" />
-                  Collaborative
+    <div className="h-screen flex">
+      {/* Main Writing Area */}
+      <div className="flex-1 flex flex-col">
+        {/* Header */}
+        <div className="border-b bg-white p-4">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-4">
+              <FileText className="h-5 w-5 text-gray-500" />
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Enter document title..."
+                className="text-lg font-medium border-none shadow-none px-0"
+                disabled={isSubmitted}
+              />
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="text-sm text-gray-500">
+                {wordCount} words
+              </div>
+              {lastSaved && (
+                <div className="text-sm text-gray-500">
+                  Saved {lastSaved.toLocaleTimeString()}
                 </div>
               )}
-              <span className="text-sm text-gray-500">{wordCount} words</span>
-              <CitationAssistant
-                sessionId={session?.id}
-                onCitationAdded={(citation) => {
-                  const newContent = content + "\n\n" + citation;
-                  setContent(newContent);
-                  handleContentChange(newContent);
-                  toast({
-                    title: "Citation Added!",
-                    description: "Citation has been added to your document.",
-                  });
-                }}
-              >
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className="text-purple-600 hover:text-purple-700"
-                >
-                  <BookOpen className="h-4 w-4 mr-1" />
-                  Citations
-                </Button>
-              </CitationAssistant>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={handleShare}
-                className="text-blue-600 hover:text-blue-700"
-              >
-                <Share className="h-4 w-4 mr-1" />
-                {isCollaborating ? "Stop Sharing" : "Share"}
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        
-        {/* Enhanced Formatting Toolbar */}
-        <EnhancedToolbar 
-          onFormatting={handleFormatting}
-          onSave={handleSave}
-          onShare={handleShare}
-          onDownload={handleDownload}
-          isSaving={isUpdating}
-        />
-        <CardContent className="p-6">
-          <div
-            ref={editorRef}
-            contentEditable
-            onInput={(e) => handleContentChange(e.currentTarget.innerHTML)}
-            className="min-h-80 border border-gray-300 focus:ring-2 focus:ring-edu-blue focus:border-transparent resize-none text-gray-700 leading-relaxed p-4 focus:outline-none"
-            style={{ whiteSpace: 'pre-wrap' }}
-            suppressContentEditableWarning={true}
-            dangerouslySetInnerHTML={{ __html: content }}
-          />
-          <div className="mt-4 flex items-center justify-between">
-            <div className="flex items-center space-x-4 text-sm text-gray-500">
-              {lastSaved && (
-                <span className="flex items-center">
-                  <Clock className="h-4 w-4 mr-1" />
-                  Last saved: {formatLastSaved(lastSaved)}
-                </span>
+              {pastedContents.length > 0 && (
+                <Badge variant="secondary" className="bg-red-100 text-red-700">
+                  <Shield className="h-3 w-3 mr-1" />
+                  {pastedContents.length} paste{pastedContents.length !== 1 ? 's' : ''}
+                </Badge>
               )}
-              <span className="flex items-center">
-                <CheckCircle className="h-4 w-4 mr-1 text-edu-success" />
-                No spelling errors
-              </span>
             </div>
-            <Button className="bg-edu-blue hover:bg-blue-700">
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Quick Writing Tools */}
-      <Card>
-        <CardContent className="p-6">
-          <h4 className="text-lg font-medium text-edu-neutral mb-4">Quick Writing Tools</h4>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <Button 
-              variant="outline" 
-              className="p-4 h-auto flex-col space-y-2 hover:border-edu-blue hover:bg-blue-50 group"
-            >
-              <Lightbulb className="h-6 w-6 text-edu-warning group-hover:text-edu-blue transition-colors" />
-              <span className="text-sm font-medium">Brainstorm Ideas</span>
-            </Button>
-            <Button 
-              variant="outline" 
-              className="p-4 h-auto flex-col space-y-2 hover:border-edu-blue hover:bg-blue-50 group"
-            >
-              <List className="h-6 w-6 text-edu-warning group-hover:text-edu-blue transition-colors" />
-              <span className="text-sm font-medium">Create Outline</span>
-            </Button>
-            <Button 
-              variant="outline" 
-              className="p-4 h-auto flex-col space-y-2 hover:border-edu-blue hover:bg-blue-50 group"
-            >
-              <Search className="h-6 w-6 text-edu-warning group-hover:text-edu-blue transition-colors" />
-              <span className="text-sm font-medium">Research Help</span>
-            </Button>
+          {/* Enhanced Toolbar */}
+          <EnhancedToolbar
+            onSave={handleSave}
+            isSaving={isSaving}
+          />
+        </div>
+
+        {/* Writing Content */}
+        <div className="flex-1 overflow-hidden">
+          <CopyPasteDetector
+            allowCopyPaste={allowCopyPaste}
+            onPasteDetected={handlePasteDetected}
+            className="h-full"
+          >
+            <div
+              ref={contentRef}
+              contentEditable={!isSubmitted}
+              onInput={handleContentChange}
+              className="h-full p-8 focus:outline-none resize-none text-gray-900 leading-relaxed"
+              style={{
+                minHeight: '100%',
+                fontFamily: 'Georgia, serif',
+                fontSize: '16px',
+                lineHeight: '1.6',
+              }}
+              dangerouslySetInnerHTML={{ __html: content }}
+              placeholder="Start writing your assignment here..."
+            />
+          </CopyPasteDetector>
+        </div>
+
+        {/* Footer Actions */}
+        <div className="border-t bg-white p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              {!allowCopyPaste && (
+                <Badge variant="outline" className="border-red-200 text-red-700">
+                  <AlertTriangle className="h-3 w-3 mr-1" />
+                  Copy & Paste Disabled
+                </Badge>
+              )}
+              {allowCopyPaste && (
+                <Badge variant="outline" className="border-yellow-200 text-yellow-700">
+                  <Shield className="h-3 w-3 mr-1" />
+                  Copy & Paste Tracked
+                </Badge>
+              )}
+            </div>
+            
+            <div className="flex gap-3">
+              <Button
+                onClick={handleSave}
+                variant="outline"
+                disabled={isSaving || isSubmitted}
+                className="gap-2"
+              >
+                <Save className="h-4 w-4" />
+                {isSaving ? "Saving..." : "Save"}
+              </Button>
+              
+              {!isSubmitted && (
+                <Button
+                  onClick={handleSubmit}
+                  disabled={submitSessionMutation.isPending || wordCount < 50}
+                  className="gap-2"
+                >
+                  <Send className="h-4 w-4" />
+                  {submitSessionMutation.isPending ? "Submitting..." : "Submit"}
+                </Button>
+              )}
+              
+              {isSubmitted && (
+                <Badge variant="outline" className="border-green-200 text-green-700 px-4 py-2">
+                  Submitted ✓
+                </Badge>
+              )}
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
+
+      {/* AI Assistant Sidebar */}
+      <div className="w-80 border-l bg-gray-50">
+        <AiAssistant 
+          sessionId={sessionId}
+          assignmentType={assignment?.aiPermissions}
+          currentContent={content}
+        />
+      </div>
     </div>
   );
 }
