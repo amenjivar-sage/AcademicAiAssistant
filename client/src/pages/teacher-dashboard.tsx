@@ -305,22 +305,168 @@ export default function TeacherDashboard() {
 
           <TabsContent value="submissions" className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-900">Students & Achievements</h2>
-              <div className="flex gap-2">
-                <Badge variant="outline">Real-time monitoring</Badge>
-                <Button variant="outline">
-                  <Users className="h-4 w-4 mr-2" />
-                  Export Grades
-                </Button>
-                <Button>
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Bulk Grade
-                </Button>
-              </div>
+              <h2 className="text-2xl font-bold text-gray-900">Student Management</h2>
+              <Badge variant="outline">Real-time monitoring</Badge>
             </div>
             
-            {/* Student Insights and Achievement Tracking */}
-            <TeacherInsights teacherId={1} />
+            {/* Student Sub-tabs */}
+            <Tabs defaultValue="achievements" className="space-y-4">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="achievements">
+                  <Trophy className="h-4 w-4 mr-2" />
+                  Achievements & Progress
+                </TabsTrigger>
+                <TabsTrigger value="roster">
+                  <Users className="h-4 w-4 mr-2" />
+                  Class Roster
+                </TabsTrigger>
+                <TabsTrigger value="grading">
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Grading Center
+                </TabsTrigger>
+              </TabsList>
+
+              {/* Achievements Tab */}
+              <TabsContent value="achievements" className="space-y-6">
+                <TeacherInsights teacherId={1} />
+              </TabsContent>
+
+              {/* Class Roster Tab */}
+              <TabsContent value="roster" className="space-y-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold">Class Rosters & Progress</h3>
+                  <Button variant="outline">
+                    <Users className="h-4 w-4 mr-2" />
+                    Export Student List
+                  </Button>
+                </div>
+                
+                {/* Class Roster Content */}
+                <div className="grid gap-6">
+                  {/* Sample class rosters - this would come from your classrooms data */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                        English 101 - Section A
+                        <Badge variant="outline">24 students</Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {/* Student cards would go here */}
+                        <div className="p-3 border rounded-lg">
+                          <p className="font-medium">Maria Rodriguez</p>
+                          <p className="text-sm text-gray-600">3 assignments completed</p>
+                          <div className="flex gap-1 mt-2">
+                            <Badge className="bg-green-100 text-green-800 text-xs">Active</Badge>
+                            <Badge className="bg-blue-100 text-blue-800 text-xs">7-day streak</Badge>
+                          </div>
+                        </div>
+                        <div className="p-3 border rounded-lg">
+                          <p className="font-medium">Alex Chen</p>
+                          <p className="text-sm text-gray-600">2 assignments completed</p>
+                          <div className="flex gap-1 mt-2">
+                            <Badge className="bg-yellow-100 text-yellow-800 text-xs">Behind</Badge>
+                          </div>
+                        </div>
+                        <div className="p-3 border rounded-lg">
+                          <p className="font-medium">Sarah Johnson</p>
+                          <p className="text-sm text-gray-600">4 assignments completed</p>
+                          <div className="flex gap-1 mt-2">
+                            <Badge className="bg-green-100 text-green-800 text-xs">Excellent</Badge>
+                            <Badge className="bg-purple-100 text-purple-800 text-xs">3 achievements</Badge>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                        Creative Writing - Section B
+                        <Badge variant="outline">18 students</Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="p-3 border rounded-lg">
+                          <p className="font-medium">David Kim</p>
+                          <p className="text-sm text-gray-600">5 assignments completed</p>
+                          <div className="flex gap-1 mt-2">
+                            <Badge className="bg-green-100 text-green-800 text-xs">Outstanding</Badge>
+                          </div>
+                        </div>
+                        <div className="p-3 border rounded-lg">
+                          <p className="font-medium">Emma Wilson</p>
+                          <p className="text-sm text-gray-600">1 assignment completed</p>
+                          <div className="flex gap-1 mt-2">
+                            <Badge className="bg-red-100 text-red-800 text-xs">Needs attention</Badge>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+
+              {/* Grading Center Tab */}
+              <TabsContent value="grading" className="space-y-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold">Grading Center</h3>
+                  <div className="flex gap-2">
+                    <Button variant="outline">
+                      <Users className="h-4 w-4 mr-2" />
+                      Export Grades
+                    </Button>
+                    <Button>
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Bulk Grade
+                    </Button>
+                  </div>
+                </div>
+
+                <GradingInterface assignmentId={1}>
+                  <Button variant="outline" className="w-full">
+                    <FileText className="h-4 w-4 mr-2" />
+                    Open Grading Interface
+                  </Button>
+                </GradingInterface>
+
+                {/* Grading Queue */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Pending Submissions</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-3 border rounded-lg">
+                        <div>
+                          <p className="font-medium">Personal Narrative Essay</p>
+                          <p className="text-sm text-gray-600">5 submissions awaiting grades</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Badge variant="outline">Due: 2 days ago</Badge>
+                          <Button size="sm">Grade Now</Button>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between p-3 border rounded-lg">
+                        <div>
+                          <p className="font-medium">Argumentative Essay</p>
+                          <p className="text-sm text-gray-600">12 submissions awaiting grades</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Badge variant="outline">Due: Today</Badge>
+                          <Button size="sm">Grade Now</Button>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
             
             {/* Student Progress Table */}
             <Card>
