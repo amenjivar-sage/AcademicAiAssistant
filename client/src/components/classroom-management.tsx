@@ -15,13 +15,25 @@ interface ClassroomManagementProps {
 export default function ClassroomManagement({ teacherId }: ClassroomManagementProps) {
   const { toast } = useToast();
 
-  const { data: classrooms, isLoading } = useQuery<Classroom[]>({
+  const { data: classrooms, isLoading, error } = useQuery<Classroom[]>({
     queryKey: [`/api/teacher/${teacherId}/classrooms`],
+    queryFn: async () => {
+      const response = await fetch(`/api/teacher/${teacherId}/classrooms`, {
+        credentials: "include",
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch classrooms');
+      }
+      const data = await response.json();
+      console.log("Raw classroom API response:", data);
+      return data;
+    },
   });
 
   // Debug logging
   console.log("Classroom data:", classrooms);
   console.log("Is loading:", isLoading);
+  console.log("Error:", error);
   console.log("Classroom count:", classrooms?.length);
 
   const copyJoinCode = (joinCode: string, className: string) => {
