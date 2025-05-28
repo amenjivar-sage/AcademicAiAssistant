@@ -41,18 +41,24 @@ export default function StudentDashboard() {
   const unsubmitMutation = useMutation({
     mutationFn: async (sessionId: number) => {
       const response = await apiRequest("PATCH", `/api/writing-sessions/${sessionId}/unsubmit`, {});
-      return response.json();
+      const data = await response.json();
+      console.log("Unsubmit response:", data);
+      return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Unsubmit successful, updated session:", data);
       toast({
         title: "Assignment unsubmitted",
         description: "You can now continue editing your work.",
       });
-      // Force refresh all relevant data
-      queryClient.invalidateQueries({ queryKey: ['/api/student/writing-sessions'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/student/assignments'] });
-      queryClient.refetchQueries({ queryKey: ['/api/student/writing-sessions'] });
-      queryClient.refetchQueries({ queryKey: ['/api/student/assignments'] });
+      // Force complete cache refresh
+      queryClient.removeQueries({ queryKey: ['/api/student/writing-sessions'] });
+      queryClient.removeQueries({ queryKey: ['/api/student/assignments'] });
+      // Trigger immediate refetch
+      setTimeout(() => {
+        queryClient.refetchQueries({ queryKey: ['/api/student/writing-sessions'] });
+        queryClient.refetchQueries({ queryKey: ['/api/student/assignments'] });
+      }, 100);
     },
     onError: () => {
       toast({
