@@ -146,6 +146,8 @@ export default function WritingWorkspace({ sessionId, assignmentId }: WritingWor
   };
 
   const handleSubmit = () => {
+    console.log('Submit clicked! Title:', title, 'Word count:', wordCount);
+    
     if (!title.trim()) {
       toast({
         title: "Title required",
@@ -157,13 +159,14 @@ export default function WritingWorkspace({ sessionId, assignmentId }: WritingWor
 
     if (wordCount < 50) {
       toast({
-        title: "Work incomplete",
+        title: "Work incomplete", 
         description: "Please write at least 50 words before submitting.",
         variant: "destructive",
       });
       return;
     }
 
+    console.log('Submitting assignment...');
     submitSessionMutation.mutate();
   };
 
