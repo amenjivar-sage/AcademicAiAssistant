@@ -495,6 +495,10 @@ Despite these challenges, the momentum toward renewable energy appears unstoppab
       ...finalUpdates,
       updatedAt: new Date(),
     };
+    
+    console.log("Storage: Updating session", id, "with updates:", finalUpdates);
+    console.log("Storage: Final updated session:", updatedSession);
+    
     this.writingSessions.set(id, updatedSession);
     return updatedSession;
   }
