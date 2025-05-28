@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -149,6 +150,11 @@ export default function ClassroomForm({ teacherId, children, classroom, mode = "
             <Users className="h-5 w-5" />
             {mode === "create" ? "Create New Class" : "Edit Class"}
           </DialogTitle>
+          <DialogDescription>
+            {mode === "create" 
+              ? "Set up a new class and get a join code for your students." 
+              : "Update your class information and settings."}
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
