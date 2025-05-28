@@ -5,6 +5,7 @@ import AiAssistant from "@/components/ai-assistant";
 import IntegrityGuidelines from "@/components/integrity-guidelines";
 import { Button } from "@/components/ui/button";
 import { PenTool, Shield } from "lucide-react";
+import SageLogo from "@/components/sage-logo";
 import type { WritingSession } from "@shared/schema";
 
 export default function Home() {
@@ -62,8 +63,8 @@ export default function Home() {
           {/* Left: Logo and Document Name */}
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-edu-blue rounded flex items-center justify-center">
-                <PenTool className="h-4 w-4 text-white" />
+              <div className="w-8 h-8 bg-white rounded flex items-center justify-center shadow-sm border">
+                <SageLogo size={20} className="text-blue-700" />
               </div>
               <span className="text-lg font-medium text-gray-700">Sage</span>
             </div>

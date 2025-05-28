@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AssignmentForm from "@/components/assignment-form";
 import { PlusCircle, Users, FileText, BarChart3, Settings, Eye } from "lucide-react";
+import SageLogo from "@/components/sage-logo";
 import type { Assignment, WritingSession } from "@shared/schema";
 
 export default function TeacherDashboard() {
@@ -35,8 +36,8 @@ export default function TeacherDashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-edu-blue rounded-lg flex items-center justify-center">
-                <FileText className="h-5 w-5 text-white" />
+              <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-sm border">
+                <SageLogo size={24} className="text-blue-700" />
               </div>
               <div>
                 <h1 className="text-xl font-semibold text-edu-neutral">Sage Teacher Portal</h1>
