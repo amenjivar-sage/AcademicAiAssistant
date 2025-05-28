@@ -158,18 +158,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const sessionId = parseInt(req.params.sessionId);
       const { assignmentId } = req.query;
       
-      // If sessionId is 0, create a new session for the assignment
+      // If sessionId is 0, check if session exists for this assignment, or create new one
       if (sessionId === 0 && assignmentId) {
         const userId = 1; // Default student user for demo
-        const newSession = await storage.createWritingSession({
-          userId,
-          assignmentId: parseInt(assignmentId as string),
-          title: "",
-          content: "",
-          wordCount: 0,
-          status: "draft"
-        });
-        res.json(newSession);
+        const existingSessions = await storage.getUserWritingSessions(userId);
+        const existingSession = existingSessions.find(s => s.assignmentId === parseInt(assignmentId as string));
+        
+        if (existingSession) {
+          res.json(existingSession);
+        } else {
+          const newSession = await storage.createWritingSession({
+            userId,
+            assignmentId: parseInt(assignmentId as string),
+            title: "",
+            content: "",
+            wordCount: 0,
+            status: "draft"
+          });
+          res.json(newSession);
+        }
       } else {
         const session = await storage.getWritingSession(sessionId);
         if (!session) {

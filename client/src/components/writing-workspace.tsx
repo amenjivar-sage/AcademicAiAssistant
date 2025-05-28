@@ -24,7 +24,8 @@ interface WritingWorkspaceProps {
   assignmentId?: number;
 }
 
-export default function WritingWorkspace({ sessionId, assignmentId }: WritingWorkspaceProps) {
+export default function WritingWorkspace({ sessionId: initialSessionId, assignmentId }: WritingWorkspaceProps) {
+  const [sessionId, setSessionId] = useState(initialSessionId);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [pastedContents, setPastedContents] = useState<PastedContent[]>([]);
@@ -130,8 +131,9 @@ export default function WritingWorkspace({ sessionId, assignmentId }: WritingWor
       setPastedContents(session.pastedContent as PastedContent[] || []);
       setWordCount(session.wordCount);
       
-      // If we got a new session with a different ID, update our URLs
+      // If we got a new session with a different ID, update our session ID state
       if (sessionId === 0 && session.id && session.id !== 0) {
+        setSessionId(session.id);
         window.history.replaceState({}, '', `/assignment/${assignmentId}/session/${session.id}`);
       }
     }
