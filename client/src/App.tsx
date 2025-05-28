@@ -14,7 +14,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Login} />
-      <Route path="/student" component={Home} />
+      <Route path="/student" component={StudentDashboard} />
       <Route path="/teacher" component={TeacherDashboard} />
       <Route path="/admin" component={AdminDashboard} />
       <Route component={NotFound} />
