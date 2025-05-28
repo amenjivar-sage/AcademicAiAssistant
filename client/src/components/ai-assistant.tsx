@@ -211,88 +211,54 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
           </div>
         </TabsContent>
 
-        <TabsContent value="citations" className="flex-1">
-          <ScrollArea className="h-full">
-            <div className="p-4">
-              <h4 className="font-medium text-gray-700 mb-4 flex items-center">
-                <BookOpen className="h-5 w-5 mr-2" />
-                Citation & Plagiarism Tools
-              </h4>
-              
-              <div className="space-y-4">
-                <CitationAssistant sessionId={sessionId}>
-                  <Button 
-                    className="w-full justify-start h-auto p-4 text-left bg-purple-50 hover:bg-purple-100 border-purple-200"
-                    variant="outline"
-                  >
-                    <div className="flex items-start">
-                      <BookOpen className="h-5 w-5 mr-3 mt-1 text-purple-600" />
-                      <div>
-                        <div className="font-medium text-purple-900">Citation Generator</div>
-                        <div className="text-sm text-purple-700 mt-1">
-                          Generate proper APA citations for books, articles, websites, and more
-                        </div>
-                      </div>
-                    </div>
-                  </Button>
-                </CitationAssistant>
+        <TabsContent value="citations" className="p-3">
+          <h4 className="font-medium text-gray-700 mb-3 text-sm flex items-center">
+            <BookOpen className="h-4 w-4 mr-2" />
+            Citation Tools
+          </h4>
+          
+          <div className="space-y-3">
+            <CitationAssistant sessionId={sessionId}>
+              <Button 
+                className="w-full justify-start h-auto p-2 text-left text-xs"
+                variant="outline"
+                size="sm"
+              >
+                <BookOpen className="h-3 w-3 mr-2 flex-shrink-0" />
+                <span>Citation Generator</span>
+              </Button>
+            </CitationAssistant>
 
-                <CitationAssistant sessionId={sessionId}>
-                  <Button 
-                    className="w-full justify-start h-auto p-4 text-left bg-blue-50 hover:bg-blue-100 border-blue-200"
-                    variant="outline"
-                  >
-                    <div className="flex items-start">
-                      <Search className="h-5 w-5 mr-3 mt-1 text-blue-600" />
-                      <div>
-                        <div className="font-medium text-blue-900">Plagiarism Checker</div>
-                        <div className="text-sm text-blue-700 mt-1">
-                          Check your text for originality and get suggestions for improvement
-                        </div>
-                      </div>
-                    </div>
-                  </Button>
-                </CitationAssistant>
+            <CitationAssistant sessionId={sessionId}>
+              <Button 
+                className="w-full justify-start h-auto p-2 text-left text-xs"
+                variant="outline"
+                size="sm"
+              >
+                <Search className="h-3 w-3 mr-2 flex-shrink-0" />
+                <span>Plagiarism Checker</span>
+              </Button>
+            </CitationAssistant>
 
-                <div className="mt-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
-                  <h5 className="text-sm font-medium text-amber-900 mb-2 flex items-center">
-                    <AlertTriangle className="h-4 w-4 mr-2" />
-                    Academic Integrity Guidelines
-                  </h5>
-                  <ul className="text-xs text-amber-800 space-y-1">
-                    <li>• Always cite sources for ideas, quotes, and data that aren't your own</li>
-                    <li>• Paraphrase in your own words and cite the original source</li>
-                    <li>• Use quotation marks for direct quotes and include citations</li>
-                    <li>• Check originality before submitting your work</li>
-                    <li>• When in doubt, cite it out!</li>
-                  </ul>
-                </div>
-
-                <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
-                  <h5 className="text-sm font-medium text-green-900 mb-2">Citation Quick Tips</h5>
-                  <ul className="text-xs text-green-800 space-y-1">
-                    <li>• Books: Author (Year). <em>Title</em>. Publisher.</li>
-                    <li>• Websites: Author (Year). Title. Retrieved from URL</li>
-                    <li>• Journals: Author (Year). Title. <em>Journal</em>, Volume(Issue), pages.</li>
-                    <li>• Keep track of sources as you research</li>
-                  </ul>
-                </div>
-              </div>
+            <div className="mt-4 p-2 bg-amber-50 rounded text-xs">
+              <h5 className="font-medium text-amber-900 mb-1">Academic Integrity</h5>
+              <ul className="text-amber-800 space-y-0.5 text-xs">
+                <li>• Always cite your sources</li>
+                <li>• Use quotation marks for direct quotes</li>
+                <li>• Paraphrase in your own words</li>
+                <li>• When in doubt, cite it out!</li>
+              </ul>
             </div>
-          </ScrollArea>
+          </div>
         </TabsContent>
 
-        <TabsContent value="history" className="flex-1">
-          <ScrollArea className="h-full">
-            <div className="p-4">
-              <h4 className="font-medium text-gray-700 mb-4">Recent AI Interactions</h4>
-              <div className="text-center text-gray-500 py-8">
-                <Bot className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                <p>Your conversation history will appear here</p>
-                <p className="text-sm mt-2">Start a conversation to see your past interactions with the AI assistant.</p>
-              </div>
-            </div>
-          </ScrollArea>
+        <TabsContent value="history" className="p-3">
+          <h4 className="font-medium text-gray-700 mb-3 text-sm">Recent Conversations</h4>
+          <div className="text-center text-gray-500 py-8">
+            <Bot className="h-8 w-8 mx-auto mb-3 text-gray-300" />
+            <p className="text-xs">Your ZoË conversations will appear here</p>
+            <p className="text-xs mt-1">Start chatting to see your history.</p>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
