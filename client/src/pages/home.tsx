@@ -65,7 +65,7 @@ export default function Home() {
               <div className="w-8 h-8 bg-edu-blue rounded flex items-center justify-center">
                 <PenTool className="h-4 w-4 text-white" />
               </div>
-              <span className="text-lg font-medium text-gray-700">ZOEEDU</span>
+              <span className="text-lg font-medium text-gray-700">Sage</span>
             </div>
             <input
               type="text"

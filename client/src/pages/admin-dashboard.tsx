@@ -16,7 +16,7 @@ export default function AdminDashboard() {
                 <Shield className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-semibold text-gray-900">ZOEEDU Admin Portal</h1>
+                <h1 className="text-xl font-semibold text-gray-900">Sage Admin Portal</h1>
                 <p className="text-sm text-gray-500">School Administration Dashboard</p>
               </div>
             </div>

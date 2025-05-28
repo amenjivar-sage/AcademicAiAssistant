@@ -39,7 +39,7 @@ export default function TeacherDashboard() {
                 <FileText className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-semibold text-edu-neutral">ZOEEDU Teacher Portal</h1>
+                <h1 className="text-xl font-semibold text-edu-neutral">Sage Teacher Portal</h1>
                 <p className="text-sm text-gray-500">Welcome, Prof. Johnson</p>
               </div>
             </div>

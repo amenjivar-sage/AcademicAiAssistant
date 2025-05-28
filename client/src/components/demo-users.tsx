@@ -157,7 +157,7 @@ export default function DemoUsers() {
 
         <div className="text-xs text-gray-500 bg-blue-50 p-3 rounded">
           <strong>Demo Scenario:</strong> This will create multiple users with the same names but different email providers, 
-          showing how ZOEEDU generates unique usernames automatically. Perfect for testing duplicate name handling!
+          showing how Sage generates unique usernames automatically. Perfect for testing duplicate name handling!
         </div>
       </CardContent>
     </Card>

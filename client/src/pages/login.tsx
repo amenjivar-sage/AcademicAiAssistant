@@ -86,7 +86,7 @@ export default function Login() {
           <div className="w-16 h-16 bg-white bg-opacity-20 rounded-xl flex items-center justify-center mx-auto mb-4">
             <GraduationCap className="h-8 w-8" />
           </div>
-          <h1 className="text-3xl font-bold mb-2">ZOEEDU</h1>
+          <h1 className="text-3xl font-bold mb-2">Sage</h1>
           <p className="text-blue-100">AI Writing Platform for Ethical Student Learning</p>
         </div>
 
@@ -177,7 +177,7 @@ export default function Login() {
 
             <Alert>
               <AlertDescription className="text-center text-sm">
-                Use the demo accounts above to explore ZOEEDU's features for teachers, students, and administrators.
+                Use the demo accounts above to explore Sage's features for teachers, students, and administrators.
               </AlertDescription>
             </Alert>
           </CardContent>
@@ -185,7 +185,7 @@ export default function Login() {
 
         {/* Footer */}
         <p className="text-center text-blue-100 text-sm">
-          © 2024 ZOEEDU - Empowering ethical AI-assisted learning
+          © 2024 Sage - Empowering ethical AI-assisted learning
         </p>
       </div>
     </div>
