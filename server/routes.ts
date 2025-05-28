@@ -46,6 +46,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Student routes
+  app.get("/api/student/assignments", async (req, res) => {
+    try {
+      // For demo, return all assignments for student to access
+      const teacherId = 1;
+      const assignments = await storage.getTeacherAssignments(teacherId);
+      res.json(assignments);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get assignments" });
+    }
+  });
+
   app.post("/api/assignments", async (req, res) => {
     try {
       const assignmentData = insertAssignmentSchema.parse(req.body);
