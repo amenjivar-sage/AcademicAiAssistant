@@ -274,6 +274,8 @@ export default function StudentDashboard() {
               
               <TabsContent value="assignments" className="space-y-4">
             
+            {/* All existing assignment content goes here */}
+            
             {assignments?.length === 0 ? (
               <Card>
                 <CardContent className="p-12 text-center">
@@ -598,6 +600,55 @@ export default function StudentDashboard() {
                   })}
               </div>
             )}
+              </TabsContent>
+              
+              <TabsContent value="classes" className="space-y-4">
+                {classes?.length === 0 ? (
+                  <Card>
+                    <CardContent className="p-12 text-center">
+                      <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No classes joined</h3>
+                      <p className="text-gray-500 mb-6">Join a class to connect with your teachers and classmates</p>
+                      <JoinClass studentId={1}>
+                        <Button>
+                          <Plus className="h-4 w-4 mr-2" />
+                          Join Your First Class
+                        </Button>
+                      </JoinClass>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="grid gap-4">
+                    {classes?.map((classroom) => (
+                      <Card key={classroom.id} className="hover:shadow-md transition-shadow">
+                        <CardContent className="p-6">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-4">
+                              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <Users className="h-5 w-5 text-blue-600" />
+                              </div>
+                              <div>
+                                <h3 className="text-lg font-semibold text-gray-900">{classroom.name}</h3>
+                                <p className="text-sm text-gray-600">{classroom.description}</p>
+                                <div className="flex items-center gap-2 mt-2">
+                                  <Badge variant="outline">Join Code: {classroom.joinCode}</Badge>
+                                  <Badge variant="secondary">{classroom.subject}</Badge>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-sm text-gray-500">
+                                {assignments?.filter(a => a.classroomId === classroom.id).length} assignments
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
           </TabsContent>
 
           <TabsContent value="progress" className="space-y-6">
