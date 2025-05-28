@@ -56,7 +56,7 @@ export class MemStorage implements IStorage {
   private writingSessions: Map<number, WritingSession>;
   private aiInteractions: Map<number, AiInteraction>;
   private messages: Map<number, Message>;
-  private classrooms: Map<number, Classroom>;
+  private classrooms: Map<number, any>;
   private currentUserId: number;
   private currentAssignmentId: number;
   private currentSessionId: number;
@@ -69,10 +69,14 @@ export class MemStorage implements IStorage {
     this.assignments = new Map();
     this.writingSessions = new Map();
     this.aiInteractions = new Map();
+    this.messages = new Map();
+    this.classrooms = new Map();
     this.currentUserId = 1;
     this.currentAssignmentId = 1;
     this.currentSessionId = 1;
     this.currentInteractionId = 1;
+    this.currentMessageId = 1;
+    this.currentClassroomId = 1;
 
     this.initializeDefaultUsers();
     this.initializeSampleSubmissions();
