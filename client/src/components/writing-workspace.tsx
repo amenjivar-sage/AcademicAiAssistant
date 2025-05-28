@@ -99,7 +99,7 @@ export default function WritingWorkspace({ sessionId, assignmentId }: WritingWor
       
       // Redirect to dashboard after 2 seconds
       setTimeout(() => {
-        window.location.href = '/';
+        window.location.href = '/#/student';
       }, 2000);
     },
     onError: (error) => {
