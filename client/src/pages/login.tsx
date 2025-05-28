@@ -127,8 +127,8 @@ export default function Login() {
               <circle cx="39" cy="27" r="2" fill="#1d4ed8" />
             </svg>
           </div>
-          <h1 className="text-4xl font-bold mb-2 text-white drop-shadow-lg">Sage</h1>
-          <p className="text-white text-lg drop-shadow-md">AI Writing Platform for Ethical Student Learning</p>
+          <h1 className="text-4xl font-bold mb-2 text-gray-900 bg-white bg-opacity-90 px-4 py-2 rounded-lg shadow-lg">Sage</h1>
+          <p className="text-white text-lg drop-shadow-md bg-black bg-opacity-20 px-3 py-1 rounded">AI Writing Platform for Ethical Student Learning</p>
         </div>
 
         {/* Login Form */}
