@@ -499,10 +499,32 @@ Despite these challenges, the momentum toward renewable energy appears unstoppab
     );
   }
 
-  async getAssignmentSubmissions(assignmentId: number): Promise<WritingSession[]> {
-    return Array.from(this.writingSessions.values()).filter(
+  async getAssignmentSubmissions(assignmentId: number): Promise<(WritingSession & { student: User })[]> {
+    const sessions = Array.from(this.writingSessions.values()).filter(
       (session) => session.assignmentId === assignmentId
     );
+    
+    // Add student information to each submission
+    return sessions.map(session => {
+      const student = this.users.get(session.userId || 0);
+      return {
+        ...session,
+        student: student || {
+          id: 0,
+          username: "unknown",
+          firstName: "Unknown",
+          lastName: "Student",
+          email: "unknown@example.com",
+          role: "student",
+          password: "",
+          department: null,
+          grade: null,
+          isActive: false,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+      };
+    });
   }
 
   async createAiInteraction(insertInteraction: InsertAiInteraction): Promise<AiInteraction> {

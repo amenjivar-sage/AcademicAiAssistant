@@ -28,7 +28,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { GraduationCap, FileText, Clock, CheckCircle, Star, BookOpen } from "lucide-react";
 import DocumentReviewer from "./document-reviewer";
-import type { WritingSession } from "@shared/schema";
+import type { WritingSession, User } from "@shared/schema";
 
 interface GradingInterfaceProps {
   assignmentId: number;
@@ -64,7 +64,7 @@ export default function GradingInterface({ assignmentId, children }: GradingInte
   const { toast } = useToast();
 
   // Get all submissions for this assignment
-  const { data: submissions, isLoading } = useQuery<WritingSession[]>({
+  const { data: submissions, isLoading } = useQuery<(WritingSession & { student: User })[]>({
     queryKey: [`/api/assignments/${assignmentId}/submissions`],
     enabled: open,
   });
@@ -211,7 +211,12 @@ export default function GradingInterface({ assignmentId, children }: GradingInte
               >
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-base">{submission.title}</CardTitle>
+                    <div>
+                      <CardTitle className="text-base">{submission.title}</CardTitle>
+                      <p className="text-sm text-gray-600 mt-1">
+                        by {submission.student.firstName} {submission.student.lastName}
+                      </p>
+                    </div>
                     {getSubmissionStatus(submission)}
                   </div>
                   <div className="flex items-center gap-4 text-sm text-gray-600">
@@ -241,6 +246,9 @@ export default function GradingInterface({ assignmentId, children }: GradingInte
                   <h3 className="text-lg font-semibold mb-2">Review Submission</h3>
                   <div className="bg-gray-50 p-4 rounded-lg mb-4">
                     <h4 className="font-medium mb-2">{selectedSubmission.title}</h4>
+                    <p className="text-sm text-blue-600 mb-2">
+                      Student: {(selectedSubmission as any).student?.firstName} {(selectedSubmission as any).student?.lastName}
+                    </p>
                     <div className="text-sm text-gray-600 mb-3">
                       {selectedSubmission.wordCount} words • Submitted {selectedSubmission.submittedAt ? new Date(selectedSubmission.submittedAt).toLocaleDateString() : 'Not submitted'}
                     </div>
