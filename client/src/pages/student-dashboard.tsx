@@ -63,8 +63,32 @@ export default function StudentDashboard() {
     },
   });
 
-  const handleUnsubmit = (sessionId: number) => {
-    unsubmitMutation.mutate(sessionId);
+  const handleUnsubmit = async (sessionId: number) => {
+    console.log("Button clicked, calling unsubmit for session:", sessionId);
+    try {
+      const response = await fetch(`/api/writing-sessions/${sessionId}/unsubmit`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      if (response.ok) {
+        toast({
+          title: "Assignment unsubmitted",
+          description: "You can now continue editing your work.",
+        });
+        // Force page reload to show updated status
+        window.location.reload();
+      } else {
+        throw new Error('Failed to unsubmit');
+      }
+    } catch (error) {
+      console.error("Unsubmit error:", error);
+      toast({
+        title: "Failed to unsubmit",
+        description: "There was an error unsubmitting your assignment. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Calculate stats
