@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import UsernamePreview from "@/components/username-preview";
 import { z } from "zod";
 import {
   Dialog,
@@ -60,6 +61,7 @@ type CreateUserForm = z.infer<typeof createUserSchema>;
 export default function AdminUserManagement() {
   const [open, setOpen] = useState(false);
   const [bulkImportOpen, setBulkImportOpen] = useState(false);
+  const [generatedUsername, setGeneratedUsername] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -82,12 +84,9 @@ export default function AdminUserManagement() {
 
   const createUserMutation = useMutation({
     mutationFn: async (userData: CreateUserForm) => {
-      // Generate username from email (part before @)
-      const username = userData.email.split('@')[0];
-      
+      // Let the backend handle intelligent username generation
       const response = await apiRequest("POST", "/api/admin/users", {
         ...userData,
-        username,
         password: generateTemporaryPassword(),
       });
       return response.json();
@@ -206,7 +205,7 @@ export default function AdminUserManagement() {
                           />
                         </FormControl>
                         <FormDescription>
-                          Username will be automatically generated from email (part before @)
+                          Username will be intelligently generated to handle duplicate names (e.g., john.smith, john.smith25, john.smith.teacher)
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
