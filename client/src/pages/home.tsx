@@ -6,6 +6,7 @@ import IntegrityGuidelines from "@/components/integrity-guidelines";
 import { Button } from "@/components/ui/button";
 import { PenTool, Shield } from "lucide-react";
 import SageLogo from "@/components/sage-logo";
+import WritingMilestone from "@/components/writing-milestone";
 import type { WritingSession } from "@shared/schema";
 
 export default function Home() {
@@ -76,12 +77,25 @@ export default function Home() {
             />
           </div>
 
-          {/* Right: Tools and User */}
+          {/* Right: Progress, Tools and User */}
           <div className="flex items-center space-x-4">
+            {/* Writing Progress */}
+            <div className="hidden md:flex items-center space-x-3 text-sm">
+              <div className="flex items-center space-x-2 text-gray-600 bg-gray-50 px-3 py-1 rounded-full">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span>Auto-saved</span>
+              </div>
+              <WritingMilestone 
+                wordCount={currentSession?.content ? currentSession.content.split(' ').filter(word => word.trim().length > 0).length : 0}
+                onMilestone={(milestone) => console.log(`Milestone reached: ${milestone} words!`)}
+              />
+            </div>
+            
             <div className="flex items-center space-x-2 text-sm text-gray-600">
               <Shield className="h-4 w-4 text-edu-success" />
-              <span className="hidden md:inline">AI Integrity Protected</span>
+              <span className="hidden lg:inline">AI Integrity Protected</span>
             </div>
+            
             <div className="flex items-center space-x-2">
               <span className="text-sm text-gray-500">Alex Smith</span>
               <div className="w-8 h-8 bg-edu-success rounded-full flex items-center justify-center text-white text-sm font-medium">
@@ -117,6 +131,12 @@ export default function Home() {
           </div>
         </div>
       </header>
+
+      {/* Milestone Celebrations */}
+      <WritingMilestone 
+        wordCount={currentSession?.content ? currentSession.content.split(' ').filter(word => word.trim().length > 0).length : 0}
+        onMilestone={(milestone) => console.log(`Celebration: ${milestone} words achieved!`)}
+      />
 
       {/* Main Document Area */}
       <div className="flex-1 flex">
