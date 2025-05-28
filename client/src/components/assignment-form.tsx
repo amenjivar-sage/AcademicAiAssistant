@@ -1,8 +1,8 @@
 import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { insertAssignmentSchema, type InsertAssignment } from "@shared/schema";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import { insertAssignmentSchema, type InsertAssignment, type Classroom } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -50,10 +50,16 @@ export default function AssignmentForm({ teacherId, children, assignment, mode =
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Fetch teacher's classrooms for the dropdown
+  const { data: classrooms } = useQuery<Classroom[]>({
+    queryKey: ["/api/teacher/classrooms"],
+  });
+
   const form = useForm<InsertAssignment>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       teacherId,
+      classroomId: assignment?.classroomId || null,
       title: assignment?.title || "",
       description: assignment?.description || "",
       dueDate: assignment?.dueDate ? new Date(assignment.dueDate) : null,
@@ -210,6 +216,38 @@ export default function AssignmentForm({ teacherId, children, assignment, mode =
                     <FormControl>
                       <Input placeholder="Enter assignment title..." {...field} />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="classroomId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Class</FormLabel>
+                    <Select 
+                      onValueChange={(value) => field.onChange(value ? parseInt(value) : null)}
+                      value={field.value?.toString() || ""}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a class for this assignment" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="">No class (general assignment)</SelectItem>
+                        {classrooms?.map((classroom) => (
+                          <SelectItem key={classroom.id} value={classroom.id.toString()}>
+                            {classroom.name} - {classroom.subject} ({classroom.gradeLevel})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Choose which class this assignment belongs to, or leave unselected for a general assignment.
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

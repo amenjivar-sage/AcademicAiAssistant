@@ -20,6 +20,7 @@ export const users = pgTable("users", {
 export const assignments = pgTable("assignments", {
   id: serial("id").primaryKey(),
   teacherId: integer("teacher_id").notNull(),
+  classroomId: integer("classroom_id"), // Link to specific classroom
   title: text("title").notNull(),
   description: text("description").notNull(),
   dueDate: timestamp("due_date"),

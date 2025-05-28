@@ -115,6 +115,7 @@ export class MemStorage implements IStorage {
     const assignment: Assignment = {
       id: 1,
       teacherId: 1,
+      classroomId: null, // General assignment not tied to specific class
       title: "Personal Narrative Essay",
       description: "Write a personal narrative about a meaningful experience that changed your perspective. Your essay should include vivid details, clear chronological structure, and reflection on the significance of the event.",
       dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Due in 1 week
