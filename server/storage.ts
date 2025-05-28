@@ -511,6 +511,40 @@ This experience changed how I approach challenges in all areas of my life. Now, 
     const targetRole = userRole === "teacher" ? "student" : "teacher";
     return Array.from(this.users.values()).filter(user => user.role === targetRole);
   }
+
+  // Classroom operations
+  async createClassroom(classroomData: any): Promise<any> {
+    const id = this.currentClassroomId++;
+    const joinCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const classroom = {
+      ...classroomData,
+      id,
+      joinCode,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.classrooms.set(id, classroom);
+    return classroom;
+  }
+
+  async getTeacherClassrooms(teacherId: number): Promise<any[]> {
+    return Array.from(this.classrooms.values()).filter(
+      (classroom) => classroom.teacherId === teacherId
+    );
+  }
+
+  async updateClassroom(id: number, updates: any): Promise<any | undefined> {
+    const classroom = this.classrooms.get(id);
+    if (!classroom) return undefined;
+
+    const updatedClassroom = {
+      ...classroom,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.classrooms.set(id, updatedClassroom);
+    return updatedClassroom;
+  }
 }
 
 export const storage = new MemStorage();
