@@ -81,8 +81,12 @@ export default function WritingWorkspace({ sessionId, assignmentId }: WritingWor
         pastedContent: pastedContents,
         wordCount,
       });
-      console.log('Submit response:', response);
-      return response.json();
+      console.log('Submit response status:', response.status);
+      if (response.ok) {
+        return { success: true };
+      } else {
+        throw new Error(`Submit failed with status ${response.status}`);
+      }
     },
     onSuccess: (data) => {
       console.log('Submit successful:', data);
