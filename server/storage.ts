@@ -275,7 +275,7 @@ This experience changed how I approach challenges in all areas of my life. Now, 
     const submission4: WritingSession = {
       id: 4,
       userId: 3,
-      assignmentId: 2,
+      assignmentId: 4,
       title: "Climate Change Solutions",
       content: `Climate change is one of the biggest challenges facing our planet today. Rising temperatures, melting ice caps, and extreme weather events are becoming more frequent and severe. However, there are many solutions we can implement to address this crisis.
 
@@ -298,7 +298,7 @@ Education is crucial too. The more people understand about climate science and e
     const submission5: WritingSession = {
       id: 5,
       userId: 4,
-      assignmentId: 2,
+      assignmentId: 4,
       title: "My Plan to Save the Environment",
       content: `I think the environment is very important and we need to do something about pollution and global warming. There are many things we can do to help save our planet.
 
@@ -323,7 +323,7 @@ If everyone does their part we can make the Earth a better place for future gene
     const submission6: WritingSession = {
       id: 6,
       userId: 2,
-      assignmentId: 4,
+      assignmentId: 2,
       title: "The Future of Renewable Energy",
       content: `As we stand at the crossroads of environmental crisis and technological innovation, renewable energy emerges as our most promising path toward a sustainable future. The transition from fossil fuels to clean energy sources represents not just an environmental necessity, but an economic opportunity that could reshape global markets.
 
