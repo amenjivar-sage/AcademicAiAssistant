@@ -77,14 +77,14 @@ export class UsernameGenerator {
   }
 
   /**
-   * Extract graduation year or class year from email domain
-   * Examples: john.smith25@school.edu -> 25, jane.doe@class2024.edu -> 24
+   * Extract graduation year or identifying numbers from email
+   * Works with Gmail, Outlook, Yahoo, and school domains
+   * Examples: john.smith25@gmail.com -> 25, jane.doe2024@outlook.com -> 24
    */
   private extractYearFromEmail(email: string): string | null {
-    const domain = email.split('@')[1];
     const emailPart = email.split('@')[0];
     
-    // Look for 2-4 digit years in email prefix
+    // Look for 2-4 digit years at the end of email prefix
     const yearMatch = emailPart.match(/(\d{2,4})$/);
     if (yearMatch) {
       const year = yearMatch[1];
@@ -94,10 +94,14 @@ export class UsernameGenerator {
       return year;
     }
 
-    // Look for years in domain
-    const domainYearMatch = domain.match(/(\d{4})/);
-    if (domainYearMatch) {
-      return domainYearMatch[1].slice(-2);
+    // Look for numbers in the middle of email (like john.smith.25@gmail.com)
+    const middleNumberMatch = emailPart.match(/\.(\d{2,4})(?:\.|$)/);
+    if (middleNumberMatch) {
+      const year = middleNumberMatch[1];
+      if (year.length === 4) {
+        return year.slice(-2);
+      }
+      return year;
     }
 
     return null;

@@ -197,15 +197,15 @@ export default function AdminUserManagement() {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>School Email Address</FormLabel>
+                        <FormLabel>Email Address</FormLabel>
                         <FormControl>
                           <Input 
-                            placeholder="student@schoolname.edu" 
+                            placeholder="student@gmail.com, teacher@outlook.com, or any email address" 
                             {...field} 
                           />
                         </FormControl>
                         <FormDescription>
-                          Username will be intelligently generated to handle duplicate names (e.g., john.smith, john.smith25, john.smith.teacher)
+                          Accepts any email address - Gmail, Outlook, Yahoo, school domains, etc. Username will be intelligently generated to handle duplicate names.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>

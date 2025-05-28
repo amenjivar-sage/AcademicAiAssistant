@@ -36,8 +36,8 @@ export default function AdminDashboard() {
               <School className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">@school.edu</div>
-              <p className="text-xs text-muted-foreground">Email domain for accounts</p>
+              <div className="text-2xl font-bold">Any Email</div>
+              <p className="text-xs text-muted-foreground">Gmail, Outlook, Yahoo, .edu domains</p>
             </CardContent>
           </Card>
           
@@ -83,8 +83,8 @@ export default function AdminDashboard() {
               School User Management
             </CardTitle>
             <p className="text-gray-600">
-              Manage teacher and student accounts using school email addresses. 
-              Usernames are automatically generated from email addresses (part before @).
+              Manage teacher and student accounts using any email provider - Gmail, Outlook, Yahoo, or school domains. 
+              Usernames are intelligently generated to handle duplicate names automatically.
             </p>
           </CardHeader>
           <CardContent>
