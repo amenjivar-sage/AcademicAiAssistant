@@ -104,7 +104,10 @@ export default function TeacherDashboard() {
                 <FileText className="h-8 w-8 text-edu-blue" />
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-500">Active Assignments</p>
-                  <p className="text-2xl font-bold text-gray-900">{assignments?.length || 0}</p>
+                  <p className="text-2xl font-bold text-gray-900">{assignments?.filter(a => a.status !== "completed").length || 0}</p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {assignments?.filter(a => a.status === "completed").length || 0} completed
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -115,8 +118,9 @@ export default function TeacherDashboard() {
               <div className="flex items-center">
                 <Users className="h-8 w-8 text-edu-success" />
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500">Students Enrolled</p>
-                  <p className="text-2xl font-bold text-gray-900">24</p>
+                  <p className="text-sm font-medium text-gray-500">Student Progress</p>
+                  <p className="text-2xl font-bold text-gray-900">18/24</p>
+                  <p className="text-xs text-gray-400 mt-1">actively writing</p>
                 </div>
               </div>
             </CardContent>
@@ -127,8 +131,9 @@ export default function TeacherDashboard() {
               <div className="flex items-center">
                 <BarChart3 className="h-8 w-8 text-edu-warning" />
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500">Submissions Pending</p>
-                  <p className="text-2xl font-bold text-gray-900">8</p>
+                  <p className="text-sm font-medium text-gray-500">Needs Grading</p>
+                  <p className="text-2xl font-bold text-gray-900">12</p>
+                  <p className="text-xs text-gray-400 mt-1">submissions ready</p>
                 </div>
               </div>
             </CardContent>
@@ -284,23 +289,250 @@ export default function TeacherDashboard() {
           </TabsContent>
 
           <TabsContent value="submissions" className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-900">Student Submissions</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-gray-900">Student Management</h2>
+              <div className="flex gap-2">
+                <Button variant="outline">
+                  <Users className="h-4 w-4 mr-2" />
+                  Export Grades
+                </Button>
+                <Button>
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Bulk Grade
+                </Button>
+              </div>
+            </div>
+            
+            {/* Student Progress Table */}
             <Card>
-              <CardContent className="p-12 text-center">
-                <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No submissions yet</h3>
-                <p className="text-gray-500">Student submissions will appear here once assignments are created.</p>
+              <CardHeader>
+                <CardTitle>Class Roster & Progress</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-6 gap-4 p-3 bg-gray-50 rounded-lg font-medium text-sm">
+                    <div>Student Name</div>
+                    <div>Current Assignment</div>
+                    <div>Progress</div>
+                    <div>AI Usage</div>
+                    <div>Last Active</div>
+                    <div>Actions</div>
+                  </div>
+                  
+                  <div className="grid grid-cols-6 gap-4 p-3 border rounded-lg items-center">
+                    <div className="font-medium">Maria Garcia</div>
+                    <div className="text-sm text-gray-600">Personal Narrative Essay</div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-16 bg-gray-200 rounded-full h-2">
+                          <div className="bg-green-600 h-2 rounded-full" style={{width: '95%'}}></div>
+                        </div>
+                        <span className="text-sm">95%</span>
+                      </div>
+                    </div>
+                    <div><Badge className="bg-blue-100 text-blue-800">High</Badge></div>
+                    <div className="text-sm text-gray-500">2 hours ago</div>
+                    <div>
+                      <Button variant="outline" size="sm">Message</Button>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-6 gap-4 p-3 border rounded-lg items-center">
+                    <div className="font-medium">Alex Kim</div>
+                    <div className="text-sm text-gray-600">Personal Narrative Essay</div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-16 bg-gray-200 rounded-full h-2">
+                          <div className="bg-blue-600 h-2 rounded-full" style={{width: '75%'}}></div>
+                        </div>
+                        <span className="text-sm">75%</span>
+                      </div>
+                    </div>
+                    <div><Badge className="bg-green-100 text-green-800">Medium</Badge></div>
+                    <div className="text-sm text-gray-500">1 day ago</div>
+                    <div>
+                      <Button variant="outline" size="sm">Message</Button>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-6 gap-4 p-3 border rounded-lg items-center">
+                    <div className="font-medium">Sarah Johnson</div>
+                    <div className="text-sm text-gray-600">Personal Narrative Essay</div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-16 bg-gray-200 rounded-full h-2">
+                          <div className="bg-yellow-600 h-2 rounded-full" style={{width: '30%'}}></div>
+                        </div>
+                        <span className="text-sm">30%</span>
+                      </div>
+                    </div>
+                    <div><Badge className="bg-red-100 text-red-800">Low</Badge></div>
+                    <div className="text-sm text-gray-500">3 days ago</div>
+                    <div>
+                      <Button variant="outline" size="sm">Remind</Button>
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
+
+            {/* Quick Actions */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <CheckCircle className="h-8 w-8 text-green-600 mx-auto mb-3" />
+                  <h3 className="font-medium mb-2">Grade Similar Work</h3>
+                  <p className="text-sm text-gray-600 mb-4">Apply same feedback to multiple submissions</p>
+                  <Button variant="outline" size="sm">Bulk Grade</Button>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <FileText className="h-8 w-8 text-blue-600 mx-auto mb-3" />
+                  <h3 className="font-medium mb-2">Comment Templates</h3>
+                  <p className="text-sm text-gray-600 mb-4">Save frequently used feedback</p>
+                  <Button variant="outline" size="sm">Manage Templates</Button>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <BarChart3 className="h-8 w-8 text-purple-600 mx-auto mb-3" />
+                  <h3 className="font-medium mb-2">Export Gradebook</h3>
+                  <p className="text-sm text-gray-600 mb-4">Download grades for school system</p>
+                  <Button variant="outline" size="sm">Export CSV</Button>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-900">AI Usage Analytics</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-gray-900">Classroom Analytics</h2>
+            </div>
+            
+            {/* Writing Progress Analytics */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5" />
+                    Student Writing Progress
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center p-3 bg-green-50 rounded">
+                      <div>
+                        <p className="font-medium">Maria Garcia</p>
+                        <p className="text-sm text-gray-600">Personal Narrative Essay</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-green-600">847 words</p>
+                        <p className="text-sm text-gray-500">95% complete</p>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-blue-50 rounded">
+                      <div>
+                        <p className="font-medium">Alex Kim</p>
+                        <p className="text-sm text-gray-600">Personal Narrative Essay</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-blue-600">623 words</p>
+                        <p className="text-sm text-gray-500">75% complete</p>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center p-3 bg-yellow-50 rounded">
+                      <div>
+                        <p className="font-medium">Sarah Johnson</p>
+                        <p className="text-sm text-gray-600">Personal Narrative Essay</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-yellow-600">234 words</p>
+                        <p className="text-sm text-gray-500">30% complete</p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Settings className="h-5 w-5" />
+                    AI Feature Usage
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium">Grammar Check</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-24 bg-gray-200 rounded-full h-2">
+                          <div className="bg-blue-600 h-2 rounded-full" style={{width: '85%'}}></div>
+                        </div>
+                        <span className="text-sm text-gray-600">85%</span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium">Brainstorming Help</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-24 bg-gray-200 rounded-full h-2">
+                          <div className="bg-green-600 h-2 rounded-full" style={{width: '67%'}}></div>
+                        </div>
+                        <span className="text-sm text-gray-600">67%</span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium">Outline Assistance</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-24 bg-gray-200 rounded-full h-2">
+                          <div className="bg-purple-600 h-2 rounded-full" style={{width: '52%'}}></div>
+                        </div>
+                        <span className="text-sm text-gray-600">52%</span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium">Research Help</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-24 bg-gray-200 rounded-full h-2">
+                          <div className="bg-orange-600 h-2 rounded-full" style={{width: '43%'}}></div>
+                        </div>
+                        <span className="text-sm text-gray-600">43%</span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Class Performance Overview */}
             <Card>
-              <CardContent className="p-12 text-center">
-                <BarChart3 className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Analytics Dashboard</h3>
-                <p className="text-gray-500">View student AI interaction patterns and learning progress.</p>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Class Performance Insights
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="text-center p-4 bg-green-50 rounded-lg">
+                    <div className="text-2xl font-bold text-green-600">72%</div>
+                    <p className="text-sm text-gray-600">Students on track</p>
+                    <p className="text-xs text-gray-500 mt-1">Meeting word count goals</p>
+                  </div>
+                  <div className="text-center p-4 bg-blue-50 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-600">8.5 min</div>
+                    <p className="text-sm text-gray-600">Avg. daily writing</p>
+                    <p className="text-xs text-gray-500 mt-1">Time spent per session</p>
+                  </div>
+                  <div className="text-center p-4 bg-purple-50 rounded-lg">
+                    <div className="text-2xl font-bold text-purple-600">94%</div>
+                    <p className="text-sm text-gray-600">AI effectiveness</p>
+                    <p className="text-xs text-gray-500 mt-1">Students improving with AI</p>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
