@@ -234,17 +234,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/writing-sessions/:sessionId/unsubmit", async (req, res) => {
     try {
       const sessionId = parseInt(req.params.sessionId);
+      console.log("Unsubmitting session:", sessionId);
       
       const session = await storage.updateWritingSession(sessionId, {
         status: "draft",
       });
       
       if (!session) {
+        console.log("Session not found:", sessionId);
         return res.status(404).json({ message: "Session not found" });
       }
       
+      console.log("Updated session:", session);
       res.json(session);
     } catch (error) {
+      console.error("Error unsubmitting session:", error);
       res.status(500).json({ message: "Failed to unsubmit session" });
     }
   });
