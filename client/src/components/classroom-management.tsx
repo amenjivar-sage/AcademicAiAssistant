@@ -31,8 +31,18 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
           throw new Error(`Failed to fetch classrooms: ${response.status} ${errorText}`);
         }
         
-        const data = await response.json();
-        console.log("Raw classroom API response:", data);
+        const responseText = await response.text();
+        console.log("Raw response text:", responseText);
+        
+        let data;
+        try {
+          data = JSON.parse(responseText);
+          console.log("Parsed classroom API response:", data);
+        } catch (parseError) {
+          console.error("JSON parse error:", parseError);
+          console.log("Response was not valid JSON");
+          throw new Error("Server returned invalid JSON");
+        }
         return data;
       } catch (error) {
         console.error("Fetch error:", error);
