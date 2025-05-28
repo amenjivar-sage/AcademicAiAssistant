@@ -48,8 +48,11 @@ export default function StudentDashboard() {
         title: "Assignment unsubmitted",
         description: "You can now continue editing your work.",
       });
+      // Force refresh all relevant data
       queryClient.invalidateQueries({ queryKey: ['/api/student/writing-sessions'] });
       queryClient.invalidateQueries({ queryKey: ['/api/student/assignments'] });
+      queryClient.refetchQueries({ queryKey: ['/api/student/writing-sessions'] });
+      queryClient.refetchQueries({ queryKey: ['/api/student/assignments'] });
     },
     onError: () => {
       toast({
