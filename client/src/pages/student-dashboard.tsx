@@ -83,21 +83,11 @@ export default function StudentDashboard() {
           </div>
         </header>
 
-        <div className="flex">
-          {/* Main Writing Area */}
-          <div className="flex-1">
-            <WritingWorkspace 
-              session={null} 
-              onContentUpdate={() => {}} 
-              onTitleUpdate={() => {}} 
-              isUpdating={false} 
-            />
-          </div>
-          
-          {/* AI Assistant Sidebar */}
-          <div className="w-80 border-l bg-gray-50">
-            <AiAssistant sessionId={undefined} />
-          </div>
+        <div className="flex-1">
+          <WritingWorkspace 
+            sessionId={writingSessions?.find(s => s.assignmentId === selectedAssignment.id)?.id || 0}
+            assignmentId={selectedAssignment.id}
+          />
         </div>
       </div>
     );
