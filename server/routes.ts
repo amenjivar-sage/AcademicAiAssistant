@@ -299,13 +299,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Simple in-memory storage for classrooms (temporary)
+  const classrooms: any[] = [];
+
+  // Get teacher's classrooms  
+  app.get("/api/teacher/:id/classrooms", async (req, res) => {
+    try {
+      const teacherId = parseInt(req.params.id);
+      const teacherClassrooms = classrooms.filter(classroom => classroom.teacherId === teacherId);
+      res.json(teacherClassrooms);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get classrooms" });
+    }
+  });
+
   // Create classroom
   app.post("/api/classrooms", async (req, res) => {
     try {
       const classroomData = req.body;
       // Generate a simple join code for now
       const joinCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-      const classroom = { ...classroomData, joinCode, id: Date.now() };
+      const classroom = { 
+        ...classroomData, 
+        joinCode, 
+        id: Date.now(),
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      classrooms.push(classroom);
       res.json(classroom);
     } catch (error) {
       console.error("Error creating classroom:", error);
