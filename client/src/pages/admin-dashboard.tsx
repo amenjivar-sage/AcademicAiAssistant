@@ -1,4 +1,5 @@
 import AdminUserManagement from "@/components/admin-user-management";
+import DemoUsers from "@/components/demo-users";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Shield, Users, School, Settings } from "lucide-react";
@@ -73,6 +74,11 @@ export default function AdminDashboard() {
               <p className="text-xs text-muted-foreground">Email-based authentication</p>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Demo Section */}
+        <div className="mb-8">
+          <DemoUsers />
         </div>
 
         {/* User Management Section */}
