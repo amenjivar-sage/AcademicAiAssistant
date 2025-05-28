@@ -10,6 +10,11 @@ export const users = pgTable("users", {
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
   email: text("email").notNull().unique(),
+  department: text("department"),
+  grade: text("grade"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 export const assignments = pgTable("assignments", {
@@ -58,6 +63,8 @@ export const insertUserSchema = createInsertSchema(users).pick({
   firstName: true,
   lastName: true,
   email: true,
+  department: true,
+  grade: true,
 });
 
 export const insertAssignmentSchema = createInsertSchema(assignments).omit({
