@@ -177,7 +177,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // AI assistance endpoint
-  app.post("/api/ai-help", async (req, res) => {
+  app.post("/api/ai/chat", async (req, res) => {
     try {
       const { sessionId, prompt } = req.body;
       

@@ -29,12 +29,10 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
 
   const aiHelpMutation = useMutation({
     mutationFn: async (promptText: string) => {
-      if (!sessionId) {
-        throw new Error("No active session");
-      }
+      const currentSessionId = sessionId || 1;
       
-      const response = await apiRequest("POST", "/api/ai-help", {
-        sessionId,
+      const response = await apiRequest("POST", "/api/ai/chat", {
+        sessionId: currentSessionId,
         prompt: promptText,
       });
       return response.json();
@@ -70,14 +68,8 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
       return;
     }
 
-    if (!sessionId) {
-      toast({
-        title: "No Session",
-        description: "Please wait for your writing session to load.",
-        variant: "destructive",
-      });
-      return;
-    }
+    // Allow AI assistant to work without session for demo
+    const currentSessionId = sessionId || 1;
 
     aiHelpMutation.mutate(prompt.trim());
   };
