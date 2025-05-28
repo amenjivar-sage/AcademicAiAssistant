@@ -161,6 +161,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // If sessionId is 0, check if session exists for this assignment, or create new one
       if (sessionId === 0 && assignmentId) {
+        console.log('Triggering session creation logic for assignment:', assignmentId);
         const userId = 1; // Default student user for demo
         const existingSessions = await storage.getUserWritingSessions(userId);
         const existingSession = existingSessions.find(s => s.assignmentId === parseInt(assignmentId as string));
