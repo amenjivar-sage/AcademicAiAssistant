@@ -164,11 +164,10 @@ export default function TeacherDashboard() {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="classes">My Classes</TabsTrigger>
             <TabsTrigger value="assignments">Assignments</TabsTrigger>
             <TabsTrigger value="submissions">Students</TabsTrigger>
-            <TabsTrigger value="insights">Student Insights</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="settings">Communication</TabsTrigger>
           </TabsList>
@@ -304,19 +303,11 @@ export default function TeacherDashboard() {
             </div>
           </TabsContent>
 
-          <TabsContent value="insights" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-900">Student Insights & Achievements</h2>
-              <Badge variant="outline">Real-time monitoring</Badge>
-            </div>
-            
-            <TeacherInsights teacherId={1} />
-          </TabsContent>
-
           <TabsContent value="submissions" className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-900">Student Management</h2>
+              <h2 className="text-2xl font-bold text-gray-900">Students & Achievements</h2>
               <div className="flex gap-2">
+                <Badge variant="outline">Real-time monitoring</Badge>
                 <Button variant="outline">
                   <Users className="h-4 w-4 mr-2" />
                   Export Grades
@@ -327,6 +318,9 @@ export default function TeacherDashboard() {
                 </Button>
               </div>
             </div>
+            
+            {/* Student Insights and Achievement Tracking */}
+            <TeacherInsights teacherId={1} />
             
             {/* Student Progress Table */}
             <Card>
