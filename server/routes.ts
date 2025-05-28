@@ -230,26 +230,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Unsubmit writing session
+  // Unsubmit writing session - TEST ROUTE
   app.patch("/api/writing-sessions/:sessionId/unsubmit", async (req, res) => {
+    console.log("=== UNSUBMIT ROUTE HIT ===");
+    console.log("Session ID:", req.params.sessionId);
+    
     try {
       const sessionId = parseInt(req.params.sessionId);
-      console.log("Unsubmitting session:", sessionId);
+      console.log("Parsed session ID:", sessionId);
       
-      const session = await storage.updateWritingSession(sessionId, {
-        status: "draft",
-      });
+      // Get current session first
+      const currentSession = await storage.getWritingSession(sessionId);
+      console.log("Current session before update:", currentSession);
       
-      if (!session) {
+      if (!currentSession) {
         console.log("Session not found:", sessionId);
         return res.status(404).json({ message: "Session not found" });
       }
       
-      console.log("Updated session:", session);
-      res.json(session);
+      // Update the session
+      const updatedSession = await storage.updateWritingSession(sessionId, {
+        status: "draft",
+      });
+      
+      console.log("Updated session after storage call:", updatedSession);
+      
+      // Force set the response headers to ensure JSON
+      res.setHeader('Content-Type', 'application/json');
+      res.status(200).json(updatedSession);
     } catch (error) {
       console.error("Error unsubmitting session:", error);
-      res.status(500).json({ message: "Failed to unsubmit session" });
+      res.status(500).json({ message: "Failed to unsubmit session", error: error.message });
     }
   });
 
