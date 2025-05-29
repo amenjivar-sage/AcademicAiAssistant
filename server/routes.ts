@@ -445,9 +445,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Join code and student ID are required" });
       }
       
-      // Find classroom by join code
-      const classrooms = await storage.getTeacherClassrooms(1); // Get all classrooms for now
-      const classroom = classrooms.find(c => c.joinCode === joinCode.toUpperCase());
+      // Find classroom by join code across all teachers
+      const allClassrooms = await storage.getAllClassrooms();
+      const classroom = allClassrooms.find(c => c.joinCode === joinCode.toUpperCase());
       
       if (!classroom) {
         return res.status(404).json({ message: "Class not found with this join code" });

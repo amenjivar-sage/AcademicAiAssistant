@@ -38,6 +38,7 @@ export interface IStorage {
   // Classroom operations
   createClassroom(classroom: InsertClassroom): Promise<Classroom>;
   getTeacherClassrooms(teacherId: number): Promise<Classroom[]>;
+  getAllClassrooms(): Promise<Classroom[]>;
   updateClassroom(id: number, updates: Partial<InsertClassroom>): Promise<Classroom | undefined>;
 }
 
@@ -659,6 +660,10 @@ Despite these challenges, the momentum toward renewable energy appears unstoppab
     return Array.from(this.classrooms.values()).filter(
       (classroom) => classroom.teacherId === teacherId
     );
+  }
+
+  async getAllClassrooms(): Promise<any[]> {
+    return Array.from(this.classrooms.values());
   }
 
   async updateClassroom(id: number, updates: any): Promise<any | undefined> {
