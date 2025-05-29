@@ -45,11 +45,12 @@ export async function seedDatabase() {
 
     // Create demo classroom
     const [classroom] = await db.insert(classrooms).values({
-      teacherId: teacher.id,
       name: "Creative Writing Workshop",
       description: "An advanced course in creative writing techniques and storytelling",
       subject: "English",
       gradeLevel: "College",
+      classSize: 30,
+      joinCode: "CW2024",
     }).returning();
 
     // Create demo assignment

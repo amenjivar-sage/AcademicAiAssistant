@@ -271,7 +271,8 @@ export class DatabaseStorage implements IStorage {
     const joinCode = Math.random().toString(36).substring(2, 8).toUpperCase();
     const [classroom] = await db.insert(classrooms).values({
       ...classroomData,
-      joinCode
+      joinCode,
+      classSize: classroomData.classSize || 30,
     }).returning();
     return classroom;
   }
@@ -291,6 +292,10 @@ export class DatabaseStorage implements IStorage {
         teacherId: classrooms.teacherId,
         name: classrooms.name,
         description: classrooms.description,
+        subject: classrooms.subject,
+        gradeLevel: classrooms.gradeLevel,
+        classSize: classrooms.classSize,
+        isActive: classrooms.isActive,
         joinCode: classrooms.joinCode,
         createdAt: classrooms.createdAt,
         updatedAt: classrooms.updatedAt,
