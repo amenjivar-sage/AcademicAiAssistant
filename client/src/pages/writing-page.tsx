@@ -15,10 +15,13 @@ export default function WritingPage() {
     queryKey: [`/api/assignments/${assignmentId}`],
   });
 
-  // Fetch existing writing session if any
-  const { data: session } = useQuery({
-    queryKey: [`/api/writing-sessions/${assignmentId}`],
+  // Fetch existing writing session for this assignment
+  const { data: userSessions } = useQuery({
+    queryKey: ['/api/student/writing-sessions'],
   });
+
+  // Find session for this specific assignment
+  const session = userSessions?.find((s: any) => s.assignmentId === assignmentId);
 
   if (assignmentLoading) {
     return (
@@ -123,9 +126,8 @@ export default function WritingPage() {
 
         {/* Writing Workspace */}
         <WritingWorkspace 
+          sessionId={session?.id || 0}
           assignmentId={assignmentId}
-          isOpen={true}
-          onClose={() => setLocation("/student")}
         />
       </div>
     </div>

@@ -189,12 +189,15 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     if (!isSaving && (title !== session?.title || content !== session?.content || pastedContents.length !== (session?.pastedContent as PastedContent[] || []).length)) {
       setIsSaving(true);
       
-      // If no session exists yet, create one
-      if (!session && !sessionId && assignmentId) {
+      // If no session exists yet (sessionId is 0 or null), create one
+      if ((!session && (!sessionId || sessionId === 0)) && assignmentId) {
         createSessionMutation.mutate({ title, content, assignmentId });
       } else {
-        // Update existing session
-        updateSessionMutation.mutate({ title, content, pastedContent: pastedContents });
+        // Update existing session - use the sessionId from state or from session data
+        const currentSessionId = session?.id || sessionId;
+        if (currentSessionId && currentSessionId !== 0) {
+          updateSessionMutation.mutate({ title, content, pastedContent: pastedContents });
+        }
       }
     }
   };
