@@ -31,7 +31,7 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
   // Fetch chat history for this session
   const { data: chatHistory = [] } = useQuery({
     queryKey: [`/api/session/${sessionId || 1}/interactions`],
-    enabled: !!sessionId,
+    enabled: true, // Always fetch for default session if no sessionId
   });
 
   const aiHelpMutation = useMutation({
