@@ -425,6 +425,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Class enrollment route
+  app.post("/api/classes/join", async (req, res) => {
+    try {
+      const { joinCode, studentId } = req.body;
+      
+      if (!joinCode || !studentId) {
+        return res.status(400).json({ message: "Join code and student ID are required" });
+      }
+      
+      // Find classroom by join code
+      const classrooms = await storage.getTeacherClassrooms(1); // Get all classrooms for now
+      const classroom = classrooms.find(c => c.joinCode === joinCode.toUpperCase());
+      
+      if (!classroom) {
+        return res.status(404).json({ message: "Class not found with this join code" });
+      }
+      
+      // Return the classroom data
+      res.json(classroom);
+    } catch (error) {
+      console.error("Error joining class:", error);
+      res.status(500).json({ message: "Failed to join class" });
+    }
+  });
+
   // Create classroom
   app.post("/api/classrooms", async (req, res) => {
     try {

@@ -79,6 +79,7 @@ export class MemStorage implements IStorage {
     this.currentClassroomId = 1;
 
     this.initializeDefaultUsers();
+    this.initializeSampleClassrooms();
     this.initializeSampleSubmissions();
   }
 
@@ -110,12 +111,29 @@ export class MemStorage implements IStorage {
     this.currentUserId = 3;
   }
 
+  private initializeSampleClassrooms() {
+    // Create a sample classroom for the teacher
+    const classroom = {
+      id: 1,
+      teacherId: 1,
+      name: "Creative Writing 101",
+      description: "Introduction to creative writing with focus on personal narratives and storytelling techniques",
+      subject: "English",
+      joinCode: "CW101A",
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.classrooms.set(1, classroom);
+    this.currentClassroomId = 2;
+  }
+
   private initializeSampleSubmissions() {
     // Create a sample assignment first
     const assignment: Assignment = {
       id: 1,
       teacherId: 1,
-      classroomId: null, // General assignment not tied to specific class
+      classroomId: 1, // Tied to Creative Writing 101 class
       title: "Personal Narrative Essay",
       description: "Write a personal narrative about a meaningful experience that changed your perspective. Your essay should include vivid details, clear chronological structure, and reflection on the significance of the event.",
       dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Due in 1 week
@@ -125,6 +143,7 @@ export class MemStorage implements IStorage {
       allowOutlining: true,
       allowGrammarCheck: true,
       allowResearchHelp: false,
+      allowCopyPaste: false,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
