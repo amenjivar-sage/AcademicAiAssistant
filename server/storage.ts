@@ -119,7 +119,7 @@ export class MemStorage implements IStorage {
       name: "Creative Writing 101",
       description: "Introduction to creative writing with focus on personal narratives and storytelling techniques",
       subject: "English",
-      joinCode: "CW101A",
+      joinCode: "ENG101A",
       isActive: true,
       createdAt: new Date(),
       updatedAt: new Date()
