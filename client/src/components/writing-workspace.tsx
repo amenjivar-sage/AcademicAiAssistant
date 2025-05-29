@@ -41,9 +41,12 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   const { data: session, isLoading: sessionLoading, refetch: refetchSession } = useQuery<WritingSession>({
     queryKey: ['/api/writing-sessions', sessionId, assignmentId],
     queryFn: async () => {
-      const response = await fetch(`/api/writing-sessions/${sessionId}?assignmentId=${assignmentId}`);
-      if (!response.ok) throw new Error('Failed to fetch session');
-      return response.json();
+      if (sessionId && sessionId !== 0) {
+        const response = await fetch(`/api/writing-sessions/${sessionId}`);
+        if (!response.ok) throw new Error('Failed to fetch session');
+        return response.json();
+      }
+      throw new Error('No valid session ID');
     },
     enabled: !!sessionId && sessionId !== 0, // Only query if we have a valid session ID
   });
@@ -193,18 +196,15 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       setIsSaving(true);
       console.log('Auto-save triggered - session:', session?.id, 'sessionId:', sessionId, 'assignmentId:', assignmentId);
       
-      // If we have a session (either from query or state), update it
+      // Always use the session from the query data if available, otherwise use sessionId from props
       const currentSessionId = session?.id || sessionId;
       if (currentSessionId && currentSessionId !== 0) {
         console.log('Updating existing session:', currentSessionId);
         updateSessionMutation.mutate({ title, content, pastedContent: pastedContents });
-      } else if (assignmentId) {
-        // Create new session if none exists
-        console.log('Creating new session for assignment:', assignmentId);
-        createSessionMutation.mutate({ title, content, assignmentId });
       } else {
+        // This should not happen if we already have a session
         setIsSaving(false);
-        console.log('No session ID or assignment ID available for save');
+        console.log('No valid session found - this should not happen');
       }
     }
   };
