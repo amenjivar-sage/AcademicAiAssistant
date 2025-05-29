@@ -188,16 +188,20 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   const handleSave = () => {
     if (!isSaving && (title !== session?.title || content !== session?.content || pastedContents.length !== (session?.pastedContent as PastedContent[] || []).length)) {
       setIsSaving(true);
+      console.log('Auto-save triggered - session:', session?.id, 'sessionId:', sessionId, 'assignmentId:', assignmentId);
       
-      // If no session exists yet (sessionId is 0 or null), create one
-      if ((!session && (!sessionId || sessionId === 0)) && assignmentId) {
+      // If we have a session (either from query or state), update it
+      const currentSessionId = session?.id || sessionId;
+      if (currentSessionId && currentSessionId !== 0) {
+        console.log('Updating existing session:', currentSessionId);
+        updateSessionMutation.mutate({ title, content, pastedContent: pastedContents });
+      } else if (assignmentId) {
+        // Create new session if none exists
+        console.log('Creating new session for assignment:', assignmentId);
         createSessionMutation.mutate({ title, content, assignmentId });
       } else {
-        // Update existing session - use the sessionId from state or from session data
-        const currentSessionId = session?.id || sessionId;
-        if (currentSessionId && currentSessionId !== 0) {
-          updateSessionMutation.mutate({ title, content, pastedContent: pastedContents });
-        }
+        setIsSaving(false);
+        console.log('No session ID or assignment ID available for save');
       }
     }
   };
