@@ -252,11 +252,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create new writing session
+  app.post("/api/writing-sessions", async (req, res) => {
+    try {
+      const sessionData = req.body;
+      
+      // Calculate word count if content is provided
+      if (sessionData.content) {
+        const words = sessionData.content.trim().split(/\s+/).filter((word: string) => word.length > 0);
+        sessionData.wordCount = words.length;
+      }
+      
+      const newSession = await storage.createWritingSession(sessionData);
+      console.log('Created new session:', newSession.id, 'for assignment:', sessionData.assignmentId);
+      res.json(newSession);
+    } catch (error) {
+      console.error('Error creating writing session:', error);
+      res.status(500).json({ message: "Failed to create session" });
+    }
+  });
+
   // Update writing session content
   app.patch("/api/writing-sessions/:id", async (req, res) => {
     try {
       const sessionId = parseInt(req.params.id);
       const updateData = req.body;
+      
+      console.log('Updating session:', sessionId, 'with data:', Object.keys(updateData));
       
       // Calculate word count if content is provided
       if (updateData.content) {
@@ -270,8 +292,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Session not found" });
       }
       
+      console.log('Session updated successfully:', updatedSession.id);
       res.json(updatedSession);
     } catch (error) {
+      console.error('Error updating session:', error);
       res.status(500).json({ message: "Failed to update session" });
     }
   });

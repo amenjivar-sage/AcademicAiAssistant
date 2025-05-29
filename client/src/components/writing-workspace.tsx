@@ -37,7 +37,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
 
-  // Get session data
+  // Get session data - only query if we have a valid sessionId
   const { data: session, isLoading: sessionLoading, refetch: refetchSession } = useQuery<WritingSession>({
     queryKey: ['/api/writing-sessions', sessionId, assignmentId],
     queryFn: async () => {
@@ -45,6 +45,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       if (!response.ok) throw new Error('Failed to fetch session');
       return response.json();
     },
+    enabled: !!sessionId && sessionId !== 0, // Only query if we have a valid session ID
   });
 
   // Get assignment data to check copy-paste permissions
