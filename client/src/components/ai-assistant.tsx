@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Bot, Send, CheckCircle, XCircle, AlertTriangle, Loader2, BookOpen, PenTool, Search, Zap, Lightbulb } from "lucide-react";
+import { Bot, Send, CheckCircle, XCircle, AlertTriangle, Loader2, BookOpen, PenTool, Search, Zap, Lightbulb, Users, Play, Shield, Target, FileText } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import CitationAssistant from "@/components/citation-assistant";
@@ -22,9 +22,17 @@ interface AiResponse {
   isRestricted: boolean;
 }
 
+interface SmartPrompt {
+  text: string;
+  icon: any;
+  category: string;
+  relevance: number;
+}
+
 export default function AiAssistant({ sessionId }: AiAssistantProps) {
   const [prompt, setPrompt] = useState("");
   const [lastResponse, setLastResponse] = useState<AiResponse | null>(null);
+  const [smartPrompts, setSmartPrompts] = useState<SmartPrompt[]>([]);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -33,6 +41,9 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
     queryKey: [`/api/session/${sessionId || 1}/interactions`],
     enabled: true, // Always fetch for default session if no sessionId
   });
+
+  // Type the chat history properly
+  const typedChatHistory = Array.isArray(chatHistory) ? chatHistory : [];
 
   const aiHelpMutation = useMutation({
     mutationFn: async (promptText: string) => {
@@ -105,14 +116,98 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
     return isRestricted ? "destructive" : "default";
   };
 
-  const quickPrompts = [
-    { icon: Lightbulb, text: "Help me brainstorm ideas for this topic", category: "brainstorming" },
-    { icon: BookOpen, text: "Review my thesis statement and suggest improvements", category: "feedback" },
-    { icon: PenTool, text: "Help me organize my thoughts into an outline", category: "structure" },
-    { icon: Search, text: "What are key points I should research?", category: "research" },
-    { icon: Zap, text: "Improve the flow and transitions in this paragraph", category: "editing" },
-    { icon: CheckCircle, text: "Check my grammar and writing style", category: "grammar" },
-  ];
+  // Generate smart prompts based on conversation history
+  const generateSmartPrompts = (chatHistory: any[]) => {
+    const basePrompts = [
+      { icon: Lightbulb, text: "Help me brainstorm ideas for this topic", category: "brainstorming", relevance: 1 },
+      { icon: BookOpen, text: "Review my thesis statement and suggest improvements", category: "feedback", relevance: 1 },
+      { icon: PenTool, text: "Help me organize my thoughts into an outline", category: "structure", relevance: 1 },
+      { icon: Search, text: "What are key points I should research?", category: "research", relevance: 1 },
+      { icon: Zap, text: "Improve the flow and transitions in this paragraph", category: "editing", relevance: 1 },
+      { icon: CheckCircle, text: "Check my grammar and writing style", category: "grammar", relevance: 1 },
+    ];
+
+    if (!chatHistory || chatHistory.length === 0) {
+      return basePrompts;
+    }
+
+    // Analyze recent questions to suggest contextual prompts
+    const recentTopics = chatHistory.slice(-3).map((interaction: any) => interaction.prompt.toLowerCase());
+    const contextualPrompts: SmartPrompt[] = [];
+
+    if (recentTopics.some(topic => topic.includes('character') || topic.includes('story') || topic.includes('creative'))) {
+      contextualPrompts.push({ 
+        icon: Users, 
+        text: "Help me develop my characters further", 
+        category: "character", 
+        relevance: 2 
+      });
+      contextualPrompts.push({ 
+        icon: BookOpen, 
+        text: "What makes dialogue feel natural?", 
+        category: "dialogue", 
+        relevance: 2 
+      });
+    }
+
+    if (recentTopics.some(topic => topic.includes('research') || topic.includes('source') || topic.includes('evidence'))) {
+      contextualPrompts.push({ 
+        icon: Search, 
+        text: "How do I find credible sources?", 
+        category: "research", 
+        relevance: 2 
+      });
+      contextualPrompts.push({ 
+        icon: FileText, 
+        text: "Help me organize my research notes", 
+        category: "organization", 
+        relevance: 2 
+      });
+    }
+
+    if (recentTopics.some(topic => topic.includes('conclusion') || topic.includes('ending') || topic.includes('finish'))) {
+      contextualPrompts.push({ 
+        icon: Target, 
+        text: "How can I write a stronger conclusion?", 
+        category: "conclusion", 
+        relevance: 2 
+      });
+    }
+
+    if (recentTopics.some(topic => topic.includes('stuck') || topic.includes('block') || topic.includes('help'))) {
+      contextualPrompts.push({ 
+        icon: Zap, 
+        text: "I have writer's block, help me get unstuck", 
+        category: "motivation", 
+        relevance: 2 
+      });
+    }
+
+    if (recentTopics.some(topic => topic.includes('introduction') || topic.includes('intro') || topic.includes('start'))) {
+      contextualPrompts.push({ 
+        icon: Play, 
+        text: "How do I write a compelling introduction?", 
+        category: "introduction", 
+        relevance: 2 
+      });
+    }
+
+    if (recentTopics.some(topic => topic.includes('argument') || topic.includes('persuasive') || topic.includes('convince'))) {
+      contextualPrompts.push({ 
+        icon: Shield, 
+        text: "Help me strengthen my argument", 
+        category: "argument", 
+        relevance: 2 
+      });
+    }
+
+    // Combine and sort by relevance, then limit to 6
+    return [...contextualPrompts, ...basePrompts]
+      .sort((a, b) => b.relevance - a.relevance)
+      .slice(0, 6);
+  };
+
+  const quickPrompts = generateSmartPrompts(typedChatHistory);
 
   return (
     <div className="h-full flex flex-col bg-white overflow-hidden">
