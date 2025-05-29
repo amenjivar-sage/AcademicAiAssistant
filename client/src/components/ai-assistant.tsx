@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -26,6 +26,13 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
   const [prompt, setPrompt] = useState("");
   const [lastResponse, setLastResponse] = useState<AiResponse | null>(null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Fetch chat history for this session
+  const { data: chatHistory = [] } = useQuery({
+    queryKey: [`/api/session/${sessionId || 1}/interactions`],
+    enabled: !!sessionId,
+  });
 
   const aiHelpMutation = useMutation({
     mutationFn: async (promptText: string) => {
@@ -40,6 +47,11 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
     onSuccess: (data: AiResponse) => {
       setLastResponse(data);
       setPrompt("");
+      
+      // Refetch chat history to include the new interaction
+      queryClient.invalidateQueries({
+        queryKey: [`/api/session/${sessionId || 1}/interactions`]
+      });
       
       if (data.isRestricted) {
         toast({
@@ -112,6 +124,30 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
         </TabsList>
 
         <TabsContent value="assistant" className="flex-1 flex flex-col space-y-4">
+          {/* Chat History */}
+          {chatHistory && chatHistory.length > 0 && (
+            <div className="flex-1 p-4">
+              <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
+                <Bot className="h-4 w-4 mr-2" />
+                Conversation History
+              </h4>
+              <ScrollArea className="h-64 space-y-3">
+                {chatHistory.map((interaction: any, index: number) => (
+                  <div key={index} className="space-y-2">
+                    <div className="bg-blue-50 p-3 rounded-lg">
+                      <p className="text-sm font-medium text-blue-900 mb-1">You asked:</p>
+                      <p className="text-sm text-blue-800">{interaction.prompt}</p>
+                    </div>
+                    <div className="bg-purple-50 p-3 rounded-lg">
+                      <p className="text-sm font-medium text-purple-900 mb-1">ZoË replied:</p>
+                      <p className="text-sm text-purple-800 whitespace-pre-line">{interaction.response}</p>
+                    </div>
+                  </div>
+                ))}
+              </ScrollArea>
+            </div>
+          )}
+
           {/* AI Assistant Input */}
           <div className="p-4 space-y-4">
             <div>
@@ -122,7 +158,7 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Example: 'Help me brainstorm main points about WWII causes' or 'Give feedback on my thesis statement'"
+                placeholder="Example: 'I want to write a story about baseball, how can I do that?' or 'Help me brainstorm creative ideas'"
                 className="resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 rows={3}
               />
@@ -136,12 +172,12 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
               {aiHelpMutation.isPending ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  AI is thinking...
+                  ZoË is thinking...
                 </>
               ) : (
                 <>
                   <Send className="h-4 w-4 mr-2" />
-                  Get AI Help
+                  Ask ZoË
                 </>
               )}
             </Button>

@@ -310,6 +310,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get session interactions (chat history)
+  app.get("/api/session/:sessionId/interactions", async (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.sessionId);
+      const interactions = await storage.getSessionInteractions(sessionId);
+      res.json(interactions);
+    } catch (error) {
+      console.error("Error fetching interactions:", error);
+      res.status(500).json({ message: "Failed to fetch chat history" });
+    }
+  });
+
   // AI assistance endpoint
   app.post("/api/ai/chat", async (req, res) => {
     try {
