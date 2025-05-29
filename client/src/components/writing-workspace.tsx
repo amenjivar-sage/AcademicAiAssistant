@@ -241,14 +241,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       return;
     }
 
-    if (wordCount < 50) {
-      toast({
-        title: "Work incomplete", 
-        description: "Please write at least 50 words before submitting.",
-        variant: "destructive",
-      });
-      return;
-    }
+
 
     console.log('Submitting assignment...');
     submitSessionMutation.mutate();
@@ -368,7 +361,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
               {!isSubmitted && (
                 <Button
                   onClick={handleSubmit}
-                  disabled={submitSessionMutation.isPending || wordCount < 50}
+                  disabled={submitSessionMutation.isPending}
                   className="gap-2"
                 >
                   <Send className="h-4 w-4" />
