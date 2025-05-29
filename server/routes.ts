@@ -236,29 +236,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get or create writing session for specific assignment
-  app.get("/api/writing-sessions/:sessionId", async (req, res) => {
-    console.log('=== ROUTE HIT: GET /api/writing-sessions/:sessionId ===');
-    console.log('Raw params:', req.params);
-    console.log('Raw query:', req.query);
+  // Get writing session by ID
+  app.get("/api/session/:id", async (req, res) => {
+    console.log('=== SESSION RETRIEVAL ROUTE HIT ===');
+    const sessionId = parseInt(req.params.id);
+    console.log('Fetching session ID:', sessionId);
+    
+    if (isNaN(sessionId)) {
+      return res.status(400).json({ message: "Invalid session ID" });
+    }
+
     try {
-      const sessionId = parseInt(req.params.sessionId);
-      const { assignmentId } = req.query;
-      console.log('GET session request - sessionId:', sessionId, 'assignmentId:', assignmentId);
-      console.log('All sessions in memory:', Array.from((storage as any).writingSessions.keys()));
+      const session = await storage.getWritingSession(sessionId);
+      if (!session) {
+        console.log('Session not found:', sessionId);
+        return res.status(404).json({ message: "Session not found" });
+      }
       
-      // If sessionId is 0, check if session exists for this assignment, or create new one
+      console.log('Session found:', session.id, 'Title:', session.title);
+      res.json(session);
+    } catch (error) {
+      console.error('Error fetching session:', error);
+      res.status(500).json({ message: "Failed to get session" });
+    }
+  });
+
+  // Get or create writing session for assignment
+  app.get("/api/writing-sessions/:sessionId", async (req, res) => {
+    const sessionId = parseInt(req.params.sessionId);
+    const { assignmentId } = req.query;
+    
+    try {
+      // If sessionId is 0, create or find session for assignment
       if (sessionId === 0 && assignmentId) {
-        console.log('Triggering session creation logic for assignment:', assignmentId);
-        const userId = 1; // Default student user for demo
+        const userId = 1; // Default student user
         const existingSessions = await storage.getUserWritingSessions(userId);
         const existingSession = existingSessions.find(s => s.assignmentId === parseInt(assignmentId as string));
         
         if (existingSession) {
-          console.log('Found existing session:', existingSession.id, 'for assignment:', assignmentId);
-          res.json(existingSession);
+          return res.json(existingSession);
         } else {
-          console.log('Creating new session for assignment:', assignmentId);
           const newSession = await storage.createWritingSession({
             userId,
             assignmentId: parseInt(assignmentId as string),
@@ -267,22 +284,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
             wordCount: 0,
             status: "draft"
           });
-          console.log('Created new session:', newSession.id);
-          res.json(newSession);
+          return res.json(newSession);
         }
-      } else {
-        console.log('Fetching session with ID:', sessionId, 'Type:', typeof sessionId);
-        console.log('Storage type:', storage.constructor.name);
-        const session = await storage.getWritingSession(sessionId);
-        console.log('Found session:', session ? `YES - ID: ${session.id}` : 'NO');
-        if (!session) {
-          return res.status(404).json({ message: "Session not found" });
-        }
-        res.json(session);
       }
+      
+      // Otherwise get existing session
+      const session = await storage.getWritingSession(sessionId);
+      if (!session) {
+        return res.status(404).json({ message: "Session not found" });
+      }
+      res.json(session);
     } catch (error) {
-      console.error('Error in GET writing session route:', error);
-      res.status(500).json({ message: "Failed to get writing session", error: error.message });
+      console.error('Error in writing session route:', error);
+      res.status(500).json({ message: "Failed to get writing session" });
     }
   });
 
