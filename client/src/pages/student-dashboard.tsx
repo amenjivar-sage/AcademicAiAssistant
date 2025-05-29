@@ -214,7 +214,15 @@ export default function StudentDashboard() {
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {classAssignments.map((assignment) => {
                           const session = sessions?.find(s => s.assignmentId === assignment.id);
-                          const status = session?.status || 'not_started';
+                          // Determine status based on session data
+                          let status = 'not_started';
+                          if (session) {
+                            if (session.status === 'submitted') {
+                              status = 'submitted';
+                            } else if (session.content && session.content.trim().length > 0) {
+                              status = 'in_progress';
+                            }
+                          }
                           const isOverdue = assignment.dueDate && new Date(assignment.dueDate) < new Date() && status !== 'submitted';
                           
                           return (
