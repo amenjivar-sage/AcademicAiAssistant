@@ -132,6 +132,7 @@ export default function WritingPage() {
         <WritingWorkspace 
           sessionId={session?.id || 0}
           assignmentId={assignmentId}
+          initialSession={session} // Pass the session data directly
         />
       </div>
     </div>

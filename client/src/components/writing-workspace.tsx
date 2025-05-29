@@ -22,9 +22,10 @@ interface PastedContent {
 interface WritingWorkspaceProps {
   sessionId: number;
   assignmentId?: number;
+  initialSession?: any; // Pre-loaded session data
 }
 
-export default function WritingWorkspace({ sessionId: initialSessionId, assignmentId }: WritingWorkspaceProps) {
+export default function WritingWorkspace({ sessionId: initialSessionId, assignmentId, initialSession }: WritingWorkspaceProps) {
   const [sessionId, setSessionId] = useState(initialSessionId);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -37,7 +38,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
 
-  // Get session data - handle both existing sessions and new session creation
+  // Use pre-loaded session data if available, otherwise fetch from API
   const { data: session, isLoading: sessionLoading, refetch: refetchSession } = useQuery<WritingSession>({
     queryKey: ['/api/writing-sessions', sessionId, assignmentId],
     queryFn: async () => {
@@ -51,7 +52,8 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       }
       throw new Error('No valid session ID or assignment ID');
     },
-    enabled: !!(sessionId !== undefined && assignmentId), // Query if we have either sessionId or assignmentId
+    enabled: !!(sessionId !== undefined && assignmentId && !initialSession), // Only query if no initial session provided
+    initialData: initialSession, // Use pre-loaded session data if available
   });
 
   // Get assignment data to check copy-paste permissions
