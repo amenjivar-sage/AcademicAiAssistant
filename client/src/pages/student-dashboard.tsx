@@ -471,10 +471,12 @@ export default function StudentDashboard() {
           <TabsContent value="classes" className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold text-gray-900">My Classes</h2>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Join New Class
-              </Button>
+              <JoinClass studentId={1}>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Join New Class
+                </Button>
+              </JoinClass>
             </div>
             
             {classes?.length === 0 ? (
