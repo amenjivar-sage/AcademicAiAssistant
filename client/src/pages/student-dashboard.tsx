@@ -8,8 +8,7 @@ import { BookOpen, PenTool, Target, Trophy, Clock, Users, Plus, MessageSquare } 
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import SageLogo from "@/components/sage-logo";
-import WritingWorkspace from "@/components/writing-workspace";
-import AiAssistant from "@/components/ai-assistant";
+
 import JoinClass from "@/components/join-class";
 import MessagingSystem from "@/components/messaging-system";
 import AchievementSystem from "@/components/achievement-system";
@@ -219,7 +218,7 @@ export default function StudentDashboard() {
                           const isOverdue = assignment.dueDate && new Date(assignment.dueDate) < new Date() && status !== 'submitted';
                           
                           return (
-                            <Card key={assignment.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedAssignment(assignment)}>
+                            <Card key={assignment.id} className="hover:shadow-md transition-shadow">
                               <CardHeader>
                                 <div className="flex items-start justify-between">
                                   <CardTitle className="text-lg line-clamp-2">{assignment.title}</CardTitle>
@@ -236,29 +235,41 @@ export default function StudentDashboard() {
                                 <p className="text-sm text-gray-600 line-clamp-3">{assignment.description}</p>
                               </CardHeader>
                               <CardContent>
-                                <div className="space-y-2">
-                                  {assignment.dueDate && (
-                                    <div className="flex items-center text-sm text-gray-500">
-                                      <Clock className="h-4 w-4 mr-2" />
-                                      Due {new Date(assignment.dueDate).toLocaleDateString()}
-                                    </div>
-                                  )}
-                                  <div className="flex items-center text-sm text-gray-500">
-                                    <PenTool className="h-4 w-4 mr-2" />
-                                    {assignment.wordCountMin}-{assignment.wordCountMax} words
+                                <div className="space-y-3">
+                                  <div className="space-y-2">
+                                    {assignment.dueDate && (
+                                      <div className="flex items-center text-sm text-gray-500">
+                                        <Clock className="h-4 w-4 mr-2" />
+                                        Due {new Date(assignment.dueDate).toLocaleDateString()}
+                                      </div>
+                                    )}
+                                    {session && (
+                                      <div className="flex items-center text-sm text-gray-500">
+                                        <Target className="h-4 w-4 mr-2" />
+                                        {session.wordCount} words written
+                                      </div>
+                                    )}
+                                    {session?.grade && (
+                                      <div className="flex items-center text-sm font-medium text-green-600">
+                                        <Trophy className="h-4 w-4 mr-2" />
+                                        Grade: {session.grade}
+                                      </div>
+                                    )}
                                   </div>
-                                  {session && (
-                                    <div className="flex items-center text-sm text-gray-500">
-                                      <Target className="h-4 w-4 mr-2" />
-                                      {session.wordCount} words written
-                                    </div>
-                                  )}
-                                  {session?.grade && (
-                                    <div className="flex items-center text-sm font-medium text-green-600">
-                                      <Trophy className="h-4 w-4 mr-2" />
-                                      Grade: {session.grade}
-                                    </div>
-                                  )}
+                                  
+                                  <Button 
+                                    className="w-full" 
+                                    variant={status === 'submitted' ? 'outline' : 'default'}
+                                    onClick={() => {
+                                      // Navigate to writing page
+                                      window.location.href = `/write/${assignment.id}`;
+                                    }}
+                                  >
+                                    <PenTool className="h-4 w-4 mr-2" />
+                                    {status === 'submitted' ? 'View Submission' : 
+                                     status === 'in_progress' ? 'Continue Writing' : 
+                                     'Start Writing'}
+                                  </Button>
                                 </div>
                               </CardContent>
                             </Card>
@@ -279,7 +290,7 @@ export default function StudentDashboard() {
               <Badge variant="outline">Stay connected</Badge>
             </div>
             
-            <MessagingSystem userRole="student" />
+            <MessagingSystem />
           </TabsContent>
 
           {/* Achievements tab */}
@@ -311,15 +322,7 @@ export default function StudentDashboard() {
           </TabsContent>
         </Tabs>
 
-        {/* Writing Workspace Modal */}
-        {selectedAssignment && (
-          <WritingWorkspace
-            assignmentId={selectedAssignment.id}
-            studentId={1}
-            isOpen={!!selectedAssignment}
-            onClose={() => setSelectedAssignment(null)}
-          />
-        )}
+
       </main>
     </div>
   );

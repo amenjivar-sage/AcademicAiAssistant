@@ -153,7 +153,66 @@ export class MemStorage implements IStorage {
       updatedAt: new Date(),
     };
     this.assignments.set(1, assignment);
-    this.currentAssignmentId = 2;
+
+    // Add more assignments to the Creative Writing class
+    const assignment2: Assignment = {
+      id: 2,
+      teacherId: 1,
+      classroomId: 1,
+      title: "Character Analysis: To Kill a Mockingbird",
+      description: "Analyze the character development of Scout Finch throughout the novel. Discuss how her understanding of justice and morality evolves through key events.",
+      dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+      status: "active",
+      aiPermissions: "limited",
+      allowBrainstorming: true,
+      allowOutlining: true,
+      allowGrammarCheck: true,
+      allowResearchHelp: false,
+      allowCopyPaste: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.assignments.set(2, assignment2);
+
+    const assignment3: Assignment = {
+      id: 3,
+      teacherId: 1,
+      classroomId: 1,
+      title: "Creative Short Story",
+      description: "Write an original short story in any genre. Your story should have a clear beginning, middle, and end, with well-developed characters and compelling conflict.",
+      dueDate: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000),
+      status: "active",
+      aiPermissions: "full",
+      allowBrainstorming: true,
+      allowOutlining: true,
+      allowGrammarCheck: true,
+      allowResearchHelp: true,
+      allowCopyPaste: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.assignments.set(3, assignment3);
+
+    const assignment4: Assignment = {
+      id: 4,
+      teacherId: 1,
+      classroomId: 1,
+      title: "Poetry Portfolio",
+      description: "Create a collection of 5 original poems exploring different themes and styles. Include at least one sonnet, one free verse, and one haiku.",
+      dueDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // Overdue
+      status: "active",
+      aiPermissions: "limited",
+      allowBrainstorming: true,
+      allowOutlining: false,
+      allowGrammarCheck: true,
+      allowResearchHelp: false,
+      allowCopyPaste: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.assignments.set(4, assignment4);
+
+    this.currentAssignmentId = 5;
 
     // Add more student users
     const maria: User = {
