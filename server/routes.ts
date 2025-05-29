@@ -241,8 +241,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           res.json(newSession);
         }
       } else {
+        console.log('Fetching session with ID:', sessionId);
         const session = await storage.getWritingSession(sessionId);
+        console.log('Found session:', session ? 'YES' : 'NO');
         if (!session) {
+          console.log('Available sessions:', Array.from((storage as any).writingSessions.keys()));
           return res.status(404).json({ message: "Session not found" });
         }
         res.json(session);
