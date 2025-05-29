@@ -43,6 +43,7 @@ interface CitationData {
   volume?: string;
   issue?: string;
   pages?: string;
+  format: "APA" | "MLA";
 }
 
 interface PlagiarismResult {
@@ -68,6 +69,7 @@ export default function CitationAssistant({ children, sessionId, onCitationAdded
     title: "",
     author: "",
     publicationDate: "",
+    format: "APA",
   });
   const [generatedCitation, setGeneratedCitation] = useState("");
   const [textToCheck, setTextToCheck] = useState("");
@@ -198,7 +200,7 @@ export default function CitationAssistant({ children, sessionId, onCitationAdded
                 <CardTitle>Generate Academic Citation</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-4">
                   <div>
                     <Label htmlFor="sourceType">Source Type</Label>
                     <Select 
@@ -215,6 +217,23 @@ export default function CitationAssistant({ children, sessionId, onCitationAdded
                         <SelectItem value="journal">Journal Article</SelectItem>
                         <SelectItem value="website">Website</SelectItem>
                         <SelectItem value="newspaper">Newspaper</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="citationFormat">Citation Format</Label>
+                    <Select 
+                      value={citationData.format} 
+                      onValueChange={(value: "APA" | "MLA") => 
+                        setCitationData(prev => ({ ...prev, format: value }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select format" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="APA">APA Style</SelectItem>
+                        <SelectItem value="MLA">MLA Style</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
