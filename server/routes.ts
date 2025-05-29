@@ -238,6 +238,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Get or create writing session for specific assignment
   app.get("/api/writing-sessions/:sessionId", async (req, res) => {
+    console.log('=== ROUTE HIT: GET /api/writing-sessions/:sessionId ===');
+    console.log('Raw params:', req.params);
+    console.log('Raw query:', req.query);
     try {
       const sessionId = parseInt(req.params.sessionId);
       const { assignmentId } = req.query;
@@ -278,7 +281,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json(session);
       }
     } catch (error) {
-      res.status(500).json({ message: "Failed to get writing session" });
+      console.error('Error in GET writing session route:', error);
+      res.status(500).json({ message: "Failed to get writing session", error: error.message });
     }
   });
 
