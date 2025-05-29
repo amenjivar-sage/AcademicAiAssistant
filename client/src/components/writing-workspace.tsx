@@ -73,6 +73,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       setIsSaving(false);
       queryClient.invalidateQueries({ queryKey: ['/api/writing-sessions'] });
       queryClient.invalidateQueries({ queryKey: ['/api/student/writing-sessions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/student/assignments'] });
     },
     onError: (error) => {
       setIsSaving(false);
@@ -97,6 +98,8 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       setLastSaved(new Date());
       setIsSaving(false);
       queryClient.invalidateQueries({ queryKey: ['/api/writing-sessions', sessionId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/student/writing-sessions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/student/assignments'] });
       console.log('Save completed successfully');
     },
     onError: (error) => {

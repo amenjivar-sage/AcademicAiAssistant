@@ -61,10 +61,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/student/assignments", async (req, res) => {
     try {
-      // For demo, return all assignments for student to access
-      const teacherId = 1;
+      const userId = 1; // Current student user
+      const teacherId = 1; // For demo, get teacher's assignments
+      
+      // Get all assignments
       const assignments = await storage.getTeacherAssignments(teacherId);
-      res.json(assignments);
+      
+      // Get user's writing sessions to determine status
+      const sessions = await storage.getUserWritingSessions(userId);
+      
+      // Add status to each assignment based on writing sessions
+      const assignmentsWithStatus = assignments.map(assignment => {
+        const session = sessions.find(s => s.assignmentId === assignment.id);
+        
+        let status = 'not_started';
+        if (session) {
+          if (session.status === 'submitted') {
+            status = 'submitted';
+          } else if (session.content && session.content.trim().length > 0) {
+            status = 'in_progress';
+          }
+        }
+        
+        return {
+          ...assignment,
+          status,
+          sessionId: session?.id || null
+        };
+      });
+      
+      res.json(assignmentsWithStatus);
     } catch (error) {
       res.status(500).json({ message: "Failed to get assignments" });
     }
