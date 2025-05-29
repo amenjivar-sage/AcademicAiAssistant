@@ -337,9 +337,13 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
                   className="w-full justify-start h-auto p-2 text-left text-xs"
                   onClick={() => {
                     setPrompt(quickPrompt.text);
-                    // Switch to assistant tab
-                    const assistantTab = document.querySelector('[value="assistant"]') as HTMLElement;
+                    // Switch to assistant tab and auto-submit
+                    const assistantTab = document.querySelector('[data-value="assistant"]') as HTMLElement;
                     assistantTab?.click();
+                    // Auto-submit the prompt after a brief delay
+                    setTimeout(() => {
+                      aiHelpMutation.mutate(quickPrompt.text);
+                    }, 100);
                   }}
                 >
                   <Icon className="h-3 w-3 mr-2 flex-shrink-0" />
