@@ -123,33 +123,59 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
           <TabsTrigger value="history" className="text-xs px-2">History</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="assistant" className="flex-1 flex flex-col space-y-4">
-          {/* Chat History */}
-          {chatHistory && chatHistory.length > 0 && (
-            <div className="flex-1 p-4">
-              <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
-                <Bot className="h-4 w-4 mr-2" />
-                Conversation History
-              </h4>
-              <ScrollArea className="h-64 space-y-3">
-                {chatHistory.map((interaction: any, index: number) => (
-                  <div key={index} className="space-y-2">
-                    <div className="bg-blue-50 p-3 rounded-lg">
-                      <p className="text-sm font-medium text-blue-900 mb-1">You asked:</p>
-                      <p className="text-sm text-blue-800">{interaction.prompt}</p>
+        <TabsContent value="assistant" className="flex-1 flex flex-col overflow-hidden">
+          {/* Scrollable Content Area */}
+          <div className="flex-1 overflow-y-auto">
+            {/* Chat History */}
+            {chatHistory && chatHistory.length > 0 && (
+              <div className="p-4">
+                <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
+                  <Bot className="h-4 w-4 mr-2" />
+                  Conversation History
+                </h4>
+                <div className="space-y-3">
+                  {chatHistory.map((interaction: any, index: number) => (
+                    <div key={index} className="space-y-2">
+                      <div className="bg-blue-50 p-3 rounded-lg">
+                        <p className="text-sm font-medium text-blue-900 mb-1">You asked:</p>
+                        <p className="text-sm text-blue-800">{interaction.prompt}</p>
+                      </div>
+                      <div className="bg-purple-50 p-3 rounded-lg">
+                        <p className="text-sm font-medium text-purple-900 mb-1">ZoË replied:</p>
+                        <p className="text-sm text-purple-800 whitespace-pre-line">{interaction.response}</p>
+                      </div>
                     </div>
-                    <div className="bg-purple-50 p-3 rounded-lg">
-                      <p className="text-sm font-medium text-purple-900 mb-1">ZoË replied:</p>
-                      <p className="text-sm text-purple-800 whitespace-pre-line">{interaction.response}</p>
-                    </div>
-                  </div>
-                ))}
-              </ScrollArea>
-            </div>
-          )}
+                  ))}
+                </div>
+              </div>
+            )}
 
-          {/* AI Assistant Input */}
-          <div className="p-4 space-y-4">
+            {/* AI Response (inline after sending) */}
+            {aiHelpMutation.isPending && (
+              <div className="p-4 border-t border-gray-200">
+                <Alert>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <AlertDescription>
+                    ZoË is thinking...
+                  </AlertDescription>
+                </Alert>
+              </div>
+            )}
+            
+            {lastResponse && (
+              <div className="p-4 border-t border-gray-200">
+                <Alert variant={getResponseVariant(lastResponse.isRestricted)}>
+                  {getResponseIcon(lastResponse.isRestricted)}
+                  <AlertDescription className="whitespace-pre-line text-sm">
+                    {lastResponse.response}
+                  </AlertDescription>
+                </Alert>
+              </div>
+            )}
+          </div>
+
+          {/* Fixed Input Area */}
+          <div className="border-t bg-white p-4 space-y-4 flex-shrink-0">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Ask ZoË for help with your writing:
@@ -186,29 +212,6 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
               💡 Tip: Press Ctrl+Enter (or Cmd+Enter) to send
             </p>
           </div>
-
-          {/* AI Response (inline after sending) */}
-          {aiHelpMutation.isPending && (
-            <div className="p-4 border-t border-gray-200">
-              <Alert>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <AlertDescription>
-                  ZoË is thinking...
-                </AlertDescription>
-              </Alert>
-            </div>
-          )}
-          
-          {lastResponse && (
-            <div className="p-4 border-t border-gray-200">
-              <Alert variant={getResponseVariant(lastResponse.isRestricted)}>
-                {getResponseIcon(lastResponse.isRestricted)}
-                <AlertDescription className="whitespace-pre-line text-sm">
-                  {lastResponse.response}
-                </AlertDescription>
-              </Alert>
-            </div>
-          )}
         </TabsContent>
 
         <TabsContent value="prompts" className="p-3">
