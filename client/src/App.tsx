@@ -19,7 +19,7 @@ function Router() {
       <Route path="/student" component={StudentDashboard} />
       <Route path="/teacher" component={TeacherDashboard} />
       <Route path="/admin" component={AdminDashboard} />
-      <Route path="/write/:id" component={WritingPage} />
+      <Route path="/writing/:id" component={WritingPage} />
       <Route path="/assignment/:assignmentId/session/:sessionId">
         {(params) => (
           <WritingWorkspace 
