@@ -13,6 +13,7 @@ export default function WritingPage() {
   // Fetch assignment details
   const { data: assignment, isLoading: assignmentLoading } = useQuery({
     queryKey: [`/api/assignments/${assignmentId}`],
+    enabled: !!assignmentId,
   });
 
   // Fetch existing writing session for this assignment
@@ -24,6 +25,8 @@ export default function WritingPage() {
   const session = userSessions?.find((s: any) => s.assignmentId === assignmentId);
   
   console.log('Writing page - Assignment ID:', assignmentId);
+  console.log('Writing page - Assignment data:', assignment);
+  console.log('Writing page - Assignment loading:', assignmentLoading);
   console.log('Writing page - User sessions:', userSessions);
   console.log('Writing page - Found session:', session);
 
