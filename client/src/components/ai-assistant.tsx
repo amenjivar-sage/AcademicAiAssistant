@@ -114,7 +114,7 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
   ];
 
   return (
-    <div className="h-full flex flex-col bg-white">
+    <div className="h-full flex flex-col bg-white overflow-hidden">
       {/* Header */}
       <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-purple-500 to-purple-600 text-white flex-shrink-0">
         <div className="flex items-center gap-2">
@@ -126,17 +126,17 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
         </p>
       </div>
 
-      <Tabs defaultValue="assistant" className="flex-1 flex flex-col">
-        <TabsList className="grid w-full grid-cols-4 h-auto m-2">
+      <Tabs defaultValue="assistant" className="flex-1 flex flex-col overflow-hidden">
+        <TabsList className="grid w-full grid-cols-4 h-auto m-2 flex-shrink-0">
           <TabsTrigger value="assistant" className="text-xs px-2">Chat</TabsTrigger>
           <TabsTrigger value="prompts" className="text-xs px-2">Help</TabsTrigger>
           <TabsTrigger value="citations" className="text-xs px-2">Cite</TabsTrigger>
           <TabsTrigger value="history" className="text-xs px-2">History</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="assistant" className="flex-1 flex flex-col overflow-hidden">
+        <TabsContent value="assistant" className="flex-1 flex flex-col min-h-0">
           {/* Scrollable Content Area */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto min-h-0">
             {/* Chat History */}
             {chatHistory && chatHistory.length > 0 && (
               <div className="p-4">
