@@ -164,6 +164,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   // Load session data and update sessionId if a new session was created
   useEffect(() => {
     if (session) {
+      console.log('Writing workspace - Loading session data:', session.id, 'Title:', session.title, 'Content:', session.content);
       setTitle(session.title);
       setContent(session.content);
       setPastedContents(session.pastedContent as PastedContent[] || []);
