@@ -1,4 +1,4 @@
-import { users, writingSessions, aiInteractions, assignments, messages, type User, type InsertUser, type WritingSession, type InsertWritingSession, type AiInteraction, type InsertAiInteraction, type Assignment, type InsertAssignment, type Message, type InsertMessage } from "@shared/schema";
+import { users, writingSessions, aiInteractions, assignments, messages, classrooms, type User, type InsertUser, type WritingSession, type InsertWritingSession, type AiInteraction, type InsertAiInteraction, type Assignment, type InsertAssignment, type Message, type InsertMessage, type Classroom, type InsertClassroom } from "@shared/schema";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { eq } from "drizzle-orm";
 import { Pool } from "pg";

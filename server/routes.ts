@@ -47,6 +47,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Student routes
+  app.get("/api/student/classes", async (req, res) => {
+    try {
+      // For now, return all available classrooms - in production this would be filtered by enrollment
+      const classrooms = await storage.getTeacherClassrooms(1);
+      res.json(classrooms);
+    } catch (error) {
+      console.error("Error fetching student classes:", error);
+      res.status(500).json({ message: "Failed to fetch classes" });
+    }
+  });
+
   app.get("/api/student/assignments", async (req, res) => {
     try {
       // For demo, return all assignments for student to access
