@@ -30,28 +30,13 @@ export default function WritingPage() {
   console.log('Writing page - User sessions:', userSessions);
   console.log('Writing page - Found session:', session);
 
-  if (assignmentLoading) {
+  if (assignmentLoading || !assignment) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading assignment...</p>
         </div>
-      </div>
-    );
-  }
-
-  if (!assignment) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Card className="max-w-md">
-          <CardContent className="pt-6 text-center">
-            <p className="text-red-600 mb-4">Assignment not found</p>
-            <Button onClick={() => setLocation("/student")}>
-              Return to Dashboard
-            </Button>
-          </CardContent>
-        </Card>
       </div>
     );
   }
