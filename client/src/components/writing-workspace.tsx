@@ -224,8 +224,8 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
 
   return (
     <div className="h-screen flex">
-      {/* Main Writing Area - Fixed Position */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
+      {/* Main Writing Area - Horizontal Scrolling */}
+      <div className="flex-1 flex flex-col h-screen">
         {/* Header - Fixed */}
         <div className="border-b bg-white p-4 flex-shrink-0">
           <div className="flex items-center justify-between mb-4">
@@ -264,12 +264,12 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
           />
         </div>
 
-        {/* Writing Content - Fixed scrollable area */}
-        <div className="flex-1 overflow-hidden relative">
+        {/* Writing Content - Horizontal and Vertical Scrolling */}
+        <div className="flex-1 overflow-auto">
           <CopyPasteDetector
             allowCopyPaste={allowCopyPaste}
             onPasteDetected={handlePasteDetected}
-            className="h-full"
+            className="min-h-full"
           >
             <textarea
               ref={contentRef}
@@ -277,7 +277,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="Start writing your assignment here..."
-              className="h-full w-full p-8 focus:outline-none resize-none text-gray-900 leading-relaxed border-none bg-transparent overflow-y-auto"
+              className="w-full min-h-full p-8 focus:outline-none resize-none text-gray-900 leading-relaxed border-none bg-transparent"
               style={{
                 minHeight: '100%',
                 fontFamily: 'Georgia, serif',
@@ -338,8 +338,8 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
         </div>
       </div>
 
-      {/* AI Assistant Sidebar - Fixed with independent scrolling */}
-      <div className="w-80 border-l bg-gray-50 h-screen overflow-hidden flex flex-col">
+      {/* AI Assistant Sidebar - Vertical Scrolling Only */}
+      <div className="w-80 border-l bg-gray-50 h-screen flex flex-col">
         <AiAssistant 
           sessionId={sessionId}
           assignmentType={assignment?.aiPermissions}
