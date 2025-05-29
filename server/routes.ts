@@ -49,8 +49,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Student routes
   app.get("/api/student/classes", async (req, res) => {
     try {
-      // For now, return all available classrooms - in production this would be filtered by enrollment
-      const classrooms = await storage.getTeacherClassrooms(1);
+      // Return only classes that the student has actually enrolled in
+      const studentId = 1; // In real app, get from auth session
+      const classrooms = await storage.getStudentClassrooms(studentId);
       res.json(classrooms);
     } catch (error) {
       console.error("Error fetching student classes:", error);
@@ -452,6 +453,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!classroom) {
         return res.status(404).json({ message: "Class not found with this join code" });
       }
+      
+      // Enroll the student in the classroom
+      await storage.enrollStudentInClassroom(studentId, classroom.id);
       
       // Return the classroom data
       res.json(classroom);

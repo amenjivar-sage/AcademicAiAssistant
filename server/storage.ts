@@ -39,6 +39,8 @@ export interface IStorage {
   createClassroom(classroom: InsertClassroom): Promise<Classroom>;
   getTeacherClassrooms(teacherId: number): Promise<Classroom[]>;
   getAllClassrooms(): Promise<Classroom[]>;
+  getStudentClassrooms(studentId: number): Promise<Classroom[]>;
+  enrollStudentInClassroom(studentId: number, classroomId: number): Promise<void>;
   updateClassroom(id: number, updates: Partial<InsertClassroom>): Promise<Classroom | undefined>;
 }
 
@@ -58,6 +60,7 @@ export class MemStorage implements IStorage {
   private aiInteractions: Map<number, AiInteraction>;
   private messages: Map<number, Message>;
   private classrooms: Map<number, any>;
+  private enrollments: Map<string, boolean>; // key: "studentId-classroomId"
   private currentUserId: number;
   private currentAssignmentId: number;
   private currentSessionId: number;
@@ -72,6 +75,7 @@ export class MemStorage implements IStorage {
     this.aiInteractions = new Map();
     this.messages = new Map();
     this.classrooms = new Map();
+    this.enrollments = new Map();
     this.currentUserId = 1;
     this.currentAssignmentId = 1;
     this.currentSessionId = 1;
@@ -664,6 +668,20 @@ Despite these challenges, the momentum toward renewable energy appears unstoppab
 
   async getAllClassrooms(): Promise<any[]> {
     return Array.from(this.classrooms.values());
+  }
+
+  async getStudentClassrooms(studentId: number): Promise<any[]> {
+    const enrolledClassroomIds = Array.from(this.enrollments.keys())
+      .filter(key => key.startsWith(`${studentId}-`))
+      .map(key => parseInt(key.split('-')[1]));
+    
+    return Array.from(this.classrooms.values())
+      .filter(classroom => enrolledClassroomIds.includes(classroom.id));
+  }
+
+  async enrollStudentInClassroom(studentId: number, classroomId: number): Promise<void> {
+    const enrollmentKey = `${studentId}-${classroomId}`;
+    this.enrollments.set(enrollmentKey, true);
   }
 
   async updateClassroom(id: number, updates: any): Promise<any | undefined> {
