@@ -262,7 +262,7 @@ export default function StudentDashboard() {
                                     variant={status === 'submitted' ? 'outline' : 'default'}
                                     onClick={() => {
                                       // Navigate to writing page
-                                      window.location.href = `/write/${assignment.id}`;
+                                      window.location.href = `/writing/${assignment.id}`;
                                     }}
                                   >
                                     <PenTool className="h-4 w-4 mr-2" />
