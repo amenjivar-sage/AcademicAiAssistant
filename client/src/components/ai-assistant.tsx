@@ -44,6 +44,9 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
 
   // Type the chat history properly
   const typedChatHistory = Array.isArray(chatHistory) ? chatHistory : [];
+  
+  // Cast for display purposes
+  const displayChatHistory = typedChatHistory as any[];
 
   const aiHelpMutation = useMutation({
     mutationFn: async (promptText: string) => {
@@ -137,13 +140,13 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
 
     if (recentTopics.some(topic => topic.includes('character') || topic.includes('story') || topic.includes('creative'))) {
       contextualPrompts.push({ 
-        icon: Users, 
+        icon: BookOpen, 
         text: "Help me develop my characters further", 
         category: "character", 
         relevance: 2 
       });
       contextualPrompts.push({ 
-        icon: BookOpen, 
+        icon: PenTool, 
         text: "What makes dialogue feel natural?", 
         category: "dialogue", 
         relevance: 2 
@@ -158,7 +161,7 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
         relevance: 2 
       });
       contextualPrompts.push({ 
-        icon: FileText, 
+        icon: BookOpen, 
         text: "Help me organize my research notes", 
         category: "organization", 
         relevance: 2 
@@ -167,7 +170,7 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
 
     if (recentTopics.some(topic => topic.includes('conclusion') || topic.includes('ending') || topic.includes('finish'))) {
       contextualPrompts.push({ 
-        icon: Target, 
+        icon: CheckCircle, 
         text: "How can I write a stronger conclusion?", 
         category: "conclusion", 
         relevance: 2 
@@ -185,7 +188,7 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
 
     if (recentTopics.some(topic => topic.includes('introduction') || topic.includes('intro') || topic.includes('start'))) {
       contextualPrompts.push({ 
-        icon: Play, 
+        icon: Lightbulb, 
         text: "How do I write a compelling introduction?", 
         category: "introduction", 
         relevance: 2 
@@ -194,7 +197,7 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
 
     if (recentTopics.some(topic => topic.includes('argument') || topic.includes('persuasive') || topic.includes('convince'))) {
       contextualPrompts.push({ 
-        icon: Shield, 
+        icon: PenTool, 
         text: "Help me strengthen my argument", 
         category: "argument", 
         relevance: 2 
@@ -234,14 +237,14 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
           {/* Scrollable Content Area */}
           <div className="flex-1 overflow-y-auto min-h-0">
             {/* Chat History */}
-            {chatHistory && chatHistory.length > 0 && (
+            {displayChatHistory && displayChatHistory.length > 0 && (
               <div className="p-4">
                 <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
                   <Bot className="h-4 w-4 mr-2" />
                   Conversation History
                 </h4>
                 <div className="space-y-3">
-                  {chatHistory.map((interaction: any, index: number) => (
+                  {displayChatHistory.map((interaction: any, index: number) => (
                     <div key={index} className="space-y-2">
                       <div className="bg-blue-50 p-3 rounded-lg">
                         <p className="text-sm font-medium text-blue-900 mb-1">You asked:</p>
