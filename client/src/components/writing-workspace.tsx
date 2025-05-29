@@ -42,8 +42,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     queryKey: ['/api/writing-sessions', sessionId, assignmentId],
     queryFn: async () => {
       if (sessionId && sessionId !== 0) {
-        const response = await fetch(`/api/writing-sessions/${sessionId}`);
-        if (!response.ok) throw new Error('Failed to fetch session');
+        const response = await apiRequest("GET", `/api/writing-sessions/${sessionId}`);
         return response.json();
       }
       throw new Error('No valid session ID');
