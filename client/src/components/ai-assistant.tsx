@@ -33,6 +33,7 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
   const [prompt, setPrompt] = useState("");
   const [lastResponse, setLastResponse] = useState<AiResponse | null>(null);
   const [smartPrompts, setSmartPrompts] = useState<SmartPrompt[]>([]);
+  const [activeTab, setActiveTab] = useState("assistant");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -225,7 +226,7 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
         </p>
       </div>
 
-      <Tabs defaultValue="assistant" className="flex-1 flex flex-col overflow-hidden">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
         <TabsList className="grid w-full grid-cols-4 h-auto m-2 flex-shrink-0">
           <TabsTrigger value="assistant" className="text-xs px-2">Chat</TabsTrigger>
           <TabsTrigger value="prompts" className="text-xs px-2">Help</TabsTrigger>
@@ -338,8 +339,7 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
                   onClick={() => {
                     setPrompt(quickPrompt.text);
                     // Switch to assistant tab and auto-submit
-                    const assistantTab = document.querySelector('[data-value="assistant"]') as HTMLElement;
-                    assistantTab?.click();
+                    setActiveTab("assistant");
                     // Auto-submit the prompt after a brief delay
                     setTimeout(() => {
                       aiHelpMutation.mutate(quickPrompt.text);
