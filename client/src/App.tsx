@@ -8,6 +8,7 @@ import Home from "@/pages/home";
 import TeacherDashboard from "@/pages/teacher-dashboard";
 import StudentDashboard from "@/pages/student-dashboard";
 import AdminDashboard from "@/pages/admin-dashboard";
+import WritingPage from "@/pages/writing-page";
 import NotFound from "@/pages/not-found";
 import WritingWorkspace from "@/components/writing-workspace";
 
@@ -18,6 +19,7 @@ function Router() {
       <Route path="/student" component={StudentDashboard} />
       <Route path="/teacher" component={TeacherDashboard} />
       <Route path="/admin" component={AdminDashboard} />
+      <Route path="/write/:id" component={WritingPage} />
       <Route path="/assignment/:assignmentId/session/:sessionId">
         {(params) => (
           <WritingWorkspace 
