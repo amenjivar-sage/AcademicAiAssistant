@@ -45,7 +45,8 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
       return response.json();
     },
     onSuccess: (data: AiResponse) => {
-      setLastResponse(data);
+      // Clear the last response since it will show in history
+      setLastResponse(null);
       setPrompt("");
       
       // Refetch chat history to include the new interaction
