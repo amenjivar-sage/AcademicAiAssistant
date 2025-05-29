@@ -53,10 +53,35 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     enabled: !!assignmentId,
   });
 
+  // Create session mutation
+  const createSessionMutation = useMutation({
+    mutationFn: async (data: { title: string; content: string; assignmentId: number }) => {
+      const response = await apiRequest("POST", "/api/writing-sessions", {
+        assignmentId: data.assignmentId,
+        title: data.title,
+        content: data.content,
+        wordCount: data.content.split(/\s+/).filter(word => word.length > 0).length,
+        status: "draft",
+        userId: 1, // Current user ID
+      });
+      return response.json();
+    },
+    onSuccess: (newSession) => {
+      setSessionId(newSession.id);
+      setLastSaved(new Date());
+      setIsSaving(false);
+      queryClient.invalidateQueries({ queryKey: ['/api/writing-sessions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/student/writing-sessions'] });
+    },
+    onError: (error) => {
+      setIsSaving(false);
+      console.error('Failed to create session:', error);
+    },
+  });
+
   // Update session mutation
   const updateSessionMutation = useMutation({
     mutationFn: async (data: { title: string; content: string; pastedContent: PastedContent[] }) => {
-      // Always use the session ID from the current session data if available
       const currentSessionId = session?.id || sessionId;
       console.log('Saving to session ID:', currentSessionId);
       const response = await apiRequest("PATCH", `/api/writing-sessions/${currentSessionId}`, {
@@ -71,12 +96,11 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       setLastSaved(new Date());
       setIsSaving(false);
       queryClient.invalidateQueries({ queryKey: ['/api/writing-sessions', sessionId] });
-      // Success toast removed to avoid clutter - auto-save should be silent
+      console.log('Save completed successfully');
     },
     onError: (error) => {
       setIsSaving(false);
-      // Don't show error toast since saves are actually working
-      console.log('Save completed successfully');
+      console.error('Save failed:', error);
     },
   });
 
@@ -163,7 +187,14 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   const handleSave = () => {
     if (!isSaving && (title !== session?.title || content !== session?.content || pastedContents.length !== (session?.pastedContent as PastedContent[] || []).length)) {
       setIsSaving(true);
-      updateSessionMutation.mutate({ title, content, pastedContent: pastedContents });
+      
+      // If no session exists yet, create one
+      if (!session && !sessionId && assignmentId) {
+        createSessionMutation.mutate({ title, content, assignmentId });
+      } else {
+        // Update existing session
+        updateSessionMutation.mutate({ title, content, pastedContent: pastedContents });
+      }
     }
   };
 
