@@ -224,10 +224,10 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
 
   return (
     <div className="h-screen flex">
-      {/* Main Writing Area */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <div className="border-b bg-white p-4">
+      {/* Main Writing Area - Fixed Position */}
+      <div className="flex-1 flex flex-col h-screen overflow-hidden">
+        {/* Header - Fixed */}
+        <div className="border-b bg-white p-4 flex-shrink-0">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
               <FileText className="h-5 w-5 text-gray-500" />
@@ -264,8 +264,8 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
           />
         </div>
 
-        {/* Writing Content */}
-        <div className="flex-1 overflow-hidden">
+        {/* Writing Content - Fixed scrollable area */}
+        <div className="flex-1 overflow-hidden relative">
           <CopyPasteDetector
             allowCopyPaste={allowCopyPaste}
             onPasteDetected={handlePasteDetected}
@@ -277,7 +277,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="Start writing your assignment here..."
-              className="h-full w-full p-8 focus:outline-none resize-none text-gray-900 leading-relaxed border-none bg-transparent"
+              className="h-full w-full p-8 focus:outline-none resize-none text-gray-900 leading-relaxed border-none bg-transparent overflow-y-auto"
               style={{
                 minHeight: '100%',
                 fontFamily: 'Georgia, serif',
@@ -338,8 +338,8 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
         </div>
       </div>
 
-      {/* AI Assistant Sidebar */}
-      <div className="w-80 border-l bg-gray-50">
+      {/* AI Assistant Sidebar - Fixed with independent scrolling */}
+      <div className="w-80 border-l bg-gray-50 h-screen overflow-hidden flex flex-col">
         <AiAssistant 
           sessionId={sessionId}
           assignmentType={assignment?.aiPermissions}
