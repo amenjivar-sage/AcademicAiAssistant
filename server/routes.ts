@@ -266,16 +266,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const sessionId = parseInt(req.params.sessionId);
     const { assignmentId } = req.query;
     
+    console.log('=== GET WRITING SESSION ROUTE ===');
+    console.log('Session ID:', sessionId);
+    console.log('Assignment ID:', assignmentId);
+    
     try {
       // If sessionId is 0, create or find session for assignment
       if (sessionId === 0 && assignmentId) {
+        console.log('Creating/finding session for assignment:', assignmentId);
         const userId = 1; // Default student user
         const existingSessions = await storage.getUserWritingSessions(userId);
         const existingSession = existingSessions.find(s => s.assignmentId === parseInt(assignmentId as string));
         
         if (existingSession) {
+          console.log('Found existing session:', existingSession.id);
           return res.json(existingSession);
         } else {
+          console.log('Creating new session for assignment');
           const newSession = await storage.createWritingSession({
             userId,
             assignmentId: parseInt(assignmentId as string),
@@ -284,15 +291,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
             wordCount: 0,
             status: "draft"
           });
+          console.log('Created new session:', newSession.id);
           return res.json(newSession);
         }
       }
       
       // Otherwise get existing session
+      console.log('Fetching existing session with ID:', sessionId);
       const session = await storage.getWritingSession(sessionId);
+      console.log('Storage returned session:', session ? 'found' : 'not found');
+      
       if (!session) {
+        console.log('Session not found, returning 404');
         return res.status(404).json({ message: "Session not found" });
       }
+      
+      console.log('Returning session:', session.id, session.title);
       res.json(session);
     } catch (error) {
       console.error('Error in writing session route:', error);

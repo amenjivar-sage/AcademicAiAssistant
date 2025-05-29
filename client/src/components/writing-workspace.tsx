@@ -37,17 +37,21 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
 
-  // Get session data - only query if we have a valid sessionId
+  // Get session data - handle both existing sessions and new session creation
   const { data: session, isLoading: sessionLoading, refetch: refetchSession } = useQuery<WritingSession>({
     queryKey: ['/api/writing-sessions', sessionId, assignmentId],
     queryFn: async () => {
       if (sessionId && sessionId !== 0) {
         const response = await apiRequest("GET", `/api/writing-sessions/${sessionId}`);
         return response.json();
+      } else if (assignmentId) {
+        // Create or find session for this assignment
+        const response = await apiRequest("GET", `/api/writing-sessions/0?assignmentId=${assignmentId}`);
+        return response.json();
       }
-      throw new Error('No valid session ID');
+      throw new Error('No valid session ID or assignment ID');
     },
-    enabled: !!sessionId && sessionId !== 0, // Only query if we have a valid session ID
+    enabled: !!(sessionId !== undefined && assignmentId), // Query if we have either sessionId or assignmentId
   });
 
   // Get assignment data to check copy-paste permissions
