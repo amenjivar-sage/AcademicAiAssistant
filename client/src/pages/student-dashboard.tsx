@@ -17,8 +17,8 @@ import WritingAnalytics from "@/components/writing-analytics";
 import type { Assignment, WritingSession, Classroom } from "@shared/schema";
 
 export default function StudentDashboard() {
-  const [activeTab, setActiveTab] = useState("coursework");
-  const [courseworkTab, setCourseworkTab] = useState("assignments");
+  const [activeTab, setActiveTab] = useState("classes");
+  const [selectedClassroom, setSelectedClassroom] = useState<Classroom | null>(null);
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -252,46 +252,224 @@ export default function StudentDashboard() {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="coursework">Coursework</TabsTrigger>
-            <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
-            <TabsTrigger value="progress">Progress</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="classes">Classes</TabsTrigger>
+            <TabsTrigger value="messages">Messages</TabsTrigger>
             <TabsTrigger value="achievements">Achievements</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="coursework" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-900">Coursework</h2>
-            </div>
-            
-            {/* Sub-navigation for Coursework */}
-            <Tabs value={courseworkTab} onValueChange={setCourseworkTab} className="space-y-4">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="assignments">Assignments</TabsTrigger>
-                <TabsTrigger value="classes">My Classes</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="assignments" className="space-y-4">
-            
-            {/* All existing assignment content goes here */}
-            
-            {assignments?.length === 0 ? (
-              <Card>
-                <CardContent className="p-12 text-center">
-                  <BookOpen className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No assignments yet</h3>
-                  <p className="text-gray-500 mb-6">Join a class to start receiving writing assignments</p>
+          <TabsContent value="classes" className="space-y-6">
+            {!selectedClassroom ? (
+              // Show all classes with option to select one
+              <>
+                <div className="flex items-center justify-between">
+                  <h2 className="text-2xl font-bold text-gray-900">My Classes</h2>
                   <JoinClass studentId={1}>
                     <Button>
                       <Plus className="h-4 w-4 mr-2" />
-                      Join Your First Class
+                      Join New Class
                     </Button>
                   </JoinClass>
-                </CardContent>
-              </Card>
+                </div>
+                
+                {classes?.length === 0 ? (
+                  <Card>
+                    <CardContent className="p-12 text-center">
+                      <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No classes joined</h3>
+                      <p className="text-gray-500 mb-6">Enter a class code from your teacher to get started</p>
+                      <JoinClass studentId={1}>
+                        <Button>
+                          <Plus className="h-4 w-4 mr-2" />
+                          Join Your First Class
+                        </Button>
+                      </JoinClass>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {classes?.map((classroom) => {
+                      const classAssignments = assignments?.filter(a => a.classroomId === classroom.id) || [];
+                      const pendingCount = classAssignments.filter(a => {
+                        const session = sessions?.find(s => s.assignmentId === a.id);
+                        return !session || session.status !== 'submitted';
+                      }).length;
+
+                      return (
+                        <Card key={classroom.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedClassroom(classroom)}>
+                          <CardHeader>
+                            <CardTitle className="text-lg">{classroom.name}</CardTitle>
+                            <div className="flex gap-2">
+                              <Badge variant="outline">{classroom.subject}</Badge>
+                              {classroom.gradeLevel && <Badge variant="secondary">{classroom.gradeLevel}</Badge>}
+                            </div>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-gray-600 text-sm mb-3">{classroom.description}</p>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center text-sm text-gray-500">
+                                <BookOpen className="h-4 w-4 mr-1" />
+                                {classAssignments.length} assignments
+                              </div>
+                              {pendingCount > 0 && (
+                                <Badge variant="destructive">{pendingCount} pending</Badge>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
             ) : (
-              <div className="space-y-6">
+              // Show selected classroom with its assignments
+              <>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <Button variant="ghost" onClick={() => setSelectedClassroom(null)}>
+                      ← Back to Classes
+                    </Button>
+                    <div>
+                      <h2 className="text-2xl font-bold text-gray-900">{selectedClassroom.name}</h2>
+                      <p className="text-gray-600">{selectedClassroom.subject}</p>
+                    </div>
+                  </div>
+                  <Badge variant="outline">
+                    {assignments?.filter(a => a.classroomId === selectedClassroom.id).length || 0} assignments
+                  </Badge>
+                </div>
+                
+                {/* Show assignments for the selected classroom */}
+                <div className="space-y-4">
+                  {(() => {
+                    const classAssignments = assignments?.filter(a => a.classroomId === selectedClassroom.id) || [];
+                    
+                    if (classAssignments.length === 0) {
+                      return (
+                        <Card>
+                          <CardContent className="p-12 text-center">
+                            <BookOpen className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                            <h3 className="text-lg font-medium text-gray-900 mb-2">No assignments yet</h3>
+                            <p className="text-gray-500">Your teacher hasn't posted any assignments for this class yet</p>
+                          </CardContent>
+                        </Card>
+                      );
+                    }
+                    
+                    return (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {classAssignments.map((assignment) => {
+                          const session = sessions?.find(s => s.assignmentId === assignment.id);
+                          const status = session?.status || 'not_started';
+                          const isOverdue = assignment.dueDate && new Date(assignment.dueDate) < new Date() && status !== 'submitted';
+                          
+                          return (
+                            <Card key={assignment.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedAssignment(assignment)}>
+                              <CardHeader>
+                                <div className="flex items-start justify-between">
+                                  <CardTitle className="text-lg line-clamp-2">{assignment.title}</CardTitle>
+                                  <Badge variant={
+                                    status === 'submitted' ? 'default' :
+                                    status === 'in_progress' ? 'secondary' :
+                                    isOverdue ? 'destructive' : 'outline'
+                                  }>
+                                    {status === 'submitted' ? 'Submitted' :
+                                     status === 'in_progress' ? 'In Progress' :
+                                     isOverdue ? 'Overdue' : 'Not Started'}
+                                  </Badge>
+                                </div>
+                                <p className="text-sm text-gray-600 line-clamp-3">{assignment.description}</p>
+                              </CardHeader>
+                              <CardContent>
+                                <div className="space-y-2">
+                                  {assignment.dueDate && (
+                                    <div className="flex items-center text-sm text-gray-500">
+                                      <Clock className="h-4 w-4 mr-2" />
+                                      Due {new Date(assignment.dueDate).toLocaleDateString()}
+                                    </div>
+                                  )}
+                                  <div className="flex items-center text-sm text-gray-500">
+                                    <PenTool className="h-4 w-4 mr-2" />
+                                    {assignment.minWords}-{assignment.maxWords} words
+                                  </div>
+                                  {session && (
+                                    <div className="flex items-center text-sm text-gray-500">
+                                      <Target className="h-4 w-4 mr-2" />
+                                      {session.wordCount} words written
+                                    </div>
+                                  )}
+                                  {session?.grade && (
+                                    <div className="flex items-center text-sm font-medium text-green-600">
+                                      <Trophy className="h-4 w-4 mr-2" />
+                                      Grade: {session.grade}
+                                    </div>
+                                  )}
+                                </div>
+                              </CardContent>
+                            </Card>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+                </div>
+              </>
+            )}
+          </TabsContent>
+
+          {/* Add Messages tab */}
+          <TabsContent value="messages" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-gray-900">Messages</h2>
+              <Badge variant="outline">Stay connected</Badge>
+            </div>
+            
+            <MessagingSystem userId={1} userRole="student" />
+          </TabsContent>
+
+          {/* Keep existing achievements and analytics tabs but remove old assignments logic */}
+          <TabsContent value="achievements" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-gray-900">Achievements & Goals</h2>
+              <Badge variant="outline">Level up your writing!</Badge>
+            </div>
+            
+            <AchievementSystem 
+              userId={1} 
+              totalWordCount={totalWordCount}
+              completedAssignments={completedAssignments}
+            />
+          </TabsContent>
+
+          <TabsContent value="analytics" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-gray-900">Writing Analytics</h2>
+              <Badge variant="outline">Track your improvement</Badge>
+            </div>
+            
+            <WritingAnalytics 
+              userId={1} 
+              userRole="student"
+              timeframe="month"
+            />
+          </TabsContent>
+        </Tabs>
+
+        {/* Writing Workspace Modal */}
+        {selectedAssignment && (
+          <WritingWorkspace
+            assignment={selectedAssignment}
+            studentId={1}
+            isOpen={!!selectedAssignment}
+            onClose={() => setSelectedAssignment(null)}
+          />
+        )}
+      </main>
+    </div>
+  );
+}
                 {/* Show general assignments (not tied to specific classes) */}
                 {assignments?.filter(a => a.classroomId === null).length > 0 && (
                   <div className="space-y-4">
