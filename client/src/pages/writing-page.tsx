@@ -17,7 +17,7 @@ export default function WritingPage() {
   });
 
   // Fetch existing writing session for this assignment
-  const { data: userSessions } = useQuery({
+  const { data: userSessions, isLoading: sessionsLoading } = useQuery({
     queryKey: ['/api/student/writing-sessions'],
   });
 
@@ -27,10 +27,11 @@ export default function WritingPage() {
   console.log('Writing page - Assignment ID:', assignmentId);
   console.log('Writing page - Assignment data:', assignment);
   console.log('Writing page - Assignment loading:', assignmentLoading);
+  console.log('Writing page - Sessions loading:', sessionsLoading);
   console.log('Writing page - User sessions:', userSessions);
   console.log('Writing page - Found session:', session);
 
-  if (assignmentLoading || !assignment) {
+  if (assignmentLoading || sessionsLoading || !assignment) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
