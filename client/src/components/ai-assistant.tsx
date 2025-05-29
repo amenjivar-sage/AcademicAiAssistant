@@ -114,10 +114,21 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
   ];
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col bg-white">
+      {/* Header */}
+      <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-purple-500 to-purple-600 text-white flex-shrink-0">
+        <div className="flex items-center gap-2">
+          <Bot className="h-5 w-5" />
+          <h3 className="font-semibold">ZoË AI Assistant</h3>
+        </div>
+        <p className="text-sm text-purple-100 mt-1">
+          Get ethical writing help and guidance
+        </p>
+      </div>
+
       <Tabs defaultValue="assistant" className="flex-1 flex flex-col">
-        <TabsList className="grid w-full grid-cols-4 h-auto">
-          <TabsTrigger value="assistant" className="text-xs px-2">ZoË</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4 h-auto m-2">
+          <TabsTrigger value="assistant" className="text-xs px-2">Chat</TabsTrigger>
           <TabsTrigger value="prompts" className="text-xs px-2">Help</TabsTrigger>
           <TabsTrigger value="citations" className="text-xs px-2">Cite</TabsTrigger>
           <TabsTrigger value="history" className="text-xs px-2">History</TabsTrigger>
