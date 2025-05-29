@@ -99,8 +99,15 @@ export class DatabaseStorage implements IStorage {
 
   // Writing session operations
   async getWritingSession(id: number): Promise<WritingSession | undefined> {
-    const [session] = await db.select().from(writingSessions).where(eq(writingSessions.id, id));
-    return session || undefined;
+    console.log('DatabaseStorage.getWritingSession called with ID:', id);
+    try {
+      const [session] = await db.select().from(writingSessions).where(eq(writingSessions.id, id));
+      console.log('Query result:', session ? `Found session ${session.id}` : 'No session found');
+      return session || undefined;
+    } catch (error) {
+      console.error('Database error in getWritingSession:', error);
+      return undefined;
+    }
   }
 
   async createWritingSession(sessionData: InsertWritingSession): Promise<WritingSession> {

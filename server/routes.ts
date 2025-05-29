@@ -268,7 +268,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           res.json(newSession);
         }
       } else {
-        console.log('Fetching session with ID:', sessionId);
+        console.log('Fetching session with ID:', sessionId, 'Type:', typeof sessionId);
+        console.log('Storage type:', storage.constructor.name);
         const session = await storage.getWritingSession(sessionId);
         console.log('Found session:', session ? `YES - ID: ${session.id}` : 'NO');
         if (!session) {
