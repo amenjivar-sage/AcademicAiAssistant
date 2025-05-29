@@ -12,12 +12,12 @@ export default function WritingPage() {
 
   // Fetch assignment details
   const { data: assignment, isLoading: assignmentLoading } = useQuery({
-    queryKey: ['/api/assignments', assignmentId],
+    queryKey: [`/api/assignments/${assignmentId}`],
   });
 
   // Fetch existing writing session if any
   const { data: session } = useQuery({
-    queryKey: ['/api/writing-sessions', assignmentId],
+    queryKey: [`/api/writing-sessions/${assignmentId}`],
   });
 
   if (assignmentLoading) {

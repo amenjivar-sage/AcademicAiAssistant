@@ -84,6 +84,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get writing session for specific assignment
+  app.get("/api/writing-sessions/:assignmentId", async (req, res) => {
+    try {
+      const assignmentId = parseInt(req.params.assignmentId);
+      const userId = 1; // Default student user for demo
+      
+      // Find session for this user and assignment
+      const sessions = await storage.getUserWritingSessions(userId);
+      const session = sessions.find(s => s.assignmentId === assignmentId);
+      
+      if (!session) {
+        return res.status(404).json({ message: "Session not found" });
+      }
+      
+      res.json(session);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get session" });
+    }
+  });
+
   // Create writing session
   app.post("/api/writing-sessions", async (req, res) => {
     try {
