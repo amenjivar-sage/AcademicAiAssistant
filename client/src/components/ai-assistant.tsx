@@ -378,18 +378,7 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
                 size="sm"
               >
                 <BookOpen className="h-3 w-3 mr-2 flex-shrink-0" />
-                <span>Citation Generator</span>
-              </Button>
-            </CitationAssistant>
-
-            <CitationAssistant sessionId={sessionId}>
-              <Button 
-                className="w-full justify-start h-auto p-2 text-left text-xs"
-                variant="outline"
-                size="sm"
-              >
-                <Search className="h-3 w-3 mr-2 flex-shrink-0" />
-                <span>Plagiarism Checker</span>
+                <span>Generate Citation</span>
               </Button>
             </CitationAssistant>
           </div>
