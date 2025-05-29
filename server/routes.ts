@@ -70,6 +70,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get specific assignment by ID
+  app.get("/api/assignments/:id", async (req, res) => {
+    try {
+      const assignmentId = parseInt(req.params.id);
+      const assignment = await storage.getAssignment(assignmentId);
+      if (!assignment) {
+        return res.status(404).json({ message: "Assignment not found" });
+      }
+      res.json(assignment);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get assignment" });
+    }
+  });
+
   // Create writing session
   app.post("/api/writing-sessions", async (req, res) => {
     try {
