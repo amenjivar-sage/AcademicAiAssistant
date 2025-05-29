@@ -22,6 +22,10 @@ export default function WritingPage() {
 
   // Find session for this specific assignment
   const session = userSessions?.find((s: any) => s.assignmentId === assignmentId);
+  
+  console.log('Writing page - Assignment ID:', assignmentId);
+  console.log('Writing page - User sessions:', userSessions);
+  console.log('Writing page - Found session:', session);
 
   if (assignmentLoading) {
     return (
