@@ -598,11 +598,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Simulate plagiarism checking with realistic results
       const wordCount = text.trim().split(/\s+/).length;
-      const baseOriginalityScore = Math.max(60, Math.min(95, 100 - (wordCount * 0.1) + Math.random() * 20));
+      let baseOriginalityScore = Math.max(70, Math.min(95, 100 - (wordCount * 0.05) + Math.random() * 15));
+      
+      // Check for direct quotes (text in quotation marks)
+      const hasQuotes = text.includes('"') || text.includes("'");
+      const quoteMatches = text.match(/"[^"]*"|'[^']*'/g);
+      
+      if (hasQuotes && quoteMatches && quoteMatches.length > 0) {
+        // Reduce originality score significantly for quoted content
+        const quotedWordCount = quoteMatches.join(' ').split(/\s+/).length;
+        const quoteRatio = quotedWordCount / wordCount;
+        baseOriginalityScore = Math.max(30, baseOriginalityScore - (quoteRatio * 50));
+      }
+      
+      // Check for academic phrases that might indicate copying
+      const suspiciousAcademicPhrases = [
+        'according to the research',
+        'studies have shown',
+        'it has been proven',
+        'research indicates',
+        'the data suggests',
+        'in conclusion',
+        'furthermore',
+        'nevertheless',
+        'on the other hand'
+      ];
+      
+      const suspiciousPhrasesFound = suspiciousAcademicPhrases.filter(phrase => 
+        text.toLowerCase().includes(phrase.toLowerCase())
+      );
+      
+      if (suspiciousPhrasesFound.length > 0) {
+        baseOriginalityScore = Math.max(40, baseOriginalityScore - (suspiciousPhrasesFound.length * 10));
+      }
       
       // Detect potential issues based on text patterns
       const concerns = [];
       const sources = [];
+      
+      // Check for direct quotes without citations
+      if (hasQuotes && quoteMatches) {
+        quoteMatches.forEach(quote => {
+          concerns.push({
+            type: "missing_citation",
+            text: quote,
+            suggestion: "This appears to be a direct quote. Please add a proper citation to identify the source."
+          });
+        });
+      }
+      
+      // Check for suspicious academic phrases
+      suspiciousPhrasesFound.forEach(phrase => {
+        concerns.push({
+          type: "missing_citation",
+          text: `"${phrase}"`,
+          suggestion: "This phrase often indicates referenced material. Consider adding citations if this refers to external sources."
+        });
+      });
       
       // Check for common plagiarism indicators
       if (text.includes("according to") || text.includes("research shows")) {
