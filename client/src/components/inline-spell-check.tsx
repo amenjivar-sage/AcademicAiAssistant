@@ -276,7 +276,7 @@ export default function InlineSpellCheck({
             const textBeforeError = content.substring(0, currentError.startIndex);
             const lines = textBeforeError.split('\n');
             const lineHeight = 25.6; // 16px * 1.6 line-height
-            const charWidth = 8.5; // Adjusted for better alignment with Georgia font
+            const charWidth = 8.0; // Fine-tuned for Georgia font character spacing
             
             const currentLine = lines.length - 1;
             const charInLine = lines[lines.length - 1].length;
