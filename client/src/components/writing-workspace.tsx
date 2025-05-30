@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useLocation } from 'wouter';
+import { useLocation, useRoute } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { Save, Send, Clock, FileText, Shield, AlertTriangle, Trophy } from 'lucide-react';
+import { Save, Send, Clock, FileText, Shield, AlertTriangle, Trophy, ArrowLeft, Loader2, Undo } from 'lucide-react';
 import AiAssistant from './ai-assistant';
 import CopyPasteDetector from './copy-paste-detector';
 import EnhancedToolbar from './enhanced-toolbar';
@@ -366,6 +366,8 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
               )}
             </div>
           </div>
+
+
 
           {/* Enhanced Toolbar */}
           <EnhancedToolbar
