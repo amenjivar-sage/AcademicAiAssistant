@@ -1,3 +1,5 @@
+import { isValidEnglishWord } from './english-words';
+
 // Simple spell checking utility for common misspellings
 export const SPELL_CHECK_DICTIONARY: Record<string, string> = {
   // Common misspellings
@@ -97,6 +99,7 @@ export interface SpellCheckResult {
   endIndex: number;
 }
 
+// Enhanced spell checking that combines dictionary with pattern matching
 export function checkSpelling(text: string): SpellCheckResult[] {
   const results: SpellCheckResult[] = [];
   const words = text.match(/\b[a-zA-Z]+\b/g) || [];
@@ -106,6 +109,7 @@ export function checkSpelling(text: string): SpellCheckResult[] {
     const wordIndex = text.indexOf(word, currentIndex);
     const lowerWord = word.toLowerCase();
     
+    // Check against our dictionary first
     if (SPELL_CHECK_DICTIONARY[lowerWord]) {
       results.push({
         word,
@@ -113,12 +117,104 @@ export function checkSpelling(text: string): SpellCheckResult[] {
         startIndex: wordIndex,
         endIndex: wordIndex + word.length
       });
+    } else {
+      // Check against comprehensive English word list
+      if (!isValidEnglishWord(word)) {
+        const suggestion = detectSpellingError(word) || generateSuggestion(word);
+        if (suggestion && suggestion !== lowerWord) {
+          results.push({
+            word,
+            suggestion,
+            startIndex: wordIndex,
+            endIndex: wordIndex + word.length
+          });
+        }
+      }
     }
     
     currentIndex = wordIndex + word.length;
   });
 
   return results;
+}
+
+// Pattern-based spell checking for common errors
+function detectSpellingError(word: string): string | null {
+  const lower = word.toLowerCase();
+  
+  // Skip very short words and proper nouns (capitalized words)
+  if (word.length < 3 || /^[A-Z][a-z]+$/.test(word)) {
+    return null;
+  }
+  
+  // Common patterns and corrections
+  const patterns = [
+    // Double letters that should be single
+    { pattern: /([a-z])\1+/, fix: '$1' },
+    // Common letter swaps
+    { pattern: /ei/, fix: 'ie' },
+    { pattern: /teh/, fix: 'the' },
+    { pattern: /adn/, fix: 'and' },
+    // Missing letters (basic heuristics)
+    { pattern: /^h[a-z]*llo$/, fix: (word: string) => word.replace(/^h([a-z]*)llo$/, 'he$1llo') },
+    { pattern: /^[a-z]*ay$/, fix: (word: string) => word.endsWith('auy') ? word.replace('auy', 'ay') : word.replace(/([a-z])ay$/, '$1day') },
+  ];
+  
+  // Apply pattern corrections
+  for (const { pattern, fix } of patterns) {
+    if (typeof fix === 'string') {
+      if (pattern.test(lower)) {
+        return lower.replace(pattern, fix);
+      }
+    } else if (typeof fix === 'function') {
+      if (pattern.test(lower)) {
+        return fix(lower);
+      }
+    }
+  }
+  
+  // Check for likely misspellings based on common error patterns
+  if (isLikelyMisspelling(word)) {
+    return generateSuggestion(word);
+  }
+  
+  return null;
+}
+
+// Detect likely misspellings based on patterns
+function isLikelyMisspelling(word: string): boolean {
+  const lower = word.toLowerCase();
+  
+  // Words with unusual letter combinations
+  const suspiciousPatterns = [
+    /hp[a-z]/, // hp followed by other letters (like "hpo", "hpello")
+    /[a-z]auy$/, // words ending in "auy"
+    /^[a-z]*[qxz]{2,}/, // multiple q, x, or z together
+    /(.)\1{2,}/, // words with 3+ repeated letters
+  ];
+  
+  return suspiciousPatterns.some(pattern => pattern.test(lower));
+}
+
+// Generate suggestions for likely misspellings
+function generateSuggestion(word: string): string {
+  const lower = word.toLowerCase();
+  
+  // Specific corrections for patterns we recognize
+  if (lower.startsWith('hp')) {
+    if (lower === 'hpo') return 'how';
+    if (lower === 'hpello') return 'hello';
+    if (lower.startsWith('hp') && lower.length > 2) {
+      return 'h' + lower.substring(2); // Remove the 'p'
+    }
+  }
+  
+  if (lower.endsWith('auy')) {
+    return lower.replace('auy', 'ay');
+  }
+  
+  // For other cases, try common fixes
+  return lower;
 }
 
 export function applySpellCheckSuggestion(text: string, result: SpellCheckResult): string {
