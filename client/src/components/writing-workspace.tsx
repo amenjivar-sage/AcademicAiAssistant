@@ -192,6 +192,33 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     },
   });
 
+  // Define handleSave function before useEffect that uses it
+  const handleSave = React.useCallback(() => {
+    if (!isSaving && (title !== session?.title || content !== session?.content || pastedContents.length !== (session?.pastedContent as PastedContent[] || []).length)) {
+      setIsSaving(true);
+      console.log('Auto-save triggered - session:', session?.id, 'sessionId:', sessionId, 'assignmentId:', assignmentId);
+      
+      // Always use the session from the query data if available, otherwise use sessionId from props
+      const currentSessionId = session?.id || sessionId;
+      if (currentSessionId && currentSessionId !== 0) {
+        console.log('Updating existing session:', currentSessionId);
+        updateSessionMutation.mutate({ title, content, pastedContent: pastedContents });
+      } else if (assignmentId && (title.trim() || content.trim()) && !createSessionMutation.isPending) {
+        // Create a new session for this assignment only if not already creating one
+        console.log('Creating new session for assignment:', assignmentId);
+        createSessionMutation.mutate({ 
+          assignmentId, 
+          title, 
+          content,
+          pastedContent: pastedContents 
+        });
+      } else {
+        setIsSaving(false);
+        console.log('No valid session or assignment to save');
+      }
+    }
+  }, [title, content, pastedContents, session, sessionId, assignmentId, isSaving, updateSessionMutation, createSessionMutation]);
+
   // Load session data and update sessionId if a new session was created
   useEffect(() => {
     if (session) {
@@ -223,12 +250,35 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     const timer = setTimeout(() => {
       if (title || content) {
         console.log('Auto-save triggered - session:', session, 'sessionId:', sessionId, 'assignmentId:', assignmentId);
-        handleSave();
+        
+        if (!isSaving && (title !== session?.title || content !== session?.content || pastedContents.length !== (session?.pastedContent as PastedContent[] || []).length)) {
+          setIsSaving(true);
+          console.log('Auto-save executing - session:', session?.id, 'sessionId:', sessionId, 'assignmentId:', assignmentId);
+          
+          // Always use the session from the query data if available, otherwise use sessionId from props
+          const currentSessionId = session?.id || sessionId;
+          if (currentSessionId && currentSessionId !== 0) {
+            console.log('Updating existing session:', currentSessionId);
+            updateSessionMutation.mutate({ title, content, pastedContent: pastedContents });
+          } else if (assignmentId && (title.trim() || content.trim()) && !createSessionMutation.isPending) {
+            // Create a new session for this assignment only if not already creating one
+            console.log('Creating new session for assignment:', assignmentId);
+            createSessionMutation.mutate({ 
+              assignmentId, 
+              title, 
+              content,
+              pastedContent: pastedContents 
+            });
+          } else {
+            setIsSaving(false);
+            console.log('No valid session or assignment to save');
+          }
+        }
       }
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, [title, content, handleSave]);
+  }, [title, content, session, sessionId, assignmentId, isSaving, pastedContents, updateSessionMutation, createSessionMutation]);
 
   // Sync sessionId when new session is created
   useEffect(() => {
@@ -243,32 +293,6 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     const words = content.split(/\s+/).filter(word => word.length > 0).length;
     setWordCount(words);
   }, [content]);
-
-  const handleSave = React.useCallback(() => {
-    if (!isSaving && (title !== session?.title || content !== session?.content || pastedContents.length !== (session?.pastedContent as PastedContent[] || []).length)) {
-      setIsSaving(true);
-      console.log('Auto-save triggered - session:', session?.id, 'sessionId:', sessionId, 'assignmentId:', assignmentId);
-      
-      // Always use the session from the query data if available, otherwise use sessionId from props
-      const currentSessionId = session?.id || sessionId;
-      if (currentSessionId && currentSessionId !== 0) {
-        console.log('Updating existing session:', currentSessionId);
-        updateSessionMutation.mutate({ title, content, pastedContent: pastedContents });
-      } else if (assignmentId && (title.trim() || content.trim()) && !createSessionMutation.isPending) {
-        // Create a new session for this assignment only if not already creating one
-        console.log('Creating new session for assignment:', assignmentId);
-        createSessionMutation.mutate({ 
-          assignmentId, 
-          title, 
-          content,
-          pastedContent: pastedContents 
-        });
-      } else {
-        setIsSaving(false);
-        console.log('No valid session or assignment to save');
-      }
-    }
-  }, [title, content, pastedContents, session, sessionId, assignmentId, isSaving, updateSessionMutation, createSessionMutation]);
 
   const handlePasteDetected = (pastedContent: PastedContent) => {
     setPastedContents(prev => [...prev, pastedContent]);
