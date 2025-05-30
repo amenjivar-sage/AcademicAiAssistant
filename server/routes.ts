@@ -286,6 +286,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get individual assignment by ID
+  app.get("/api/assignments/:id", async (req, res) => {
+    try {
+      const assignmentId = parseInt(req.params.id);
+      console.log('Fetching assignment:', assignmentId);
+      
+      const assignment = await storage.getAssignment(assignmentId);
+      
+      if (!assignment) {
+        console.log('Assignment not found:', assignmentId);
+        return res.status(404).json({ message: "Assignment not found" });
+      }
+      
+      console.log('Assignment found:', assignment.id);
+      res.json(assignment);
+    } catch (error) {
+      console.error("Error fetching assignment:", error);
+      res.status(500).json({ message: "Failed to fetch assignment" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
