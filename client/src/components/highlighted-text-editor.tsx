@@ -105,8 +105,6 @@ export default function HighlightedTextEditor({
           background: 'transparent',
           color: 'transparent',
           zIndex: 1,
-          scrollTop: scrollTop,
-          scrollLeft: scrollLeft,
         }}
         dangerouslySetInnerHTML={{ __html: createHighlightedText() }}
       />

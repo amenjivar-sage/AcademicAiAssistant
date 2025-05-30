@@ -498,7 +498,11 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
             content={content}
             onContentChange={setContent}
             isOpen={showSpellCheck}
-            onClose={() => setShowSpellCheck(false)}
+            onClose={() => {
+              setShowSpellCheck(false);
+              setSpellErrors([]);
+            }}
+            onSpellErrorsChange={setSpellErrors}
           />
         </div>
       )}

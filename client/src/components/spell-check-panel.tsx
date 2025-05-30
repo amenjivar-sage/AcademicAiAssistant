@@ -39,6 +39,7 @@ export default function SpellCheckPanel({ content, onContentChange, isOpen, onCl
     // Use AI-powered spell checking
     checkSpellingWithAI(content).then(errors => {
       setSpellErrors(errors);
+      onSpellErrorsChange?.(errors);
       setProcessedErrors(new Set());
       setIsLoading(false);
     }).catch(error => {
@@ -46,6 +47,7 @@ export default function SpellCheckPanel({ content, onContentChange, isOpen, onCl
       // Fallback to basic spell checking if AI fails
       const errors = checkSpelling(content);
       setSpellErrors(errors);
+      onSpellErrorsChange?.(errors);
       setProcessedErrors(new Set());
       setIsLoading(false);
     });
