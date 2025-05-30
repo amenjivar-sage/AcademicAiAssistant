@@ -389,28 +389,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Import AI functions
       const { generateAiResponse } = await import("./openai");
       
-      const spellCheckPrompt = `You are a precise spell checker. Find ONLY clearly misspelled words in this text: "${text}"
+      // Limit errors to prevent overwhelming the AI and UI
+      const spellCheckPrompt = `Find the first 5 obvious misspelled words in: "${text}"
 
-STRICT RULES:
-1. Only flag words that are OBVIOUSLY misspelled (missing letters, extra letters, transposed letters)
-2. Provide 1-2 simple, correct suggestions only
-3. Do NOT flag correctly spelled words
-4. Focus on the most obvious errors first
+RULES:
+1. Only flag clear typos (missing/extra/wrong letters)
+2. Stop after finding 5 errors maximum
+3. Provide 1 simple correction per word
+4. Be precise with word positions
 
-Examples:
-- "teh" → ["the"] ✓
-- "recieve" → ["receive"] ✓
-- "seperate" → ["separate"] ✓
-- "yiou" → ["you"] ✓
-
-IGNORE: contractions, proper nouns, technical terms, correctly spelled words
-
-Return JSON with exact positions:
-[
-  {"word": "exact_misspelled_word", "suggestions": ["correct1"], "startIndex": number, "endIndex": number}
-]
-
-Be precise with positions. Return [] if no clear misspellings.`;
+Return JSON: [{"word": "misspelled", "suggestions": ["correct"], "startIndex": 0, "endIndex": 10}]
+Return [] if no errors.`;
 
       const aiResponse = await generateAiResponse(spellCheckPrompt);
       

@@ -268,13 +268,14 @@ export default function InlineSpellCheck({
             overflow: 'hidden'
           }}
         >
-          {spellErrors.map((error, index) => {
-            // Simple positioning - count characters and newlines
+          {spellErrors.slice(0, 5).map((error, index) => {
+            // Simple positioning calculation
             const textBeforeError = content.substring(0, error.startIndex);
-            const lines = textBeforeError.split('\n');
             const lineHeight = 25.6; // 16px * 1.6 line-height
-            const charWidth = 8.0;
+            const charWidth = 7.5; // Adjusted for better accuracy
             
+            // Count actual lines by splitting on newlines
+            const lines = textBeforeError.split('\n');
             const currentLine = lines.length - 1;
             const lastLineText = lines[lines.length - 1] || '';
             const charInLine = lastLineText.length;
