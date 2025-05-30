@@ -233,11 +233,10 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
-        <TabsList className="grid w-full grid-cols-4 h-auto m-2 flex-shrink-0">
+        <TabsList className="grid w-full grid-cols-3 h-auto m-2 flex-shrink-0">
           <TabsTrigger value="assistant" className="text-xs px-2">Chat</TabsTrigger>
           <TabsTrigger value="prompts" className="text-xs px-2">Help</TabsTrigger>
           <TabsTrigger value="citations" className="text-xs px-2">Cite</TabsTrigger>
-          <TabsTrigger value="history" className="text-xs px-2">History</TabsTrigger>
         </TabsList>
 
         <TabsContent value="assistant" className="flex-1 flex flex-col min-h-0">
@@ -400,14 +399,7 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
           </div>
         </TabsContent>
 
-        <TabsContent value="history" className="p-3">
-          <h4 className="font-medium text-gray-700 mb-3 text-sm">Recent Conversations</h4>
-          <div className="text-center text-gray-500 py-8">
-            <Bot className="h-8 w-8 mx-auto mb-3 text-gray-300" />
-            <p className="text-xs">Your ZoË conversations will appear here</p>
-            <p className="text-xs mt-1">Start chatting to see your history.</p>
-          </div>
-        </TabsContent>
+
       </Tabs>
     </div>
   );
