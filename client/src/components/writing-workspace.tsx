@@ -474,19 +474,41 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                   onFormatRef={formatRef}
                 />
               ) : (
-                /* Normal inline spell check view */
-                <InlineSpellCheck
-                  content={content}
-                  onContentChange={(newContent) => {
-                    console.log('Content changed from spell check:', newContent);
-                    setContent(newContent);
-                  }}
-                  isActive={showSpellCheck}
-                  onClose={() => setShowSpellCheck(false)}
-                  disabled={isSubmitted || isGraded}
-                  placeholder="Start writing your assignment here..."
-                  onSpellCheckStatusChange={setSpellCheckActive}
-                />
+                /* Normal rich text editor view */
+                <div className="p-6 min-h-full">
+                  <RichTextEditor
+                    content={content}
+                    onContentChange={(newContent) => {
+                      console.log('Content changed from normal view:', newContent);
+                      setContent(newContent);
+                    }}
+                    disabled={isSubmitted || isGraded}
+                    onFormatRef={formatRef}
+                    placeholder="Start writing your assignment here..."
+                    className="w-full min-h-[600px] p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    style={{
+                      fontFamily: 'Times New Roman, serif',
+                      fontSize: '14px',
+                      lineHeight: '1.6'
+                    }}
+                  />
+                  
+                  {/* Spell Check Overlay */}
+                  {showSpellCheck && (
+                    <InlineSpellCheck
+                      content={content}
+                      onContentChange={(newContent) => {
+                        console.log('Content changed from spell check:', newContent);
+                        setContent(newContent);
+                      }}
+                      isActive={showSpellCheck}
+                      onClose={() => setShowSpellCheck(false)}
+                      disabled={isSubmitted || isGraded}
+                      placeholder="Start writing your assignment here..."
+                      onSpellCheckStatusChange={setSpellCheckActive}
+                    />
+                  )}
+                </div>
               )}
             </div>
           </CopyPasteDetector>
