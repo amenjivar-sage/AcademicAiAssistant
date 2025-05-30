@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useParams, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Clock, Target } from "lucide-react";
+import { ArrowLeft, Clock, Target, Shield, AlertTriangle } from "lucide-react";
 import WritingWorkspace from "@/components/writing-workspace";
 
 export default function WritingPage() {
@@ -45,9 +45,9 @@ export default function WritingPage() {
   const isOverdue = assignment.dueDate && new Date(assignment.dueDate) < new Date() && session?.status !== 'submitted';
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Fixed Navigation Header */}
-      <div className="bg-white border-b sticky top-0 z-50 shadow-sm">
+    <>
+      {/* Fixed Navigation Header - Always Visible */}
+      <div className="bg-white border-b fixed top-0 left-0 right-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
@@ -63,10 +63,10 @@ export default function WritingPage() {
               
               <div className="border-l border-gray-200 pl-4">
                 <h1 className="text-xl font-semibold text-gray-900">
-                  {assignment.title}
+                  {assignment?.title || 'Loading...'}
                 </h1>
                 <div className="flex items-center space-x-4 text-sm text-gray-500">
-                  {assignment.dueDate && (
+                  {assignment?.dueDate && (
                     <div className="flex items-center">
                       <Clock className="h-4 w-4 mr-1" />
                       Due {new Date(assignment.dueDate).toLocaleDateString()}
@@ -87,33 +87,31 @@ export default function WritingPage() {
       </div>
 
       {/* Assignment Details */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pt-20">
         <Card className="mb-6">
           <CardHeader>
             <CardTitle>Assignment Instructions</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-700 mb-4">{assignment.description}</p>
+            <p className="text-gray-700 whitespace-pre-wrap">{assignment?.description}</p>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <div className="font-medium text-gray-900">AI Assistance</div>
-                <div className="text-gray-600 capitalize">{assignment.aiPermissions}</div>
+            <div className="mt-6 flex items-center gap-4 text-sm text-gray-500">
+              <div className="flex items-center">
+                <Target className="h-4 w-4 mr-1" />
+                AI Permissions: {assignment?.aiPermissions}
               </div>
               
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <div className="font-medium text-gray-900">Copy & Paste</div>
-                <div className="text-gray-600">
-                  {assignment.allowCopyPaste ? 'Allowed' : 'Not Allowed'}
+              {assignment?.allowCopyPaste ? (
+                <div className="flex items-center text-yellow-600">
+                  <Shield className="h-4 w-4 mr-1" />
+                  Copy & Paste Tracked
                 </div>
-              </div>
-              
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <div className="font-medium text-gray-900">Status</div>
-                <div className="text-gray-600 capitalize">
-                  {session?.status || 'Not Started'}
+              ) : (
+                <div className="flex items-center text-red-600">
+                  <AlertTriangle className="h-4 w-4 mr-1" />
+                  Copy & Paste Disabled
                 </div>
-              </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -122,9 +120,9 @@ export default function WritingPage() {
         <WritingWorkspace 
           sessionId={session?.id || 0}
           assignmentId={assignmentId}
-          initialSession={session} // Pass the session data directly
+          initialSession={session}
         />
       </div>
-    </div>
+    </>
   );
 }
