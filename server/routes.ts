@@ -389,53 +389,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Import AI functions
       const { generateAiResponse } = await import("./openai");
       
-      // Enhanced grammar-aware spell checking
-      const spellCheckPrompt = `Analyze this ENTIRE text for spelling AND grammar errors, including capitalization. Scan through ALL words, not just the first few.
+      // Helper function to parse AI response
+      const parseAiResponse = (aiResponse: string): any[] => {
+        let corrections: any[] = [];
+        try {
+          corrections = JSON.parse(aiResponse);
+        } catch (parseError) {
+          const jsonMatch = aiResponse.match(/```json\s*([\s\S]*?)\s*```/);
+          if (jsonMatch) {
+            try {
+              corrections = JSON.parse(jsonMatch[1]);
+            } catch (extractError) {
+              corrections = [];
+            }
+          }
+        }
+        return corrections;
+      };
+
+      // Split long text into chunks for better processing
+      const maxChunkSize = 1000; // Process in 1000-character chunks
+      let allCorrections: any[] = [];
+      
+      if (text.length <= maxChunkSize) {
+        // Process short text in one go
+        const spellCheckPrompt = `Analyze this text for spelling AND grammar errors, including capitalization.
 
 Text: "${text}"
 
 CHECK FOR:
-1. Misspelled words (find up to 10 errors throughout the ENTIRE text)
-2. Capitalization errors for:
-   - State names (california → California, texas → Texas)
-   - Country names (america → America, canada → Canada)
-   - City names (new york → New York, los angeles → Los Angeles)
-   - Proper nouns and names
-   - Beginning of sentences
-3. Common grammar mistakes
+1. Misspelled words 
+2. Capitalization errors for state names, countries, cities, proper nouns
+3. Beginning of sentences
+4. Common grammar mistakes
 
 RULES:
-- Scan the ENTIRE text from beginning to end
-- Only check individual words separated by spaces
+- Check ALL words in the text
 - Give exact positions in the original text
-- Provide the correct capitalized/spelled version
-- Find errors throughout the whole document, not just at the beginning
-- Return up to 10 errors maximum
+- Provide correct spelling/capitalization
+- Find ALL errors, not just the first few
 
 Return JSON: [{"word": "california", "suggestions": ["California"], "startIndex": 0, "endIndex": 10}]
 Return [] if no errors.`;
 
-      const aiResponse = await generateAiResponse(spellCheckPrompt);
-      
-      // Extract JSON from AI response
-      let corrections = [];
-      try {
-        // Try direct JSON parsing first
-        corrections = JSON.parse(aiResponse);
-      } catch (parseError) {
-        // Extract JSON from markdown code blocks
-        const jsonMatch = aiResponse.match(/```json\s*([\s\S]*?)\s*```/);
-        if (jsonMatch) {
+        const aiResponse = await generateAiResponse(spellCheckPrompt);
+        allCorrections = parseAiResponse(aiResponse);
+      } else {
+        // Process long text in chunks
+        for (let i = 0; i < text.length; i += maxChunkSize) {
+          const chunk = text.substring(i, Math.min(i + maxChunkSize, text.length));
+          const chunkPrompt = `Analyze this text chunk for spelling AND grammar errors:
+
+Text: "${chunk}"
+
+CHECK FOR:
+1. Misspelled words 
+2. Capitalization errors for state names, countries, cities, proper nouns
+3. Beginning of sentences
+4. Common grammar mistakes
+
+Return JSON with positions relative to this chunk: [{"word": "california", "suggestions": ["California"], "startIndex": 0, "endIndex": 10}]
+Return [] if no errors.`;
+
           try {
-            corrections = JSON.parse(jsonMatch[1]);
-          } catch (extractError) {
-            corrections = [];
+            const aiResponse = await generateAiResponse(chunkPrompt);
+            const chunkCorrections = parseAiResponse(aiResponse);
+            
+            // Adjust positions to be relative to the full text
+            chunkCorrections.forEach((correction: any) => {
+              correction.startIndex += i;
+              correction.endIndex += i;
+            });
+            
+            allCorrections.push(...chunkCorrections);
+          } catch (error) {
+            console.error(`Error processing chunk ${i}:`, error);
           }
         }
       }
 
-      // Validate corrections and fix positions
-      corrections = corrections.filter((correction: any) => {
+      // Validate and filter corrections
+      const validatedCorrections = allCorrections.filter((correction: any) => {
         if (!correction.word || correction.startIndex === undefined || correction.endIndex === undefined) {
           return false;
         }
@@ -444,7 +478,7 @@ Return [] if no errors.`;
         const actualWord = text.substring(correction.startIndex, correction.endIndex);
         if (actualWord.toLowerCase() !== correction.word.toLowerCase()) {
           // Try to find the correct position
-          const correctIndex = text.toLowerCase().indexOf(correction.word.toLowerCase());
+          const correctIndex = text.toLowerCase().indexOf(correction.word.toLowerCase(), correction.startIndex - 50);
           if (correctIndex !== -1) {
             correction.startIndex = correctIndex;
             correction.endIndex = correctIndex + correction.word.length;
@@ -453,7 +487,14 @@ Return [] if no errors.`;
           return false;
         }
         return true;
-      }).slice(0, 10); // Limit to 10 errors
+      });
+      
+      // Remove duplicates and sort by position
+      const corrections = validatedCorrections
+        .filter((correction: any, index: number, arr: any[]) => 
+          arr.findIndex((c: any) => c.startIndex === correction.startIndex && c.word === correction.word) === index
+        )
+        .sort((a: any, b: any) => a.startIndex - b.startIndex);
       
       res.json({ corrections });
     } catch (error) {
