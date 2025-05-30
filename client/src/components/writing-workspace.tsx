@@ -64,7 +64,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
 
   // Get assignment data to check copy-paste permissions
   const { data: assignment } = useQuery<Assignment>({
-    queryKey: ['/api/assignments', assignmentId],
+    queryKey: [`/api/assignments/${assignmentId}`],
     enabled: !!assignmentId,
   });
 
