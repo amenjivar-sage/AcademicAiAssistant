@@ -732,6 +732,117 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(classOverview);
   });
 
+  // Teacher goal management endpoints
+  app.get("/api/teacher/:teacherId/goals", async (req, res) => {
+    const teacherId = parseInt(req.params.teacherId);
+    // Demo teacher goals
+    const goals = [
+      {
+        id: 1,
+        teacherId,
+        classroomId: 1,
+        type: "daily_words",
+        title: "Daily Writing Practice",
+        description: "Students should write at least 250 words every day to build consistency",
+        target: 250,
+        deadline: "2025-06-30",
+        isActive: true,
+        assignedStudents: 18,
+        completionRate: 67,
+        createdAt: "2025-05-20"
+      },
+      {
+        id: 2,
+        teacherId,
+        classroomId: 1,
+        type: "weekly_sessions",
+        title: "Weekly Writing Sessions",
+        description: "Complete at least 4 writing sessions per week",
+        target: 4,
+        deadline: "2025-06-07",
+        isActive: true,
+        assignedStudents: 18,
+        completionRate: 83,
+        createdAt: "2025-05-25"
+      },
+      {
+        id: 3,
+        teacherId,
+        classroomId: 1,
+        type: "grammar_accuracy",
+        title: "Grammar Improvement",
+        description: "Achieve 90% grammar accuracy in writing assignments",
+        target: 90,
+        deadline: "2025-07-15",
+        isActive: true,
+        assignedStudents: 18,
+        completionRate: 45,
+        createdAt: "2025-05-28"
+      }
+    ];
+    res.json(goals);
+  });
+
+  app.post("/api/teacher/goals", async (req, res) => {
+    try {
+      const goalData = req.body;
+      // In a real implementation, this would save to database
+      const newGoal = {
+        id: Date.now(), // Simple ID generation for demo
+        ...goalData,
+        assignedStudents: 18, // Demo count
+        completionRate: 0,
+        createdAt: new Date().toISOString()
+      };
+      res.json(newGoal);
+    } catch (error) {
+      console.error('Error creating goal:', error);
+      res.status(500).json({ message: "Failed to create goal" });
+    }
+  });
+
+  app.patch("/api/teacher/goals/:goalId", async (req, res) => {
+    try {
+      const goalId = parseInt(req.params.goalId);
+      const updates = req.body;
+      // In a real implementation, this would update the database
+      const updatedGoal = {
+        id: goalId,
+        ...updates,
+        updatedAt: new Date().toISOString()
+      };
+      res.json(updatedGoal);
+    } catch (error) {
+      console.error('Error updating goal:', error);
+      res.status(500).json({ message: "Failed to update goal" });
+    }
+  });
+
+  app.delete("/api/teacher/goals/:goalId", async (req, res) => {
+    try {
+      const goalId = parseInt(req.params.goalId);
+      // In a real implementation, this would delete from database
+      res.json({ message: "Goal deleted successfully" });
+    } catch (error) {
+      console.error('Error deleting goal:', error);
+      res.status(500).json({ message: "Failed to delete goal" });
+    }
+  });
+
+  // Get students in a classroom
+  app.get("/api/teacher/classrooms/:classroomId/students", async (req, res) => {
+    const classroomId = parseInt(req.params.classroomId);
+    // Demo student list
+    const students = [
+      { id: 1, name: "Alice Johnson", email: "alice.j@school.edu", progress: 85 },
+      { id: 2, name: "Bob Smith", email: "bob.s@school.edu", progress: 72 },
+      { id: 3, name: "Maria Rodriguez", email: "maria.r@school.edu", progress: 94 },
+      { id: 4, name: "David Kim", email: "david.k@school.edu", progress: 78 },
+      { id: 5, name: "Sarah Chen", email: "sarah.c@school.edu", progress: 61 }
+    ];
+    res.json(students);
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

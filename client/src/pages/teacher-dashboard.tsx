@@ -9,7 +9,8 @@ import AssignmentForm from "@/components/assignment-form";
 import ClassroomManagement from "@/components/classroom-management";
 import MessagingSystem from "@/components/messaging-system";
 import TeacherInsights from "@/components/teacher-insights";
-import { PlusCircle, Users, FileText, BarChart3, MessageSquare } from "lucide-react";
+import { TeacherGoalManagement } from "@/components/teacher-goal-management";
+import { PlusCircle, Users, FileText, BarChart3, MessageSquare, Target } from "lucide-react";
 import SageLogo from "@/components/sage-logo";
 import type { Assignment, Classroom } from "@shared/schema";
 
@@ -161,9 +162,10 @@ export default function TeacherDashboard() {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="classes">Classes</TabsTrigger>
             <TabsTrigger value="submissions">Students</TabsTrigger>
+            <TabsTrigger value="goals">Goals</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="settings">Communication</TabsTrigger>
           </TabsList>
@@ -184,6 +186,10 @@ export default function TeacherDashboard() {
                 <p className="text-gray-500">View student progress, achievements, and submissions</p>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="goals" className="space-y-6">
+            <TeacherGoalManagement teacherId={1} />
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-6">
