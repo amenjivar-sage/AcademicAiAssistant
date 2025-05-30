@@ -293,19 +293,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Otherwise get existing session - ensure it exists before returning
+      console.log('Attempting to retrieve session:', sessionId);
       const session = await storage.getWritingSession(sessionId);
       
       if (!session) {
+        console.log('Direct lookup failed, checking user sessions for:', sessionId);
         // If session doesn't exist, try to find it by checking all user sessions
         const userId = currentDemoUserId;
         const userSessions = await storage.getUserWritingSessions(userId);
+        console.log('User has', userSessions.length, 'sessions total');
         const foundSession = userSessions.find(s => s.id === sessionId);
         
         if (foundSession) {
+          console.log('Found session via user sessions:', foundSession.id);
           return res.json(foundSession);
         }
         
-        console.log('Session not found:', sessionId);
+        console.log('Session not found anywhere:', sessionId);
         return res.status(404).json({ message: "Session not found" });
       }
       
