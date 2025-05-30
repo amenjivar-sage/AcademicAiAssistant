@@ -230,6 +230,12 @@ function generateSuggestion(word: string): string {
     'watre': 'water',
     'channals': 'channels',
     'chanals': 'channels',
+    'accpt': 'accept',
+    'acpt': 'accept',
+    'sugestions': 'suggestions',
+    'sugestion': 'suggestion',
+    'corections': 'corrections',
+    'corection': 'correction',
     'alex': 'Alex', // Proper noun
     'teh': 'the',
     'adn': 'and',

@@ -157,7 +157,29 @@ export const COMMON_ENGLISH_WORDS = new Set([
   // Education-related words
   'school', 'student', 'teacher', 'class', 'lesson', 'homework', 'assignment', 'test', 'exam',
   'grade', 'study', 'learn', 'education', 'knowledge', 'book', 'paper', 'write', 'read',
-  'university', 'college', 'subject', 'course', 'degree', 'graduation', 'scholarship'
+  'university', 'college', 'subject', 'course', 'degree', 'graduation', 'scholarship',
+  
+  // Additional common words that were missing
+  'suggestions', 'suggestion', 'suggest', 'suggests', 'suggested', 'suggesting',
+  'corrections', 'correction', 'correct', 'corrects', 'corrected', 'correcting',
+  'accept', 'accepts', 'accepted', 'accepting', 'acceptance',
+  'water', 'watering', 'watered', 'waters',
+  'channels', 'channel', 'channeling', 'channeled',
+  'juice', 'juices', 'juicing', 'juiced',
+  'store', 'stores', 'storing', 'stored', 'storage',
+  'hello', 'hi', 'hey', 'greetings', 'greeting',
+  
+  // Technology and writing terms
+  'spell', 'spelling', 'spells', 'spelled',
+  'check', 'checking', 'checks', 'checked', 'checker',
+  'error', 'errors', 'mistake', 'mistakes',
+  'word', 'words', 'text', 'document', 'documents',
+  'edit', 'editing', 'edits', 'edited', 'editor',
+  'format', 'formatting', 'formats', 'formatted',
+  'save', 'saving', 'saves', 'saved',
+  'delete', 'deleting', 'deletes', 'deleted',
+  'copy', 'copying', 'copies', 'copied',
+  'paste', 'pasting', 'pastes', 'pasted'
 ]);
 
 export function isValidEnglishWord(word: string): boolean {
