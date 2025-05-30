@@ -8,6 +8,7 @@ import {
   classrooms,
   classroomEnrollments,
   messages,
+  inlineComments,
   type User,
   type InsertUser,
   type Assignment,
@@ -18,6 +19,8 @@ import {
   type InsertAiInteraction,
   type Classroom,
   type InsertClassroom,
+  type InlineComment,
+  type InsertInlineComment,
   type Message,
   type InsertMessage,
 } from "@shared/schema";
