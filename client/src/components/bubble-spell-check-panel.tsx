@@ -170,12 +170,18 @@ export default function BubbleSpellCheckPanel({
 
     setIsLoading(true);
     
+    // Check if the edited word is actually correct
     checkSpellingWithAI(editingWord)
       .then(suggestions => {
-        if (suggestions.length > 0) {
+        if (suggestions.length === 0) {
+          // Word is correct, apply it as the correction
+          handleAcceptSuggestion(editingWord);
+        } else {
+          // Word still has errors, update suggestions
           const updatedErrors = [...spellErrors];
           updatedErrors[currentErrorIndex] = {
             ...error,
+            word: editingWord,
             suggestions: suggestions[0].suggestions || []
           };
           setSpellErrors(updatedErrors);

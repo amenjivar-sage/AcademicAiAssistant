@@ -11,8 +11,7 @@ import AiAssistant from './ai-assistant';
 import CopyPasteDetector from './copy-paste-detector';
 import EnhancedToolbar from './enhanced-toolbar';
 import FeedbackViewer from './feedback-viewer';
-import BubbleSpellCheckPanel from './bubble-spell-check-panel';
-import HighlightedTextEditor from './highlighted-text-editor';
+import InlineSpellCheck from './inline-spell-check';
 import type { WritingSession, Assignment } from '@shared/schema';
 
 interface PastedContent {
@@ -37,8 +36,6 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [showSpellCheck, setShowSpellCheck] = useState(false);
-  const [spellErrors, setSpellErrors] = useState<any[]>([]);
-  const [currentErrorIndex, setCurrentErrorIndex] = useState<number>(-1);
   const contentRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -406,22 +403,30 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
             onPasteDetected={handlePasteDetected}
             className="min-h-full"
           >
-            <HighlightedTextEditor
-              value={content}
-              onChange={setContent}
-              placeholder="Start writing your assignment here..."
-              disabled={isSubmitted || isGraded}
-              spellErrors={spellErrors}
-              showSpellCheck={showSpellCheck}
-              currentErrorIndex={currentErrorIndex}
-              className="w-full min-h-full p-8 focus:outline-none resize-none text-gray-900 leading-relaxed border-none bg-transparent"
-              style={{
-                minHeight: '100%',
-                fontFamily: 'Georgia, serif',
-                fontSize: '16px',
-                lineHeight: '1.6',
-              }}
-            />
+            <div className="relative w-full min-h-full">
+              <textarea
+                ref={contentRef}
+                disabled={isSubmitted || isGraded}
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="Start writing your assignment here..."
+                className="w-full min-h-full p-8 focus:outline-none resize-none text-gray-900 leading-relaxed border-none bg-transparent relative z-20"
+                style={{
+                  minHeight: '100%',
+                  fontFamily: 'Georgia, serif',
+                  fontSize: '16px',
+                  lineHeight: '1.6',
+                }}
+              />
+              
+              {/* Inline spell check overlay */}
+              <InlineSpellCheck
+                content={content}
+                onContentChange={setContent}
+                isActive={showSpellCheck}
+                onClose={() => setShowSpellCheck(false)}
+              />
+            </div>
           </CopyPasteDetector>
         </div>
 
@@ -493,23 +498,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
         />
       </div>
 
-      {/* Spell Check Panel Overlay */}
-      {showSpellCheck && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <BubbleSpellCheckPanel
-            content={content}
-            onContentChange={setContent}
-            isOpen={showSpellCheck}
-            onClose={() => {
-              setShowSpellCheck(false);
-              setSpellErrors([]);
-              setCurrentErrorIndex(-1);
-            }}
-            onSpellErrorsChange={setSpellErrors}
-            onCurrentErrorChange={setCurrentErrorIndex}
-          />
-        </div>
-      )}
+
     </div>
   );
 }
