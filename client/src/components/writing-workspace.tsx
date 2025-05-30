@@ -4,9 +4,12 @@ import { useLocation, useRoute } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { Save, Send, Clock, FileText, Shield, AlertTriangle, Trophy, ArrowLeft, Loader2, Undo } from 'lucide-react';
+import { Save, Send, Clock, FileText, Shield, AlertTriangle, Trophy, ArrowLeft, Loader2, Undo, Settings } from 'lucide-react';
 import AiAssistant from './ai-assistant';
 import CopyPasteDetector from './copy-paste-detector';
 import EnhancedToolbar from './enhanced-toolbar';
@@ -494,24 +497,71 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                   )}
                 </div>
               ) : (
-                /* Normal rich text editor view */
+                /* Normal rich text editor view with page breaks and settings */
                 <div className="p-6 min-h-full">
-                  <RichTextEditor
-                    content={content}
-                    onContentChange={(newContent) => {
-                      console.log('Content changed from normal view:', newContent);
-                      setContent(newContent);
-                    }}
-                    disabled={isSubmitted || isGraded}
-                    onFormatRef={formatRef}
-                    placeholder="Start writing your assignment here..."
-                    className="w-full min-h-[600px] p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    style={{
-                      fontFamily: 'Times New Roman, serif',
-                      fontSize: '14px',
-                      lineHeight: '1.6'
-                    }}
-                  />
+                  {/* Document Status Bar */}
+                  <div className="mb-4 bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <FileText className="h-5 w-5 text-gray-600" />
+                        <span className="text-sm font-medium text-gray-700">
+                          Document: {Math.ceil(wordCount / 250) || 1} page{Math.ceil(wordCount / 250) !== 1 ? 's' : ''}
+                        </span>
+                        <span className="text-sm text-gray-500">
+                          {wordCount} words
+                        </span>
+                      </div>
+                      
+                      <div className="text-xs text-gray-500">
+                        Page formatting available in Page View mode
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="relative">
+                    <RichTextEditor
+                      content={content}
+                      onContentChange={(newContent) => {
+                        console.log('Content changed from normal view:', newContent);
+                        setContent(newContent);
+                      }}
+                      disabled={isSubmitted || isGraded}
+                      onFormatRef={formatRef}
+                      placeholder="Start writing your assignment here..."
+                      className="w-full min-h-[600px] p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      style={{
+                        fontFamily: 'Times New Roman, serif',
+                        fontSize: '14px',
+                        lineHeight: '1.6'
+                      }}
+                    />
+                    
+                    {/* Page Break Indicators */}
+                    {(() => {
+                      const words = content.split(/\s+/).filter(word => word.length > 0);
+                      const wordsPerPage = 250;
+                      const pageBreaks = [];
+                      
+                      for (let i = 1; i < Math.ceil(words.length / wordsPerPage); i++) {
+                        const pageBreakPosition = i * wordsPerPage;
+                        const percentage = (pageBreakPosition / words.length) * 100;
+                        
+                        pageBreaks.push(
+                          <div
+                            key={i}
+                            className="absolute left-0 right-0 border-t-2 border-dashed border-blue-400 bg-blue-50"
+                            style={{ top: `${Math.min(percentage, 85)}%` }}
+                          >
+                            <div className="bg-blue-500 text-white text-xs px-2 py-1 rounded-r-md inline-block">
+                              Page {i + 1} starts here
+                            </div>
+                          </div>
+                        );
+                      }
+                      
+                      return pageBreaks;
+                    })()}
+                  </div>
                   
                   {/* Spell Check Overlay */}
                   {showSpellCheck && (
