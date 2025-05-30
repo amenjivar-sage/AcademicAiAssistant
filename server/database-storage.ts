@@ -104,24 +104,11 @@ export class DatabaseStorage implements IStorage {
   async getWritingSession(id: number): Promise<WritingSession | undefined> {
     console.log('DatabaseStorage.getWritingSession called with ID:', id);
     try {
-      // Try multiple times with delays to handle timing issues
-      let session = null;
-      let attempts = 0;
-      const maxAttempts = 3;
+      // Direct query first
+      const sessions = await db.select().from(writingSessions).where(eq(writingSessions.id, id));
+      const session = sessions[0];
       
-      while (!session && attempts < maxAttempts) {
-        [session] = await db.select().from(writingSessions).where(eq(writingSessions.id, id));
-        
-        if (!session && attempts < maxAttempts - 1) {
-          console.log(`Session ${id} not found on attempt ${attempts + 1}, retrying...`);
-          await new Promise(resolve => setTimeout(resolve, 100)); // Wait 100ms
-          attempts++;
-        } else {
-          break;
-        }
-      }
-      
-      console.log('Query returned session:', session ? 'found' : 'not found');
+      console.log('Direct query returned:', session ? 'found' : 'not found');
       if (session) {
         console.log('Found session:', session.id, 'Title:', session.title, 'Content length:', session.content?.length || 0);
         // Ensure pastedContent is properly handled
@@ -130,7 +117,7 @@ export class DatabaseStorage implements IStorage {
           pastedContent: session.pastedContent || []
         };
       } else {
-        console.log('No session found with ID:', id, 'after', attempts + 1, 'attempts');
+        console.log('No session found with ID:', id);
         return undefined;
       }
     } catch (error) {

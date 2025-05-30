@@ -46,16 +46,16 @@ export default function WritingPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b sticky top-0 z-50">
+      {/* Fixed Navigation Header */}
+      <div className="bg-white border-b sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
               <Button 
                 variant="outline" 
-                size="sm"
+                size="default"
                 onClick={() => setLocation("/student")}
-                className="bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 font-medium"
+                className="bg-blue-600 text-white hover:bg-blue-700 border-blue-600 font-medium px-4 py-2"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Dashboard
