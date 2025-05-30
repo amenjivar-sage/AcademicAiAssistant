@@ -91,8 +91,16 @@ export default function SpellCheckPanel({ content, onContentChange, isOpen, onCl
     setIsLoading(true);
     try {
       const newSuggestions = await checkSpellingWithAI(editingWord);
-      if (newSuggestions.length > 0) {
-        // Update the error with new suggestions
+      if (newSuggestions.length === 0) {
+        // Word is spelled correctly, apply it directly
+        const error = spellErrors[errorIndex];
+        const newContent = applySpellCheckSuggestion(content, error, editingWord);
+        onContentChange(newContent);
+        
+        // Remove this error from the list
+        setSpellErrors(prev => prev.filter((_, index) => index !== errorIndex));
+      } else {
+        // Update the error with new suggestions for the edited word
         setSpellErrors(prev => prev.map((error, index) => 
           index === errorIndex 
             ? { ...error, word: editingWord, suggestions: newSuggestions[0].suggestions || [editingWord] }
@@ -188,7 +196,7 @@ export default function SpellCheckPanel({ content, onContentChange, isOpen, onCl
                           disabled={isLoading}
                           className="h-7 text-xs"
                         >
-                          Get Suggestions
+                          Apply/Check
                         </Button>
                         <Button
                           size="sm"
