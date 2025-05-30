@@ -238,7 +238,7 @@ export default function InlineSpellCheck({
       {spellErrors.length > 0 && (
         <div
           ref={editorRef}
-          className="absolute inset-0 pointer-events-none z-10"
+          className="absolute inset-0 pointer-events-none z-50"
           style={{
             fontFamily: 'Georgia, serif',
             fontSize: '16px',
@@ -280,12 +280,14 @@ export default function InlineSpellCheck({
                   left: `${charInLine * charWidth}px`,
                   width: `${currentError.word.length * charWidth}px`,
                   height: `${lineHeight}px`,
-                  background: 'rgba(239, 68, 68, 0.5)',
+                  background: 'rgba(239, 68, 68, 0.8)',
                   borderBottom: '3px wavy #ef4444',
-                  borderRadius: '3px',
+                  border: '2px solid #ef4444',
+                  borderRadius: '4px',
                   pointerEvents: 'none',
-                  zIndex: 20,
-                  boxShadow: '0 0 0 1px rgba(239, 68, 68, 0.5)'
+                  zIndex: 999,
+                  boxShadow: '0 2px 4px rgba(239, 68, 68, 0.4)',
+                  display: 'block'
                 }}
                 title={`Misspelled: ${currentError.word}`}
               />
