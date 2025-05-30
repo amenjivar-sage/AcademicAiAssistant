@@ -326,9 +326,19 @@ function generateTypingErrorSuggestions(word: string): string[] {
 
 export function applySpellCheckSuggestion(text: string, result: SpellCheckResult, suggestion?: string): string {
   const replacement = suggestion || result.suggestion || (result.suggestions && result.suggestions[0]) || result.word;
-  return text.substring(0, result.startIndex) + 
-         replacement + 
-         text.substring(result.endIndex);
+  
+  // Ensure we're only replacing the exact word at the correct position
+  const beforeText = text.substring(0, result.startIndex);
+  const afterText = text.substring(result.endIndex);
+  
+  // Verify the word at the position matches what we expect
+  const originalWord = text.substring(result.startIndex, result.endIndex);
+  if (originalWord.toLowerCase() !== result.word.toLowerCase()) {
+    console.warn('Word mismatch during replacement:', originalWord, 'vs', result.word);
+    return text; // Don't replace if there's a mismatch
+  }
+  
+  return beforeText + replacement + afterText;
 }
 
 // Auto-correct common typos without prompting
