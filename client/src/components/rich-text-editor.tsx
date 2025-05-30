@@ -32,10 +32,10 @@ export default function RichTextEditor({
   // Handle content updates from parent
   useEffect(() => {
     if (editorRef.current && !isUpdating) {
-      const currentPlainText = editorRef.current.innerText || '';
-      if (currentPlainText !== content) {
-        // Set plain text content to avoid HTML entity issues
-        editorRef.current.innerText = content;
+      const currentHTML = editorRef.current.innerHTML || '';
+      // Convert plain text content to HTML for first time setup
+      if (!currentHTML && content) {
+        editorRef.current.innerHTML = content.replace(/\n/g, '<br>');
       }
     }
   }, [content, isUpdating]);
@@ -44,8 +44,12 @@ export default function RichTextEditor({
   const handleInput = () => {
     if (editorRef.current) {
       setIsUpdating(true);
-      // Use innerText to get clean plain text content
-      const plainContent = editorRef.current.innerText || '';
+      // Use innerHTML to preserve formatting, then extract plain text for saving
+      const htmlContent = editorRef.current.innerHTML || '';
+      // Convert HTML back to plain text for storage while preserving line breaks
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = htmlContent;
+      const plainContent = tempDiv.innerText || tempDiv.textContent || '';
       onContentChange(plainContent);
       setTimeout(() => setIsUpdating(false), 0);
     }
@@ -85,6 +89,23 @@ export default function RichTextEditor({
           const range = selection.getRangeAt(0);
           const span = document.createElement('span');
           span.style.fontSize = value;
+          try {
+            range.surroundContents(span);
+          } catch (e) {
+            const contents = range.extractContents();
+            span.appendChild(contents);
+            range.insertNode(span);
+          }
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+      } else if (command === 'foreColor' && value) {
+        // Handle text color specifically
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          const span = document.createElement('span');
+          span.style.color = value;
           try {
             range.surroundContents(span);
           } catch (e) {

@@ -55,11 +55,22 @@ export default function EnhancedToolbar({
   };
 
   const fontSizes = [
-    { label: "Small", value: "12px" },
-    { label: "Normal", value: "14px" },
-    { label: "Medium", value: "16px" },
-    { label: "Large", value: "18px" },
-    { label: "Extra Large", value: "24px" },
+    { label: "8", value: "8px" },
+    { label: "9", value: "9px" },
+    { label: "10", value: "10px" },
+    { label: "11", value: "11px" },
+    { label: "12", value: "12px" },
+    { label: "14", value: "14px" },
+    { label: "16", value: "16px" },
+    { label: "18", value: "18px" },
+    { label: "20", value: "20px" },
+    { label: "22", value: "22px" },
+    { label: "24", value: "24px" },
+    { label: "26", value: "26px" },
+    { label: "28", value: "28px" },
+    { label: "36", value: "36px" },
+    { label: "48", value: "48px" },
+    { label: "72", value: "72px" },
   ];
 
   const fontFamilies = [
