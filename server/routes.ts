@@ -8,7 +8,7 @@ import { checkRestrictedPrompt, generateAiResponse } from "./openai";
 export async function registerRoutes(app: Express): Promise<Server> {
 
   // Demo user ID for memory storage
-  const currentDemoUserId = 2; // Student user ID
+  const currentDemoUserId = 1; // Student user ID
 
   // Authentication routes
   app.post("/api/auth/login", async (req, res) => {
@@ -60,10 +60,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log('Session retrieval request for ID:', sessionId);
     
     try {
-      // Debug: Check all available sessions
-      const allSessions = await storage.getUserWritingSessions(2); // Get all sessions for user 2
-      console.log('Available sessions:', allSessions.map(s => s.id));
-      
       const session = await storage.getWritingSession(sessionId);
       if (session) {
         console.log('Session found:', session.id);
