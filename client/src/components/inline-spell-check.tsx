@@ -58,7 +58,15 @@ export default function InlineSpellCheck({
     // Use AI-powered spell checking
     checkSpellingWithAI(content).then(errors => {
       console.log('Spell check found errors:', errors);
-      setSpellErrors(errors);
+      
+      // Filter out correctly spelled words to prevent false positives
+      const validErrors = errors.filter(error => {
+        const actualWord = content.substring(error.startIndex, error.endIndex);
+        return actualWord.toLowerCase() === error.word.toLowerCase();
+      });
+      
+      console.log('Filtered valid errors:', validErrors);
+      setSpellErrors(validErrors);
       setCurrentErrorIndex(0);
       setIsLoading(false);
     }).catch(error => {
@@ -105,9 +113,9 @@ export default function InlineSpellCheck({
     const currentLine = lines.length - 1;
     const charInLine = lines[lines.length - 1].length;
     
-    // Calculate initial position
+    // Calculate initial position - center the tooltip horizontally
     let top = (currentLine + 1) * lineHeight + 70; // Add padding for overlay
-    let left = charInLine * charWidth + 32; // Add left padding
+    let left = Math.max(50, charInLine * charWidth); // Start near the word but with minimum margin
     
     // Get editor bounds to constrain tooltip
     const editorElement = document.querySelector('.writing-editor') as HTMLElement;
@@ -117,7 +125,11 @@ export default function InlineSpellCheck({
       const tooltipHeight = 200;
       const margin = 20;
       
-      // Keep tooltip within editor bounds horizontally - use absolute positioning relative to editor
+      // Center the tooltip in the available space
+      const centerX = editorRect.width / 2;
+      left = centerX - (tooltipWidth / 2);
+      
+      // Keep tooltip within editor bounds horizontally
       const maxLeft = editorRect.width - tooltipWidth - margin;
       if (left > maxLeft) {
         left = maxLeft;
