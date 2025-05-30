@@ -276,7 +276,7 @@ export default function InlineSpellCheck({
             const textBeforeError = content.substring(0, currentError.startIndex);
             const lines = textBeforeError.split('\n');
             const lineHeight = 25.6; // 16px * 1.6 line-height
-            const charWidth = 9.6;
+            const charWidth = 8.5; // Adjusted for better alignment with Georgia font
             
             const currentLine = lines.length - 1;
             const charInLine = lines[lines.length - 1].length;
@@ -295,7 +295,7 @@ export default function InlineSpellCheck({
               <span
                 style={{
                   position: 'absolute',
-                  top: `${(currentLine + 1) * lineHeight + 32}px`, // Position well below the text line
+                  top: `${currentLine * lineHeight + 54}px`, // Position directly under the text baseline
                   left: `${charInLine * charWidth + 32}px`, // Match the padding of textarea
                   width: `${currentError.word.length * charWidth}px`,
                   height: '3px',
