@@ -134,10 +134,17 @@ export class DatabaseStorage implements IStorage {
   async updateWritingSession(id: number, updates: Partial<InsertWritingSession>): Promise<WritingSession | undefined> {
     const [session] = await db
       .update(writingSessions)
-      .set({ ...updates, updatedAt: new Date() })
+      .set({ 
+        ...updates, 
+        updatedAt: new Date(),
+        pastedContent: updates.pastedContent || []
+      })
       .where(eq(writingSessions.id, id))
       .returning();
-    return session || undefined;
+    return session ? {
+      ...session,
+      pastedContent: session.pastedContent || []
+    } : undefined;
   }
 
   async getUserWritingSessions(userId: number): Promise<WritingSession[]> {

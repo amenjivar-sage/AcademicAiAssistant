@@ -350,6 +350,7 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                 <div>
                   <label className="text-sm font-medium">Overall Feedback</label>
                   <textarea 
+                    id="feedback-textarea"
                     className="w-full mt-1 p-2 border rounded min-h-24"
                     placeholder="Provide comprehensive feedback about the student's work..."
                   />
@@ -357,7 +358,23 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
 
                 <Button 
                   className="w-full"
-                  onClick={() => onGradeSubmit("A", "Great work!")}
+                  onClick={() => {
+                    const gradeSelect = document.querySelector('select') as HTMLSelectElement;
+                    const feedbackTextarea = document.getElementById('feedback-textarea') as HTMLTextAreaElement;
+                    const grade = gradeSelect?.value || "";
+                    const feedback = feedbackTextarea?.value || "";
+                    
+                    if (!grade) {
+                      alert("Please select a grade");
+                      return;
+                    }
+                    if (!feedback.trim()) {
+                      alert("Please provide feedback");
+                      return;
+                    }
+                    
+                    onGradeSubmit(grade, feedback);
+                  }}
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? "Submitting..." : "Submit Grade & Feedback"}
