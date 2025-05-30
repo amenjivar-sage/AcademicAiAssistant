@@ -19,6 +19,7 @@ interface PageSettings {
   headerText: string;
   footerText: string;
   showPageNumbers: boolean;
+  showPageNumbersInHeader: boolean;
   showStudentName: boolean;
   studentName: string;
   namePosition: 'left' | 'center' | 'right';
@@ -40,6 +41,7 @@ export default function PageBasedEditor({
     headerText: '',
     footerText: '',
     showPageNumbers: true,
+    showPageNumbersInHeader: false,
     showStudentName: false,
     studentName: '',
     namePosition: 'left',
@@ -225,7 +227,7 @@ export default function PageBasedEditor({
                       <div className="flex items-center justify-between">
                         <Label htmlFor="show-numbers" className="text-sm flex items-center gap-2">
                           <Hash className="h-4 w-4" />
-                          Show Page Numbers
+                          Show Page Numbers (Footer)
                         </Label>
                         <Switch
                           id="show-numbers"
@@ -235,7 +237,23 @@ export default function PageBasedEditor({
                           }
                         />
                       </div>
-                      {pageSettings.showPageNumbers && (
+                      
+                      {/* Page Numbers in Header */}
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="show-numbers-header" className="text-sm flex items-center gap-2 ml-6">
+                          <Hash className="h-4 w-4" />
+                          Show Page Numbers (Header)
+                        </Label>
+                        <Switch
+                          id="show-numbers-header"
+                          checked={pageSettings.showPageNumbersInHeader}
+                          onCheckedChange={(checked) => 
+                            setPageSettings(prev => ({ ...prev, showPageNumbersInHeader: checked }))
+                          }
+                        />
+                      </div>
+                      
+                      {(pageSettings.showPageNumbers || pageSettings.showPageNumbersInHeader) && (
                         <div className="flex items-center gap-2">
                           <Label className="text-xs text-gray-500">Position:</Label>
                           <Select 
@@ -357,7 +375,7 @@ export default function PageBasedEditor({
               {/* Page Content */}
               <div className="bg-white rounded-lg shadow-lg border border-gray-200 min-h-[11in] relative">
                 {/* Header */}
-                {(pageSettings.headerText || (pageSettings.showStudentName && pageSettings.studentName)) && (
+                {(pageSettings.headerText || (pageSettings.showStudentName && pageSettings.studentName) || pageSettings.showPageNumbersInHeader) && (
                   <div className="px-16 pt-8 pb-4 border-b border-gray-200">
                     {renderHeaderFooterContent(
                       pageSettings.studentName,
@@ -368,7 +386,7 @@ export default function PageBasedEditor({
                       pageSettings.pageNumberPosition,
                       pageSettings.showStudentName,
                       !!pageSettings.headerText,
-                      false // Don't show page numbers in header unless specifically configured
+                      pageSettings.showPageNumbersInHeader
                     )}
                   </div>
                 )}
