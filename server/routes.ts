@@ -680,6 +680,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
 
+  // Demo user switching
+  app.post("/api/demo/switch-user", async (req, res) => {
+    try {
+      const { userId } = req.body;
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      res.json({ message: "User switched", user });
+    } catch (error) {
+      console.error("Error switching user:", error);
+      res.status(500).json({ error: "Failed to switch user" });
+    }
+  });
+
+  // Get current demo user
+  let currentDemoUserId = 1; // Default to user 1 (Sarah Johnson - teacher)
+  
+  app.get("/api/demo/current-user", async (req, res) => {
+    try {
+      const user = await storage.getUser(currentDemoUserId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error getting current user:", error);
+      res.status(500).json({ error: "Failed to get current user" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
