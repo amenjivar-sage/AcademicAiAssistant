@@ -437,13 +437,22 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
             
             <div className="flex gap-3">
               <Button
+                onClick={() => setLocation('/student')}
+                variant="outline"
+                className="gap-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Dashboard
+              </Button>
+              
+              <Button
                 onClick={handleSave}
                 variant="outline"
-                disabled={isSaving || isSubmitted}
+                disabled={isSubmitted || updateSessionMutation.isPending}
                 className="gap-2"
               >
                 <Save className="h-4 w-4" />
-                {isSaving ? "Saving..." : "Save"}
+                {updateSessionMutation.isPending ? "Saving..." : "Save"}
               </Button>
               
               {!isSubmitted && (
