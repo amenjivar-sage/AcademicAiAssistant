@@ -32,10 +32,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface EnhancedToolbarProps {
   onFormatting?: (command: string, value?: string) => void;
@@ -184,25 +188,16 @@ export default function EnhancedToolbar({
       <Separator orientation="vertical" className="h-6" />
 
       {/* Text Color */}
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button variant="ghost" size="sm">
-            <Palette className="h-4 w-4" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-48">
-          <div className="grid grid-cols-4 gap-2">
-            {textColors.map((color) => (
-              <button
-                key={color}
-                className="w-8 h-8 rounded border border-gray-300 hover:scale-110 transition-transform"
-                style={{ backgroundColor: color }}
-                onClick={() => handleFormat("foreColor", color)}
-              />
-            ))}
-          </div>
-        </PopoverContent>
-      </Popover>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => {
+          const color = prompt("Enter color (hex code like #ff0000 or color name like red):");
+          if (color) handleFormat("foreColor", color);
+        }}
+      >
+        <Palette className="h-4 w-4" />
+      </Button>
 
       <Separator orientation="vertical" className="h-6" />
 
@@ -255,23 +250,44 @@ export default function EnhancedToolbar({
 
       {/* Page Elements */}
       <div className="flex items-center gap-1">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => {
-            const header = prompt("Enter header text (optional):");
-            const footer = prompt("Enter footer text (optional):");
-            const pageNumbers = confirm("Add page numbers?");
-            
-            // For now, just show confirmation - can be enhanced later
-            if (header || footer || pageNumbers) {
-              alert(`Settings saved:\nHeader: ${header || 'None'}\nFooter: ${footer || 'None'}\nPage numbers: ${pageNumbers ? 'Yes' : 'No'}`);
-            }
-          }}
-        >
-          <Type className="h-4 w-4 mr-1" />
-          Header/Footer
-        </Button>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="ghost" size="sm">
+              <Type className="h-4 w-4 mr-1" />
+              Header/Footer
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Page Header & Footer Settings</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <label htmlFor="header" className="text-right text-sm font-medium">
+                  Header:
+                </label>
+                <Input id="header" placeholder="Enter header text..." className="col-span-3" />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <label htmlFor="footer" className="text-right text-sm font-medium">
+                  Footer:
+                </label>
+                <Input id="footer" placeholder="Enter footer text..." className="col-span-3" />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <label className="text-right text-sm font-medium">
+                  Options:
+                </label>
+                <div className="col-span-3 flex items-center space-x-2">
+                  <Checkbox id="pageNumbers" />
+                  <label htmlFor="pageNumbers" className="text-sm">
+                    Show page numbers
+                  </label>
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
         
         <Button
           variant="ghost"
