@@ -352,6 +352,13 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   const isSubmitted = session?.status === "submitted";
   const isGraded = session?.status === "graded";
 
+  // Debug copy-paste permissions
+  console.log('Copy-paste permissions:', {
+    assignment: assignment?.allowCopyPaste,
+    computed: allowCopyPaste,
+    assignmentData: assignment
+  });
+
   // Show feedback viewer for graded assignments
   if (isGraded && session) {
     return <FeedbackViewer session={session} />;
