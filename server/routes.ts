@@ -143,10 +143,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/assignments", async (req, res) => {
     try {
+      console.log('Creating assignment with data:', req.body);
       const assignmentData = insertAssignmentSchema.parse(req.body);
+      console.log('Parsed assignment data:', assignmentData);
       const assignment = await storage.createAssignment(assignmentData);
+      console.log('Assignment created successfully:', assignment.id);
       res.json(assignment);
     } catch (error) {
+      console.error('Error creating assignment:', error);
       res.status(500).json({ message: "Failed to create assignment" });
     }
   });
