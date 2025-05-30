@@ -62,7 +62,19 @@ export default function InlineSpellCheck({
       // Filter out correctly spelled words to prevent false positives
       const validErrors = errors.filter(error => {
         const actualWord = content.substring(error.startIndex, error.endIndex);
-        return actualWord.toLowerCase() === error.word.toLowerCase();
+        
+        // Check if the word in the text matches exactly what the AI thinks is wrong
+        if (actualWord.toLowerCase() !== error.word.toLowerCase()) {
+          return false;
+        }
+        
+        // If the word is already correctly capitalized or spelled, don't flag it
+        const suggestion = error.suggestions && error.suggestions[0];
+        if (suggestion && actualWord === suggestion) {
+          return false;
+        }
+        
+        return true;
       });
       
       console.log('Filtered valid errors:', validErrors);
