@@ -55,19 +55,54 @@ export default function RichTextEditor({
   const executeCommand = (command: string, value?: string) => {
     if (disabled || !editorRef.current) return;
     
+    console.log('Executing format command:', command, value);
+    
     try {
       // Focus the editor first to ensure proper selection
       editorRef.current.focus();
       
-      // Execute the formatting command
-      const success = document.execCommand(command, false, value);
-      
-      if (success) {
-        // Trigger content update after formatting
-        setTimeout(() => handleInput(), 10);
+      // For font family and size, we need to use a different approach
+      if (command === 'fontName' && value) {
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          const span = document.createElement('span');
+          span.style.fontFamily = value;
+          try {
+            range.surroundContents(span);
+          } catch (e) {
+            // If surroundContents fails, extract and wrap content
+            const contents = range.extractContents();
+            span.appendChild(contents);
+            range.insertNode(span);
+          }
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+      } else if (command === 'fontSize' && value) {
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          const span = document.createElement('span');
+          span.style.fontSize = value;
+          try {
+            range.surroundContents(span);
+          } catch (e) {
+            const contents = range.extractContents();
+            span.appendChild(contents);
+            range.insertNode(span);
+          }
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
       } else {
-        console.warn('Command failed:', command, value);
+        // Use execCommand for other formatting
+        const success = document.execCommand(command, false, value);
+        console.log('execCommand result:', success, command, value);
       }
+      
+      // Trigger content update after formatting
+      setTimeout(() => handleInput(), 10);
     } catch (error) {
       console.error('Error executing command:', command, error);
     }
