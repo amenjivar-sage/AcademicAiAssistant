@@ -105,12 +105,17 @@ export function checkSpelling(text: string): SpellCheckResult[] {
   const words = text.match(/\b[a-zA-Z]+\b/g) || [];
   let currentIndex = 0;
 
+  console.log('Words found:', words);
+
   words.forEach(word => {
     const wordIndex = text.indexOf(word, currentIndex);
     const lowerWord = word.toLowerCase();
     
+    console.log(`Checking word: "${word}" (${lowerWord})`);
+    
     // Check against our dictionary first
     if (SPELL_CHECK_DICTIONARY[lowerWord]) {
+      console.log(`Found in dictionary: ${word} -> ${SPELL_CHECK_DICTIONARY[lowerWord]}`);
       results.push({
         word,
         suggestion: SPELL_CHECK_DICTIONARY[lowerWord],
@@ -119,8 +124,12 @@ export function checkSpelling(text: string): SpellCheckResult[] {
       });
     } else {
       // Check against comprehensive English word list
-      if (!isValidEnglishWord(word)) {
+      const isValid = isValidEnglishWord(word);
+      console.log(`Is "${word}" valid English word?`, isValid);
+      
+      if (!isValid) {
         const suggestion = detectSpellingError(word) || generateSuggestion(word);
+        console.log(`Generated suggestion for "${word}":`, suggestion);
         if (suggestion && suggestion !== lowerWord) {
           results.push({
             word,
@@ -135,6 +144,7 @@ export function checkSpelling(text: string): SpellCheckResult[] {
     currentIndex = wordIndex + word.length;
   });
 
+  console.log('Final spell check results:', results);
   return results;
 }
 

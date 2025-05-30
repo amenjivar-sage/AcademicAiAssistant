@@ -19,7 +19,9 @@ export default function SpellCheckPanel({ content, onContentChange, isOpen, onCl
 
   useEffect(() => {
     if (isOpen) {
+      console.log('Checking spelling for content:', content);
       const errors = checkSpelling(content);
+      console.log('Spell check results:', errors);
       setSpellErrors(errors);
       setProcessedErrors(new Set());
     }
