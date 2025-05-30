@@ -250,11 +250,17 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
 
   // Auto-save functionality with improved session handling
   useEffect(() => {
+    // Don't set up auto-save timer if spell check is active
+    if (spellCheckActive) {
+      console.log('Auto-save disabled during spell check');
+      return;
+    }
+
     const timer = setTimeout(() => {
       if (title || content) {
         console.log('Auto-save triggered - session:', session, 'sessionId:', sessionId, 'assignmentId:', assignmentId);
         
-        if (!isSaving && !spellCheckActive && (title || content) && (title !== session?.title || content !== session?.content || pastedContents.length !== (session?.pastedContent as PastedContent[] || []).length)) {
+        if (!isSaving && (title || content) && (title !== session?.title || content !== session?.content || pastedContents.length !== (session?.pastedContent as PastedContent[] || []).length)) {
           setIsSaving(true);
           console.log('Auto-save executing - session:', session?.id, 'sessionId:', sessionId, 'assignmentId:', assignmentId);
           
