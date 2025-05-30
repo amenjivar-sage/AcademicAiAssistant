@@ -524,18 +524,20 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                 
                 {/* Spell Check Overlay */}
                 {showSpellCheck && (
-                  <InlineSpellCheck
-                    content={content}
-                    onContentChange={(newContent) => {
-                      console.log('Content changed from spell check:', newContent);
-                      setContent(newContent);
-                    }}
-                    isActive={showSpellCheck}
-                    onClose={() => setShowSpellCheck(false)}
-                    disabled={isSubmitted || isGraded}
-                    placeholder="Start writing your assignment here..."
-                    onSpellCheckStatusChange={setSpellCheckActive}
-                  />
+                  <div className="absolute inset-0 bg-white z-50 p-4">
+                    <InlineSpellCheck
+                      content={content}
+                      onContentChange={(newContent) => {
+                        console.log('Content changed from spell check:', newContent);
+                        setContent(newContent);
+                      }}
+                      isActive={showSpellCheck}
+                      onClose={() => setShowSpellCheck(false)}
+                      disabled={isSubmitted || isGraded}
+                      placeholder="Start writing your assignment here..."
+                      onSpellCheckStatusChange={setSpellCheckActive}
+                    />
+                  </div>
                 )}
               </div>
             </div>
