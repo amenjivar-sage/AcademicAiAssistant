@@ -66,6 +66,7 @@ export class MemStorage implements IStorage {
   private messages: Map<number, Message>;
   private classrooms: Map<number, any>;
   private enrollments: Map<string, boolean>; // key: "studentId-classroomId"
+  private inlineComments: Map<number, any>;
   private currentUserId: number;
   private currentAssignmentId: number;
   private currentSessionId: number;
@@ -81,6 +82,7 @@ export class MemStorage implements IStorage {
     this.messages = new Map();
     this.classrooms = new Map();
     this.enrollments = new Map();
+    this.inlineComments = new Map();
     this.currentUserId = 1;
     this.currentAssignmentId = 1;
     this.currentSessionId = 1;
@@ -776,6 +778,28 @@ Despite these challenges, the momentum toward renewable energy appears unstoppab
     };
     this.classrooms.set(id, updatedClassroom);
     return updatedClassroom;
+  }
+
+  // Inline comment operations
+  async createInlineComment(comment: any): Promise<any> {
+    const id = Date.now(); // Simple ID generation
+    const newComment = {
+      ...comment,
+      id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.inlineComments.set(id, newComment);
+    return newComment;
+  }
+
+  async getSessionInlineComments(sessionId: number): Promise<any[]> {
+    return Array.from(this.inlineComments.values())
+      .filter((comment: any) => comment.sessionId === sessionId);
+  }
+
+  async deleteInlineComment(commentId: number): Promise<void> {
+    this.inlineComments.delete(commentId);
   }
 }
 

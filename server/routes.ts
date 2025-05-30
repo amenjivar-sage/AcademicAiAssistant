@@ -315,6 +315,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Inline comments routes
+  app.get("/api/sessions/:sessionId/comments", async (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.sessionId);
+      const comments = await storage.getSessionInlineComments(sessionId);
+      res.json(comments);
+    } catch (error) {
+      console.error("Error fetching inline comments:", error);
+      res.status(500).json({ error: "Failed to fetch comments" });
+    }
+  });
+
+  app.post("/api/sessions/:sessionId/comments", async (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.sessionId);
+      const commentData = {
+        ...req.body,
+        sessionId,
+        teacherId: 1 // Default teacher ID for demo
+      };
+      const comment = await storage.createInlineComment(commentData);
+      res.json(comment);
+    } catch (error) {
+      console.error("Error creating inline comment:", error);
+      res.status(500).json({ error: "Failed to create comment" });
+    }
+  });
+
+  app.delete("/api/sessions/:sessionId/comments/:commentId", async (req, res) => {
+    try {
+      const commentId = parseInt(req.params.commentId);
+      await storage.deleteInlineComment(commentId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting inline comment:", error);
+      res.status(500).json({ error: "Failed to delete comment" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
