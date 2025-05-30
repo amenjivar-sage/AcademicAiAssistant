@@ -172,6 +172,25 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
     });
   };
 
+  // Helper function to highlight pasted content in red
+  const highlightPastedContent = (text: string) => {
+    if (!session.pastedContent || !Array.isArray(session.pastedContent) || session.pastedContent.length === 0) {
+      return text;
+    }
+
+    let result = text;
+    const pastedTexts = session.pastedContent.map((item: any) => 
+      typeof item === 'string' ? item : item.content || ''
+    ).filter(pastedText => pastedText.length > 10); // Only highlight substantial pastes
+
+    pastedTexts.forEach((pastedText, index) => {
+      const regex = new RegExp(pastedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+      result = result.replace(regex, `<span class="bg-red-200 border-b-2 border-red-400 text-red-800 font-medium" title="Copy-pasted content">${pastedText}</span>`);
+    });
+
+    return result;
+  };
+
   // Render content with highlights
   const renderContentWithHighlights = () => {
     if (!session.content) return <p className="text-gray-500">No content available</p>;
@@ -183,10 +202,10 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
     sortedComments.forEach((comment, index) => {
       // Add text before the comment
       if (lastIndex < comment.startIndex) {
+        const textSegment = session.content.slice(lastIndex, comment.startIndex);
+        const highlightedText = highlightPastedContent(textSegment);
         elements.push(
-          <span key={`text-${index}`}>
-            {session.content.slice(lastIndex, comment.startIndex)}
-          </span>
+          <span key={`text-${index}`} dangerouslySetInnerHTML={{ __html: highlightedText }} />
         );
       }
 
@@ -207,10 +226,10 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
 
     // Add remaining text
     if (lastIndex < session.content.length) {
+      const textSegment = session.content.slice(lastIndex);
+      const highlightedText = highlightPastedContent(textSegment);
       elements.push(
-        <span key="final-text">
-          {session.content.slice(lastIndex)}
-        </span>
+        <span key="final-text" dangerouslySetInnerHTML={{ __html: highlightedText }} />
       );
     }
 
@@ -240,7 +259,7 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
           <Card>
             <CardHeader>
               <Tabs defaultValue="document" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="document" className="flex items-center gap-2">
                     <Edit3 className="h-4 w-4" />
                     Student Writing
@@ -249,16 +268,22 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                     <Bot className="h-4 w-4" />
                     AI Assistance Used
                   </TabsTrigger>
-                  <TabsTrigger value="copy-paste" className="flex items-center gap-2">
-                    <MessageCircle className="h-4 w-4" />
-                    Copy & Paste Activity
-                  </TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="document" className="mt-4">
+                  {session.pastedContent && Array.isArray(session.pastedContent) && session.pastedContent.length > 0 && (
+                    <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3">
+                      <div className="flex items-center gap-2">
+                        <div className="h-2 w-2 bg-red-500 rounded-full"></div>
+                        <p className="text-sm text-red-700 font-medium">
+                          Copy-paste activity detected: {session.pastedContent.length} instance(s) highlighted in red below
+                        </p>
+                      </div>
+                    </div>
+                  )}
                   <div className="mb-4">
                     <p className="text-sm text-gray-600">
-                      Select any text to add specific feedback comments
+                      Select any text to add specific feedback comments. Copy-pasted content appears highlighted in red.
                     </p>
                   </div>
                   <div className="relative">
@@ -338,77 +363,7 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                   />
                 </TabsContent>
                 
-                <TabsContent value="copy-paste" className="mt-4">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-medium">Copy & Paste Activity</h3>
-                      <Badge variant={session.pastedContent && session.pastedContent.length > 0 ? "destructive" : "secondary"}>
-                        {session.pastedContent ? session.pastedContent.length : 0} instances
-                      </Badge>
-                    </div>
-                    
-                    {session.pastedContent && session.pastedContent.length > 0 ? (
-                      <div className="space-y-3">
-                        <p className="text-sm text-amber-700 bg-amber-50 p-3 rounded-lg border border-amber-200">
-                          <strong>Alert:</strong> This student has copied and pasted content during their writing session. Review each instance below.
-                        </p>
-                        
-                        {session.pastedContent.map((pastedItem: any, index: number) => (
-                          <Card key={index} className="border-orange-200 bg-orange-50">
-                            <CardHeader className="pb-2">
-                              <div className="flex items-center justify-between">
-                                <Badge variant="outline" className="text-orange-700 border-orange-300">
-                                  Paste #{index + 1}
-                                </Badge>
-                                <span className="text-xs text-gray-600">
-                                  {pastedItem.timestamp ? new Date(pastedItem.timestamp).toLocaleString() : 'Unknown time'}
-                                </span>
-                              </div>
-                            </CardHeader>
-                            <CardContent className="pt-0">
-                              <div className="space-y-2">
-                                <div>
-                                  <label className="text-xs font-medium text-gray-700">Pasted Content:</label>
-                                  <div className="bg-white p-3 rounded border border-orange-200 text-sm max-h-32 overflow-y-auto">
-                                    {pastedItem.content || pastedItem}
-                                  </div>
-                                </div>
-                                {pastedItem.source && (
-                                  <div>
-                                    <label className="text-xs font-medium text-gray-700">Source (if detected):</label>
-                                    <div className="bg-white p-2 rounded border border-orange-200 text-xs">
-                                      {pastedItem.source}
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                        
-                        <div className="bg-red-50 p-4 rounded-lg border border-red-200">
-                          <h4 className="font-medium text-red-800 mb-2">Academic Integrity Review Required</h4>
-                          <p className="text-sm text-red-700">
-                            Please review this content for proper citation and academic integrity compliance. 
-                            Consider whether the pasted content constitutes plagiarism or if it's properly attributed.
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-center py-8">
-                        <div className="bg-green-50 p-6 rounded-lg border border-green-200">
-                          <div className="text-green-600 mb-2">
-                            <MessageCircle className="h-8 w-8 mx-auto" />
-                          </div>
-                          <h3 className="font-medium text-green-800 mb-2">No Copy & Paste Detected</h3>
-                          <p className="text-sm text-green-700">
-                            This student appears to have written their content without copying and pasting from external sources.
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </TabsContent>
+
               </Tabs>
             </CardHeader>
           </Card>
