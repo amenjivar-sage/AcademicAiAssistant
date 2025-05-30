@@ -50,9 +50,20 @@ Tailor your response to their level and focus on their specific improvement area
 `;
     }
 
+    let documentContext = "";
+    if (documentContent && documentContent.trim()) {
+      documentContext = `
+Current Document Content:
+"${documentContent}"
+
+You can now see and analyze the student's current document. When they ask for help like "check the document", "spell check", or "review my work", refer directly to this content and provide specific feedback.
+`;
+    }
+
     const systemPrompt = `You are ZoË, a knowledgeable and supportive AI writing tutor focused on providing practical, educational guidance to help students succeed academically. You provide concrete examples and starting points while maintaining academic integrity.
 
 ${personalizedContext}
+${documentContext}
 
 Your approach:
 - Give practical examples: When asked about research papers, provide actual paper structures, sample thesis statements, real outline formats
