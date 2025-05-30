@@ -276,14 +276,15 @@ export default function StudentDashboard() {
                                   
                                   <Button 
                                     className="w-full" 
-                                    variant={status === 'submitted' ? 'outline' : 'default'}
+                                    variant={status === 'submitted' ? 'outline' : status === 'graded' ? 'secondary' : 'default'}
                                     onClick={() => {
                                       // Navigate to writing page
                                       window.location.href = `/writing/${assignment.id}`;
                                     }}
                                   >
                                     <PenTool className="h-4 w-4 mr-2" />
-                                    {status === 'submitted' ? 'View Submission' : 
+                                    {status === 'graded' ? 'Review Feedback' : 
+                                     status === 'submitted' ? 'View Submission' : 
                                      status === 'in_progress' ? 'Continue Writing' : 
                                      'Start Writing'}
                                   </Button>

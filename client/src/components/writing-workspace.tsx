@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { Save, Send, Clock, FileText, Shield, AlertTriangle } from 'lucide-react';
+import { Save, Send, Clock, FileText, Shield, AlertTriangle, Trophy } from 'lucide-react';
 import AiAssistant from './ai-assistant';
 import CopyPasteDetector from './copy-paste-detector';
 import EnhancedToolbar from './enhanced-toolbar';
@@ -262,11 +262,36 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
 
   const allowCopyPaste = assignment?.allowCopyPaste || false;
   const isSubmitted = session?.status === "submitted";
+  const isGraded = session?.status === "graded";
 
   return (
     <div className="h-screen flex">
       {/* Main Writing Area - Horizontal Scrolling */}
       <div className="flex-1 flex flex-col h-screen">
+        {/* Graded Feedback Banner - Fixed */}
+        {isGraded && (
+          <div className="bg-green-50 border-b border-green-200 p-4 flex-shrink-0">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Trophy className="h-5 w-5 text-green-600" />
+                <div>
+                  <h3 className="font-medium text-green-900">Assignment Graded</h3>
+                  <p className="text-sm text-green-700">Grade: {session?.grade}</p>
+                </div>
+              </div>
+              <Badge variant="default" className="bg-green-600">
+                Completed
+              </Badge>
+            </div>
+            {session?.teacherFeedback && (
+              <div className="mt-3 p-3 bg-white rounded border border-green-200">
+                <h4 className="font-medium text-gray-900 mb-2">Teacher Feedback:</h4>
+                <p className="text-gray-700">{session.teacherFeedback}</p>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Header - Fixed */}
         <div className="border-b bg-white p-4 flex-shrink-0">
           <div className="flex items-center justify-between mb-4">
@@ -277,7 +302,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Enter document title..."
                 className="text-lg font-medium border-none shadow-none px-0"
-                disabled={isSubmitted}
+                disabled={isSubmitted || isGraded}
               />
             </div>
             <div className="flex items-center gap-4">
@@ -314,7 +339,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
           >
             <textarea
               ref={contentRef}
-              disabled={isSubmitted}
+              disabled={isSubmitted || isGraded}
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="Start writing your assignment here..."
