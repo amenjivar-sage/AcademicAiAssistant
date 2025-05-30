@@ -38,10 +38,13 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
   const queryClient = useQueryClient();
 
   // Fetch chat history for this session - only if we have a valid sessionId
-  const { data: chatHistory = [] } = useQuery({
+  const { data: chatHistory = [], isLoading: historyLoading } = useQuery({
     queryKey: [`/api/session/${sessionId}/interactions`],
     enabled: !!sessionId && sessionId > 0, // Only fetch if we have a valid session
   });
+
+  // Debug chat history
+  console.log("Chat history data:", chatHistory, "Loading:", historyLoading, "SessionId:", sessionId);
 
   // Type the chat history properly
   const typedChatHistory = Array.isArray(chatHistory) ? chatHistory : [];
