@@ -218,16 +218,32 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     }
   }, [session, sessionId, assignmentId, queryClient]);
 
-  // Auto-save functionality
+  // Auto-save functionality with improved session handling
   useEffect(() => {
     const timer = setTimeout(() => {
       if (title || content) {
-        handleSave();
+        console.log('Auto-save triggered - session:', session, 'sessionId:', sessionId, 'assignmentId:', assignmentId);
+        
+        if (sessionId && sessionId > 0) {
+          console.log('Updating existing session:', sessionId);
+          handleSave();
+        } else if (assignmentId) {
+          console.log('Creating new session for assignment:', assignmentId);
+          handleCreateSession();
+        }
       }
     }, 2000);
 
     return () => clearTimeout(timer);
   }, [title, content]);
+
+  // Sync sessionId when new session is created
+  useEffect(() => {
+    if (session && session.id && sessionId !== session.id && session.id > 0) {
+      console.log('Syncing session ID from:', sessionId, 'to:', session.id);
+      setSessionId(session.id);
+    }
+  }, [session]);
 
   // Update word count
   useEffect(() => {
