@@ -16,21 +16,23 @@ interface SpellCheckPanelProps {
 export default function SpellCheckPanel({ content, onContentChange, isOpen, onClose }: SpellCheckPanelProps) {
   const [spellErrors, setSpellErrors] = useState<SpellCheckResult[]>([]);
   const [processedErrors, setProcessedErrors] = useState<Set<number>>(new Set());
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
-      console.log('Checking spelling for content:', content);
+      setIsLoading(true);
       // Use AI-powered spell checking
       checkSpellingWithAI(content).then(errors => {
-        console.log('AI spell check results:', errors);
         setSpellErrors(errors);
         setProcessedErrors(new Set());
+        setIsLoading(false);
       }).catch(error => {
         console.error('AI spell check failed, using fallback:', error);
         // Fallback to basic spell checking if AI fails
         const errors = checkSpelling(content);
         setSpellErrors(errors);
         setProcessedErrors(new Set());
+        setIsLoading(false);
       });
     }
   }, [content, isOpen]);
@@ -69,14 +71,17 @@ export default function SpellCheckPanel({ content, onContentChange, isOpen, onCl
   };
 
   const handleRefreshCheck = () => {
+    setIsLoading(true);
     checkSpellingWithAI(content).then(errors => {
       setSpellErrors(errors);
       setProcessedErrors(new Set());
+      setIsLoading(false);
     }).catch(error => {
       console.error('AI spell check failed, using fallback:', error);
       const errors = checkSpelling(content);
       setSpellErrors(errors);
       setProcessedErrors(new Set());
+      setIsLoading(false);
     });
   };
 
@@ -94,9 +99,10 @@ export default function SpellCheckPanel({ content, onContentChange, isOpen, onCl
               variant="ghost"
               size="sm"
               onClick={handleRefreshCheck}
+              disabled={isLoading}
               className="h-8 w-8 p-0"
             >
-              <RefreshCw className="h-4 w-4" />
+              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
             </Button>
             <Button
               variant="ghost"
@@ -124,7 +130,12 @@ export default function SpellCheckPanel({ content, onContentChange, isOpen, onCl
       
       <CardContent className="flex-1 p-0">
         <ScrollArea className="h-full px-4 pb-4">
-          {activeErrors.length === 0 ? (
+          {isLoading ? (
+            <div className="text-center text-gray-500 mt-8">
+              <RefreshCw className="h-8 w-8 mx-auto mb-2 animate-spin" />
+              <p className="text-sm">Checking for spelling errors...</p>
+            </div>
+          ) : activeErrors.length === 0 ? (
             <div className="text-center text-gray-500 mt-8">
               <CheckCircle className="h-12 w-12 mx-auto mb-2 text-green-500" />
               <p className="text-sm">Great job! No spelling errors detected.</p>

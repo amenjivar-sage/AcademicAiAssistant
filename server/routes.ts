@@ -409,31 +409,24 @@ If no errors are found, return: []
 Text to check: "${text}"`;
 
       const aiResponse = await generateAiResponse(spellCheckPrompt);
-      console.log('AI spell check response:', aiResponse);
       
       // Extract JSON from AI response (handle markdown formatting)
       let corrections = [];
       try {
         // Try direct JSON parsing first
         corrections = JSON.parse(aiResponse);
-        console.log('Parsed corrections:', corrections);
       } catch (parseError) {
-        console.log('JSON parse failed, trying to extract JSON from markdown:', parseError);
-        
         // Extract JSON from markdown code blocks
         const jsonMatch = aiResponse.match(/```json\s*([\s\S]*?)\s*```/);
         if (jsonMatch) {
           try {
             corrections = JSON.parse(jsonMatch[1]);
-            console.log('Extracted corrections from markdown:', corrections);
           } catch (extractError) {
-            console.log('Failed to parse extracted JSON:', extractError);
             corrections = parseSpellCheckResponse(aiResponse, text);
           }
         } else {
           // If no markdown, try to extract corrections from text
           corrections = parseSpellCheckResponse(aiResponse, text);
-          console.log('Extracted corrections from text:', corrections);
         }
       }
 
