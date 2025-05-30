@@ -144,6 +144,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Teacher API routes (missing from clean routes)
+  app.get("/api/teacher/assignments", async (req, res) => {
+    try {
+      const teacherId = 1; // Demo teacher ID
+      const assignments = await storage.getTeacherAssignments(teacherId);
+      res.json(assignments);
+    } catch (error) {
+      console.error("Error fetching teacher assignments:", error);
+      res.status(500).json({ message: "Failed to fetch assignments" });
+    }
+  });
+
+  app.get("/api/teacher/classrooms", async (req, res) => {
+    try {
+      const teacherId = 1; // Demo teacher ID
+      const classrooms = await storage.getTeacherClassrooms(teacherId);
+      res.json(classrooms);
+    } catch (error) {
+      console.error("Error fetching teacher classrooms:", error);
+      res.status(500).json({ message: "Failed to fetch classrooms" });
+    }
+  });
+
   // Get user writing sessions  
   app.get("/api/users/:userId/writing-sessions", async (req, res) => {
     try {
