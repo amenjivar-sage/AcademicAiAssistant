@@ -183,7 +183,7 @@ export default function InlineSpellCheck({
       }
       // Re-run spell check after a delay to catch any remaining errors
       setTimeout(() => {
-        runSpellCheck();
+        debouncedSpellCheck();
       }, 1500);
     }
   };
