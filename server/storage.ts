@@ -97,7 +97,12 @@ export class MemStorage implements IStorage {
       role: "teacher",
       firstName: "Sarah",
       lastName: "Johnson",
-      email: "teacher@sage.com"
+      email: "teacher@sage.com",
+      grade: null,
+      department: null,
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
     this.users.set(1, teacher);
 
@@ -109,7 +114,12 @@ export class MemStorage implements IStorage {
       role: "student",
       firstName: "Alex",
       lastName: "Smith",
-      email: "student@sage.com"
+      email: "student@sage.com",
+      grade: "10",
+      department: null,
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
     this.users.set(2, student);
 
@@ -759,4 +769,4 @@ Despite these challenges, the momentum toward renewable energy appears unstoppab
 
 import { DatabaseStorage } from "./database-storage";
 
-export const storage = new DatabaseStorage();
+export const storage = new MemStorage();
