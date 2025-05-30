@@ -348,7 +348,8 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     );
   }
 
-  const allowCopyPaste = assignment?.allowCopyPaste || false;
+  // Wait for assignment data to load before determining permissions
+  const allowCopyPaste = assignment?.allowCopyPaste === true;
   const isSubmitted = session?.status === "submitted";
   const isGraded = session?.status === "graded";
 
@@ -356,7 +357,8 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   console.log('Copy-paste permissions:', {
     assignment: assignment?.allowCopyPaste,
     computed: allowCopyPaste,
-    assignmentData: assignment
+    assignmentData: assignment,
+    assignmentLoaded: !!assignment
   });
 
   // Show feedback viewer for graded assignments
