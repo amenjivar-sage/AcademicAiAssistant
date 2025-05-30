@@ -61,15 +61,17 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
       return response.json();
     },
     onSuccess: (data: AiResponse) => {
-      // Always show the response immediately for better user experience
-      setLastResponse(data);
       setPrompt("");
       
-      // If we have a valid session, also refresh the chat history
+      // If we have a valid session, refresh the chat history and don't show duplicate response
       if (sessionId && sessionId > 0) {
+        setLastResponse(null);
         queryClient.invalidateQueries({
           queryKey: [`/api/session/${sessionId}/interactions`]
         });
+      } else {
+        // Only show immediate response if no session to store it in
+        setLastResponse(data);
       }
       
       if (data.isRestricted) {
