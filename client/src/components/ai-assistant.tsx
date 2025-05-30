@@ -51,12 +51,11 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
 
   const aiHelpMutation = useMutation({
     mutationFn: async (promptText: string) => {
-      if (!sessionId || sessionId <= 0) {
-        throw new Error("No valid session available for AI assistance");
-      }
+      // Allow AI assistant to work without session for general help
+      const currentSessionId = sessionId && sessionId > 0 ? sessionId : null;
       
       const response = await apiRequest("POST", "/api/ai/chat", {
-        sessionId: sessionId,
+        sessionId: currentSessionId,
         prompt: promptText,
       });
       return response.json();
