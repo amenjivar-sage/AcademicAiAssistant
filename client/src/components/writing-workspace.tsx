@@ -53,7 +53,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       }
       throw new Error('No valid session ID or assignment ID');
     },
-    enabled: !!(sessionId !== undefined && assignmentId && !initialSession), // Only query if no initial session provided
+    enabled: !!(sessionId > 0 && assignmentId && !initialSession), // Only query if valid session ID and no initial session
     initialData: initialSession, // Use pre-loaded session data if available
     retry: 3,
     retryDelay: 1000, // Wait 1 second between retries to allow database transaction to complete
@@ -96,10 +96,16 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
         pastedContent: pastedContents || []
       };
       
+      // Set the cached data for multiple query keys to ensure it's available
       queryClient.setQueryData(['/api/writing-sessions', newSession.id], sessionWithContent);
-      queryClient.invalidateQueries({ queryKey: ['/api/writing-sessions'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/student/writing-sessions'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/student/assignments'] });
+      queryClient.setQueryData(['/api/writing-sessions', newSession.id, assignmentId], sessionWithContent);
+      
+      // Disable queries temporarily to prevent 404 race conditions
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['/api/writing-sessions'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/student/writing-sessions'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/student/assignments'] });
+      }, 2000); // Wait 2 seconds before allowing fresh queries
     },
     onError: (error) => {
       console.error('Error creating session:', error);

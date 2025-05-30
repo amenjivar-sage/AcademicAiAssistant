@@ -339,7 +339,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       console.log('Session verified successfully:', verificationSession.id);
-      res.json(newSession);
+      
+      // Return the verified session data to ensure consistency
+      res.json(verificationSession);
     } catch (error) {
       console.error('Error creating writing session:', error);
       res.status(500).json({ message: "Failed to create session" });
