@@ -112,6 +112,22 @@ export default function RichTextEditor({
           selection.removeAllRanges();
           selection.addRange(range);
         }
+      } else if (command === 'insertUnorderedList' || command === 'insertOrderedList') {
+        // Handle lists with special formatting preservation
+        editorRef.current.focus();
+        const success = document.execCommand(command, false, value);
+        console.log('List command result:', success, command);
+        
+        // Force a content update to preserve the HTML formatting for lists
+        setTimeout(() => {
+          if (editorRef.current) {
+            const htmlContent = editorRef.current.innerHTML;
+            // Keep HTML content temporarily to preserve list formatting
+            editorRef.current.innerHTML = htmlContent;
+            handleInput();
+          }
+        }, 50);
+        return; // Skip the normal content update
       } else {
         // Use execCommand for other formatting
         const success = document.execCommand(command, false, value);
