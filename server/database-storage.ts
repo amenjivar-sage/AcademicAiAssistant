@@ -105,7 +105,11 @@ export class DatabaseStorage implements IStorage {
       console.log('Query returned session:', session ? 'found' : 'not found');
       if (session) {
         console.log('Found session:', session.id, 'Title:', session.title, 'Content length:', session.content?.length || 0);
-        return session;
+        // Ensure pastedContent is properly handled
+        return {
+          ...session,
+          pastedContent: session.pastedContent || []
+        };
       } else {
         console.log('No session found with ID:', id);
         return undefined;
@@ -117,8 +121,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createWritingSession(sessionData: InsertWritingSession): Promise<WritingSession> {
-    const [session] = await db.insert(writingSessions).values(sessionData).returning();
-    return session;
+    const [session] = await db.insert(writingSessions).values({
+      ...sessionData,
+      pastedContent: sessionData.pastedContent || []
+    }).returning();
+    return {
+      ...session,
+      pastedContent: session.pastedContent || []
+    };
   }
 
   async updateWritingSession(id: number, updates: Partial<InsertWritingSession>): Promise<WritingSession | undefined> {
@@ -131,7 +141,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserWritingSessions(userId: number): Promise<WritingSession[]> {
-    return await db.select().from(writingSessions).where(eq(writingSessions.userId, userId));
+    const sessions = await db.select().from(writingSessions).where(eq(writingSessions.userId, userId));
+    return sessions.map(session => ({
+      ...session,
+      pastedContent: session.pastedContent || []
+    }));
   }
 
   async getAssignmentSubmissions(assignmentId: number): Promise<(WritingSession & { student: User })[]> {
