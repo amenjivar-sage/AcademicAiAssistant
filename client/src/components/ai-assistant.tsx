@@ -37,10 +37,10 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch chat history for this session
+  // Fetch chat history for this session - only if we have a valid sessionId
   const { data: chatHistory = [] } = useQuery({
-    queryKey: [`/api/session/${sessionId || 1}/interactions`],
-    enabled: true, // Always fetch for default session if no sessionId
+    queryKey: [`/api/session/${sessionId}/interactions`],
+    enabled: !!sessionId && sessionId > 0, // Only fetch if we have a valid session
   });
 
   // Type the chat history properly
@@ -51,10 +51,12 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
 
   const aiHelpMutation = useMutation({
     mutationFn: async (promptText: string) => {
-      const currentSessionId = sessionId || 1;
+      if (!sessionId || sessionId <= 0) {
+        throw new Error("No valid session available for AI assistance");
+      }
       
       const response = await apiRequest("POST", "/api/ai/chat", {
-        sessionId: currentSessionId,
+        sessionId: sessionId,
         prompt: promptText,
       });
       return response.json();
@@ -66,7 +68,7 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
       
       // Refetch chat history to include the new interaction
       queryClient.invalidateQueries({
-        queryKey: [`/api/session/${sessionId || 1}/interactions`]
+        queryKey: [`/api/session/${sessionId}/interactions`]
       });
       
       if (data.isRestricted) {
