@@ -227,6 +227,9 @@ function generateSuggestion(word: string): string {
   const commonCorrections: Record<string, string> = {
     'jucie': 'juice',
     'stoer': 'store',
+    'watre': 'water',
+    'channals': 'channels',
+    'chanals': 'channels',
     'alex': 'Alex', // Proper noun
     'teh': 'the',
     'adn': 'and',
@@ -240,7 +243,26 @@ function generateSuggestion(word: string): string {
     'wierd': 'weird',
     'calender': 'calendar',
     'tommorrow': 'tomorrow',
-    'alot': 'a lot'
+    'alot': 'a lot',
+    'peple': 'people',
+    'poeple': 'people',
+    'becuase': 'because',
+    'beacuse': 'because',
+    'thier': 'their',
+    'ther': 'their',
+    'theyre': 'they\'re',
+    'youre': 'you\'re',
+    'its': 'it\'s',
+    'wont': 'won\'t',
+    'cant': 'can\'t',
+    'dont': 'don\'t',
+    'isnt': 'isn\'t',
+    'wasnt': 'wasn\'t',
+    'werent': 'weren\'t',
+    'arent': 'aren\'t',
+    'hasnt': 'hasn\'t',
+    'havent': 'haven\'t',
+    'hadnt': 'hadn\'t'
   };
   
   if (commonCorrections[lower]) {

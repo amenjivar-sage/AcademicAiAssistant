@@ -28,10 +28,14 @@ export default function SpellCheckPanel({ content, onContentChange, isOpen, onCl
   }, [content, isOpen]);
 
   const handleAcceptSuggestion = (errorIndex: number) => {
+    console.log('Accept suggestion clicked for index:', errorIndex);
     const error = spellErrors[errorIndex];
+    console.log('Error details:', error);
     if (!error) return;
 
     const newContent = applySpellCheckSuggestion(content, error);
+    console.log('Original content:', content);
+    console.log('New content:', newContent);
     onContentChange(newContent);
     
     // Mark this error as processed
