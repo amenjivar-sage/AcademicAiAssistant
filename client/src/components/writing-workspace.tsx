@@ -307,10 +307,8 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     console.log('Paste detected:', pastedContent);
     setPastedContents(prev => [...prev, pastedContent]);
     
-    // Update content state when paste is detected
-    const newContent = content + pastedContent.text;
-    console.log('Updating content after paste:', newContent);
-    setContent(newContent);
+    // Don't update content here - the textarea handles paste naturally
+    // Just track it for teacher review
     
     // Highlight pasted content in red for teacher view
     if (contentRef.current) {

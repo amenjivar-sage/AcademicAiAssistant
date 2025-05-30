@@ -31,31 +31,26 @@ export default function CopyPasteDetector({
     if (!container) return;
 
     const handlePaste = (e: ClipboardEvent) => {
-      e.preventDefault();
-      
       const pastedText = e.clipboardData?.getData('text') || '';
       
       if (!allowCopyPaste) {
         // Block paste and show warning
+        e.preventDefault();
         setLastPasteAttempt(pastedText.substring(0, 50) + (pastedText.length > 50 ? '...' : ''));
         setShowPasteWarning(true);
         setTimeout(() => setShowPasteWarning(false), 3000);
         return;
       }
 
-      // Allow paste but track it
-      const selection = window.getSelection();
-      const range = selection?.getRangeAt(0);
+      // Allow paste to happen naturally for textarea, but track it
+      // Don't prevent default - let the textarea handle the paste normally
       
-      if (range && selection) {
-        const startIndex = range.startOffset;
+      // Get the textarea element
+      const textarea = container.querySelector('textarea');
+      if (textarea) {
+        const startIndex = textarea.selectionStart || 0;
         
-        // Insert the pasted text
-        range.deleteContents();
-        const textNode = document.createTextNode(pastedText);
-        range.insertNode(textNode);
-        
-        // Track the paste
+        // Track the paste - we'll let the normal paste event update the textarea value
         const pastedContent: PastedContent = {
           text: pastedText,
           startIndex: startIndex,
@@ -63,13 +58,10 @@ export default function CopyPasteDetector({
           timestamp: new Date()
         };
         
-        onPasteDetected(pastedContent);
-        
-        // Move cursor to end of pasted text
-        range.setStartAfter(textNode);
-        range.setEndAfter(textNode);
-        selection.removeAllRanges();
-        selection.addRange(range);
+        // Delay the callback to let the paste complete first
+        setTimeout(() => {
+          onPasteDetected(pastedContent);
+        }, 0);
       }
     };
 
