@@ -326,6 +326,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const newSession = await storage.createWritingSession(sessionData);
       console.log('Created new session:', newSession.id, 'for assignment:', sessionData.assignmentId);
+      
+      // Verify the session was created and can be retrieved immediately
+      const verificationSession = await storage.getWritingSession(newSession.id);
+      if (!verificationSession) {
+        console.error('Session creation verification failed for session:', newSession.id);
+        return res.status(500).json({ message: "Failed to verify session creation" });
+      }
+      
+      console.log('Session verified successfully:', verificationSession.id);
       res.json(newSession);
     } catch (error) {
       console.error('Error creating writing session:', error);

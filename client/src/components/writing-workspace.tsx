@@ -53,8 +53,10 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       }
       throw new Error('No valid session ID or assignment ID');
     },
-    enabled: !!(sessionId !== undefined && assignmentId && !initialSession), // Only query if no initial session provided
+    enabled: !!(sessionId !== undefined && assignmentId && !initialSession && !createSessionMutation.isPending), // Don't query during session creation
     initialData: initialSession, // Use pre-loaded session data if available
+    retry: 3,
+    retryDelay: 1000, // Wait 1 second between retries to allow database transaction to complete
   });
 
   // Get assignment data to check copy-paste permissions
@@ -83,17 +85,18 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       setLastSaved(new Date());
       setIsSaving(false);
       
-      // Preserve current content - don't overwrite what user is typing
-      if (!title && !content) {
-        setTitle(newSession.title || "");
-        setContent(newSession.content || "");
-      }
-      
       // Update URL to include the new session ID
       window.history.replaceState({}, '', `/assignment/${assignmentId}/session/${newSession.id}`);
       
-      // Cache the new session data to prevent retrieval issues
-      queryClient.setQueryData(['/api/writing-sessions', newSession.id], newSession);
+      // Cache the new session data with current content to prevent retrieval issues
+      const sessionWithContent = {
+        ...newSession,
+        title: title || newSession.title || "",
+        content: content || newSession.content || "",
+        pastedContent: pastedContents || []
+      };
+      
+      queryClient.setQueryData(['/api/writing-sessions', newSession.id], sessionWithContent);
       queryClient.invalidateQueries({ queryKey: ['/api/writing-sessions'] });
       queryClient.invalidateQueries({ queryKey: ['/api/student/writing-sessions'] });
       queryClient.invalidateQueries({ queryKey: ['/api/student/assignments'] });
@@ -185,12 +188,14 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
 
   // Load session data and update sessionId if a new session was created
   useEffect(() => {
-    if (session) {
+    if (session && !createSessionMutation.isPending) {
       console.log('Writing workspace - Loading session data:', session.id, 'Title:', session.title, 'Content:', session.content);
       
-      // Only load session content if we don't already have content (to prevent overwriting during typing)
+      // Only load session content if we don't already have content AND this isn't during session creation
       const hasCurrentContent = title.trim() || content.trim();
-      if (!hasCurrentContent) {
+      const isSessionCreation = createSessionMutation.isPending || updateSessionMutation.isPending;
+      
+      if (!hasCurrentContent && !isSessionCreation) {
         setTitle(session.title || "");
         setContent(session.content || "");
         setPastedContents(session.pastedContent as PastedContent[] || []);
@@ -205,7 +210,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
         queryClient.invalidateQueries({ queryKey: ['/api/writing-sessions'] });
       }
     }
-  }, [session, sessionId, assignmentId, queryClient]);
+  }, [session, sessionId, assignmentId, queryClient, createSessionMutation.isPending, updateSessionMutation.isPending]);
 
   // Auto-save functionality
   useEffect(() => {

@@ -124,10 +124,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createWritingSession(sessionData: InsertWritingSession): Promise<WritingSession> {
+    console.log('Creating session with data:', sessionData);
     const [session] = await db.insert(writingSessions).values({
       ...sessionData,
       pastedContent: sessionData.pastedContent || []
     }).returning();
+    
+    console.log('Session created in database:', session.id);
+    
+    // Immediately verify the session was created and can be retrieved
+    const verification = await db.select().from(writingSessions).where(eq(writingSessions.id, session.id));
+    if (verification.length === 0) {
+      console.error('CRITICAL: Session was created but cannot be retrieved immediately');
+      throw new Error('Session creation verification failed');
+    }
+    
+    console.log('Session creation verified successfully:', session.id);
     return {
       ...session,
       pastedContent: session.pastedContent || []
