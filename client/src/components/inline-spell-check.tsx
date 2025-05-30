@@ -426,15 +426,7 @@ export default function InlineSpellCheck({
         </div>
       )}
 
-      {/* Results summary */}
-      {!isLoading && spellErrors.length === 0 && (
-        <div className="absolute top-4 right-4 z-50 bg-green-50 border border-green-200 rounded-lg px-3 py-2 shadow-sm">
-          <div className="flex items-center gap-2 text-sm text-green-700">
-            <Check className="h-4 w-4" />
-            No spelling errors
-          </div>
-        </div>
-      )}
+
 
       {!isLoading && spellErrors.length > 0 && (
         <div className="absolute top-4 right-4 z-50 bg-red-50 border border-red-200 rounded-lg px-3 py-2 shadow-sm">
