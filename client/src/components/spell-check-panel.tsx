@@ -49,10 +49,8 @@ export default function SpellCheckPanel({ content, onContentChange, isOpen, onCl
     newProcessed.add(errorIndex);
     setProcessedErrors(newProcessed);
 
-    // Remove this error from the list after a short delay
-    setTimeout(() => {
-      setSpellErrors(prev => prev.filter((_, index) => index !== errorIndex));
-    }, 300);
+    // Remove this error from the list immediately for faster UX
+    setSpellErrors(prev => prev.filter((_, index) => index !== errorIndex));
   };
 
   const handleIgnore = (errorIndex: number) => {
@@ -60,10 +58,8 @@ export default function SpellCheckPanel({ content, onContentChange, isOpen, onCl
     newProcessed.add(errorIndex);
     setProcessedErrors(newProcessed);
     
-    // Remove this error from the list
-    setTimeout(() => {
-      setSpellErrors(prev => prev.filter((_, index) => index !== errorIndex));
-    }, 100);
+    // Remove this error from the list immediately
+    setSpellErrors(prev => prev.filter((_, index) => index !== errorIndex));
   };
 
   const handleRefreshCheck = () => {

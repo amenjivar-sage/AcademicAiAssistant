@@ -391,20 +391,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const spellCheckPrompt = `You are a spell checker. Identify all spelling errors in this text: "${text}"
 
-For each spelling error found, provide the misspelled word and multiple correction suggestions (2-4 suggestions per word when possible).
+IMPORTANT RULES:
+1. Only flag actual misspelled words, not compound words that should be separated
+2. If you see compound words like "ffontscrpt", suggest separating them: "font script"
+3. Provide 2-4 relevant suggestions per misspelled word
+4. Consider context, common typos, and phonetic similarities
 
 Examples of spelling errors and multiple suggestions:
 - "hellp" could be: "hello", "help", "shell"
 - "hpo" could be: "how", "hop", "who" 
 - "doping" in context "I am doping fine" could be: "doing", "coping", "hoping"
+- "ffontscrpt" could be: "font script", "font-script", "fonts script"
 
 Return a JSON array with this exact format:
 [
   {"word": "hellp", "suggestions": ["hello", "help", "shell"], "startIndex": 0, "endIndex": 5},
-  {"word": "hpo", "suggestions": ["how", "hop", "who"], "startIndex": 7, "endIndex": 10}
+  {"word": "ffontscrpt", "suggestions": ["font script", "font-script", "fonts script"], "startIndex": 10, "endIndex": 20}
 ]
-
-Provide 2-4 relevant suggestions per misspelled word. Consider context, common typos, and phonetic similarities.
 
 If no errors are found, return: []
 
