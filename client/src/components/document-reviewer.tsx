@@ -18,7 +18,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { MessageCircle, X, Plus, Edit3 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MessageCircle, X, Plus, Edit3, Bot } from "lucide-react";
+import AiChatViewer from "./ai-chat-viewer";
 import type { WritingSession } from "@shared/schema";
 
 interface Comment {
@@ -212,17 +214,37 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        {/* Document Content */}
+        {/* Document Content with AI Chat Tabs */}
         <div className="lg:col-span-3">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Edit3 className="h-5 w-5" />
-                Student Writing
-              </CardTitle>
-              <p className="text-sm text-gray-600">
-                Select any text to add specific feedback comments
-              </p>
+              <Tabs defaultValue="document" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="document" className="flex items-center gap-2">
+                    <Edit3 className="h-4 w-4" />
+                    Student Writing
+                  </TabsTrigger>
+                  <TabsTrigger value="ai-chat" className="flex items-center gap-2">
+                    <Bot className="h-4 w-4" />
+                    AI Assistance Used
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="document" className="mt-4">
+                  <div className="mb-4">
+                    <p className="text-sm text-gray-600">
+                      Select any text to add specific feedback comments
+                    </p>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="ai-chat" className="mt-4">
+                  <AiChatViewer 
+                    sessionId={session.id} 
+                    studentName={`${(session as any).student?.firstName || 'Student'} ${(session as any).student?.lastName || ''}`}
+                  />
+                </TabsContent>
+              </Tabs>
             </CardHeader>
             <CardContent>
               <div className="relative">
