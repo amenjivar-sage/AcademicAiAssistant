@@ -348,6 +348,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         updateData.wordCount = words.length;
       }
       
+      // Convert submittedAt ISO string to Date object if present
+      if (updateData.submittedAt && typeof updateData.submittedAt === 'string') {
+        updateData.submittedAt = new Date(updateData.submittedAt);
+      }
+      
       const updatedSession = await storage.updateWritingSession(sessionId, updateData);
       
       if (!updatedSession) {
