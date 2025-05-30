@@ -389,30 +389,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Import AI functions
       const { generateAiResponse } = await import("./openai");
       
-      const spellCheckPrompt = `You are a spell checker. Analyze this text and find individual misspelled words: "${text}"
+      const spellCheckPrompt = `You are a spell checker. Analyze this text and find misspelled words: "${text}"
 
 IMPORTANT RULES:
-1. Only identify single misspelled words, never compound words
-2. Calculate exact character positions for each individual word
-3. Provide 2-4 relevant suggestions per misspelled word
-4. Ensure startIndex and endIndex match the exact word boundaries
+1. Consider context when determining if a word is misspelled
+2. Only flag words that are clearly misspelled, not words that might be correct in context
+3. Pay attention to common typos like missing letters, extra letters, or transposed letters
+4. Provide 2-4 relevant suggestions per misspelled word based on context
 
-Examples:
-- Text: "meaing full esays" 
-- "meaing" at position 0-6 could be: "meaning", "meat", "meeting"
-- "esays" at position 13-18 could be: "essays", "says", "easy"
+Examples of what TO flag:
+- "teh" → "the" (clear typo)
+- "thta" → "that" (transposed letters)
+- "recieve" → "receive" (common misspelling)
+- "seperate" → "separate" (common misspelling)
 
-Return a JSON array with exact positions:
+Examples of what NOT to flag:
+- "able" when it could be correct in context (unless clearly meant to be "table")
+- Proper nouns or names
+- Technical terms
+
+Analyze the context: "${text}"
+
+Look for actual spelling errors and return a JSON array:
 [
-  {"word": "meaing", "suggestions": ["meaning", "meat", "meeting"], "startIndex": 0, "endIndex": 6},
-  {"word": "esays", "suggestions": ["essays", "says", "easy"], "startIndex": 13, "endIndex": 18}
+  {"word": "thta", "suggestions": ["that", "theta"], "startIndex": X, "endIndex": Y}
 ]
 
-Calculate positions by finding where each word starts and ends in the original text.
-
-If no errors are found, return: []
-
-Text to check: "${text}"`;
+If no clear spelling errors are found, return: []`;
 
       const aiResponse = await generateAiResponse(spellCheckPrompt);
       

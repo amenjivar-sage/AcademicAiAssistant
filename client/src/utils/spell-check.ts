@@ -337,6 +337,7 @@ const COMMON_AUTO_CORRECTIONS: Record<string, string> = {
   'adn': 'and',
   'hte': 'the',
   'taht': 'that',
+  'thta': 'that',
   'htis': 'this',
   'recieve': 'receive',
   'seperate': 'separate',
