@@ -565,6 +565,7 @@ Despite these challenges, the momentum toward renewable energy appears unstoppab
       userId: null,
       assignmentId: null,
       content: "",
+      pastedContent: [],
       wordCount: 0,
       status: "draft",
       submittedAt: null,
@@ -775,4 +776,4 @@ Despite these challenges, the momentum toward renewable energy appears unstoppab
 
 import { DatabaseStorage } from "./database-storage";
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
