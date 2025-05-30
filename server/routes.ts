@@ -390,12 +390,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { generateAiResponse } = await import("./openai");
       
       // Enhanced grammar-aware spell checking
-      const spellCheckPrompt = `Analyze this text for spelling AND grammar errors, including capitalization. Focus on proper nouns and grammar rules.
+      const spellCheckPrompt = `Analyze this ENTIRE text for spelling AND grammar errors, including capitalization. Scan through ALL words, not just the first few.
 
 Text: "${text}"
 
 CHECK FOR:
-1. Misspelled words (up to 5 total errors)
+1. Misspelled words (find up to 10 errors throughout the ENTIRE text)
 2. Capitalization errors for:
    - State names (california → California, texas → Texas)
    - Country names (america → America, canada → Canada)
@@ -405,10 +405,12 @@ CHECK FOR:
 3. Common grammar mistakes
 
 RULES:
+- Scan the ENTIRE text from beginning to end
 - Only check individual words separated by spaces
 - Give exact positions in the original text
 - Provide the correct capitalized/spelled version
-- Limit to 5 most important errors
+- Find errors throughout the whole document, not just at the beginning
+- Return up to 10 errors maximum
 
 Return JSON: [{"word": "california", "suggestions": ["California"], "startIndex": 0, "endIndex": 10}]
 Return [] if no errors.`;
@@ -451,7 +453,7 @@ Return [] if no errors.`;
           return false;
         }
         return true;
-      }).slice(0, 5); // Limit to 5 errors
+      }).slice(0, 10); // Limit to 10 errors
       
       res.json({ corrections });
     } catch (error) {
