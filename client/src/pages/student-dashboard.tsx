@@ -13,6 +13,7 @@ import JoinClass from "@/components/join-class";
 import MessagingSystem from "@/components/messaging-system";
 import AchievementSystem from "@/components/achievement-system";
 import WritingAnalytics from "@/components/writing-analytics";
+import { AnalyticsDashboard } from "@/components/analytics-dashboard";
 import type { Assignment, WritingSession, Classroom } from "@shared/schema";
 
 export default function StudentDashboard() {
@@ -332,11 +333,7 @@ export default function StudentDashboard() {
               <Badge variant="outline">Track your improvement</Badge>
             </div>
             
-            <WritingAnalytics 
-              userId={1} 
-              userRole="student"
-              timeframe="month"
-            />
+            <AnalyticsDashboard userId={1} />
           </TabsContent>
         </Tabs>
 

@@ -528,6 +528,210 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Analytics endpoints with demo data
+  app.get("/api/users/:userId/streak", async (req, res) => {
+    const userId = parseInt(req.params.userId);
+    // Demo writing streak data
+    const streakData = {
+      currentStreak: 7,
+      longestStreak: 15,
+      totalDays: 42,
+      streakHistory: [
+        { date: "2025-05-24", hasWritten: true, wordCount: 234 },
+        { date: "2025-05-25", hasWritten: true, wordCount: 456 },
+        { date: "2025-05-26", hasWritten: true, wordCount: 123 },
+        { date: "2025-05-27", hasWritten: false, wordCount: 0 },
+        { date: "2025-05-28", hasWritten: true, wordCount: 567 },
+        { date: "2025-05-29", hasWritten: true, wordCount: 234 },
+        { date: "2025-05-30", hasWritten: true, wordCount: 345 }
+      ]
+    };
+    res.json(streakData);
+  });
+
+  app.get("/api/users/:userId/goals", async (req, res) => {
+    const userId = parseInt(req.params.userId);
+    // Demo writing goals
+    const goals = [
+      {
+        id: 1,
+        type: "daily_words",
+        target: 250,
+        current: 178,
+        title: "Daily Writing Goal",
+        description: "Write at least 250 words every day",
+        deadline: "2025-05-31",
+        isActive: true
+      },
+      {
+        id: 2,
+        type: "weekly_sessions",
+        target: 5,
+        current: 3,
+        title: "Weekly Writing Sessions",
+        description: "Complete 5 writing sessions this week",
+        deadline: "2025-06-01",
+        isActive: true
+      },
+      {
+        id: 3,
+        type: "monthly_assignments",
+        target: 4,
+        current: 2,
+        title: "Monthly Assignments",
+        description: "Submit 4 assignments this month",
+        deadline: "2025-06-30",
+        isActive: true
+      }
+    ];
+    res.json(goals);
+  });
+
+  app.get("/api/users/:userId/achievements", async (req, res) => {
+    const userId = parseInt(req.params.userId);
+    // Demo achievements
+    const achievements = [
+      {
+        id: 1,
+        name: "First Steps",
+        description: "Complete your first writing assignment",
+        icon: "🎯",
+        unlockedAt: "2025-05-15",
+        category: "milestone"
+      },
+      {
+        id: 2,
+        name: "Word Warrior",
+        description: "Write over 1,000 words in a single session",
+        icon: "⚔️",
+        unlockedAt: "2025-05-22",
+        category: "writing"
+      },
+      {
+        id: 3,
+        name: "Streak Master",
+        description: "Maintain a 7-day writing streak",
+        icon: "🔥",
+        unlockedAt: "2025-05-30",
+        category: "consistency"
+      },
+      {
+        id: 4,
+        name: "AI Collaborator",
+        description: "Successfully use AI assistance for learning",
+        icon: "🤖",
+        unlockedAt: "2025-05-28",
+        category: "learning"
+      },
+      {
+        id: 5,
+        name: "Perfect Grade",
+        description: "Receive an A+ on an assignment",
+        icon: "⭐",
+        unlockedAt: null,
+        category: "excellence"
+      }
+    ];
+    res.json(achievements);
+  });
+
+  app.get("/api/analytics/:userId/sessions", async (req, res) => {
+    const userId = parseInt(req.params.userId);
+    // Demo session analytics
+    const sessionAnalytics = {
+      totalSessions: 23,
+      averageSessionLength: 45, // minutes
+      totalWordsWritten: 5847,
+      sessionsThisWeek: 5,
+      sessionsThisMonth: 18,
+      weeklyProgress: [
+        { week: "Week 1", sessions: 3, words: 756 },
+        { week: "Week 2", sessions: 4, words: 1024 },
+        { week: "Week 3", sessions: 5, words: 1456 },
+        { week: "Week 4", sessions: 6, words: 1789 },
+        { week: "Current", sessions: 5, words: 822 }
+      ],
+      timeDistribution: {
+        morning: 35,
+        afternoon: 45,
+        evening: 20
+      }
+    };
+    res.json(sessionAnalytics);
+  });
+
+  app.get("/api/analytics/:userId/writing-stats", async (req, res) => {
+    const userId = parseInt(req.params.userId);
+    // Demo writing statistics
+    const writingStats = {
+      averageWordsPerSession: 254,
+      vocabularyGrowth: {
+        uniqueWords: 1247,
+        newWordsThisWeek: 23,
+        complexityScore: 7.2
+      },
+      writingSpeed: {
+        wordsPerMinute: 12,
+        improvement: "+15%"
+      },
+      grammarProgress: {
+        accuracy: 89,
+        commonMistakes: ["comma splices", "subject-verb agreement"],
+        improvement: "+12%"
+      },
+      aiUsageStats: {
+        totalInteractions: 34,
+        helpCategories: {
+          brainstorming: 12,
+          grammar: 8,
+          research: 6,
+          structure: 8
+        },
+        adaptiveLevel: "intermediate",
+        learningProgress: "+25%"
+      },
+      monthlyTrends: [
+        { month: "January", words: 1200, quality: 7.1 },
+        { month: "February", words: 1456, quality: 7.4 },
+        { month: "March", words: 1678, quality: 7.8 },
+        { month: "April", words: 1834, quality: 8.1 },
+        { month: "May", words: 1925, quality: 8.3 }
+      ]
+    };
+    res.json(writingStats);
+  });
+
+  // Teacher analytics for class overview
+  app.get("/api/analytics/teacher/:teacherId/class-overview", async (req, res) => {
+    const teacherId = parseInt(req.params.teacherId);
+    // Demo class analytics
+    const classOverview = {
+      totalStudents: 24,
+      activeWriters: 18,
+      averageClassGrade: "B+",
+      assignmentCompletion: 78,
+      aiUsageTrends: {
+        studentsUsingAI: 16,
+        averageInteractionsPerStudent: 12,
+        mostCommonHelpType: "brainstorming"
+      },
+      classProgress: {
+        wordsWrittenThisMonth: 45678,
+        averageWordsPerStudent: 1903,
+        improvementRate: "+18%"
+      },
+      strugglingStudents: [
+        { name: "Alex Johnson", issue: "Low engagement", lastActive: "3 days ago" },
+        { name: "Sarah Chen", issue: "Grammar patterns", improvement: "needed" }
+      ],
+      topPerformers: [
+        { name: "Maria Rodriguez", achievement: "Consistent A grades", streak: 12 },
+        { name: "David Kim", achievement: "Most improved", growth: "+45%" }
+      ]
+    };
+    res.json(classOverview);
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
