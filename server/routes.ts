@@ -389,18 +389,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Import AI functions
       const { generateAiResponse } = await import("./openai");
       
-      // Use a simpler approach that respects word boundaries
-      const spellCheckPrompt = `Find misspelled words in this text. IMPORTANT: Only check words separated by spaces. Do NOT combine adjacent words.
+      // Enhanced grammar-aware spell checking
+      const spellCheckPrompt = `Analyze this text for spelling AND grammar errors, including capitalization. Focus on proper nouns and grammar rules.
 
 Text: "${text}"
 
-RULES:
-1. Find up to 5 clearly misspelled words
-2. Each word must be separated by spaces in the original text
-3. Give exact positions of individual words only
-4. Provide 1 simple correction per word
+CHECK FOR:
+1. Misspelled words (up to 5 total errors)
+2. Capitalization errors for:
+   - State names (california → California, texas → Texas)
+   - Country names (america → America, canada → Canada)
+   - City names (new york → New York, los angeles → Los Angeles)
+   - Proper nouns and names
+   - Beginning of sentences
+3. Common grammar mistakes
 
-Return JSON: [{"word": "misspelled", "suggestions": ["correct"], "startIndex": 0, "endIndex": 10}]
+RULES:
+- Only check individual words separated by spaces
+- Give exact positions in the original text
+- Provide the correct capitalized/spelled version
+- Limit to 5 most important errors
+
+Return JSON: [{"word": "california", "suggestions": ["California"], "startIndex": 0, "endIndex": 10}]
 Return [] if no errors.`;
 
       const aiResponse = await generateAiResponse(spellCheckPrompt);
