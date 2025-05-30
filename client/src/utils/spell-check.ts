@@ -223,8 +223,62 @@ function generateSuggestion(word: string): string {
     return lower.replace('auy', 'ay');
   }
   
-  // For other cases, try common fixes
-  return lower;
+  // Common word corrections
+  const commonCorrections: Record<string, string> = {
+    'jucie': 'juice',
+    'stoer': 'store',
+    'alex': 'Alex', // Proper noun
+    'teh': 'the',
+    'adn': 'and',
+    'recieve': 'receive',
+    'seperate': 'separate',
+    'definately': 'definitely',
+    'occured': 'occurred',
+    'necesary': 'necessary',
+    'beleive': 'believe',
+    'freind': 'friend',
+    'wierd': 'weird',
+    'calender': 'calendar',
+    'tommorrow': 'tomorrow',
+    'alot': 'a lot'
+  };
+  
+  if (commonCorrections[lower]) {
+    return commonCorrections[lower];
+  }
+  
+  // Try simple character substitutions for common typing errors
+  const suggestions = generateTypingErrorSuggestions(lower);
+  if (suggestions.length > 0) {
+    return suggestions[0];
+  }
+  
+  // If no specific correction found, return the original word
+  return word;
+}
+
+// Generate suggestions based on common typing errors
+function generateTypingErrorSuggestions(word: string): string[] {
+  const suggestions: string[] = [];
+  
+  // Try single character replacements for common errors
+  const commonSwaps = [
+    ['ie', 'ei'], ['ei', 'ie'],
+    ['c', 'k'], ['k', 'c'],
+    ['s', 'z'], ['z', 's'],
+    ['f', 'ph'], ['ph', 'f']
+  ];
+  
+  for (const [from, to] of commonSwaps) {
+    if (word.includes(from)) {
+      const suggestion = word.replace(from, to);
+      if (isValidEnglishWord(suggestion)) {
+        suggestions.push(suggestion);
+      }
+    }
+  }
+  
+  return suggestions;
 }
 
 export function applySpellCheckSuggestion(text: string, result: SpellCheckResult): string {
