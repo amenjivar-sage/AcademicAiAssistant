@@ -14,6 +14,7 @@ interface HighlightedTextEditorProps {
   disabled?: boolean;
   spellErrors?: SpellError[];
   showSpellCheck?: boolean;
+  currentErrorIndex?: number;
   className?: string;
   style?: React.CSSProperties;
 }
@@ -25,6 +26,7 @@ export default function HighlightedTextEditor({
   disabled,
   spellErrors = [],
   showSpellCheck = false,
+  currentErrorIndex = -1,
   className,
   style
 }: HighlightedTextEditorProps) {
@@ -44,29 +46,34 @@ export default function HighlightedTextEditor({
     }
   };
 
-  // Create highlighted text with spell errors
+  // Create highlighted text with spell errors - only highlight current error
   const createHighlightedText = () => {
-    if (!showSpellCheck || spellErrors.length === 0) {
+    if (!showSpellCheck || spellErrors.length === 0 || currentErrorIndex < 0) {
       return '';
     }
 
+    const currentError = spellErrors[currentErrorIndex];
+    if (!currentError) return '';
+
     let highlightedText = value;
-    let offset = 0;
+    
+    const beforeText = highlightedText.substring(0, currentError.startIndex);
+    const errorText = highlightedText.substring(currentError.startIndex, currentError.endIndex);
+    const afterText = highlightedText.substring(currentError.endIndex);
 
-    // Sort errors by start index to process them in order
-    const sortedErrors = [...spellErrors].sort((a, b) => a.startIndex - b.startIndex);
-
-    sortedErrors.forEach((error) => {
-      const beforeText = highlightedText.substring(0, error.startIndex + offset);
-      const errorText = highlightedText.substring(error.startIndex + offset, error.endIndex + offset);
-      const afterText = highlightedText.substring(error.endIndex + offset);
-
-      // Only add the underline styling, make text transparent so textarea text shows through
-      const highlightedError = `<span style="border-bottom: 2px wavy #ef4444; position: relative; color: transparent;" title="Suggested: ${error.suggestions.join(', ')}">${errorText}</span>`;
-      
-      highlightedText = beforeText + highlightedError + afterText;
-      offset += highlightedError.length - errorText.length;
-    });
+    // Highlight only the current error with a bubble-like style
+    const highlightedError = `<span style="
+      background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+      border: 2px solid #ef4444;
+      border-radius: 8px;
+      padding: 2px 4px;
+      box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+      position: relative;
+      color: transparent;
+      animation: pulse 2s infinite;
+    " title="Suggested: ${currentError.suggestions.join(', ')}">${errorText}</span>`;
+    
+    highlightedText = beforeText + highlightedError + afterText;
 
     return highlightedText.replace(/\n/g, '<br>').replace(/ /g, '&nbsp;');
   };
@@ -76,7 +83,7 @@ export default function HighlightedTextEditor({
     if (highlightRef.current) {
       highlightRef.current.innerHTML = createHighlightedText();
     }
-  }, [value, spellErrors, showSpellCheck, placeholder]);
+  }, [value, spellErrors, showSpellCheck, currentErrorIndex, placeholder]);
 
   // Sync dimensions when content changes
   useEffect(() => {

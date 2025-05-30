@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { CheckCircle, X, RefreshCw, Undo } from 'lucide-react';
+import { CheckCircle, X, RefreshCw, Undo, ChevronLeft, ChevronRight, Edit } from 'lucide-react';
 import { checkSpelling, checkSpellingWithAI, applySpellCheckSuggestion, applyAutoCorrections, SpellCheckResult } from '@/utils/spell-check';
 
 interface SpellCheckPanelProps {
@@ -12,14 +12,15 @@ interface SpellCheckPanelProps {
   isOpen: boolean;
   onClose: () => void;
   onSpellErrorsChange?: (errors: SpellCheckResult[]) => void;
+  onCurrentErrorChange?: (index: number) => void;
 }
 
-export default function SpellCheckPanel({ content, onContentChange, isOpen, onClose, onSpellErrorsChange }: SpellCheckPanelProps) {
+export default function SpellCheckPanel({ content, onContentChange, isOpen, onClose, onSpellErrorsChange, onCurrentErrorChange }: SpellCheckPanelProps) {
   const [spellErrors, setSpellErrors] = useState<SpellCheckResult[]>([]);
-  const [processedErrors, setProcessedErrors] = useState<Set<number>>(new Set());
+  const [currentErrorIndex, setCurrentErrorIndex] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editingWord, setEditingWord] = useState<string>("");
+  const [isEditing, setIsEditing] = useState<boolean>(false);
   const [recentChanges, setRecentChanges] = useState<Array<{original: string, corrected: string, timestamp: number}>>([]);
   const [showSuccessMessage, setShowSuccessMessage] = useState<string | null>(null);
 
@@ -40,7 +41,8 @@ export default function SpellCheckPanel({ content, onContentChange, isOpen, onCl
     checkSpellingWithAI(content).then(errors => {
       setSpellErrors(errors);
       onSpellErrorsChange?.(errors);
-      setProcessedErrors(new Set());
+      setCurrentErrorIndex(0);
+      onCurrentErrorChange?.(0);
       setIsLoading(false);
     }).catch(error => {
       console.error('AI spell check failed, using fallback:', error);
@@ -48,7 +50,8 @@ export default function SpellCheckPanel({ content, onContentChange, isOpen, onCl
       const errors = checkSpelling(content);
       setSpellErrors(errors);
       onSpellErrorsChange?.(errors);
-      setProcessedErrors(new Set());
+      setCurrentErrorIndex(0);
+      onCurrentErrorChange?.(0);
       setIsLoading(false);
     });
   }, [content, isOpen, onContentChange]);
