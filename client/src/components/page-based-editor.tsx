@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import RichTextEditor from './rich-text-editor';
 
 interface PageBasedEditorProps {
   content: string;
@@ -13,6 +14,7 @@ interface PageBasedEditorProps {
   disabled?: boolean;
   placeholder?: string;
   wordsPerPage?: number;
+  onFormatRef?: React.MutableRefObject<((command: string, value?: string) => void) | null>;
 }
 
 interface PageSettings {
@@ -33,7 +35,8 @@ export default function PageBasedEditor({
   onContentChange,
   disabled = false,
   placeholder = "Start writing...",
-  wordsPerPage = 250
+  wordsPerPage = 250,
+  onFormatRef
 }: PageBasedEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -394,13 +397,13 @@ export default function PageBasedEditor({
                 {/* Page margins and content area */}
                 <div className={`px-16 ${(pageSettings.headerText || pageSettings.showStudentName) ? 'pt-8' : 'pt-16'} ${(pageSettings.footerText || pageSettings.showPageNumbers) ? 'pb-8' : 'pb-16'} min-h-[9in]`}>
                   {isLastPage ? (
-                    // Editable textarea for the current/last page
-                    <textarea
-                      ref={textareaRef}
-                      value={content}
-                      onChange={(e) => onContentChange(e.target.value)}
+                    // Editable rich text editor for the current/last page
+                    <RichTextEditor
+                      content={content}
+                      onContentChange={onContentChange}
                       placeholder={pageNumber === 1 ? placeholder : "Continue writing..."}
                       disabled={disabled}
+                      onFormatRef={onFormatRef}
                       className="w-full h-full min-h-[9in] resize-none border-none outline-none bg-transparent text-gray-900"
                       style={{
                         fontFamily: 'Times New Roman, serif',

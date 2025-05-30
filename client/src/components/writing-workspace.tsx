@@ -41,6 +41,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   const [spellCheckActive, setSpellCheckActive] = useState(false);
   const [usePageView, setUsePageView] = useState(false);
   const contentRef = useRef<HTMLTextAreaElement>(null);
+  const formatRef = useRef<((command: string, value?: string) => void) | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
