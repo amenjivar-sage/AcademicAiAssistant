@@ -117,6 +117,45 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     },
   });
 
+  // Create session mutation for new assignments
+  const createSessionMutation = useMutation({
+    mutationFn: async (sessionData: { assignmentId: number; title: string; content: string; pastedContent: PastedContent[] }) => {
+      const response = await apiRequest("POST", "/api/writing-sessions", {
+        userId: 1, // This should come from auth context
+        assignmentId: sessionData.assignmentId,
+        title: sessionData.title,
+        content: sessionData.content,
+        pastedContent: sessionData.pastedContent,
+        wordCount: sessionData.content.split(/\s+/).filter(word => word.length > 0).length,
+        status: "draft",
+      });
+      return response.json();
+    },
+    onSuccess: (newSession) => {
+      console.log('New session created:', newSession.id);
+      setSessionId(newSession.id);
+      setLastSaved(new Date());
+      setIsSaving(false);
+      
+      // Update URL to include the new session ID
+      window.history.replaceState({}, '', `/assignment/${assignmentId}/session/${newSession.id}`);
+      
+      // Invalidate and refetch queries
+      queryClient.invalidateQueries({ queryKey: ['/api/writing-sessions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/student/writing-sessions'] });
+      queryClient.setQueryData(['/api/writing-sessions', newSession.id], newSession);
+    },
+    onError: (error) => {
+      console.error('Error creating session:', error);
+      setIsSaving(false);
+      toast({
+        title: "Save failed",
+        description: "There was an error saving your work. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Submit session mutation
   const submitSessionMutation = useMutation({
     mutationFn: async () => {
@@ -208,10 +247,18 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       if (currentSessionId && currentSessionId !== 0) {
         console.log('Updating existing session:', currentSessionId);
         updateSessionMutation.mutate({ title, content, pastedContent: pastedContents });
+      } else if (assignmentId && (title.trim() || content.trim())) {
+        // Create a new session for this assignment
+        console.log('Creating new session for assignment:', assignmentId);
+        createSessionMutation.mutate({ 
+          assignmentId, 
+          title, 
+          content, 
+          pastedContent: pastedContents 
+        });
       } else {
-        // This should not happen if we already have a session
         setIsSaving(false);
-        console.log('No valid session found - this should not happen');
+        console.log('No valid session or assignment to save');
       }
     }
   };
