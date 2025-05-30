@@ -36,6 +36,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [showSpellCheck, setShowSpellCheck] = useState(false);
+  const [spellCheckActive, setSpellCheckActive] = useState(false);
   const contentRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -253,7 +254,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       if (title || content) {
         console.log('Auto-save triggered - session:', session, 'sessionId:', sessionId, 'assignmentId:', assignmentId);
         
-        if (!isSaving && (title || content) && (title !== session?.title || content !== session?.content || pastedContents.length !== (session?.pastedContent as PastedContent[] || []).length)) {
+        if (!isSaving && !spellCheckActive && (title || content) && (title !== session?.title || content !== session?.content || pastedContents.length !== (session?.pastedContent as PastedContent[] || []).length)) {
           setIsSaving(true);
           console.log('Auto-save executing - session:', session?.id, 'sessionId:', sessionId, 'assignmentId:', assignmentId);
           
@@ -412,6 +413,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                 onClose={() => setShowSpellCheck(false)}
                 disabled={isSubmitted || isGraded}
                 placeholder="Start writing your assignment here..."
+                onSpellCheckStatusChange={setSpellCheckActive}
               />
             </div>
           </CopyPasteDetector>

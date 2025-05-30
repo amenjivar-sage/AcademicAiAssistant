@@ -11,6 +11,7 @@ interface InlineSpellCheckProps {
   onClose: () => void;
   disabled?: boolean;
   placeholder?: string;
+  onSpellCheckStatusChange?: (isActive: boolean) => void;
 }
 
 interface SpellTooltip {
@@ -25,7 +26,8 @@ export default function InlineSpellCheck({
   isActive,
   onClose,
   disabled = false,
-  placeholder = "Start writing..."
+  placeholder = "Start writing...",
+  onSpellCheckStatusChange
 }: InlineSpellCheckProps) {
   const [spellErrors, setSpellErrors] = useState<SpellCheckResult[]>([]);
   const [currentErrorIndex, setCurrentErrorIndex] = useState<number>(0);
@@ -145,6 +147,9 @@ export default function InlineSpellCheck({
     const error = spellErrors[errorIndex];
     if (!error) return;
 
+    // Disable auto-save during correction
+    onSpellCheckStatusChange?.(true);
+
     const newContent = applySpellCheckSuggestion(content, error, suggestion);
     
     // Track the change for undo functionality
@@ -155,6 +160,11 @@ export default function InlineSpellCheck({
     }]);
 
     onContentChange(newContent);
+    
+    // Re-enable auto-save after a brief delay to allow content to settle
+    setTimeout(() => {
+      onSpellCheckStatusChange?.(false);
+    }, 1000);
     
     // Move to next error or close if done
     moveToNextError();
