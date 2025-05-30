@@ -335,7 +335,20 @@ export function applySpellCheckSuggestion(text: string, result: SpellCheckResult
   const originalWord = text.substring(result.startIndex, result.endIndex);
   if (originalWord.toLowerCase() !== result.word.toLowerCase()) {
     console.warn('Word mismatch during replacement:', originalWord, 'vs', result.word);
-    return text; // Don't replace if there's a mismatch
+    
+    // Try to find the exact word using word boundaries
+    const wordRegex = new RegExp(`\\b${result.word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+    const match = wordRegex.exec(text);
+    
+    if (match && match.index !== undefined) {
+      // Found the word, use its actual position
+      const actualStartIndex = match.index;
+      const actualEndIndex = actualStartIndex + result.word.length;
+      
+      return text.substring(0, actualStartIndex) + replacement + text.substring(actualEndIndex);
+    }
+    
+    return text; // Don't replace if we can't find the word
   }
   
   return beforeText + replacement + afterText;

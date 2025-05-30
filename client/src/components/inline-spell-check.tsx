@@ -178,10 +178,8 @@ export default function InlineSpellCheck({
       if (currentErrorIndex >= updatedErrors.length) {
         setCurrentErrorIndex(0);
       }
-      // Re-run spell check after a delay to catch any remaining errors
-      setTimeout(() => {
-        debouncedSpellCheck();
-      }, 1500);
+      // Don't re-run spell check automatically to prevent loops
+      // User can manually continue if there are more errors
     }
   };
 
