@@ -415,12 +415,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Store the AI interaction if we have a valid session
       if (sessionId && sessionId > 0) {
-        await storage.createAiInteraction({
-          sessionId,
-          prompt,
-          response,
-          isRestricted,
-        });
+        console.log("Saving AI interaction for session:", sessionId);
+        try {
+          const interaction = await storage.createAiInteraction({
+            sessionId,
+            prompt,
+            response,
+            isRestricted,
+          });
+          console.log("AI interaction saved:", interaction.id);
+        } catch (error) {
+          console.error("Failed to save AI interaction:", error);
+        }
       }
 
       res.json({
@@ -430,6 +436,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("AI help error:", error);
       res.status(500).json({ message: "Failed to generate AI response" });
+    }
+  });
+
+  // Get AI interactions for a session (chat history)
+  app.get("/api/session/:sessionId/interactions", async (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.sessionId);
+      console.log("Fetching interactions for session:", sessionId);
+      
+      const interactions = await storage.getSessionInteractions(sessionId);
+      console.log("Found interactions:", interactions.length);
+      
+      res.json(interactions);
+    } catch (error) {
+      console.error("Error fetching session interactions:", error);
+      res.status(500).json({ message: "Failed to fetch interactions" });
     }
   });
 
