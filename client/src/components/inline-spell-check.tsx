@@ -44,6 +44,9 @@ export default function InlineSpellCheck({
     
     setIsLoading(true);
     
+    // Disable auto-save at the start of spell check
+    onSpellCheckStatusChange?.(true);
+    
     // Apply auto-corrections first
     const autoCorrectResult = applyAutoCorrections(content);
     if (autoCorrectResult.changes.length > 0) {
@@ -147,9 +150,6 @@ export default function InlineSpellCheck({
     const error = spellErrors[errorIndex];
     if (!error) return;
 
-    // Disable auto-save during correction
-    onSpellCheckStatusChange?.(true);
-
     const newContent = applySpellCheckSuggestion(content, error, suggestion);
     
     // Track the change for undo functionality
@@ -168,13 +168,10 @@ export default function InlineSpellCheck({
 
     onContentChange(newContent);
     
-    // Re-enable auto-save after a brief delay to allow content to settle
-    setTimeout(() => {
-      onSpellCheckStatusChange?.(false);
-    }, 1000);
-    
     // Move to next error or close if done
     if (updatedErrors.length === 0) {
+      // Re-enable auto-save when spell check is complete
+      onSpellCheckStatusChange?.(false);
       onClose();
     } else {
       // Adjust current error index if needed
@@ -495,7 +492,10 @@ export default function InlineSpellCheck({
             <Button
               variant="ghost"
               size="sm"
-              onClick={onClose}
+              onClick={() => {
+                onSpellCheckStatusChange?.(false);
+                onClose();
+              }}
               className="h-5 w-5 p-0 ml-2"
             >
               <X className="h-3 w-3" />
