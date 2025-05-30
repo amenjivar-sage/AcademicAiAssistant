@@ -207,3 +207,25 @@ export type Achievement = typeof achievements.$inferSelect;
 export type InsertAchievement = z.infer<typeof insertAchievementSchema>;
 export type WritingGoal = typeof writingGoals.$inferSelect;
 export type InsertWritingGoal = z.infer<typeof insertWritingGoalSchema>;
+
+// Inline comments table for teacher feedback on specific text selections
+export const inlineComments = pgTable("inline_comments", {
+  id: serial("id").primaryKey(),
+  sessionId: integer("session_id").notNull().references(() => writingSessions.id),
+  teacherId: integer("teacher_id").notNull().references(() => users.id),
+  startIndex: integer("start_index").notNull(),
+  endIndex: integer("end_index").notNull(),
+  highlightedText: text("highlighted_text").notNull(),
+  comment: text("comment").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertInlineCommentSchema = createInsertSchema(inlineComments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InlineComment = typeof inlineComments.$inferSelect;
+export type InsertInlineComment = z.infer<typeof insertInlineCommentSchema>;

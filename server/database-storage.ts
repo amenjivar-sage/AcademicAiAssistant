@@ -356,4 +356,18 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return classroom || undefined;
   }
+
+  // Inline comment operations
+  async createInlineComment(commentData: InsertInlineComment): Promise<InlineComment> {
+    const [comment] = await db.insert(inlineComments).values(commentData).returning();
+    return comment;
+  }
+
+  async getSessionInlineComments(sessionId: number): Promise<InlineComment[]> {
+    return await db.select().from(inlineComments).where(eq(inlineComments.sessionId, sessionId));
+  }
+
+  async deleteInlineComment(commentId: number): Promise<void> {
+    await db.delete(inlineComments).where(eq(inlineComments.id, commentId));
+  }
 }
