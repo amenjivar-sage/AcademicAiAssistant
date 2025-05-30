@@ -61,7 +61,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/student/assignments", async (req, res) => {
     try {
-      const userId = 1; // Current student user
+      const userId = currentDemoUserId; // Current user
       const teacherId = 1; // For demo, get teacher's assignments
       
       // Get all assignments
@@ -209,8 +209,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get or create a default writing session
   app.get("/api/session", async (req, res) => {
     try {
-      // For demo purposes, use a default user ID of 1
-      const userId = 1;
+      // Use current demo user ID
+      const userId = currentDemoUserId;
       
       // Get existing sessions for user
       const sessions = await storage.getUserWritingSessions(userId);
@@ -274,7 +274,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // If sessionId is 0, create or find session for assignment
       if (sessionId === 0 && assignmentId) {
         console.log('Creating/finding session for assignment:', assignmentId);
-        const userId = 1; // Default student user
+        const userId = currentDemoUserId; // Current user
         const existingSessions = await storage.getUserWritingSessions(userId);
         const existingSession = existingSessions.find(s => s.assignmentId === parseInt(assignmentId as string));
         
@@ -680,6 +680,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
 
+  // Get current demo user
+  let currentDemoUserId = 1; // Default to user 1 (Sarah Johnson - teacher)
+
   // Demo user switching
   app.post("/api/demo/switch-user", async (req, res) => {
     try {
@@ -688,15 +691,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
+      currentDemoUserId = userId; // Update the current user
       res.json({ message: "User switched", user });
     } catch (error) {
       console.error("Error switching user:", error);
       res.status(500).json({ error: "Failed to switch user" });
     }
   });
-
-  // Get current demo user
-  let currentDemoUserId = 1; // Default to user 1 (Sarah Johnson - teacher)
   
   app.get("/api/demo/current-user", async (req, res) => {
     try {
