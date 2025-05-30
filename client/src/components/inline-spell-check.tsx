@@ -262,6 +262,16 @@ export default function InlineSpellCheck({
             const currentLine = lines.length - 1;
             const charInLine = lines[lines.length - 1].length;
             
+            console.log('Positioning highlight:', {
+              currentError,
+              textBeforeError,
+              lines,
+              currentLine,
+              charInLine,
+              calculatedTop: currentLine * lineHeight,
+              calculatedLeft: charInLine * charWidth
+            });
+            
             return (
               <span
                 style={{
@@ -270,11 +280,14 @@ export default function InlineSpellCheck({
                   left: `${charInLine * charWidth}px`,
                   width: `${currentError.word.length * charWidth}px`,
                   height: `${lineHeight}px`,
-                  background: 'rgba(239, 68, 68, 0.3)',
-                  borderBottom: '2px wavy #ef4444',
+                  background: 'rgba(239, 68, 68, 0.5)',
+                  borderBottom: '3px wavy #ef4444',
                   borderRadius: '3px',
-                  pointerEvents: 'none'
+                  pointerEvents: 'none',
+                  zIndex: 20,
+                  boxShadow: '0 0 0 1px rgba(239, 68, 68, 0.5)'
                 }}
+                title={`Misspelled: ${currentError.word}`}
               />
             );
           })()}
