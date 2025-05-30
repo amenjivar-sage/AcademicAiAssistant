@@ -53,7 +53,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       }
       throw new Error('No valid session ID or assignment ID');
     },
-    enabled: !!(sessionId !== undefined && assignmentId && !initialSession && !createSessionMutation.isPending), // Don't query during session creation
+    enabled: !!(sessionId !== undefined && assignmentId && !initialSession), // Only query if no initial session provided
     initialData: initialSession, // Use pre-loaded session data if available
     retry: 3,
     retryDelay: 1000, // Wait 1 second between retries to allow database transaction to complete
@@ -188,14 +188,14 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
 
   // Load session data and update sessionId if a new session was created
   useEffect(() => {
-    if (session && !createSessionMutation.isPending) {
+    if (session) {
       console.log('Writing workspace - Loading session data:', session.id, 'Title:', session.title, 'Content:', session.content);
       
-      // Only load session content if we don't already have content AND this isn't during session creation
+      // Only load session content if this is the initial load (when we don't have any current content)
       const hasCurrentContent = title.trim() || content.trim();
-      const isSessionCreation = createSessionMutation.isPending || updateSessionMutation.isPending;
       
-      if (!hasCurrentContent && !isSessionCreation) {
+      // Load session data only if we don't currently have content (initial load scenario)
+      if (!hasCurrentContent) {
         setTitle(session.title || "");
         setContent(session.content || "");
         setPastedContents(session.pastedContent as PastedContent[] || []);
@@ -210,7 +210,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
         queryClient.invalidateQueries({ queryKey: ['/api/writing-sessions'] });
       }
     }
-  }, [session, sessionId, assignmentId, queryClient, createSessionMutation.isPending, updateSessionMutation.isPending]);
+  }, [session, sessionId, assignmentId, queryClient]);
 
   // Auto-save functionality
   useEffect(() => {
@@ -239,8 +239,8 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       if (currentSessionId && currentSessionId !== 0) {
         console.log('Updating existing session:', currentSessionId);
         updateSessionMutation.mutate({ title, content, pastedContent: pastedContents });
-      } else if (assignmentId && (title.trim() || content.trim())) {
-        // Create a new session for this assignment
+      } else if (assignmentId && (title.trim() || content.trim()) && !createSessionMutation.isPending) {
+        // Create a new session for this assignment only if not already creating one
         console.log('Creating new session for assignment:', assignmentId);
         createSessionMutation.mutate({ 
           assignmentId, 
