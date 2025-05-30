@@ -295,15 +295,24 @@ export default function InlineSpellCheck({
               <span
                 style={{
                   position: 'absolute',
-                  top: `${currentLine * lineHeight + 20}px`, // Move down to be under the text
+                  top: `${currentLine * lineHeight + 18}px`, // Position under the text
                   left: `${charInLine * charWidth}px`,
                   width: `${currentError.word.length * charWidth}px`,
-                  height: '3px', // Just a thin underline
-                  background: 'transparent',
-                  borderBottom: '3px wavy #ef4444',
+                  height: '4px',
+                  background: '#ef4444',
+                  borderRadius: '2px',
                   pointerEvents: 'none',
                   zIndex: 999,
-                  display: 'block'
+                  display: 'block',
+                  boxShadow: '0 1px 3px rgba(239, 68, 68, 0.5)',
+                  // Add wavy effect with CSS
+                  backgroundImage: `repeating-linear-gradient(
+                    45deg,
+                    #ef4444 0px,
+                    #ef4444 2px,
+                    transparent 2px,
+                    transparent 4px
+                  )`
                 }}
                 title={`Misspelled: ${currentError.word}`}
               />
