@@ -87,8 +87,11 @@ export default function InlineSpellCheck({
         return true;
       });
       
-      console.log('Filtered valid errors:', validErrors);
-      setSpellErrors(validErrors);
+      // Sort errors by position so we process them from beginning to end
+      const sortedErrors = validErrors.sort((a, b) => a.startIndex - b.startIndex);
+      
+      console.log('Filtered and sorted valid errors:', sortedErrors);
+      setSpellErrors(sortedErrors);
       setCurrentErrorIndex(0);
       setIsLoading(false);
     }).catch(error => {
@@ -151,33 +154,32 @@ export default function InlineSpellCheck({
     let top = (currentLine + 1) * lineHeight + 70; // Add padding for overlay
     let left = Math.max(50, charInLine * charWidth); // Start near the word but with minimum margin
     
+    // Always position the tooltip in a visible, centered location
+    const tooltipWidth = 350;
+    const tooltipHeight = 200;
+    const margin = 20;
+    
     // Get editor bounds to constrain tooltip
     const editorElement = document.querySelector('.writing-editor') as HTMLElement;
     if (editorElement) {
       const editorRect = editorElement.getBoundingClientRect();
-      const tooltipWidth = 350;
-      const tooltipHeight = 200;
-      const margin = 20;
       
-      // Center the tooltip in the available space
-      const centerX = editorRect.width / 2;
-      left = centerX - (tooltipWidth / 2);
+      // Center the tooltip horizontally in the editor
+      left = Math.max(margin, (editorRect.width - tooltipWidth) / 2);
       
-      // Keep tooltip within editor bounds horizontally
-      const maxLeft = editorRect.width - tooltipWidth - margin;
-      if (left > maxLeft) {
-        left = maxLeft;
-      }
-      if (left < margin) {
-        left = margin;
+      // Position tooltip in the upper portion of the editor for visibility
+      // If the error is near the top, position tooltip below it
+      // If error is further down, position tooltip in the top area
+      if (currentLine < 5) {
+        // Error is near top, position tooltip below
+        top = Math.min(150, (currentLine + 2) * lineHeight + 50);
+      } else {
+        // Error is further down, position tooltip in top area for visibility
+        top = 100;
       }
       
-      // Keep tooltip within editor bounds vertically
-      const maxTop = editorRect.height - tooltipHeight - margin;
-      if (top > maxTop) {
-        // Position above the word instead
-        top = Math.max(margin, (currentLine * lineHeight) - tooltipHeight - 10);
-      }
+      // Ensure tooltip stays within bounds
+      top = Math.max(margin, Math.min(top, editorRect.height - tooltipHeight - margin));
     }
 
     const tooltip = {
@@ -189,7 +191,7 @@ export default function InlineSpellCheck({
       visible: true
     };
 
-    console.log('Created tooltip:', tooltip);
+    console.log('Created tooltip with corrected position:', tooltip, 'for line:', currentLine);
     newTooltips.push(tooltip);
     setTooltips(newTooltips);
   };
