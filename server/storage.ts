@@ -265,6 +265,7 @@ export class MemStorage implements IStorage {
       userId: 2,
       assignmentId: 1,
       title: "The Day I Learned to Stand Up",
+      pastedContent: [],
       content: `The cafeteria was buzzing with its usual chaos when I witnessed something that would change how I view courage forever. It was a typical Tuesday, and I was sitting with my friends when I noticed Marcus, a quiet kid from my math class, being surrounded by three older students near the lunch line.
 
 "Hey, Marcus, where's our lunch money?" one of them sneered, while the others blocked his path. I watched as Marcus's face turned red, his hands trembling as he reached into his pocket. My stomach churned with a mixture of anger and fear.
@@ -298,6 +299,7 @@ That day taught me that courage isn't about being fearless – it's about doing 
       userId: 3,
       assignmentId: 1,
       title: "Moving to a New Country",
+      pastedContent: [],
       content: `When my family told me we were moving from Mexico to the United States, I thought it would be an adventure. I was wrong – it was one of the hardest experiences of my life, but also the most transformative.
 
 The airplane ride felt endless. I pressed my face against the small window, watching my homeland disappear beneath the clouds. Everything I knew – my friends, my school, my grandmother's house where we had Sunday dinners – was getting smaller and smaller until it vanished completely.
@@ -327,6 +329,7 @@ Moving to a new country taught me that home isn't just a place – it's somethin
       userId: 4,
       assignmentId: 1,
       title: "The Science Fair Disaster",
+      pastedContent: [],
       content: `Science had always been my worst subject, so when our teacher announced the mandatory science fair project, I felt my stomach drop. While my classmates excitedly discussed their elaborate experiments, I sat there feeling completely overwhelmed.
 
 I decided to test which type of soil would help plants grow best. It seemed simple enough – plant some seeds, add different soils, water them, and measure the growth. What could go wrong?
@@ -370,6 +373,7 @@ This experience changed how I approach challenges in all areas of my life. Now, 
       userId: 3,
       assignmentId: 4,
       title: "Climate Change Solutions",
+      pastedContent: [],
       content: `Climate change is one of the biggest challenges facing our planet today. Rising temperatures, melting ice caps, and extreme weather events are becoming more frequent and severe. However, there are many solutions we can implement to address this crisis.
 
 Renewable energy is perhaps the most important solution. Solar panels, wind turbines, and hydroelectric power can replace fossil fuels that release carbon dioxide into the atmosphere. Many countries are already making significant investments in clean energy infrastructure.
@@ -393,6 +397,7 @@ Education is crucial too. The more people understand about climate science and e
       userId: 4,
       assignmentId: 4,
       title: "My Plan to Save the Environment",
+      pastedContent: [],
       content: `I think the environment is very important and we need to do something about pollution and global warming. There are many things we can do to help save our planet.
 
 First, we should recycle more. I always try to put my bottles and cans in the recycling bin instead of the trash. My family also tries to use less plastic bags when we go shopping.
@@ -418,6 +423,7 @@ If everyone does their part we can make the Earth a better place for future gene
       userId: 2,
       assignmentId: 2,
       title: "The Future of Renewable Energy",
+      pastedContent: [],
       content: `As we stand at the crossroads of environmental crisis and technological innovation, renewable energy emerges as our most promising path toward a sustainable future. The transition from fossil fuels to clean energy sources represents not just an environmental necessity, but an economic opportunity that could reshape global markets.
 
 Solar energy has experienced remarkable growth over the past decade. The cost of solar panels has plummeted by over 80% since 2010, making solar power competitive with traditional energy sources in many regions. Countries like Germany and Denmark have demonstrated that it's possible to generate significant portions of national energy needs from renewable sources without compromising economic stability.
