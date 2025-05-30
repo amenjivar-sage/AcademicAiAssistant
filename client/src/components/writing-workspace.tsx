@@ -462,17 +462,37 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
             <div className="relative w-full min-h-full">
               {usePageView ? (
                 /* Page-based editor view */
-                <PageBasedEditor
-                  content={content}
-                  onContentChange={(newContent) => {
-                    console.log('Content changed from page editor:', newContent);
-                    setContent(newContent);
-                  }}
-                  disabled={isSubmitted || isGraded}
-                  placeholder="Start writing your assignment here..."
-                  wordsPerPage={250}
-                  onFormatRef={formatRef}
-                />
+                <div className="relative">
+                  <PageBasedEditor
+                    content={content}
+                    onContentChange={(newContent) => {
+                      console.log('Content changed from page editor:', newContent);
+                      setContent(newContent);
+                    }}
+                    disabled={isSubmitted || isGraded}
+                    placeholder="Start writing your assignment here..."
+                    wordsPerPage={250}
+                    onFormatRef={formatRef}
+                  />
+                  
+                  {/* Spell Check Overlay for Page View */}
+                  {showSpellCheck && (
+                    <div className="absolute inset-0 bg-white bg-opacity-95 z-50">
+                      <InlineSpellCheck
+                        content={content}
+                        onContentChange={(newContent) => {
+                          console.log('Content changed from page view spell check:', newContent);
+                          setContent(newContent);
+                        }}
+                        isActive={showSpellCheck}
+                        onClose={() => setShowSpellCheck(false)}
+                        disabled={isSubmitted || isGraded}
+                        placeholder="Start writing your assignment here..."
+                        onSpellCheckStatusChange={setSpellCheckActive}
+                      />
+                    </div>
+                  )}
+                </div>
               ) : (
                 /* Normal rich text editor view */
                 <div className="p-6 min-h-full">
