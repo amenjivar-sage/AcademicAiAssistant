@@ -12,6 +12,7 @@ import CopyPasteDetector from './copy-paste-detector';
 import EnhancedToolbar from './enhanced-toolbar';
 import FeedbackViewer from './feedback-viewer';
 import InlineSpellCheck from './inline-spell-check';
+import PageBasedEditor from './page-based-editor';
 import type { WritingSession, Assignment } from '@shared/schema';
 
 interface PastedContent {
@@ -37,6 +38,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [showSpellCheck, setShowSpellCheck] = useState(false);
   const [spellCheckActive, setSpellCheckActive] = useState(false);
+  const [usePageView, setUsePageView] = useState(false);
   const contentRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();

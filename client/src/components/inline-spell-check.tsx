@@ -12,6 +12,8 @@ interface InlineSpellCheckProps {
   disabled?: boolean;
   placeholder?: string;
   onSpellCheckStatusChange?: (isActive: boolean) => void;
+  enablePageBreaks?: boolean;
+  wordsPerPage?: number;
 }
 
 interface SpellTooltip {
@@ -27,7 +29,9 @@ export default function InlineSpellCheck({
   onClose,
   disabled = false,
   placeholder = "Start writing...",
-  onSpellCheckStatusChange
+  onSpellCheckStatusChange,
+  enablePageBreaks = false,
+  wordsPerPage = 250
 }: InlineSpellCheckProps) {
   const [spellErrors, setSpellErrors] = useState<SpellCheckResult[]>([]);
   const [currentErrorIndex, setCurrentErrorIndex] = useState<number>(0);
