@@ -67,7 +67,7 @@ export default function StudentDashboard() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center">
@@ -93,6 +93,25 @@ export default function StudentDashboard() {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center">
+                <Clock className="h-8 w-8 text-orange-600" />
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Due</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {assignments.filter(a => {
+                      if (!a.dueDate) return false;
+                      const dueDate = new Date(a.dueDate);
+                      const today = new Date();
+                      const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+                      return dueDate >= today && dueDate <= nextWeek && !sessions.some(s => s.assignmentId === a.id && s.status === 'submitted');
+                    }).length}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center">
                 <Users className="h-8 w-8 text-purple-600" />
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Classes</p>
@@ -105,9 +124,8 @@ export default function StudentDashboard() {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="classes">Classes</TabsTrigger>
-            <TabsTrigger value="messages">Messages</TabsTrigger>
             <TabsTrigger value="achievements">Achievements</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
@@ -302,15 +320,7 @@ export default function StudentDashboard() {
             )}
           </TabsContent>
 
-          {/* Messages tab */}
-          <TabsContent value="messages" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-900">Messages</h2>
-              <Badge variant="outline">Stay connected</Badge>
-            </div>
-            
-            <MessagingSystem />
-          </TabsContent>
+
 
           {/* Achievements tab */}
           <TabsContent value="achievements" className="space-y-6">

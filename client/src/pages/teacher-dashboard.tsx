@@ -163,12 +163,11 @@ export default function TeacherDashboard() {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="classes">Classes</TabsTrigger>
             <TabsTrigger value="submissions">Students</TabsTrigger>
             <TabsTrigger value="goals">Goals</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            <TabsTrigger value="settings">Communication</TabsTrigger>
           </TabsList>
 
           <TabsContent value="classes" className="space-y-8">
@@ -187,9 +186,7 @@ export default function TeacherDashboard() {
             <TeacherInsights teacherId={1} />
           </TabsContent>
 
-          <TabsContent value="settings" className="space-y-6">
-            <MessagingSystem currentUserId={1} currentUserRole="teacher" standalone={true} />
-          </TabsContent>
+
         </Tabs>
       </main>
     </div>
