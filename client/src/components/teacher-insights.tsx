@@ -4,8 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Trophy, TrendingUp, TrendingDown, AlertTriangle, Star, Target, MessageSquare, Award } from "lucide-react";
+import { Trophy, TrendingUp, TrendingDown, AlertTriangle, Star, Target, MessageSquare, Award, Plus } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import MessagingSystem from "@/components/messaging-system";
+import { TeacherGoalManagement } from "@/components/teacher-goal-management";
 import type { User, Achievement, WritingStreak, WritingSession } from "@shared/schema";
 
 interface TeacherInsightsProps {
@@ -102,6 +104,128 @@ export default function TeacherInsights({ teacherId }: TeacherInsightsProps) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Quick Goal Assignment for Classes */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Target className="h-5 w-5" />
+              Class Goal Management
+            </CardTitle>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Set Goals for Class
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl">
+                <DialogHeader>
+                  <DialogTitle>Assign Goals to Class</DialogTitle>
+                </DialogHeader>
+                <TeacherGoalManagement 
+                  teacherId={teacherId} 
+                  preselectedClass={1}
+                  showClassSelector={false}
+                />
+              </DialogContent>
+            </Dialog>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-4 border border-blue-200 bg-blue-50 rounded-lg">
+              <h4 className="font-medium text-blue-900 mb-2">Creative Writing 101</h4>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Daily Writing Goal</span>
+                  <span className="text-blue-600">67% completion</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span>Weekly Sessions</span>
+                  <span className="text-blue-600">83% completion</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span>Grammar Improvement</span>
+                  <span className="text-blue-600">45% completion</span>
+                </div>
+              </div>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="w-full mt-3">
+                    Manage Goals
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl">
+                  <DialogHeader>
+                    <DialogTitle>Goals for Creative Writing 101</DialogTitle>
+                  </DialogHeader>
+                  <TeacherGoalManagement 
+                    teacherId={teacherId} 
+                    classroomId={1}
+                    showClassSelector={false}
+                  />
+                </DialogContent>
+              </Dialog>
+            </div>
+            
+            <div className="p-4 border border-gray-200 bg-gray-50 rounded-lg">
+              <h4 className="font-medium text-gray-700 mb-2">Advanced Writing</h4>
+              <p className="text-sm text-gray-600 mb-3">No active goals set</p>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="w-full">
+                    <Plus className="h-3 w-3 mr-2" />
+                    Set First Goal
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl">
+                  <DialogHeader>
+                    <DialogTitle>Set Goals for Advanced Writing</DialogTitle>
+                  </DialogHeader>
+                  <TeacherGoalManagement 
+                    teacherId={teacherId} 
+                    preselectedClass={2}
+                    showClassSelector={false}
+                  />
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            <div className="p-4 border border-green-200 bg-green-50 rounded-lg">
+              <h4 className="font-medium text-green-900 mb-2">Essay Writing</h4>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Research Skills</span>
+                  <span className="text-green-600">92% completion</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span>Citation Practice</span>
+                  <span className="text-green-600">78% completion</span>
+                </div>
+              </div>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="w-full mt-3">
+                    Manage Goals
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl">
+                  <DialogHeader>
+                    <DialogTitle>Goals for Essay Writing</DialogTitle>
+                  </DialogHeader>
+                  <TeacherGoalManagement 
+                    teacherId={teacherId} 
+                    classroomId={3}
+                    showClassSelector={false}
+                  />
+                </DialogContent>
+              </Dialog>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Achievement Leaderboard */}
       <Card>

@@ -15,9 +15,11 @@ import { Target, Plus, Edit, Trash2, Users, Calendar, BarChart3 } from "lucide-r
 interface GoalManagementProps {
   teacherId: number;
   classroomId?: number;
+  preselectedClass?: number;
+  showClassSelector?: boolean;
 }
 
-export function TeacherGoalManagement({ teacherId, classroomId }: GoalManagementProps) {
+export function TeacherGoalManagement({ teacherId, classroomId, preselectedClass, showClassSelector = true }: GoalManagementProps) {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState<any>(null);
   const { toast } = useToast();
@@ -95,10 +97,13 @@ export function TeacherGoalManagement({ teacherId, classroomId }: GoalManagement
     { value: "vocabulary_growth", label: "Vocabulary Growth", unit: "new words" },
   ];
 
-  const handleCreateGoal = (formData: FormData) => {
+  const handleCreateGoal = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    
     const goalData = {
       teacherId,
-      classroomId: classroomId || parseInt(formData.get("classroomId") as string),
+      classroomId: preselectedClass || classroomId || parseInt(formData.get("classroomId") as string),
       type: formData.get("type"),
       title: formData.get("title"),
       description: formData.get("description"),
@@ -140,8 +145,8 @@ export function TeacherGoalManagement({ teacherId, classroomId }: GoalManagement
             <DialogHeader>
               <DialogTitle>Create Writing Goal</DialogTitle>
             </DialogHeader>
-            <form action={handleCreateGoal} className="space-y-4">
-              {!classroomId && (
+            <form onSubmit={handleCreateGoal} className="space-y-4">
+              {showClassSelector && !classroomId && !preselectedClass && (
                 <div className="space-y-2">
                   <Label htmlFor="classroomId">Select Class</Label>
                   <Select name="classroomId" required>
@@ -149,13 +154,25 @@ export function TeacherGoalManagement({ teacherId, classroomId }: GoalManagement
                       <SelectValue placeholder="Choose a class" />
                     </SelectTrigger>
                     <SelectContent>
-                      {classrooms.map((classroom: any) => (
+                      {(classrooms as any[])?.map((classroom: any) => (
                         <SelectItem key={classroom.id} value={classroom.id.toString()}>
                           {classroom.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+              )}
+
+              {preselectedClass && (
+                <div className="space-y-2">
+                  <Label>Assign to Class</Label>
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+                    <p className="text-sm font-medium text-blue-900">
+                      {(classrooms as any[])?.find(c => c.id === preselectedClass)?.name || "Selected Class"}
+                    </p>
+                    <p className="text-xs text-blue-600">Goal will be assigned to all students in this class</p>
+                  </div>
                 </div>
               )}
 
