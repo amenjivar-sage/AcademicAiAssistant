@@ -304,7 +304,13 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   }, [content]);
 
   const handlePasteDetected = (pastedContent: PastedContent) => {
+    console.log('Paste detected:', pastedContent);
     setPastedContents(prev => [...prev, pastedContent]);
+    
+    // Update content state when paste is detected
+    const newContent = content + pastedContent.text;
+    console.log('Updating content after paste:', newContent);
+    setContent(newContent);
     
     // Highlight pasted content in red for teacher view
     if (contentRef.current) {
@@ -424,7 +430,10 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
               {/* Inline spell check overlay */}
               <InlineSpellCheck
                 content={content}
-                onContentChange={setContent}
+                onContentChange={(newContent) => {
+                  console.log('Content changed from spell check:', newContent);
+                  setContent(newContent);
+                }}
                 isActive={showSpellCheck}
                 onClose={() => setShowSpellCheck(false)}
                 disabled={isSubmitted || isGraded}
