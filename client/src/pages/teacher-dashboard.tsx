@@ -10,6 +10,7 @@ import ClassroomManagement from "@/components/classroom-management";
 import MessagingSystem from "@/components/messaging-system";
 import TeacherInsights from "@/components/teacher-insights";
 import { TeacherGoalManagement } from "@/components/teacher-goal-management";
+import { StudentManagement } from "@/components/student-management";
 import { PlusCircle, Users, FileText, BarChart3, MessageSquare, Target } from "lucide-react";
 import SageLogo from "@/components/sage-logo";
 import type { Assignment, Classroom } from "@shared/schema";
@@ -175,17 +176,7 @@ export default function TeacherDashboard() {
           </TabsContent>
 
           <TabsContent value="submissions" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-900">Student Management</h2>
-            </div>
-            
-            <Card>
-              <CardContent className="p-12 text-center">
-                <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Student overview coming soon</h3>
-                <p className="text-gray-500">View student progress, achievements, and submissions</p>
-              </CardContent>
-            </Card>
+            <StudentManagement teacherId={1} />
           </TabsContent>
 
           <TabsContent value="goals" className="space-y-6">
