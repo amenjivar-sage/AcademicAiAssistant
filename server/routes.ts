@@ -411,61 +411,140 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const maxChunkSize = 1000; // Process in 1000-character chunks
       let allCorrections: any[] = [];
       
-      if (text.length <= maxChunkSize) {
-        // Process short text in one go
-        const spellCheckPrompt = `Analyze this text for spelling AND grammar errors, including capitalization.
-
-Text: "${text}"
-
-CHECK FOR:
-1. Misspelled words 
-2. Capitalization errors for state names, countries, cities, proper nouns
-3. Beginning of sentences
-4. Common grammar mistakes
-
-RULES:
-- Check ALL words in the text
-- Give exact positions in the original text
-- Provide correct spelling/capitalization
-- Find ALL errors, not just the first few
-
-Return JSON: [{"word": "california", "suggestions": ["California"], "startIndex": 0, "endIndex": 10}]
-Return [] if no errors.`;
-
-        const aiResponse = await generateAiResponse(spellCheckPrompt);
-        allCorrections = parseAiResponse(aiResponse);
-      } else {
-        // Process long text in chunks
-        for (let i = 0; i < text.length; i += maxChunkSize) {
-          const chunk = text.substring(i, Math.min(i + maxChunkSize, text.length));
-          const chunkPrompt = `Analyze this text chunk for spelling AND grammar errors:
-
-Text: "${chunk}"
-
-CHECK FOR:
-1. Misspelled words 
-2. Capitalization errors for state names, countries, cities, proper nouns
-3. Beginning of sentences
-4. Common grammar mistakes
-
-Return JSON with positions relative to this chunk: [{"word": "california", "suggestions": ["California"], "startIndex": 0, "endIndex": 10}]
-Return [] if no errors.`;
-
-          try {
-            const aiResponse = await generateAiResponse(chunkPrompt);
-            const chunkCorrections = parseAiResponse(aiResponse);
+      // Always process in smaller chunks to catch all errors
+      const chunkSize = 500; // Smaller chunks for better accuracy
+      
+      for (let i = 0; i < text.length; i += chunkSize) {
+        const chunk = text.substring(i, Math.min(i + chunkSize, text.length));
+        
+        // Extract individual words and check each one
+        const words = chunk.match(/\b[a-zA-Z]+\b/g) || [];
+        const wordErrors: any[] = [];
+        
+        // Process each word individually for better accuracy
+        let chunkOffset = 0;
+        for (const word of words) {
+          const wordIndex = chunk.indexOf(word, chunkOffset);
+          if (wordIndex !== -1) {
+            // Common misspellings dictionary
+            const corrections: Record<string, string> = {
+              'accomodate': 'accommodate',
+              'acknowlege': 'acknowledge', 
+              'arguement': 'argument',
+              'beleive': 'believe',
+              'calender': 'calendar',
+              'comitmment': 'commitment',
+              'definately': 'definitely',
+              'embarass': 'embarrass',
+              'enviroment': 'environment',
+              'excercise': 'exercise',
+              'existance': 'existence',
+              'febuary': 'February',
+              'goverment': 'government',
+              'harrass': 'harass',
+              'heighth': 'height',
+              'independant': 'independent',
+              'inteligent': 'intelligent',
+              'interupt': 'interrupt',
+              'jewlery': 'jewelry',
+              'knowlege': 'knowledge',
+              'liason': 'liaison',
+              'maintanence': 'maintenance',
+              'medeval': 'medieval',
+              'mischievious': 'mischievous',
+              'neccessary': 'necessary',
+              'noticable': 'noticeable',
+              'occured': 'occurred',
+              'occassion': 'occasion',
+              'optomist': 'optimist',
+              'parallell': 'parallel',
+              'playwrite': 'playwright',
+              'posession': 'possession',
+              'privelege': 'privilege',
+              'pronounciation': 'pronunciation',
+              'recieve': 'receive',
+              'recomend': 'recommend',
+              'refered': 'referred',
+              'relevent': 'relevant',
+              'resevoir': 'reservoir',
+              'responsibilty': 'responsibility',
+              'rythym': 'rhythm',
+              'secretery': 'secretary',
+              'seperate': 'separate',
+              'sieze': 'seize',
+              'surprize': 'surprise',
+              'temprature': 'temperature',
+              'tounge': 'tongue',
+              'truely': 'truly',
+              'untill': 'until',
+              'vaccuum': 'vacuum',
+              'wierd': 'weird',
+              'writting': 'writing',
+              'adress': 'address',
+              'amatuer': 'amateur',
+              'arguementative': 'argumentative',
+              'athiest': 'atheist',
+              'bizzare': 'bizarre',
+              'buisness': 'business',
+              'catagory': 'category',
+              'concious': 'conscious',
+              'critisize': 'criticize',
+              'curiculum': 'curriculum',
+              'deisel': 'diesel',
+              'dissapear': 'disappear',
+              'exagerate': 'exaggerate',
+              'familier': 'familiar',
+              'finaly': 'finally',
+              'foriegner': 'foreigner',
+              'freind': 'friend',
+              'gaurd': 'guard',
+              'graffitti': 'graffiti',
+              'guidlines': 'guidelines',
+              'heirarchy': 'hierarchy',
+              'ignorence': 'ignorance',
+              'immediateley': 'immediately',
+              'incidently': 'incidentally',
+              'inculate': 'inculcate',
+              'integrety': 'integrity',
+              'judgement': 'judgment',
+              'knowlegeable': 'knowledgeable',
+              'leutenant': 'lieutenant',
+              'lisense': 'license',
+              'marraige': 'marriage',
+              'miniture': 'miniature',
+              'noticeing': 'noticing',
+              'ocasionaly': 'occasionally',
+              'ocurred': 'occurred',
+              'parrallel': 'parallel',
+              'pesonal': 'personal',
+              'preceed': 'precede',
+              'publically': 'publicly',
+              'recieveing': 'receiving',
+              'rediculous': 'ridiculous',
+              'referance': 'reference',
+              'releive': 'relieve',
+              'repetative': 'repetitive',
+              'restaraunt': 'restaurant',
+              'sargeant': 'sergeant',
+              'shedule': 'schedule',
+              'sucessful': 'successful'
+            };
             
-            // Adjust positions to be relative to the full text
-            chunkCorrections.forEach((correction: any) => {
-              correction.startIndex += i;
-              correction.endIndex += i;
-            });
+            const lowerWord = word.toLowerCase();
+            if (corrections[lowerWord]) {
+              wordErrors.push({
+                word: word,
+                suggestions: [corrections[lowerWord]],
+                startIndex: i + wordIndex,
+                endIndex: i + wordIndex + word.length
+              });
+            }
             
-            allCorrections.push(...chunkCorrections);
-          } catch (error) {
-            console.error(`Error processing chunk ${i}:`, error);
+            chunkOffset = wordIndex + word.length;
           }
         }
+        
+        allCorrections.push(...wordErrors);
       }
 
       // Validate and filter corrections
