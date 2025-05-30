@@ -57,6 +57,7 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
       const response = await apiRequest("POST", "/api/ai/chat", {
         sessionId: currentSessionId,
         prompt: promptText,
+        userId: 2, // Demo student ID - in real app, get from auth context
       });
       return response.json();
     },

@@ -377,10 +377,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // AI chat assistance endpoint
+  // AI chat assistance endpoint with adaptive learning
   app.post("/api/ai/chat", async (req, res) => {
     try {
-      const { sessionId, prompt } = req.body;
+      const { sessionId, prompt, userId } = req.body;
       
       if (!prompt) {
         return res.status(400).json({ message: "Prompt is required" });
@@ -392,11 +392,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if the prompt is restricted
       const isRestricted = checkRestrictedPrompt(prompt);
       
+      // Get student profile for personalized responses
+      let studentProfile;
+      if (userId) {
+        try {
+          studentProfile = await storage.getStudentProfile(userId);
+          // Update learning progress with this interaction
+          await storage.updateLearningProgress(userId, { prompt, sessionId });
+        } catch (error) {
+          console.error("Failed to load student profile:", error);
+          // Continue without profile
+        }
+      }
+      
       let response;
       if (isRestricted) {
         response = "❌ This type of assistance goes beyond what I can help with. Try asking for brainstorming ideas, writing feedback, or research guidance instead!";
       } else {
-        response = await generateAiResponse(prompt);
+        // Generate personalized AI response using student profile
+        response = await generateAiResponse(prompt, studentProfile);
       }
 
       // Store the AI interaction if we have a valid session
@@ -416,6 +430,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("AI help error:", error);
       res.status(500).json({ message: "Failed to generate AI response" });
+    }
+  });
+
+  // Student learning profile endpoints for adaptive AI
+  app.get("/api/students/:userId/learning-profile", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const profile = await storage.getStudentProfile(userId);
+      
+      if (!profile) {
+        // Create a default profile if none exists
+        const newProfile = await storage.createStudentProfile({
+          userId,
+          writingLevel: "beginner",
+          strengths: [],
+          weaknesses: [],
+          commonMistakes: [],
+          improvementAreas: [],
+          learningPreferences: {},
+          totalWordsWritten: 0,
+          totalSessions: 0,
+        });
+        return res.json(newProfile);
+      }
+      
+      res.json(profile);
+    } catch (error) {
+      console.error("Error fetching learning profile:", error);
+      res.status(500).json({ message: "Failed to fetch learning profile" });
+    }
+  });
+
+  app.put("/api/students/:userId/learning-profile", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const updates = req.body;
+      
+      const updatedProfile = await storage.updateStudentProfile(userId, updates);
+      if (!updatedProfile) {
+        return res.status(404).json({ message: "Student profile not found" });
+      }
+      
+      res.json(updatedProfile);
+    } catch (error) {
+      console.error("Error updating learning profile:", error);
+      res.status(500).json({ message: "Failed to update learning profile" });
+    }
+  });
+
+  // Get all student profiles for teacher overview
+  app.get("/api/teacher/student-profiles", async (req, res) => {
+    try {
+      const students = await storage.getAllUsers();
+      const studentProfiles = [];
+      
+      for (const student of students.filter(u => u.role === 'student')) {
+        const profile = await storage.getStudentProfile(student.id);
+        studentProfiles.push({
+          student,
+          profile: profile || {
+            writingLevel: "beginner",
+            strengths: [],
+            weaknesses: [],
+            totalSessions: 0,
+            lastInteractionSummary: "No interactions yet"
+          }
+        });
+      }
+      
+      res.json(studentProfiles);
+    } catch (error) {
+      console.error("Error fetching student profiles:", error);
+      res.status(500).json({ message: "Failed to fetch student profiles" });
     }
   });
 
