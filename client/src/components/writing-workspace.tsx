@@ -358,7 +358,8 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     assignment: assignment?.allowCopyPaste,
     computed: allowCopyPaste,
     assignmentData: assignment,
-    assignmentLoaded: !!assignment
+    assignmentLoaded: !!assignment,
+    assignmentId: assignmentId
   });
 
   // Show feedback viewer for graded assignments
