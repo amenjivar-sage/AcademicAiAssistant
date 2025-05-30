@@ -60,6 +60,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log('Session retrieval request for ID:', sessionId);
     
     try {
+      // Debug: Check all available sessions
+      const allSessions = await storage.getUserWritingSessions(2); // Get all sessions for user 2
+      console.log('Available sessions:', allSessions.map(s => s.id));
+      
       const session = await storage.getWritingSession(sessionId);
       if (session) {
         console.log('Session found:', session.id);
@@ -140,15 +144,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get user writing sessions
+  // Get user writing sessions  
   app.get("/api/users/:userId/writing-sessions", async (req, res) => {
     try {
       const userId = parseInt(req.params.userId);
+      console.log('Fetching sessions for user:', userId);
       const sessions = await storage.getUserWritingSessions(userId);
+      console.log('Found sessions:', sessions.length);
       res.json(sessions);
     } catch (error) {
       console.error("Error fetching sessions:", error);
       res.status(500).json({ message: "Failed to fetch sessions" });
+    }
+  });
+
+  // Get all users (for admin/debug)
+  app.get("/api/users", async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users.map(u => ({ ...u, password: undefined }))); // Remove passwords
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
     }
   });
 
