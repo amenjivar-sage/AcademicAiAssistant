@@ -47,7 +47,7 @@ export default function HighlightedTextEditor({
   // Create highlighted text with spell errors
   const createHighlightedText = () => {
     if (!showSpellCheck || spellErrors.length === 0) {
-      return value.replace(/\n/g, '<br>').replace(/ /g, '&nbsp;') || '<span style="color: #9ca3af;">' + (placeholder || '') + '</span>';
+      return '';
     }
 
     let highlightedText = value;
@@ -61,7 +61,8 @@ export default function HighlightedTextEditor({
       const errorText = highlightedText.substring(error.startIndex + offset, error.endIndex + offset);
       const afterText = highlightedText.substring(error.endIndex + offset);
 
-      const highlightedError = `<span style="background-color: #fef2f2; border-bottom: 2px wavy #ef4444; position: relative;" title="Suggested: ${error.suggestions.join(', ')}">${errorText}</span>`;
+      // Only add the underline styling, make text transparent so textarea text shows through
+      const highlightedError = `<span style="border-bottom: 2px wavy #ef4444; position: relative; color: transparent;" title="Suggested: ${error.suggestions.join(', ')}">${errorText}</span>`;
       
       highlightedText = beforeText + highlightedError + afterText;
       offset += highlightedError.length - errorText.length;
@@ -122,8 +123,7 @@ export default function HighlightedTextEditor({
           ...style,
           position: 'relative',
           zIndex: 2,
-          background: showSpellCheck && spellErrors.length > 0 ? 'transparent' : 'white',
-          color: showSpellCheck && spellErrors.length > 0 ? 'transparent' : 'inherit',
+          background: 'transparent',
         }}
       />
     </div>
