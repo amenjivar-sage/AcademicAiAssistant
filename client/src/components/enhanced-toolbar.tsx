@@ -34,6 +34,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -257,38 +258,68 @@ export default function EnhancedToolbar({
               Header/Footer
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]" aria-describedby="header-footer-description">
+          <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>Page Header & Footer Settings</DialogTitle>
-              <p id="header-footer-description" className="text-sm text-muted-foreground">
-                Configure page headers, footers, and numbering options for your document.
-              </p>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
-                <label htmlFor="header" className="text-right text-sm font-medium">
+                <label htmlFor="header-input" className="text-right text-sm font-medium">
                   Header:
                 </label>
-                <Input id="header" placeholder="Enter header text..." className="col-span-3" />
+                <Input 
+                  id="header-input" 
+                  placeholder="Enter header text..." 
+                  className="col-span-3" 
+                />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <label htmlFor="footer" className="text-right text-sm font-medium">
+                <label htmlFor="footer-input" className="text-right text-sm font-medium">
                   Footer:
                 </label>
-                <Input id="footer" placeholder="Enter footer text..." className="col-span-3" />
+                <Input 
+                  id="footer-input" 
+                  placeholder="Enter footer text..." 
+                  className="col-span-3" 
+                />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <label className="text-right text-sm font-medium">
                   Options:
                 </label>
                 <div className="col-span-3 flex items-center space-x-2">
-                  <Checkbox id="pageNumbers" />
-                  <label htmlFor="pageNumbers" className="text-sm">
+                  <Checkbox id="page-numbers" />
+                  <label htmlFor="page-numbers" className="text-sm">
                     Show page numbers
                   </label>
                 </div>
               </div>
             </div>
+            <DialogFooter>
+              <Button 
+                type="submit" 
+                onClick={() => {
+                  const headerInput = document.getElementById('header-input') as HTMLInputElement;
+                  const footerInput = document.getElementById('footer-input') as HTMLInputElement;
+                  const pageNumbersCheck = document.getElementById('page-numbers') as HTMLInputElement;
+                  
+                  const headerText = headerInput?.value || '';
+                  const footerText = footerInput?.value || '';
+                  const showPageNumbers = pageNumbersCheck?.checked || false;
+                  
+                  console.log('Header/Footer settings saved:', {
+                    header: headerText,
+                    footer: footerText,
+                    pageNumbers: showPageNumbers
+                  });
+                  
+                  // Show confirmation
+                  alert(`Settings saved!\nHeader: ${headerText || 'None'}\nFooter: ${footerText || 'None'}\nPage numbers: ${showPageNumbers ? 'Yes' : 'No'}`);
+                }}
+              >
+                Save Settings
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
         
