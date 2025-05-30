@@ -293,11 +293,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Otherwise get existing session - ensure it exists before returning
-      console.log('Attempting to retrieve session:', sessionId);
+      console.log('=== SESSION RETRIEVAL DEBUG ===');
+      console.log('Attempting to retrieve session ID:', sessionId, 'Type:', typeof sessionId);
+      console.log('Raw params:', req.params);
+      console.log('Session ID from params:', req.params.sessionId);
       
       // Direct lookup first to avoid cache timing issues
-      console.log('DatabaseStorage.getWritingSession - Direct lookup for session:', sessionId);
+      console.log('Calling storage.getWritingSession with ID:', sessionId);
       const session = await storage.getWritingSession(sessionId);
+      console.log('Retrieved session result:', session ? `Found session ${session.id}` : 'No session found');
       
       if (session) {
         console.log('Session retrieved successfully via direct lookup:', session.id);
