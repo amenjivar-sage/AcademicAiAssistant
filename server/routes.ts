@@ -389,21 +389,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Import AI functions
       const { generateAiResponse } = await import("./openai");
       
-      const spellCheckPrompt = `Please identify all spelling errors in this text and provide corrections. Return your response as a JSON array with objects containing "word", "suggestion", "startIndex", and "endIndex" for each misspelling found.
+      const spellCheckPrompt = `You are a spell checker. Identify all spelling errors in this text: "${text}"
 
-Text to check: "${text}"
+For each spelling error found, provide the misspelled word and its correction. 
 
-Respond with only the JSON array, no other text. If no errors are found, return an empty array [].`;
+Examples of spelling errors in the text:
+- "hellp" should be "hello"
+- "hpo" should be "how"
+- "doping" in context "I am doping fine" should be "doing"
+
+Return a JSON array with this exact format:
+[
+  {"word": "hellp", "suggestion": "hello", "startIndex": 0, "endIndex": 5},
+  {"word": "hpo", "suggestion": "how", "startIndex": 7, "endIndex": 10}
+]
+
+If no errors are found, return: []
+
+Text to check: "${text}"`;
 
       const aiResponse = await generateAiResponse(spellCheckPrompt);
+      console.log('AI spell check response:', aiResponse);
       
       // Try to parse the AI response as JSON
       let corrections = [];
       try {
         corrections = JSON.parse(aiResponse);
+        console.log('Parsed corrections:', corrections);
       } catch (parseError) {
+        console.log('JSON parse failed, trying text extraction:', parseError);
         // If AI didn't return valid JSON, try to extract corrections from text
         corrections = parseSpellCheckResponse(aiResponse, text);
+        console.log('Extracted corrections:', corrections);
       }
 
       res.json({ corrections });
