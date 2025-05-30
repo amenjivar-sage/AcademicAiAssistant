@@ -20,7 +20,9 @@ import {
   Download,
   Palette,
   Type,
-  Minus
+  Minus,
+  CheckCircle,
+  SpellCheck
 } from "lucide-react";
 import {
   Select,
