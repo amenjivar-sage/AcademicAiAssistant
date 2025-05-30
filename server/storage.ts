@@ -781,4 +781,4 @@ Despite these challenges, the momentum toward renewable energy appears unstoppab
 
 import { DatabaseStorage } from "./database-storage";
 
-export const storage = new DatabaseStorage();
+export const storage = new MemStorage();
