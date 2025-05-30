@@ -267,8 +267,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Get or create writing session for assignment
   app.get("/api/writing-sessions/:sessionId", async (req, res) => {
+    console.log('=== ROUTE HIT: /api/writing-sessions/:sessionId ===');
+    console.log('Raw sessionId param:', req.params.sessionId);
+    console.log('Full request URL:', req.url);
+    console.log('Request method:', req.method);
+    
     const sessionId = parseInt(req.params.sessionId);
     const { assignmentId } = req.query;
+    
+    console.log('Parsed sessionId:', sessionId, 'Type:', typeof sessionId);
+    console.log('Assignment ID from query:', assignmentId);
     
     try {
       // If sessionId is 0, create or find session for assignment
