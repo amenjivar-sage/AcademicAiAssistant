@@ -33,9 +33,26 @@ export function checkRestrictedPrompt(prompt: string): boolean {
   );
 }
 
-export async function generateAiResponse(prompt: string): Promise<string> {
+export async function generateAiResponse(prompt: string, studentProfile?: any): Promise<string> {
   try {
+    let personalizedContext = "";
+    if (studentProfile) {
+      personalizedContext = `
+Student Context (adapt your response accordingly):
+- Writing Level: ${studentProfile.writingLevel || 'beginner'}
+- Strengths: ${studentProfile.strengths?.join(', ') || 'developing'}
+- Areas for improvement: ${studentProfile.weaknesses?.join(', ') || 'general writing skills'}
+- Common mistakes: ${studentProfile.commonMistakes?.join(', ') || 'none identified yet'}
+- Total sessions: ${studentProfile.totalSessions || 0}
+- Recent context: ${studentProfile.lastInteractionSummary || 'first interaction'}
+
+Tailor your response to their level and focus on their specific improvement areas.
+`;
+    }
+
     const systemPrompt = `You are ZoË, a knowledgeable and supportive AI writing tutor focused on providing practical, educational guidance to help students succeed academically. You provide concrete examples and starting points while maintaining academic integrity.
+
+${personalizedContext}
 
 Your approach:
 - Give practical examples: When asked about research papers, provide actual paper structures, sample thesis statements, real outline formats

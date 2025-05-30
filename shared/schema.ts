@@ -229,3 +229,31 @@ export const insertInlineCommentSchema = createInsertSchema(inlineComments).omit
 
 export type InlineComment = typeof inlineComments.$inferSelect;
 export type InsertInlineComment = z.infer<typeof insertInlineCommentSchema>;
+
+// Student learning profiles to track progress and adapt AI responses
+export const studentProfiles = pgTable("student_profiles", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  writingLevel: text("writing_level").default("beginner"), // beginner, intermediate, advanced
+  strengths: json("strengths").default([]), // array of identified strengths
+  weaknesses: json("weaknesses").default([]), // array of areas needing improvement
+  writingStyle: text("writing_style"), // descriptive, analytical, creative, etc.
+  commonMistakes: json("common_mistakes").default([]), // recurring issues
+  improvementAreas: json("improvement_areas").default([]), // current focus areas
+  learningPreferences: json("learning_preferences").default({}), // how they learn best
+  totalWordsWritten: integer("total_words_written").default(0),
+  totalSessions: integer("total_sessions").default(0),
+  averageGrade: text("average_grade"),
+  lastInteractionSummary: text("last_interaction_summary"), // context from recent AI chats
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertStudentProfileSchema = createInsertSchema(studentProfiles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type StudentProfile = typeof studentProfiles.$inferSelect;
+export type InsertStudentProfile = z.infer<typeof insertStudentProfileSchema>;

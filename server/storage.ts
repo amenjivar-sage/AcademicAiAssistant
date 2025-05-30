@@ -47,6 +47,12 @@ export interface IStorage {
   createInlineComment(comment: InsertInlineComment): Promise<InlineComment>;
   getSessionInlineComments(sessionId: number): Promise<InlineComment[]>;
   deleteInlineComment(commentId: number): Promise<void>;
+  
+  // Student profile operations for adaptive AI
+  getStudentProfile(userId: number): Promise<any | undefined>;
+  createStudentProfile(profile: any): Promise<any>;
+  updateStudentProfile(userId: number, updates: any): Promise<any | undefined>;
+  updateLearningProgress(userId: number, interactionData: any): Promise<void>;
 }
 
 // Database connection
@@ -67,6 +73,7 @@ export class MemStorage implements IStorage {
   private classrooms: Map<number, any>;
   private enrollments: Map<string, boolean>; // key: "studentId-classroomId"
   private inlineComments: Map<number, any>;
+  private studentProfiles: Map<number, any>;
   private currentUserId: number;
   private currentAssignmentId: number;
   private currentSessionId: number;
@@ -83,6 +90,7 @@ export class MemStorage implements IStorage {
     this.classrooms = new Map();
     this.enrollments = new Map();
     this.inlineComments = new Map();
+    this.studentProfiles = new Map();
     this.currentUserId = 1;
     this.currentAssignmentId = 1;
     this.currentSessionId = 1;
@@ -800,6 +808,71 @@ Despite these challenges, the momentum toward renewable energy appears unstoppab
 
   async deleteInlineComment(commentId: number): Promise<void> {
     this.inlineComments.delete(commentId);
+  }
+
+  // Student profile operations for adaptive AI
+  async getStudentProfile(userId: number): Promise<any | undefined> {
+    // Initialize student profiles if not exists
+    if (!this.studentProfiles) {
+      this.studentProfiles = new Map();
+    }
+    return this.studentProfiles.get(userId);
+  }
+
+  async createStudentProfile(profile: any): Promise<any> {
+    if (!this.studentProfiles) {
+      this.studentProfiles = new Map();
+    }
+    const id = Date.now();
+    const newProfile = {
+      ...profile,
+      id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.studentProfiles.set(profile.userId, newProfile);
+    return newProfile;
+  }
+
+  async updateStudentProfile(userId: number, updates: any): Promise<any | undefined> {
+    if (!this.studentProfiles) {
+      this.studentProfiles = new Map();
+    }
+    const existing = this.studentProfiles.get(userId);
+    if (!existing) return undefined;
+    
+    const updated = {
+      ...existing,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.studentProfiles.set(userId, updated);
+    return updated;
+  }
+
+  async updateLearningProgress(userId: number, interactionData: any): Promise<void> {
+    let profile = await this.getStudentProfile(userId);
+    if (!profile) {
+      profile = await this.createStudentProfile({
+        userId,
+        writingLevel: "beginner",
+        strengths: [],
+        weaknesses: [],
+        commonMistakes: [],
+        improvementAreas: [],
+        learningPreferences: {},
+        totalWordsWritten: 0,
+        totalSessions: 0,
+      });
+    }
+
+    // Update learning data based on interaction
+    const updates: any = {
+      lastInteractionSummary: interactionData.prompt,
+      totalSessions: profile.totalSessions + 1,
+    };
+
+    await this.updateStudentProfile(userId, updates);
   }
 }
 
