@@ -266,6 +266,36 @@ export default function InlineSpellCheck({
     }
   };
 
+  const handleAcceptAllSuggestions = () => {
+    let updatedContent = content;
+    let cumulativeLengthChange = 0;
+    
+    // Process errors from end to beginning to avoid position conflicts
+    const sortedErrors = [...spellErrors].sort((a, b) => b.startIndex - a.startIndex);
+    
+    sortedErrors.forEach(error => {
+      const suggestion = error.suggestions && error.suggestions[0];
+      if (suggestion) {
+        const beforeText = updatedContent.substring(0, error.startIndex);
+        const afterText = updatedContent.substring(error.endIndex);
+        updatedContent = beforeText + suggestion + afterText;
+        
+        // Track changes
+        setRecentChanges(prev => [...prev, {
+          original: error.word,
+          corrected: suggestion,
+          timestamp: Date.now()
+        }]);
+      }
+    });
+    
+    onContentChange(updatedContent);
+    setSpellErrors([]);
+    setTooltips([]);
+    onSpellCheckStatusChange?.(false);
+    onClose();
+  };
+
   const handleEditWord = () => {
     const currentError = spellErrors[currentErrorIndex];
     if (!currentError) return;
@@ -515,6 +545,20 @@ export default function InlineSpellCheck({
                       {suggestion}
                     </Button>
                   ))}
+                  
+                  {/* Accept All button when there are many errors */}
+                  {spellErrors.length > 5 && (
+                    <div className="pt-2 mt-2 border-t border-gray-200">
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={handleAcceptAllSuggestions}
+                        className="w-full h-8 text-sm bg-blue-600 hover:bg-blue-700"
+                      >
+                        Accept All {spellErrors.length} Corrections
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
             </>
