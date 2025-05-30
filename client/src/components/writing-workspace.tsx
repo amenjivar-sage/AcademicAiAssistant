@@ -12,6 +12,7 @@ import CopyPasteDetector from './copy-paste-detector';
 import EnhancedToolbar from './enhanced-toolbar';
 import FeedbackViewer from './feedback-viewer';
 import SpellCheckPanel from './spell-check-panel';
+import HighlightedTextEditor from './highlighted-text-editor';
 import type { WritingSession, Assignment } from '@shared/schema';
 
 interface PastedContent {
@@ -36,6 +37,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [showSpellCheck, setShowSpellCheck] = useState(false);
+  const [spellErrors, setSpellErrors] = useState<any[]>([]);
   const contentRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -403,12 +405,13 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
             onPasteDetected={handlePasteDetected}
             className="min-h-full"
           >
-            <textarea
-              ref={contentRef}
-              disabled={isSubmitted || isGraded}
+            <HighlightedTextEditor
               value={content}
-              onChange={(e) => setContent(e.target.value)}
+              onChange={setContent}
               placeholder="Start writing your assignment here..."
+              disabled={isSubmitted || isGraded}
+              spellErrors={spellErrors}
+              showSpellCheck={showSpellCheck}
               className="w-full min-h-full p-8 focus:outline-none resize-none text-gray-900 leading-relaxed border-none bg-transparent"
               style={{
                 minHeight: '100%',

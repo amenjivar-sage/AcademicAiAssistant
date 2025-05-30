@@ -11,9 +11,10 @@ interface SpellCheckPanelProps {
   onContentChange: (newContent: string) => void;
   isOpen: boolean;
   onClose: () => void;
+  onSpellErrorsChange?: (errors: SpellCheckResult[]) => void;
 }
 
-export default function SpellCheckPanel({ content, onContentChange, isOpen, onClose }: SpellCheckPanelProps) {
+export default function SpellCheckPanel({ content, onContentChange, isOpen, onClose, onSpellErrorsChange }: SpellCheckPanelProps) {
   const [spellErrors, setSpellErrors] = useState<SpellCheckResult[]>([]);
   const [processedErrors, setProcessedErrors] = useState<Set<number>>(new Set());
   const [isLoading, setIsLoading] = useState(false);
