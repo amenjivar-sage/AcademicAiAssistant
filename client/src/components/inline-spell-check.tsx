@@ -295,14 +295,14 @@ export default function InlineSpellCheck({
               <span
                 style={{
                   position: 'absolute',
-                  top: `${currentLine * lineHeight + 20}px`, // Position directly under the text
-                  left: `${charInLine * charWidth}px`,
+                  top: `${(currentLine + 1) * lineHeight + 32}px`, // Position well below the text line
+                  left: `${charInLine * charWidth + 32}px`, // Match the padding of textarea
                   width: `${currentError.word.length * charWidth}px`,
                   height: '3px',
                   background: '#ef4444',
                   borderRadius: '1px',
                   pointerEvents: 'none',
-                  zIndex: 999,
+                  zIndex: 10,
                   display: 'block',
                   boxShadow: '0 1px 2px rgba(239, 68, 68, 0.4)'
                 }}
