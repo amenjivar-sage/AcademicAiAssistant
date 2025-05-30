@@ -416,6 +416,11 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
           {/* Enhanced Toolbar */}
           <div className="flex items-center justify-between">
             <EnhancedToolbar
+              onFormatting={(command, value) => {
+                if (formatRef.current) {
+                  formatRef.current(command, value);
+                }
+              }}
               onSave={handleSave}
               isSaving={isSaving}
               onSpellCheck={() => setShowSpellCheck(true)}
@@ -462,6 +467,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                   disabled={isSubmitted || isGraded}
                   placeholder="Start writing your assignment here..."
                   wordsPerPage={250}
+                  onFormatRef={formatRef}
                 />
               ) : (
                 /* Normal inline spell check view */

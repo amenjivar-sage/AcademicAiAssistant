@@ -33,8 +33,10 @@ export default function RichTextEditor({
   useEffect(() => {
     if (editorRef.current && !isUpdating) {
       const currentContent = editorRef.current.innerHTML;
-      if (currentContent !== content) {
-        editorRef.current.innerHTML = content;
+      // Convert plain text content to HTML if needed
+      const htmlContent = content.includes('<') ? content : content.replace(/\n/g, '<br>');
+      if (currentContent !== htmlContent) {
+        editorRef.current.innerHTML = htmlContent;
       }
     }
   }, [content, isUpdating]);
@@ -44,7 +46,9 @@ export default function RichTextEditor({
     if (editorRef.current) {
       setIsUpdating(true);
       const newContent = editorRef.current.innerHTML;
-      onContentChange(newContent);
+      // Convert HTML back to plain text for storage compatibility
+      const plainContent = newContent.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]*>/g, '');
+      onContentChange(plainContent);
       setTimeout(() => setIsUpdating(false), 0);
     }
   };
