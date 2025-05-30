@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -44,11 +44,26 @@ type CommentForm = z.infer<typeof commentSchema>;
 
 export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting }: DocumentReviewerProps) {
   const [selectedText, setSelectedText] = useState<{ text: string; start: number; end: number; x: number; y: number } | null>(null);
-  const [comments, setComments] = useState<Comment[]>([]);
   const [showCommentForm, setShowCommentForm] = useState(false);
   const [activeComment, setActiveComment] = useState<string | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+
+  // Fetch inline comments from database
+  const { data: inlineComments = [], isLoading } = useQuery({
+    queryKey: [`/api/sessions/${session.id}/comments`],
+    retry: false,
+  });
+
+  // Convert database comments to display format
+  const comments: Comment[] = inlineComments.map((comment: any) => ({
+    id: comment.id.toString(),
+    text: comment.comment,
+    startIndex: comment.startIndex,
+    endIndex: comment.endIndex,
+    highlightedText: comment.highlightedText,
+    createdAt: new Date(comment.createdAt),
+  }));
 
   const commentForm = useForm<CommentForm>({
     resolver: zodResolver(commentSchema),
@@ -86,27 +101,40 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
     }
   };
 
+  // Mutation to save comment to database
+  const addCommentMutation = useMutation({
+    mutationFn: async (commentData: any) => {
+      const response = await apiRequest("POST", `/api/sessions/${session.id}/comments`, commentData);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/sessions/${session.id}/comments`] });
+      setSelectedText(null);
+      setShowCommentForm(false);
+      commentForm.reset();
+      toast({
+        title: "Comment Added",
+        description: "Your feedback has been added to the document.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to save comment. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
   // Add a new comment
   const handleAddComment = (data: CommentForm) => {
     if (!selectedText) return;
 
-    const newComment: Comment = {
-      id: Math.random().toString(36).substr(2, 9),
-      text: data.comment,
+    addCommentMutation.mutate({
       startIndex: selectedText.start,
       endIndex: selectedText.end,
       highlightedText: selectedText.text,
-      createdAt: new Date(),
-    };
-
-    setComments(prev => [...prev, newComment]);
-    setSelectedText(null);
-    setShowCommentForm(false);
-    commentForm.reset();
-
-    toast({
-      title: "Comment Added",
-      description: "Your feedback has been added to the document.",
+      comment: data.comment,
     });
   };
 
