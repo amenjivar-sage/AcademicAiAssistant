@@ -159,6 +159,13 @@ export default function InlineSpellCheck({
       timestamp: Date.now()
     }]);
 
+    // Remove the corrected error from the list
+    const updatedErrors = spellErrors.filter((_, index) => index !== errorIndex);
+    setSpellErrors(updatedErrors);
+    
+    // Clear tooltips to remove red underlines
+    setTooltips([]);
+
     onContentChange(newContent);
     
     // Re-enable auto-save after a brief delay to allow content to settle
@@ -167,7 +174,18 @@ export default function InlineSpellCheck({
     }, 1000);
     
     // Move to next error or close if done
-    moveToNextError();
+    if (updatedErrors.length === 0) {
+      onClose();
+    } else {
+      // Adjust current error index if needed
+      if (currentErrorIndex >= updatedErrors.length) {
+        setCurrentErrorIndex(0);
+      }
+      // Re-run spell check after a delay to catch any remaining errors
+      setTimeout(() => {
+        runSpellCheck();
+      }, 1500);
+    }
   };
 
   const handleIgnoreError = (errorIndex: number) => {
