@@ -229,7 +229,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
           handleSave();
         } else if (assignmentId) {
           console.log('Creating new session for assignment:', assignmentId);
-          handleCreateSession();
+          handleSave(); // Use the existing handleSave which already handles session creation
         }
       }
     }, 2000);
@@ -275,7 +275,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
         console.log('No valid session or assignment to save');
       }
     }
-  };
+  }
 
   const handlePasteDetected = (pastedContent: PastedContent) => {
     setPastedContents(prev => [...prev, pastedContent]);
