@@ -37,15 +37,11 @@ export default function SpellCheckPanel({ content, onContentChange, isOpen, onCl
     }
   }, [content, isOpen]);
 
-  const handleAcceptSuggestion = (errorIndex: number) => {
-    console.log('Accept suggestion clicked for index:', errorIndex);
+  const handleAcceptSuggestion = (errorIndex: number, suggestionText?: string) => {
     const error = spellErrors[errorIndex];
-    console.log('Error details:', error);
     if (!error) return;
 
-    const newContent = applySpellCheckSuggestion(content, error);
-    console.log('Original content:', content);
-    console.log('New content:', newContent);
+    const newContent = applySpellCheckSuggestion(content, error, suggestionText);
     onContentChange(newContent);
     
     // Mark this error as processed
@@ -152,23 +148,41 @@ export default function SpellCheckPanel({ content, onContentChange, isOpen, onCl
                   </div>
                   
                   <div className="mb-3">
-                    <p className="text-xs text-gray-600 mb-1">Suggestion:</p>
-                    <span className="text-sm font-medium text-green-600">"{error.suggestion}"</span>
+                    <p className="text-xs text-gray-600 mb-1">
+                      {error.suggestions && error.suggestions.length > 1 ? 'Suggestions:' : 'Suggestion:'}
+                    </p>
+                    {error.suggestions && error.suggestions.length > 0 ? (
+                      <div className="flex flex-wrap gap-1">
+                        {error.suggestions.map((suggestion, suggIndex) => (
+                          <Button
+                            key={suggIndex}
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleAcceptSuggestion(index, suggestion)}
+                            className="h-7 text-xs px-2 text-green-600 border-green-200 hover:bg-green-50"
+                          >
+                            "{suggestion}"
+                          </Button>
+                        ))}
+                      </div>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleAcceptSuggestion(index)}
+                        className="h-7 text-xs px-2 text-green-600 border-green-200 hover:bg-green-50"
+                      >
+                        "{error.suggestion}"
+                      </Button>
+                    )}
                   </div>
                   
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 justify-end">
                     <Button
-                      size="sm"
-                      onClick={() => handleAcceptSuggestion(index)}
-                      className="h-8 text-xs"
-                    >
-                      Accept
-                    </Button>
-                    <Button
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
                       onClick={() => handleIgnore(index)}
-                      className="h-8 text-xs"
+                      className="h-7 text-xs text-gray-500 hover:bg-gray-100"
                     >
                       Ignore
                     </Button>

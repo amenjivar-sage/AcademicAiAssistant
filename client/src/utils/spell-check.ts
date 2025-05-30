@@ -94,7 +94,8 @@ export const SPELL_CHECK_DICTIONARY: Record<string, string> = {
 
 export interface SpellCheckResult {
   word: string;
-  suggestion: string;
+  suggestion?: string; // For backward compatibility
+  suggestions?: string[]; // Multiple suggestions
   startIndex: number;
   endIndex: number;
 }
@@ -323,9 +324,10 @@ function generateTypingErrorSuggestions(word: string): string[] {
   return suggestions;
 }
 
-export function applySpellCheckSuggestion(text: string, result: SpellCheckResult): string {
+export function applySpellCheckSuggestion(text: string, result: SpellCheckResult, suggestion?: string): string {
+  const replacement = suggestion || result.suggestion || (result.suggestions && result.suggestions[0]) || result.word;
   return text.substring(0, result.startIndex) + 
-         result.suggestion + 
+         replacement + 
          text.substring(result.endIndex);
 }
 
