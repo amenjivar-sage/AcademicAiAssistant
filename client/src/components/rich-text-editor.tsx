@@ -32,10 +32,10 @@ export default function RichTextEditor({
   // Handle content updates from parent
   useEffect(() => {
     if (editorRef.current && !isUpdating) {
-      const currentHTML = editorRef.current.innerHTML || '';
-      // Convert plain text content to HTML for first time setup
-      if (!currentHTML && content) {
-        editorRef.current.innerHTML = content.replace(/\n/g, '<br>');
+      const currentText = editorRef.current.innerText || '';
+      if (currentText !== content) {
+        // Set plain text content and preserve line breaks
+        editorRef.current.innerText = content;
       }
     }
   }, [content, isUpdating]);
@@ -44,12 +44,8 @@ export default function RichTextEditor({
   const handleInput = () => {
     if (editorRef.current) {
       setIsUpdating(true);
-      // Use innerHTML to preserve formatting, then extract plain text for saving
-      const htmlContent = editorRef.current.innerHTML || '';
-      // Convert HTML back to plain text for storage while preserving line breaks
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = htmlContent;
-      const plainContent = tempDiv.innerText || tempDiv.textContent || '';
+      // Use innerText to get plain text content while preserving line breaks
+      const plainContent = editorRef.current.innerText || '';
       onContentChange(plainContent);
       setTimeout(() => setIsUpdating(false), 0);
     }
