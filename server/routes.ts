@@ -354,6 +354,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Submit grade and feedback for writing session
+  app.post("/api/sessions/:sessionId/grade", async (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.sessionId);
+      const { grade, feedback } = req.body;
+
+      const updatedSession = await storage.gradeWritingSession(sessionId, {
+        grade,
+        teacherFeedback: feedback,
+        status: "graded",
+      });
+
+      if (!updatedSession) {
+        return res.status(404).json({ message: "Writing session not found" });
+      }
+
+      res.json(updatedSession);
+    } catch (error) {
+      console.error("Error submitting grade:", error);
+      res.status(500).json({ message: "Failed to submit grade" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
