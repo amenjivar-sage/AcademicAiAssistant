@@ -40,7 +40,16 @@ export default function InlineSpellCheck({
 
   // Debounced spell checking
   const debouncedSpellCheck = useCallback(() => {
+    console.log('Spell check triggered - isActive:', isActive, 'content length:', content.length, 'content:', content.substring(0, 50));
+    
     if (!isActive) return;
+    
+    if (!content || content.trim().length === 0) {
+      console.log('Spell check skipped - no content');
+      setSpellErrors([]);
+      setTooltips([]);
+      return;
+    }
     
     setIsLoading(true);
     
@@ -56,6 +65,7 @@ export default function InlineSpellCheck({
     }
 
     // Use AI-powered spell checking
+    console.log('Sending to AI spell check:', content.substring(0, 100));
     checkSpellingWithAI(content).then(errors => {
       console.log('Spell check found errors:', errors);
       
