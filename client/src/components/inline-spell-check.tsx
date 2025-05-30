@@ -243,7 +243,7 @@ export default function InlineSpellCheck({
     if (isActive && spellErrors.length > 0) {
       return createHighlightedContent();
     }
-    return content || (content === '' ? `<span style="color: #9ca3af;">${placeholder}</span>` : content);
+    return content;
   };
 
   return (
@@ -262,9 +262,19 @@ export default function InlineSpellCheck({
           whiteSpace: 'pre-wrap',
           wordWrap: 'break-word'
         }}
+        data-placeholder={placeholder}
         dangerouslySetInnerHTML={{ __html: getDisplayContent() }}
         suppressContentEditableWarning={true}
       />
+      
+      {/* CSS for placeholder when empty */}
+      <style jsx>{`
+        div[contenteditable][data-placeholder]:empty:before {
+          content: attr(data-placeholder);
+          color: #9ca3af;
+          pointer-events: none;
+        }
+      `}</style>
 
       {/* Inline tooltip for current error only */}
       {tooltips.map((tooltip, index) => (
