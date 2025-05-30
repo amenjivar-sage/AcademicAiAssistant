@@ -1,4 +1,5 @@
 import React, { useState, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -22,8 +23,21 @@ export default function FeedbackViewer({ session }: FeedbackViewerProps) {
   const [activeComment, setActiveComment] = useState<string | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
-  // Extract actual teacher feedback from the session
-  const comments: Comment[] = [];
+  // Fetch actual inline comments from the database
+  const { data: inlineComments = [], isLoading } = useQuery({
+    queryKey: [`/api/sessions/${session.id}/comments`],
+    retry: false,
+  });
+
+  // Convert database comments to display format
+  const comments: Comment[] = inlineComments.map((comment: any) => ({
+    id: comment.id.toString(),
+    text: comment.comment,
+    startIndex: comment.startIndex,
+    endIndex: comment.endIndex,
+    highlightedText: comment.highlightedText,
+    createdAt: new Date(comment.createdAt),
+  }));
 
   // Render content with highlights
   const renderContentWithHighlights = () => {
