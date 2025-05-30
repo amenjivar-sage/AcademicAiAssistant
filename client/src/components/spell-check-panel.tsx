@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { CheckCircle, X, RefreshCw } from 'lucide-react';
-import { checkSpelling, checkSpellingWithAI, applySpellCheckSuggestion, SpellCheckResult } from '@/utils/spell-check';
+import { CheckCircle, X, RefreshCw, Undo } from 'lucide-react';
+import { checkSpelling, checkSpellingWithAI, applySpellCheckSuggestion, applyAutoCorrections, SpellCheckResult } from '@/utils/spell-check';
 
 interface SpellCheckPanelProps {
   content: string;
@@ -19,32 +19,64 @@ export default function SpellCheckPanel({ content, onContentChange, isOpen, onCl
   const [isLoading, setIsLoading] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editingWord, setEditingWord] = useState<string>("");
+  const [recentChanges, setRecentChanges] = useState<Array<{original: string, corrected: string, timestamp: number}>>([]);
+  const [showSuccessMessage, setShowSuccessMessage] = useState<string | null>(null);
+
+  // Debounced spell checking
+  const debouncedSpellCheck = useCallback(() => {
+    if (!isOpen) return;
+    
+    setIsLoading(true);
+    // Apply auto-corrections for common typos first
+    const autoCorrections = applyAutoCorrections(content);
+    if (autoCorrections.corrected !== content) {
+      onContentChange(autoCorrections.corrected);
+      setRecentChanges(prev => [...prev, ...autoCorrections.changes]);
+      return;
+    }
+
+    // Use AI-powered spell checking
+    checkSpellingWithAI(content).then(errors => {
+      setSpellErrors(errors);
+      setProcessedErrors(new Set());
+      setIsLoading(false);
+    }).catch(error => {
+      console.error('AI spell check failed, using fallback:', error);
+      // Fallback to basic spell checking if AI fails
+      const errors = checkSpelling(content);
+      setSpellErrors(errors);
+      setProcessedErrors(new Set());
+      setIsLoading(false);
+    });
+  }, [content, isOpen, onContentChange]);
 
   useEffect(() => {
     if (isOpen) {
-      setIsLoading(true);
-      // Use AI-powered spell checking
-      checkSpellingWithAI(content).then(errors => {
-        setSpellErrors(errors);
-        setProcessedErrors(new Set());
-        setIsLoading(false);
-      }).catch(error => {
-        console.error('AI spell check failed, using fallback:', error);
-        // Fallback to basic spell checking if AI fails
-        const errors = checkSpelling(content);
-        setSpellErrors(errors);
-        setProcessedErrors(new Set());
-        setIsLoading(false);
-      });
+      const timer = setTimeout(debouncedSpellCheck, 300);
+      return () => clearTimeout(timer);
     }
-  }, [content, isOpen]);
+  }, [debouncedSpellCheck]);
 
   const handleAcceptSuggestion = (errorIndex: number, suggestionText?: string) => {
     const error = spellErrors[errorIndex];
     if (!error) return;
 
+    const originalText = content;
+    const replacement = suggestionText || (error.suggestions && error.suggestions[0]) || error.suggestion;
     const newContent = applySpellCheckSuggestion(content, error, suggestionText);
+    
+    // Track the change for undo functionality
+    setRecentChanges(prev => [...prev, {
+      original: error.word,
+      corrected: replacement || error.word,
+      timestamp: Date.now()
+    }]);
+
     onContentChange(newContent);
+    
+    // Show success message
+    setShowSuccessMessage(`"${error.word}" → "${replacement}"`);
+    setTimeout(() => setShowSuccessMessage(null), 2000);
     
     // Mark this error as processed
     const newProcessed = new Set(processedErrors);
@@ -120,6 +152,43 @@ export default function SpellCheckPanel({ content, onContentChange, isOpen, onCl
     setEditingWord("");
   };
 
+  // Undo functionality
+  const handleUndo = () => {
+    if (recentChanges.length === 0) return;
+    
+    const lastChange = recentChanges[recentChanges.length - 1];
+    const updatedContent = content.replace(new RegExp(`\\b${lastChange.corrected}\\b`, 'g'), lastChange.original);
+    onContentChange(updatedContent);
+    
+    setRecentChanges(prev => prev.slice(0, -1));
+    setShowSuccessMessage(`Undid: "${lastChange.corrected}" → "${lastChange.original}"`);
+    setTimeout(() => setShowSuccessMessage(null), 2000);
+  };
+
+  // Keyboard shortcuts
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (!isOpen) return;
+    
+    if (e.key === 'Escape') {
+      if (editingIndex !== null) {
+        handleCancelEdit();
+      } else {
+        onClose();
+      }
+    } else if (e.key === 'Enter' && editingIndex !== null) {
+      e.preventDefault();
+      handleGetNewSuggestions(editingIndex);
+    } else if (e.ctrlKey && e.key === 'z') {
+      e.preventDefault();
+      handleUndo();
+    }
+  }, [isOpen, editingIndex, handleCancelEdit, onClose]);
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
+
   if (!isOpen) return null;
 
   const activeErrors = spellErrors.filter((_, index) => !processedErrors.has(index));
@@ -130,12 +199,25 @@ export default function SpellCheckPanel({ content, onContentChange, isOpen, onCl
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg">Spell Check</CardTitle>
           <div className="flex items-center gap-2">
+            {recentChanges.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleUndo}
+                className="h-8 px-2 text-xs text-blue-600 hover:bg-blue-50"
+                title="Undo last correction (Ctrl+Z)"
+              >
+                <Undo className="h-3 w-3 mr-1" />
+                Undo
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="sm"
               onClick={handleRefreshCheck}
               disabled={isLoading}
               className="h-8 w-8 p-0"
+              title="Refresh spell check"
             >
               <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
             </Button>
@@ -144,18 +226,25 @@ export default function SpellCheckPanel({ content, onContentChange, isOpen, onCl
               size="sm"
               onClick={onClose}
               className="h-8 w-8 p-0"
+              title="Close spell check (Esc)"
             >
               <X className="h-4 w-4" />
             </Button>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {activeErrors.length === 0 ? (
+          {showSuccessMessage && (
+            <div className="flex items-center gap-2 text-green-600 text-sm">
+              <CheckCircle className="h-4 w-4" />
+              <span>{showSuccessMessage}</span>
+            </div>
+          )}
+          {!showSuccessMessage && activeErrors.length === 0 ? (
             <div className="flex items-center gap-2 text-green-600">
               <CheckCircle className="h-4 w-4" />
               <span className="text-sm">No spelling errors found</span>
             </div>
-          ) : (
+          ) : !showSuccessMessage && (
             <Badge variant="destructive" className="text-xs">
               {activeErrors.length} error{activeErrors.length !== 1 ? 's' : ''} found
             </Badge>

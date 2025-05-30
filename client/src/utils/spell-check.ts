@@ -331,6 +331,56 @@ export function applySpellCheckSuggestion(text: string, result: SpellCheckResult
          text.substring(result.endIndex);
 }
 
+// Auto-correct common typos without prompting
+const COMMON_AUTO_CORRECTIONS: Record<string, string> = {
+  'teh': 'the',
+  'adn': 'and',
+  'hte': 'the',
+  'taht': 'that',
+  'htis': 'this',
+  'recieve': 'receive',
+  'seperate': 'separate',
+  'occured': 'occurred',
+  'beleive': 'believe',
+  'freind': 'friend',
+  'wierd': 'weird',
+  'calender': 'calendar',
+  'tommorrow': 'tomorrow',
+  'alot': 'a lot',
+  'cant': "can't",
+  'dont': "don't",
+  'wont': "won't",
+  'isnt': "isn't",
+  'wasnt': "wasn't",
+  'arent': "aren't",
+  'hasnt': "hasn't",
+  'havent': "haven't",
+  'hadnt': "hadn't",
+  'wouldnt': "wouldn't",
+  'shouldnt': "shouldn't",
+  'couldnt': "couldn't"
+};
+
+export function applyAutoCorrections(text: string): {corrected: string, changes: Array<{original: string, corrected: string, timestamp: number}>} {
+  let correctedText = text;
+  const changes: Array<{original: string, corrected: string, timestamp: number}> = [];
+  
+  // Find and replace common typos
+  Object.entries(COMMON_AUTO_CORRECTIONS).forEach(([incorrect, correct]) => {
+    const regex = new RegExp(`\\b${incorrect}\\b`, 'gi');
+    if (regex.test(correctedText)) {
+      correctedText = correctedText.replace(regex, correct);
+      changes.push({
+        original: incorrect,
+        corrected: correct,
+        timestamp: Date.now()
+      });
+    }
+  });
+  
+  return { corrected: correctedText, changes };
+}
+
 export function highlightMisspelledWords(text: string): string {
   const spellErrors = checkSpelling(text);
   let highlightedText = text;
