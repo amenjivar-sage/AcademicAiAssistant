@@ -70,33 +70,27 @@ export default function InlineSpellCheck({
     if (!editorRef.current) return;
 
     const newTooltips: SpellTooltip[] = [];
-    const editor = editorRef.current;
-    const editorRect = editor.getBoundingClientRect();
-
+    
+    // Simple positioning based on approximate character positions
     errors.forEach((error, index) => {
-      // Create a temporary range to find the word position
-      const range = document.createRange();
-      const textNode = editor.firstChild;
+      // Approximate position calculation
+      const lineHeight = 24; // Approximate line height
+      const charWidth = 9.6; // Approximate character width for Georgia serif
       
-      if (textNode && textNode.nodeType === Node.TEXT_NODE) {
-        try {
-          range.setStart(textNode, error.startIndex);
-          range.setEnd(textNode, error.endIndex);
-          const rect = range.getBoundingClientRect();
-          
-          newTooltips.push({
-            error,
-            position: {
-              top: rect.bottom - editorRect.top + 5,
-              left: rect.left - editorRect.left
-            },
-            visible: true
-          });
-        } catch (e) {
-          // If range creation fails, skip this error
-          console.warn('Could not create range for word:', error.word);
-        }
-      }
+      // Count lines up to this word
+      const textBeforeWord = content.substring(0, error.startIndex);
+      const lines = textBeforeWord.split('\n');
+      const currentLine = lines.length - 1;
+      const charInLine = lines[lines.length - 1].length;
+      
+      newTooltips.push({
+        error,
+        position: {
+          top: (currentLine + 1) * lineHeight + 40, // Add padding
+          left: charInLine * charWidth + 32 // Add left padding
+        },
+        visible: true
+      });
     });
 
     setTooltips(newTooltips);
