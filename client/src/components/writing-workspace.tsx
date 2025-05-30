@@ -65,11 +65,12 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
 
   // Create session mutation
   const createSessionMutation = useMutation({
-    mutationFn: async (data: { title: string; content: string; assignmentId: number }) => {
+    mutationFn: async (data: { title: string; content: string; assignmentId: number; pastedContent: PastedContent[] }) => {
       const response = await apiRequest("POST", "/api/writing-sessions", {
         assignmentId: data.assignmentId,
         title: data.title,
         content: data.content,
+        pastedContent: data.pastedContent,
         wordCount: data.content.split(/\s+/).filter(word => word.length > 0).length,
         status: "draft",
         userId: 1, // Current user ID
@@ -77,16 +78,27 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       return response.json();
     },
     onSuccess: (newSession) => {
+      console.log('New session created:', newSession.id);
       setSessionId(newSession.id);
       setLastSaved(new Date());
       setIsSaving(false);
+      
+      // Update URL to include the new session ID
+      window.history.replaceState({}, '', `/assignment/${assignmentId}/session/${newSession.id}`);
+      
       queryClient.invalidateQueries({ queryKey: ['/api/writing-sessions'] });
       queryClient.invalidateQueries({ queryKey: ['/api/student/writing-sessions'] });
       queryClient.invalidateQueries({ queryKey: ['/api/student/assignments'] });
+      queryClient.setQueryData(['/api/writing-sessions', newSession.id], newSession);
     },
     onError: (error) => {
+      console.error('Error creating session:', error);
       setIsSaving(false);
-      console.error('Failed to create session:', error);
+      toast({
+        title: "Save failed",
+        description: "There was an error saving your work. Please try again.",
+        variant: "destructive",
+      });
     },
   });
 
@@ -117,44 +129,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     },
   });
 
-  // Create session mutation for new assignments
-  const createSessionMutation = useMutation({
-    mutationFn: async (sessionData: { assignmentId: number; title: string; content: string; pastedContent: PastedContent[] }) => {
-      const response = await apiRequest("POST", "/api/writing-sessions", {
-        userId: 1, // This should come from auth context
-        assignmentId: sessionData.assignmentId,
-        title: sessionData.title,
-        content: sessionData.content,
-        pastedContent: sessionData.pastedContent,
-        wordCount: sessionData.content.split(/\s+/).filter(word => word.length > 0).length,
-        status: "draft",
-      });
-      return response.json();
-    },
-    onSuccess: (newSession) => {
-      console.log('New session created:', newSession.id);
-      setSessionId(newSession.id);
-      setLastSaved(new Date());
-      setIsSaving(false);
-      
-      // Update URL to include the new session ID
-      window.history.replaceState({}, '', `/assignment/${assignmentId}/session/${newSession.id}`);
-      
-      // Invalidate and refetch queries
-      queryClient.invalidateQueries({ queryKey: ['/api/writing-sessions'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/student/writing-sessions'] });
-      queryClient.setQueryData(['/api/writing-sessions', newSession.id], newSession);
-    },
-    onError: (error) => {
-      console.error('Error creating session:', error);
-      setIsSaving(false);
-      toast({
-        title: "Save failed",
-        description: "There was an error saving your work. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
+
 
   // Submit session mutation
   const submitSessionMutation = useMutation({
@@ -253,7 +228,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
         createSessionMutation.mutate({ 
           assignmentId, 
           title, 
-          content, 
+          content,
           pastedContent: pastedContents 
         });
       } else {
