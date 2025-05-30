@@ -295,17 +295,14 @@ export default function InlineSpellCheck({
               <span
                 style={{
                   position: 'absolute',
-                  top: `${currentLine * lineHeight}px`,
+                  top: `${currentLine * lineHeight + 20}px`, // Move down to be under the text
                   left: `${charInLine * charWidth}px`,
                   width: `${currentError.word.length * charWidth}px`,
-                  height: `${lineHeight}px`,
-                  background: 'rgba(239, 68, 68, 0.8)',
+                  height: '3px', // Just a thin underline
+                  background: 'transparent',
                   borderBottom: '3px wavy #ef4444',
-                  border: '2px solid #ef4444',
-                  borderRadius: '4px',
                   pointerEvents: 'none',
                   zIndex: 999,
-                  boxShadow: '0 2px 4px rgba(239, 68, 68, 0.4)',
                   display: 'block'
                 }}
                 title={`Misspelled: ${currentError.word}`}
