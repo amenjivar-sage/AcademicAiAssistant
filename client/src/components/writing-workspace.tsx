@@ -251,7 +251,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       if (title || content) {
         console.log('Auto-save triggered - session:', session, 'sessionId:', sessionId, 'assignmentId:', assignmentId);
         
-        if (!isSaving && (title !== session?.title || content !== session?.content || pastedContents.length !== (session?.pastedContent as PastedContent[] || []).length)) {
+        if (!isSaving && (title || content) && (title !== session?.title || content !== session?.content || pastedContents.length !== (session?.pastedContent as PastedContent[] || []).length)) {
           setIsSaving(true);
           console.log('Auto-save executing - session:', session?.id, 'sessionId:', sessionId, 'assignmentId:', assignmentId);
           
