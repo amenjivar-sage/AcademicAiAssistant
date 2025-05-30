@@ -19,6 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MessageCircle, X, Plus, Edit3, Bot } from "lucide-react";
 import AiChatViewer from "./ai-chat-viewer";
 import type { WritingSession } from "@shared/schema";
@@ -39,10 +40,31 @@ interface DocumentReviewerProps {
 }
 
 const commentSchema = z.object({
-  comment: z.string().min(5, "Comment must be at least 5 characters"),
+  comment: z.string().min(1, "Comment is required"),
+});
+
+const gradingSchema = z.object({
+  grade: z.string().min(1, "Grade is required"),
+  feedback: z.string().min(10, "Feedback must be at least 10 characters"),
 });
 
 type CommentForm = z.infer<typeof commentSchema>;
+type GradingForm = z.infer<typeof gradingSchema>;
+
+const gradeOptions = [
+  { value: "A+", label: "A+ (97-100)" },
+  { value: "A", label: "A (93-96)" },
+  { value: "A-", label: "A- (90-92)" },
+  { value: "B+", label: "B+ (87-89)" },
+  { value: "B", label: "B (83-86)" },
+  { value: "B-", label: "B- (80-82)" },
+  { value: "C+", label: "C+ (77-79)" },
+  { value: "C", label: "C (73-76)" },
+  { value: "C-", label: "C- (70-72)" },
+  { value: "D+", label: "D+ (67-69)" },
+  { value: "D", label: "D (60-66)" },
+  { value: "F", label: "F (Below 60)" },
+];
 
 export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting }: DocumentReviewerProps) {
   const [selectedText, setSelectedText] = useState<{ text: string; start: number; end: number; x: number; y: number } | null>(null);
@@ -58,14 +80,14 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
   });
 
   // Convert database comments to display format
-  const comments: Comment[] = inlineComments.map((comment: any) => ({
+  const comments: Comment[] = Array.isArray(inlineComments) ? inlineComments.map((comment: any) => ({
     id: comment.id.toString(),
     text: comment.comment,
     startIndex: comment.startIndex,
     endIndex: comment.endIndex,
     highlightedText: comment.highlightedText,
     createdAt: new Date(comment.createdAt),
-  }));
+  })) : [];
 
   const commentForm = useForm<CommentForm>({
     resolver: zodResolver(commentSchema),
@@ -74,49 +96,34 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
     },
   });
 
-  // Handle text selection
-  const handleTextSelection = () => {
-    const selection = window.getSelection();
-    if (selection && selection.toString().trim().length > 0) {
-      const range = selection.getRangeAt(0);
-      const selectedText = selection.toString();
-      
-      // Get position of selection for floating comment form
-      const rect = range.getBoundingClientRect();
-      const containerRect = contentRef.current!.getBoundingClientRect();
-      
-      // Calculate position relative to the content
-      const preCaretRange = range.cloneRange();
-      preCaretRange.selectNodeContents(contentRef.current!);
-      preCaretRange.setEnd(range.startContainer, range.startOffset);
-      const startIndex = preCaretRange.toString().length;
-      const endIndex = startIndex + selectedText.length;
+  const gradingForm = useForm<GradingForm>({
+    resolver: zodResolver(gradingSchema),
+    defaultValues: {
+      grade: session.grade || "",
+      feedback: session.teacherFeedback || "",
+    },
+  });
 
-      setSelectedText({
-        text: selectedText,
-        start: startIndex,
-        end: endIndex,
-        x: rect.right - containerRect.left + 10, // Position to the right of selection
-        y: rect.top - containerRect.top,
-      });
-      setShowCommentForm(true);
-    }
-  };
-
-  // Mutation to save comment to database
+  // Add comment mutation
   const addCommentMutation = useMutation({
     mutationFn: async (commentData: any) => {
-      const response = await apiRequest("POST", `/api/sessions/${session.id}/comments`, commentData);
+      const response = await apiRequest("POST", `/api/sessions/${session.id}/comments`, {
+        ...commentData,
+        teacherId: 1, // Demo teacher ID
+      });
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/sessions/${session.id}/comments`] });
-      setSelectedText(null);
+      queryClient.invalidateQueries({
+        queryKey: [`/api/sessions/${session.id}/comments`]
+      });
       setShowCommentForm(false);
+      setSelectedText(null);
       commentForm.reset();
+      window.getSelection()?.removeAllRanges();
       toast({
-        title: "Comment Added",
-        description: "Your feedback has been added to the document.",
+        title: "Comment added",
+        description: "Your feedback has been saved.",
       });
     },
     onError: () => {
@@ -127,6 +134,31 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
       });
     }
   });
+
+  // Text selection handler
+  const handleTextSelection = () => {
+    const selection = window.getSelection();
+    if (selection && selection.toString().trim()) {
+      const range = selection.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      const containerRect = contentRef.current?.getBoundingClientRect();
+      
+      if (containerRect) {
+        const selectedText = selection.toString();
+        const startOffset = range.startOffset;
+        const endOffset = range.endOffset;
+        
+        setSelectedText({
+          text: selectedText,
+          start: startOffset,
+          end: endOffset,
+          x: rect.left - containerRect.left,
+          y: rect.bottom - containerRect.top + 10,
+        });
+        setShowCommentForm(true);
+      }
+    }
+  };
 
   // Add a new comment
   const handleAddComment = (data: CommentForm) => {
@@ -140,25 +172,17 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
     });
   };
 
-  // Remove a comment
-  const handleRemoveComment = (commentId: string) => {
-    setComments(prev => prev.filter(c => c.id !== commentId));
-    setActiveComment(null);
-  };
-
   // Render content with highlights
   const renderContentWithHighlights = () => {
-    if (!session.content || comments.length === 0) {
-      return <div className="whitespace-pre-wrap leading-relaxed">{session.content}</div>;
-    }
+    if (!session.content) return <p className="text-gray-500">No content available</p>;
 
     const sortedComments = [...comments].sort((a, b) => a.startIndex - b.startIndex);
+    const elements = [];
     let lastIndex = 0;
-    const elements: React.ReactNode[] = [];
 
     sortedComments.forEach((comment, index) => {
-      // Add text before highlight
-      if (comment.startIndex > lastIndex) {
+      // Add text before the comment
+      if (lastIndex < comment.startIndex) {
         elements.push(
           <span key={`text-${index}`}>
             {session.content.slice(lastIndex, comment.startIndex)}
@@ -166,15 +190,12 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
         );
       }
 
-      // Add highlighted text with comment
+      // Add highlighted comment
       elements.push(
         <span
           key={comment.id}
-          className={`bg-yellow-200 border-b-2 border-yellow-400 cursor-pointer relative ${
-            activeComment === comment.id ? 'bg-yellow-300' : ''
-          }`}
+          className="bg-yellow-200 hover:bg-yellow-300 cursor-pointer relative"
           onClick={() => setActiveComment(activeComment === comment.id ? null : comment.id)}
-          title={comment.text}
         >
           {comment.highlightedText}
           <MessageCircle className="inline h-3 w-3 ml-1 text-yellow-600" />
@@ -317,119 +338,108 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
           </Card>
         </div>
 
-        {/* Fixed Comments Sidebar */}
+        {/* Comments and Grading Sidebar */}
         <div className="lg:col-span-2">
           <div className="sticky top-0 space-y-4">
+            {/* Comments Panel */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <MessageCircle className="h-5 w-5" />
-                  Feedback Comments ({comments.length})
+                  Comments ({comments.length})
                 </CardTitle>
               </CardHeader>
-              <CardContent className="max-h-96 overflow-y-auto">
-              {comments.length === 0 ? (
-                <div className="text-center py-6 text-gray-500">
-                  <MessageCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">No comments yet</p>
-                  <p className="text-xs">Select text to add feedback</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {comments.map((comment) => (
-                    <Card
-                      key={comment.id}
-                      className={`border-l-4 ${
-                        activeComment === comment.id 
-                          ? 'border-l-blue-500 bg-blue-50' 
-                          : 'border-l-yellow-400'
-                      }`}
-                    >
-                      <CardContent className="p-3">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1">
-                            <div className="text-xs text-gray-500 mb-1">
-                              "{comment.highlightedText}"
-                            </div>
-                            <p className="text-sm">{comment.text}</p>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleRemoveComment(comment.id)}
-                            className="h-6 w-6 p-0"
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
+              <CardContent>
+                {comments.length === 0 ? (
+                  <p className="text-sm text-gray-500 text-center py-4">
+                    No comments yet. Select text to add feedback.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {comments.map((comment) => (
+                      <div
+                        key={comment.id}
+                        className={`p-3 rounded-lg border transition-colors ${
+                          activeComment === comment.id 
+                            ? 'border-blue-300 bg-blue-50' 
+                            : 'border-gray-200 bg-gray-50'
+                        }`}
+                      >
+                        <div className="text-xs text-gray-500 mb-1">
+                          "{comment.highlightedText}"
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                        <p className="text-sm">{comment.text}</p>
+                        <div className="text-xs text-gray-400 mt-1">
+                          {comment.createdAt.toLocaleString()}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
-          {/* Grading Form in Sidebar */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Submit Grade & Overall Feedback</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium">Grade</label>
-                  <select className="w-full mt-1 p-2 border rounded">
-                    <option value="">Select a grade</option>
-                    <option value="A+">A+ (97-100)</option>
-                    <option value="A">A (93-96)</option>
-                    <option value="A-">A- (90-92)</option>
-                    <option value="B+">B+ (87-89)</option>
-                    <option value="B">B (83-86)</option>
-                    <option value="B-">B- (80-82)</option>
-                    <option value="C+">C+ (77-79)</option>
-                    <option value="C">C (73-76)</option>
-                    <option value="C-">C- (70-72)</option>
-                    <option value="D">D (60-66)</option>
-                    <option value="F">F (Below 60)</option>
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="text-sm font-medium">Overall Feedback</label>
-                  <textarea 
-                    id="feedback-textarea"
-                    className="w-full mt-1 p-2 border rounded min-h-24"
-                    placeholder="Provide comprehensive feedback about the student's work..."
-                  />
-                </div>
-
-                <Button 
-                  className="w-full"
-                  onClick={() => {
-                    const gradeSelect = document.querySelector('select') as HTMLSelectElement;
-                    const feedbackTextarea = document.getElementById('feedback-textarea') as HTMLTextAreaElement;
-                    const grade = gradeSelect?.value || "";
-                    const feedback = feedbackTextarea?.value || "";
-                    
-                    if (!grade) {
-                      alert("Please select a grade");
-                      return;
-                    }
-                    if (!feedback.trim()) {
-                      alert("Please provide feedback");
-                      return;
-                    }
-                    
-                    onGradeSubmit(grade, feedback);
-                  }}
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? "Submitting..." : "Submit Grade & Feedback"}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+            {/* Grading Panel */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Grade & Feedback</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Form {...gradingForm}>
+                  <form onSubmit={gradingForm.handleSubmit((data) => onGradeSubmit(data.grade, data.feedback))} className="space-y-4">
+                    <FormField
+                      control={gradingForm.control}
+                      name="grade"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Grade</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select a grade" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {gradeOptions.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={gradingForm.control}
+                      name="feedback"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Overall Feedback</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Provide constructive feedback on the student's work..."
+                              className="min-h-32"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? "Submitting..." : "Submit Grade & Feedback"}
+                    </Button>
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </div>

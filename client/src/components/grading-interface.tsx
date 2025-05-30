@@ -27,7 +27,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { GraduationCap, FileText, Clock, CheckCircle, Star, BookOpen } from "lucide-react";
-import DocumentReviewer from "./document-reviewer";
+import DocumentReviewer from "./document-reviewer-fixed";
 import type { WritingSession, User } from "@shared/schema";
 
 interface GradingInterfaceProps {
