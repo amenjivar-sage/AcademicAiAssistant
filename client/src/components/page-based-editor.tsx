@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface PageBasedEditorProps {
@@ -20,6 +21,10 @@ interface PageSettings {
   showPageNumbers: boolean;
   showStudentName: boolean;
   studentName: string;
+  namePosition: 'left' | 'center' | 'right';
+  pageNumberPosition: 'left' | 'center' | 'right';
+  headerPosition: 'left' | 'center' | 'right';
+  footerPosition: 'left' | 'center' | 'right';
 }
 
 export default function PageBasedEditor({
@@ -36,7 +41,11 @@ export default function PageBasedEditor({
     footerText: '',
     showPageNumbers: true,
     showStudentName: false,
-    studentName: ''
+    studentName: '',
+    namePosition: 'left',
+    pageNumberPosition: 'right',
+    headerPosition: 'center',
+    footerPosition: 'center'
   });
   
   // Calculate word count and total pages
@@ -63,6 +72,71 @@ export default function PageBasedEditor({
     const words = content.split(/\s+/).filter(word => word.length > 0);
     const endIndex = pageNumber * wordsPerPage;
     return words.slice(0, endIndex).join(' ');
+  };
+
+  // Helper function to get alignment class
+  const getAlignmentClass = (position: 'left' | 'center' | 'right') => {
+    switch (position) {
+      case 'left': return 'text-left';
+      case 'center': return 'text-center';
+      case 'right': return 'text-right';
+      default: return 'text-left';
+    }
+  };
+
+  // Helper function to render header/footer content with proper positioning
+  const renderHeaderFooterContent = (
+    studentName: string, 
+    customText: string, 
+    pageNumber: number, 
+    namePosition: 'left' | 'center' | 'right',
+    textPosition: 'left' | 'center' | 'right',
+    numberPosition: 'left' | 'center' | 'right',
+    showName: boolean,
+    showText: boolean,
+    showNumber: boolean
+  ) => {
+    const items = [];
+    
+    if (showName && studentName) {
+      items.push({ content: studentName, position: namePosition, type: 'name' });
+    }
+    if (showText && customText) {
+      items.push({ content: customText, position: textPosition, type: 'text' });
+    }
+    if (showNumber) {
+      items.push({ content: pageNumber.toString(), position: numberPosition, type: 'number' });
+    }
+
+    const leftItems = items.filter(item => item.position === 'left');
+    const centerItems = items.filter(item => item.position === 'center');
+    const rightItems = items.filter(item => item.position === 'right');
+
+    return (
+      <div className="flex justify-between items-center text-sm text-gray-600">
+        <div className="flex-1 text-left">
+          {leftItems.map((item, index) => (
+            <span key={index} className="block">
+              {item.content}
+            </span>
+          ))}
+        </div>
+        <div className="flex-1 text-center">
+          {centerItems.map((item, index) => (
+            <span key={index} className="block">
+              {item.content}
+            </span>
+          ))}
+        </div>
+        <div className="flex-1 text-right">
+          {rightItems.map((item, index) => (
+            <span key={index} className="block">
+              {item.content}
+            </span>
+          ))}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -115,30 +189,72 @@ export default function PageBasedEditor({
                         />
                       </div>
                       {pageSettings.showStudentName && (
-                        <Input
-                          placeholder="Enter your name"
-                          value={pageSettings.studentName}
-                          onChange={(e) => 
-                            setPageSettings(prev => ({ ...prev, studentName: e.target.value }))
-                          }
-                          className="text-sm"
-                        />
+                        <div className="space-y-2">
+                          <Input
+                            placeholder="Enter your name"
+                            value={pageSettings.studentName}
+                            onChange={(e) => 
+                              setPageSettings(prev => ({ ...prev, studentName: e.target.value }))
+                            }
+                            className="text-sm"
+                          />
+                          <div className="flex items-center gap-2">
+                            <Label className="text-xs text-gray-500">Position:</Label>
+                            <Select 
+                              value={pageSettings.namePosition} 
+                              onValueChange={(value: 'left' | 'center' | 'right') => 
+                                setPageSettings(prev => ({ ...prev, namePosition: value }))
+                              }
+                            >
+                              <SelectTrigger className="h-8 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="left">Left</SelectItem>
+                                <SelectItem value="center">Center</SelectItem>
+                                <SelectItem value="right">Right</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
                       )}
                     </div>
                     
                     {/* Page Numbers */}
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="show-numbers" className="text-sm flex items-center gap-2">
-                        <Hash className="h-4 w-4" />
-                        Show Page Numbers
-                      </Label>
-                      <Switch
-                        id="show-numbers"
-                        checked={pageSettings.showPageNumbers}
-                        onCheckedChange={(checked) => 
-                          setPageSettings(prev => ({ ...prev, showPageNumbers: checked }))
-                        }
-                      />
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="show-numbers" className="text-sm flex items-center gap-2">
+                          <Hash className="h-4 w-4" />
+                          Show Page Numbers
+                        </Label>
+                        <Switch
+                          id="show-numbers"
+                          checked={pageSettings.showPageNumbers}
+                          onCheckedChange={(checked) => 
+                            setPageSettings(prev => ({ ...prev, showPageNumbers: checked }))
+                          }
+                        />
+                      </div>
+                      {pageSettings.showPageNumbers && (
+                        <div className="flex items-center gap-2">
+                          <Label className="text-xs text-gray-500">Position:</Label>
+                          <Select 
+                            value={pageSettings.pageNumberPosition} 
+                            onValueChange={(value: 'left' | 'center' | 'right') => 
+                              setPageSettings(prev => ({ ...prev, pageNumberPosition: value }))
+                            }
+                          >
+                            <SelectTrigger className="h-8 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="left">Left</SelectItem>
+                              <SelectItem value="center">Center</SelectItem>
+                              <SelectItem value="right">Right</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
                     </div>
                     
                     {/* Custom Header */}
@@ -155,6 +271,26 @@ export default function PageBasedEditor({
                         }
                         className="text-sm"
                       />
+                      {pageSettings.headerText && (
+                        <div className="flex items-center gap-2">
+                          <Label className="text-xs text-gray-500">Position:</Label>
+                          <Select 
+                            value={pageSettings.headerPosition} 
+                            onValueChange={(value: 'left' | 'center' | 'right') => 
+                              setPageSettings(prev => ({ ...prev, headerPosition: value }))
+                            }
+                          >
+                            <SelectTrigger className="h-8 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="left">Left</SelectItem>
+                              <SelectItem value="center">Center</SelectItem>
+                              <SelectItem value="right">Right</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
                     </div>
                     
                     {/* Custom Footer */}
@@ -171,6 +307,26 @@ export default function PageBasedEditor({
                         }
                         className="text-sm"
                       />
+                      {pageSettings.footerText && (
+                        <div className="flex items-center gap-2">
+                          <Label className="text-xs text-gray-500">Position:</Label>
+                          <Select 
+                            value={pageSettings.footerPosition} 
+                            onValueChange={(value: 'left' | 'center' | 'right') => 
+                              setPageSettings(prev => ({ ...prev, footerPosition: value }))
+                            }
+                          >
+                            <SelectTrigger className="h-8 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="left">Left</SelectItem>
+                              <SelectItem value="center">Center</SelectItem>
+                              <SelectItem value="right">Right</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </PopoverContent>
@@ -201,20 +357,19 @@ export default function PageBasedEditor({
               {/* Page Content */}
               <div className="bg-white rounded-lg shadow-lg border border-gray-200 min-h-[11in] relative">
                 {/* Header */}
-                {(pageSettings.headerText || pageSettings.showStudentName) && (
+                {(pageSettings.headerText || (pageSettings.showStudentName && pageSettings.studentName)) && (
                   <div className="px-16 pt-8 pb-4 border-b border-gray-200">
-                    <div className="flex justify-between items-center text-sm text-gray-600">
-                      <div>
-                        {pageSettings.showStudentName && pageSettings.studentName && (
-                          <span>{pageSettings.studentName}</span>
-                        )}
-                      </div>
-                      <div>
-                        {pageSettings.headerText && (
-                          <span>{pageSettings.headerText}</span>
-                        )}
-                      </div>
-                    </div>
+                    {renderHeaderFooterContent(
+                      pageSettings.studentName,
+                      pageSettings.headerText,
+                      pageNumber,
+                      pageSettings.namePosition,
+                      pageSettings.headerPosition,
+                      pageSettings.pageNumberPosition,
+                      pageSettings.showStudentName,
+                      !!pageSettings.headerText,
+                      false // Don't show page numbers in header unless specifically configured
+                    )}
                   </div>
                 )}
 
@@ -257,18 +412,17 @@ export default function PageBasedEditor({
                 {(pageSettings.footerText || pageSettings.showPageNumbers) && (
                   <div className="absolute bottom-8 left-16 right-16">
                     <div className="border-t border-gray-200 pt-4">
-                      <div className="flex justify-between items-center text-sm text-gray-600">
-                        <div>
-                          {pageSettings.footerText && (
-                            <span>{pageSettings.footerText}</span>
-                          )}
-                        </div>
-                        <div>
-                          {pageSettings.showPageNumbers && (
-                            <span>{pageNumber}</span>
-                          )}
-                        </div>
-                      </div>
+                      {renderHeaderFooterContent(
+                        pageSettings.studentName,
+                        pageSettings.footerText,
+                        pageNumber,
+                        pageSettings.namePosition,
+                        pageSettings.footerPosition,
+                        pageSettings.pageNumberPosition,
+                        false, // Don't show student name in footer unless specifically configured
+                        !!pageSettings.footerText,
+                        pageSettings.showPageNumbers
+                      )}
                     </div>
                   </div>
                 )}
