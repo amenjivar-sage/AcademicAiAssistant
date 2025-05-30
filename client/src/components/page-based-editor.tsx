@@ -1,5 +1,10 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { FileText } from 'lucide-react';
+import { FileText, Settings, User, Hash } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface PageBasedEditorProps {
   content: string;
@@ -7,6 +12,14 @@ interface PageBasedEditorProps {
   disabled?: boolean;
   placeholder?: string;
   wordsPerPage?: number;
+}
+
+interface PageSettings {
+  headerText: string;
+  footerText: string;
+  showPageNumbers: boolean;
+  showStudentName: boolean;
+  studentName: string;
 }
 
 export default function PageBasedEditor({
@@ -18,6 +31,13 @@ export default function PageBasedEditor({
 }: PageBasedEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSettings, setPageSettings] = useState<PageSettings>({
+    headerText: '',
+    footerText: '',
+    showPageNumbers: true,
+    showStudentName: false,
+    studentName: ''
+  });
   
   // Calculate word count and total pages
   const wordCount = content.split(/\s+/).filter(word => word.length > 0).length;
@@ -57,8 +77,104 @@ export default function PageBasedEditor({
                 Document: {totalPages} page{totalPages !== 1 ? 's' : ''}
               </span>
             </div>
-            <div className="text-sm text-gray-500">
-              {wordCount} words total
+            <div className="flex items-center gap-4">
+              <div className="text-sm text-gray-500">
+                {wordCount} words total
+              </div>
+              
+              {/* Page Settings Button */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Settings className="h-4 w-4" />
+                    Page Settings
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80" align="end">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <h4 className="font-medium text-sm">Page Formatting</h4>
+                      <p className="text-xs text-gray-500">
+                        Customize headers, footers, and page numbering
+                      </p>
+                    </div>
+                    
+                    {/* Student Name */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="show-name" className="text-sm flex items-center gap-2">
+                          <User className="h-4 w-4" />
+                          Show Student Name
+                        </Label>
+                        <Switch
+                          id="show-name"
+                          checked={pageSettings.showStudentName}
+                          onCheckedChange={(checked) => 
+                            setPageSettings(prev => ({ ...prev, showStudentName: checked }))
+                          }
+                        />
+                      </div>
+                      {pageSettings.showStudentName && (
+                        <Input
+                          placeholder="Enter your name"
+                          value={pageSettings.studentName}
+                          onChange={(e) => 
+                            setPageSettings(prev => ({ ...prev, studentName: e.target.value }))
+                          }
+                          className="text-sm"
+                        />
+                      )}
+                    </div>
+                    
+                    {/* Page Numbers */}
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="show-numbers" className="text-sm flex items-center gap-2">
+                        <Hash className="h-4 w-4" />
+                        Show Page Numbers
+                      </Label>
+                      <Switch
+                        id="show-numbers"
+                        checked={pageSettings.showPageNumbers}
+                        onCheckedChange={(checked) => 
+                          setPageSettings(prev => ({ ...prev, showPageNumbers: checked }))
+                        }
+                      />
+                    </div>
+                    
+                    {/* Custom Header */}
+                    <div className="space-y-2">
+                      <Label htmlFor="header-text" className="text-sm">
+                        Header Text (optional)
+                      </Label>
+                      <Input
+                        id="header-text"
+                        placeholder="e.g., Course Name, Assignment Title"
+                        value={pageSettings.headerText}
+                        onChange={(e) => 
+                          setPageSettings(prev => ({ ...prev, headerText: e.target.value }))
+                        }
+                        className="text-sm"
+                      />
+                    </div>
+                    
+                    {/* Custom Footer */}
+                    <div className="space-y-2">
+                      <Label htmlFor="footer-text" className="text-sm">
+                        Footer Text (optional)
+                      </Label>
+                      <Input
+                        id="footer-text"
+                        placeholder="e.g., Date, Class Period"
+                        value={pageSettings.footerText}
+                        onChange={(e) => 
+                          setPageSettings(prev => ({ ...prev, footerText: e.target.value }))
+                        }
+                        className="text-sm"
+                      />
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
         </div>
@@ -84,8 +200,26 @@ export default function PageBasedEditor({
 
               {/* Page Content */}
               <div className="bg-white rounded-lg shadow-lg border border-gray-200 min-h-[11in] relative">
+                {/* Header */}
+                {(pageSettings.headerText || pageSettings.showStudentName) && (
+                  <div className="px-16 pt-8 pb-4 border-b border-gray-200">
+                    <div className="flex justify-between items-center text-sm text-gray-600">
+                      <div>
+                        {pageSettings.showStudentName && pageSettings.studentName && (
+                          <span>{pageSettings.studentName}</span>
+                        )}
+                      </div>
+                      <div>
+                        {pageSettings.headerText && (
+                          <span>{pageSettings.headerText}</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Page margins and content area */}
-                <div className="p-16 min-h-[10in]">
+                <div className={`px-16 ${(pageSettings.headerText || pageSettings.showStudentName) ? 'pt-8' : 'pt-16'} ${(pageSettings.footerText || pageSettings.showPageNumbers) ? 'pb-8' : 'pb-16'} min-h-[9in]`}>
                   {isLastPage ? (
                     // Editable textarea for the current/last page
                     <textarea
@@ -119,10 +253,25 @@ export default function PageBasedEditor({
                   )}
                 </div>
 
-                {/* Page Number Footer */}
-                <div className="absolute bottom-4 left-0 right-0 text-center text-sm text-gray-400">
-                  {pageNumber}
-                </div>
+                {/* Footer */}
+                {(pageSettings.footerText || pageSettings.showPageNumbers) && (
+                  <div className="absolute bottom-8 left-16 right-16">
+                    <div className="border-t border-gray-200 pt-4">
+                      <div className="flex justify-between items-center text-sm text-gray-600">
+                        <div>
+                          {pageSettings.footerText && (
+                            <span>{pageSettings.footerText}</span>
+                          )}
+                        </div>
+                        <div>
+                          {pageSettings.showPageNumbers && (
+                            <span>{pageNumber}</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Page Break Indicator */}
