@@ -412,11 +412,33 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
 
 
           {/* Enhanced Toolbar */}
-          <EnhancedToolbar
-            onSave={handleSave}
-            isSaving={isSaving}
-            onSpellCheck={() => setShowSpellCheck(true)}
-          />
+          <div className="flex items-center justify-between">
+            <EnhancedToolbar
+              onSave={handleSave}
+              isSaving={isSaving}
+              onSpellCheck={() => setShowSpellCheck(true)}
+            />
+            
+            {/* View Toggle */}
+            <div className="flex items-center gap-2">
+              <Button
+                variant={!usePageView ? "default" : "outline"}
+                size="sm"
+                onClick={() => setUsePageView(false)}
+                className="h-8 px-3"
+              >
+                Normal View
+              </Button>
+              <Button
+                variant={usePageView ? "default" : "outline"}
+                size="sm"
+                onClick={() => setUsePageView(true)}
+                className="h-8 px-3"
+              >
+                Page View
+              </Button>
+            </div>
+          </div>
         </div>
 
         {/* Writing Content - Horizontal and Vertical Scrolling */}
@@ -427,19 +449,33 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
             className="min-h-full"
           >
             <div className="relative w-full min-h-full">
-              {/* Inline spell check overlay */}
-              <InlineSpellCheck
-                content={content}
-                onContentChange={(newContent) => {
-                  console.log('Content changed from spell check:', newContent);
-                  setContent(newContent);
-                }}
-                isActive={showSpellCheck}
-                onClose={() => setShowSpellCheck(false)}
-                disabled={isSubmitted || isGraded}
-                placeholder="Start writing your assignment here..."
-                onSpellCheckStatusChange={setSpellCheckActive}
-              />
+              {usePageView ? (
+                /* Page-based editor view */
+                <PageBasedEditor
+                  content={content}
+                  onContentChange={(newContent) => {
+                    console.log('Content changed from page editor:', newContent);
+                    setContent(newContent);
+                  }}
+                  disabled={isSubmitted || isGraded}
+                  placeholder="Start writing your assignment here..."
+                  wordsPerPage={250}
+                />
+              ) : (
+                /* Normal inline spell check view */
+                <InlineSpellCheck
+                  content={content}
+                  onContentChange={(newContent) => {
+                    console.log('Content changed from spell check:', newContent);
+                    setContent(newContent);
+                  }}
+                  isActive={showSpellCheck}
+                  onClose={() => setShowSpellCheck(false)}
+                  disabled={isSubmitted || isGraded}
+                  placeholder="Start writing your assignment here..."
+                  onSpellCheckStatusChange={setSpellCheckActive}
+                />
+              )}
             </div>
           </CopyPasteDetector>
         </div>
