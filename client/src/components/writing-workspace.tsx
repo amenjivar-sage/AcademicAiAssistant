@@ -42,7 +42,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [showSpellCheck, setShowSpellCheck] = useState(false);
   const [spellCheckActive, setSpellCheckActive] = useState(false);
-  const [usePageView, setUsePageView] = useState(false);
+
   const contentRef = useRef<HTMLTextAreaElement>(null);
   const formatRef = useRef<((command: string, value?: string) => void) | null>(null);
   const { toast } = useToast();
@@ -433,24 +433,11 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
               onSpellCheck={() => setShowSpellCheck(true)}
             />
             
-            {/* View Toggle */}
+            {/* View Info */}
             <div className="flex items-center gap-2">
-              <Button
-                variant={!usePageView ? "default" : "outline"}
-                size="sm"
-                onClick={() => setUsePageView(false)}
-                className="h-8 px-3"
-              >
-                Normal View
-              </Button>
-              <Button
-                variant={usePageView ? "default" : "outline"}
-                size="sm"
-                onClick={() => setUsePageView(true)}
-                className="h-8 px-3"
-              >
-                Page View
-              </Button>
+              <div className="text-sm text-gray-600 bg-blue-50 px-3 py-1 rounded-full">
+                Document View
+              </div>
             </div>
           </div>
         </div>
@@ -463,123 +450,94 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
             className="min-h-full"
           >
             <div className="relative w-full min-h-full">
-              {usePageView ? (
-                /* Page-based editor view */
+              {/* Enhanced Document View with Page Progression */}
+              <div className="p-6 min-h-full">
+                {/* Document Status Bar */}
+                <div className="mb-4 bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <FileText className="h-5 w-5 text-gray-600" />
+                      <span className="text-sm font-medium text-gray-700">
+                        Document: {Math.ceil(wordCount / 250) || 1} page{Math.ceil(wordCount / 250) !== 1 ? 's' : ''}
+                      </span>
+                      <span className="text-sm text-gray-500">
+                        {wordCount} words
+                      </span>
+                      {wordCount > 0 && (
+                        <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                          Currently on page {Math.ceil(wordCount / 250)}
+                        </span>
+                      )}
+                    </div>
+                    
+                    <div className="text-xs text-gray-500">
+                      Auto page breaks every 250 words
+                    </div>
+                  </div>
+                </div>
+                
                 <div className="relative">
-                  <PageBasedEditor
+                  <RichTextEditor
                     content={content}
                     onContentChange={(newContent) => {
-                      console.log('Content changed from page editor:', newContent);
+                      console.log('Content changed from document view:', newContent);
                       setContent(newContent);
                     }}
                     disabled={isSubmitted || isGraded}
-                    placeholder="Start writing your assignment here..."
-                    wordsPerPage={250}
                     onFormatRef={formatRef}
+                    placeholder="Start writing your assignment here..."
+                    className="w-full min-h-[600px] p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    style={{
+                      fontFamily: 'Times New Roman, serif',
+                      fontSize: '14px',
+                      lineHeight: '1.6'
+                    }}
                   />
                   
-                  {/* Spell Check Overlay for Page View */}
-                  {showSpellCheck && (
-                    <div className="absolute inset-0 bg-white bg-opacity-95 z-50">
-                      <InlineSpellCheck
-                        content={content}
-                        onContentChange={(newContent) => {
-                          console.log('Content changed from page view spell check:', newContent);
-                          setContent(newContent);
-                        }}
-                        isActive={showSpellCheck}
-                        onClose={() => setShowSpellCheck(false)}
-                        disabled={isSubmitted || isGraded}
-                        placeholder="Start writing your assignment here..."
-                        onSpellCheckStatusChange={setSpellCheckActive}
-                      />
-                    </div>
-                  )}
-                </div>
-              ) : (
-                /* Normal rich text editor view with page breaks and settings */
-                <div className="p-6 min-h-full">
-                  {/* Document Status Bar */}
-                  <div className="mb-4 bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <FileText className="h-5 w-5 text-gray-600" />
-                        <span className="text-sm font-medium text-gray-700">
-                          Document: {Math.ceil(wordCount / 250) || 1} page{Math.ceil(wordCount / 250) !== 1 ? 's' : ''}
-                        </span>
-                        <span className="text-sm text-gray-500">
-                          {wordCount} words
-                        </span>
-                      </div>
-                      
-                      <div className="text-xs text-gray-500">
-                        Page formatting available in Page View mode
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="relative">
-                    <RichTextEditor
-                      content={content}
-                      onContentChange={(newContent) => {
-                        console.log('Content changed from normal view:', newContent);
-                        setContent(newContent);
-                      }}
-                      disabled={isSubmitted || isGraded}
-                      onFormatRef={formatRef}
-                      placeholder="Start writing your assignment here..."
-                      className="w-full min-h-[600px] p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
-                      style={{
-                        fontFamily: 'Times New Roman, serif',
-                        fontSize: '14px',
-                        lineHeight: '1.6'
-                      }}
-                    />
+                  {/* Enhanced Page Break Indicators */}
+                  {(() => {
+                    const words = content.split(/\s+/).filter(word => word.length > 0);
+                    const wordsPerPage = 250;
+                    const totalPages = Math.ceil(words.length / wordsPerPage) || 1;
+                    const pageBreaks = [];
                     
-                    {/* Page Break Indicators */}
-                    {(() => {
-                      const words = content.split(/\s+/).filter(word => word.length > 0);
-                      const wordsPerPage = 250;
-                      const pageBreaks = [];
+                    for (let i = 1; i < totalPages; i++) {
+                      const pageBreakPosition = i * wordsPerPage;
+                      const percentage = (pageBreakPosition / words.length) * 100;
                       
-                      for (let i = 1; i < Math.ceil(words.length / wordsPerPage); i++) {
-                        const pageBreakPosition = i * wordsPerPage;
-                        const percentage = (pageBreakPosition / words.length) * 100;
-                        
-                        pageBreaks.push(
-                          <div
-                            key={i}
-                            className="absolute left-0 right-0 border-t-2 border-dashed border-blue-400 bg-blue-50"
-                            style={{ top: `${Math.min(percentage, 85)}%` }}
-                          >
-                            <div className="bg-blue-500 text-white text-xs px-2 py-1 rounded-r-md inline-block">
-                              Page {i + 1} starts here
-                            </div>
+                      pageBreaks.push(
+                        <div
+                          key={i}
+                          className="absolute left-0 right-0 border-t-2 border-dashed border-blue-400 bg-blue-50 opacity-80"
+                          style={{ top: `${Math.min(percentage, 85)}%` }}
+                        >
+                          <div className="bg-blue-500 text-white text-xs px-3 py-1 rounded-r-md inline-block shadow-sm">
+                            Page {i + 1} starts here
                           </div>
-                        );
-                      }
-                      
-                      return pageBreaks;
-                    })()}
-                  </div>
-                  
-                  {/* Spell Check Overlay */}
-                  {showSpellCheck && (
-                    <InlineSpellCheck
-                      content={content}
-                      onContentChange={(newContent) => {
-                        console.log('Content changed from spell check:', newContent);
-                        setContent(newContent);
-                      }}
-                      isActive={showSpellCheck}
-                      onClose={() => setShowSpellCheck(false)}
-                      disabled={isSubmitted || isGraded}
-                      placeholder="Start writing your assignment here..."
-                      onSpellCheckStatusChange={setSpellCheckActive}
-                    />
-                  )}
+                        </div>
+                      );
+                    }
+                    
+                    return pageBreaks;
+                  })()}
                 </div>
-              )}
+                
+                {/* Spell Check Overlay */}
+                {showSpellCheck && (
+                  <InlineSpellCheck
+                    content={content}
+                    onContentChange={(newContent) => {
+                      console.log('Content changed from spell check:', newContent);
+                      setContent(newContent);
+                    }}
+                    isActive={showSpellCheck}
+                    onClose={() => setShowSpellCheck(false)}
+                    disabled={isSubmitted || isGraded}
+                    placeholder="Start writing your assignment here..."
+                    onSpellCheckStatusChange={setSpellCheckActive}
+                  />
+                )}
+              </div>
             </div>
           </CopyPasteDetector>
         </div>
