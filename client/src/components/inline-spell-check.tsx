@@ -254,7 +254,7 @@ export default function InlineSpellCheck({
         }}
       />
       
-      {/* Spell check highlighting overlay */}
+      {/* Spell check highlighting overlay - show all errors with red underlines */}
       {isActive && spellErrors.length > 0 && (
         <div
           className="absolute inset-0 pointer-events-none z-30"
@@ -268,48 +268,58 @@ export default function InlineSpellCheck({
             overflow: 'hidden'
           }}
         >
-          {(() => {
-            const currentError = spellErrors[currentErrorIndex];
-            if (!currentError) return null;
+          {spellErrors.map((error, index) => {
+            // Calculate position for each error
+            const textBeforeError = content.substring(0, error.startIndex);
             
-            // Calculate position for the current error
-            const textBeforeError = content.substring(0, currentError.startIndex);
-            const lines = textBeforeError.split('\n');
+            // Handle line wrapping by measuring text width
+            const words = textBeforeError.split(' ');
             const lineHeight = 25.6; // 16px * 1.6 line-height
-            const charWidth = 8.0; // Fine-tuned for Georgia font character spacing
+            const charWidth = 8.0;
+            const maxCharsPerLine = Math.floor((window.innerWidth - 100) / charWidth); // Approximate
             
-            const currentLine = lines.length - 1;
-            const charInLine = lines[lines.length - 1].length;
+            let currentLine = 0;
+            let currentLinePosition = 0;
+            let totalChars = 0;
             
-            console.log('Positioning highlight:', {
-              currentError,
-              textBeforeError,
-              lines,
-              currentLine,
-              charInLine,
-              calculatedTop: currentLine * lineHeight,
-              calculatedLeft: charInLine * charWidth
-            });
+            for (const word of words) {
+              const wordLength = word.length + 1; // +1 for space
+              if (currentLinePosition + wordLength > maxCharsPerLine && currentLinePosition > 0) {
+                currentLine++;
+                currentLinePosition = wordLength;
+              } else {
+                currentLinePosition += wordLength;
+              }
+              totalChars += wordLength;
+              if (totalChars >= textBeforeError.length) break;
+            }
+            
+            const charInLine = currentLinePosition - (words[words.length - 1]?.length || 0);
+            
+            // Highlight current error more prominently
+            const isCurrentError = index === currentErrorIndex;
             
             return (
               <span
+                key={`error-${index}`}
                 style={{
                   position: 'absolute',
-                  top: `${currentLine * lineHeight + 54}px`, // Position directly under the text baseline
-                  left: `${charInLine * charWidth + 32}px`, // Match the padding of textarea
-                  width: `${currentError.word.length * charWidth}px`,
+                  top: `${currentLine * lineHeight + 54}px`,
+                  left: `${charInLine * charWidth + 32}px`,
+                  width: `${error.word.length * charWidth}px`,
                   height: '3px',
-                  background: '#ef4444',
+                  background: isCurrentError ? '#ef4444' : '#f97316', // Red for current, orange for others
                   borderRadius: '1px',
                   pointerEvents: 'none',
-                  zIndex: 10,
+                  zIndex: isCurrentError ? 15 : 10,
                   display: 'block',
-                  boxShadow: '0 1px 2px rgba(239, 68, 68, 0.4)'
+                  boxShadow: isCurrentError ? '0 2px 4px rgba(239, 68, 68, 0.6)' : '0 1px 2px rgba(249, 115, 22, 0.4)',
+                  opacity: isCurrentError ? 1 : 0.7
                 }}
-                title={`Misspelled: ${currentError.word}`}
+                title={`Misspelled: ${error.word}`}
               />
             );
-          })()}
+          })}
         </div>
       )}
 
