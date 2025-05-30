@@ -163,6 +163,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get assignment submissions for teacher grading
+  app.get("/api/assignments/:assignmentId/submissions", async (req, res) => {
+    try {
+      const assignmentId = parseInt(req.params.assignmentId);
+      const submissions = await storage.getAssignmentSubmissions(assignmentId);
+      res.json(submissions);
+    } catch (error) {
+      console.error("Error fetching assignment submissions:", error);
+      res.status(500).json({ message: "Failed to fetch submissions" });
+    }
+  });
+
   // Get user writing sessions  
   app.get("/api/users/:userId/writing-sessions", async (req, res) => {
     try {
