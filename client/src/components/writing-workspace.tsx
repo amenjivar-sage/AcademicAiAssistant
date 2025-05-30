@@ -223,19 +223,12 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     const timer = setTimeout(() => {
       if (title || content) {
         console.log('Auto-save triggered - session:', session, 'sessionId:', sessionId, 'assignmentId:', assignmentId);
-        
-        if (sessionId && sessionId > 0) {
-          console.log('Updating existing session:', sessionId);
-          handleSave();
-        } else if (assignmentId) {
-          console.log('Creating new session for assignment:', assignmentId);
-          handleSave(); // Use the existing handleSave which already handles session creation
-        }
+        handleSave();
       }
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, [title, content]);
+  }, [title, content, handleSave]);
 
   // Sync sessionId when new session is created
   useEffect(() => {
@@ -251,7 +244,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     setWordCount(words);
   }, [content]);
 
-  const handleSave = () => {
+  const handleSave = React.useCallback(() => {
     if (!isSaving && (title !== session?.title || content !== session?.content || pastedContents.length !== (session?.pastedContent as PastedContent[] || []).length)) {
       setIsSaving(true);
       console.log('Auto-save triggered - session:', session?.id, 'sessionId:', sessionId, 'assignmentId:', assignmentId);
@@ -275,7 +268,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
         console.log('No valid session or assignment to save');
       }
     }
-  }
+  }, [title, content, pastedContents, session, sessionId, assignmentId, isSaving, updateSessionMutation, createSessionMutation]);
 
   const handlePasteDetected = (pastedContent: PastedContent) => {
     setPastedContents(prev => [...prev, pastedContent]);
