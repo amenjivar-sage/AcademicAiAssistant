@@ -301,9 +301,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.json(foundSession);
         }
         
+        console.log('Session not found:', sessionId);
         return res.status(404).json({ message: "Session not found" });
       }
       
+      console.log('Session retrieved successfully:', session.id);
       res.json(session);
     } catch (error) {
       console.error('Error in writing session route:', error);
