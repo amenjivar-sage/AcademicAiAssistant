@@ -377,6 +377,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // AI chat assistance endpoint
+  app.post("/api/ai/chat", async (req, res) => {
+    try {
+      const { sessionId, prompt } = req.body;
+      
+      if (!prompt) {
+        return res.status(400).json({ message: "Prompt is required" });
+      }
+
+      // Import AI functions
+      const { checkRestrictedPrompt, generateAiResponse } = await import("./openai");
+      
+      // Check if the prompt is restricted
+      const isRestricted = checkRestrictedPrompt(prompt);
+      
+      let response;
+      if (isRestricted) {
+        response = "❌ This type of assistance goes beyond what I can help with. Try asking for brainstorming ideas, writing feedback, or research guidance instead!";
+      } else {
+        response = await generateAiResponse(prompt);
+      }
+
+      // Store the AI interaction if we have a valid session
+      if (sessionId && sessionId > 0) {
+        await storage.createAiInteraction({
+          sessionId,
+          prompt,
+          response,
+          isRestricted,
+        });
+      }
+
+      res.json({
+        response,
+        isRestricted,
+      });
+    } catch (error) {
+      console.error("AI help error:", error);
+      res.status(500).json({ message: "Failed to generate AI response" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
