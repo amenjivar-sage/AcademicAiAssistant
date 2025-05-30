@@ -217,7 +217,9 @@ export default function StudentDashboard() {
                           // Determine status based on session data
                           let status = 'not_started';
                           if (session) {
-                            if (session.status === 'submitted') {
+                            if (session.status === 'graded') {
+                              status = 'graded';
+                            } else if (session.status === 'submitted') {
                               status = 'submitted';
                             } else if (session.content && session.content.trim().length > 0) {
                               status = 'in_progress';
@@ -231,11 +233,13 @@ export default function StudentDashboard() {
                                 <div className="flex items-start justify-between">
                                   <CardTitle className="text-lg line-clamp-2">{assignment.title}</CardTitle>
                                   <Badge variant={
-                                    status === 'submitted' ? 'default' :
-                                    status === 'in_progress' ? 'secondary' :
+                                    status === 'graded' ? 'default' :
+                                    status === 'submitted' ? 'secondary' :
+                                    status === 'in_progress' ? 'outline' :
                                     isOverdue ? 'destructive' : 'outline'
                                   }>
-                                    {status === 'submitted' ? 'Submitted' :
+                                    {status === 'graded' ? 'Graded' :
+                                     status === 'submitted' ? 'Submitted' :
                                      status === 'in_progress' ? 'In Progress' :
                                      isOverdue ? 'Overdue' : 'Not Started'}
                                   </Badge>
@@ -261,6 +265,11 @@ export default function StudentDashboard() {
                                       <div className="flex items-center text-sm font-medium text-green-600">
                                         <Trophy className="h-4 w-4 mr-2" />
                                         Grade: {session.grade}
+                                      </div>
+                                    )}
+                                    {session?.teacherFeedback && (
+                                      <div className="text-sm text-gray-600 bg-blue-50 p-2 rounded">
+                                        <strong>Teacher Feedback:</strong> {session.teacherFeedback}
                                       </div>
                                     )}
                                   </div>
