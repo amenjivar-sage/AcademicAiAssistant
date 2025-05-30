@@ -11,7 +11,7 @@ import AiAssistant from './ai-assistant';
 import CopyPasteDetector from './copy-paste-detector';
 import EnhancedToolbar from './enhanced-toolbar';
 import FeedbackViewer from './feedback-viewer';
-import SpellCheckPanel from './spell-check-panel';
+import BubbleSpellCheckPanel from './bubble-spell-check-panel';
 import HighlightedTextEditor from './highlighted-text-editor';
 import type { WritingSession, Assignment } from '@shared/schema';
 
@@ -38,6 +38,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [showSpellCheck, setShowSpellCheck] = useState(false);
   const [spellErrors, setSpellErrors] = useState<any[]>([]);
+  const [currentErrorIndex, setCurrentErrorIndex] = useState<number>(-1);
   const contentRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -412,6 +413,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
               disabled={isSubmitted || isGraded}
               spellErrors={spellErrors}
               showSpellCheck={showSpellCheck}
+              currentErrorIndex={currentErrorIndex}
               className="w-full min-h-full p-8 focus:outline-none resize-none text-gray-900 leading-relaxed border-none bg-transparent"
               style={{
                 minHeight: '100%',
@@ -494,15 +496,17 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       {/* Spell Check Panel Overlay */}
       {showSpellCheck && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <SpellCheckPanel
+          <BubbleSpellCheckPanel
             content={content}
             onContentChange={setContent}
             isOpen={showSpellCheck}
             onClose={() => {
               setShowSpellCheck(false);
               setSpellErrors([]);
+              setCurrentErrorIndex(-1);
             }}
             onSpellErrorsChange={setSpellErrors}
+            onCurrentErrorChange={setCurrentErrorIndex}
           />
         </div>
       )}
