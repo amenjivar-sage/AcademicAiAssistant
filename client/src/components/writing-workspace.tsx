@@ -13,6 +13,7 @@ import EnhancedToolbar from './enhanced-toolbar';
 import FeedbackViewer from './feedback-viewer';
 import InlineSpellCheck from './inline-spell-check';
 import PageBasedEditor from './page-based-editor';
+import RichTextEditor from './rich-text-editor';
 import type { WritingSession, Assignment } from '@shared/schema';
 
 interface PastedContent {
