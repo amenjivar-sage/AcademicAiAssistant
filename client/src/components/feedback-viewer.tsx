@@ -22,25 +22,8 @@ export default function FeedbackViewer({ session }: FeedbackViewerProps) {
   const [activeComment, setActiveComment] = useState<string | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
-  // Mock comments for demo - in real app these would come from the session data
-  const comments: Comment[] = [
-    {
-      id: "1",
-      text: "Great opening sentence! This immediately captures the reader's attention.",
-      startIndex: 0,
-      endIndex: 43,
-      highlightedText: "hello how are you doing? I am doing fine",
-      createdAt: new Date(),
-    },
-    {
-      id: "2", 
-      text: "Consider varying your sentence structure here for better flow.",
-      startIndex: 60,
-      endIndex: 85,
-      highlightedText: "I am doing fine and you?",
-      createdAt: new Date(),
-    }
-  ];
+  // Extract actual teacher feedback from the session
+  const comments: Comment[] = [];
 
   // Render content with highlights
   const renderContentWithHighlights = () => {
