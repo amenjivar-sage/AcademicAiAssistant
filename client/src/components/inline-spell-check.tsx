@@ -48,9 +48,9 @@ export default function InlineSpellCheck({
 
     // Use AI-powered spell checking
     checkSpellingWithAI(content).then(errors => {
+      console.log('Spell check found errors:', errors);
       setSpellErrors(errors);
       setCurrentErrorIndex(0);
-      calculateTooltipPositions(errors);
       setIsLoading(false);
     }).catch(error => {
       console.error('AI spell check failed:', error);
@@ -69,6 +69,13 @@ export default function InlineSpellCheck({
       setTooltips([]);
     }
   }, [debouncedSpellCheck, isActive]);
+
+  // Recalculate tooltip positions when errors or current index changes
+  useEffect(() => {
+    if (spellErrors.length > 0) {
+      calculateTooltipPositions(spellErrors);
+    }
+  }, [spellErrors, currentErrorIndex, content]);
 
   const calculateTooltipPositions = (errors: SpellCheckResult[]) => {
     if (!editorRef.current || errors.length === 0) return;
@@ -194,11 +201,15 @@ export default function InlineSpellCheck({
     const currentError = spellErrors[currentErrorIndex];
     if (!currentError) return content;
 
+    console.log('Creating highlight for:', currentError);
+
     let highlightedText = content;
     
     const beforeText = highlightedText.substring(0, currentError.startIndex);
     const errorText = highlightedText.substring(currentError.startIndex, currentError.endIndex);
     const afterText = highlightedText.substring(currentError.endIndex);
+
+    console.log('Text parts:', { beforeText, errorText, afterText });
 
     // Highlight only the current error with a strong visual indicator
     const highlightedError = `<span style="
@@ -210,6 +221,8 @@ export default function InlineSpellCheck({
     " data-error-word="${errorText}">${errorText}</span>`;
     
     highlightedText = beforeText + highlightedError + afterText;
+
+    console.log('Final highlighted text:', highlightedText);
 
     return highlightedText;
   };
