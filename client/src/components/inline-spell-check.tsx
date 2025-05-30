@@ -100,11 +100,35 @@ export default function InlineSpellCheck({
     const currentLine = lines.length - 1;
     const charInLine = lines[lines.length - 1].length;
     
+    // Calculate initial position
+    let top = (currentLine + 1) * lineHeight + 70; // Add padding for overlay
+    let left = charInLine * charWidth + 32; // Add left padding
+    
+    // Get editor bounds to constrain tooltip
+    const editorElement = document.querySelector('.writing-editor') as HTMLElement;
+    if (editorElement) {
+      const editorRect = editorElement.getBoundingClientRect();
+      const tooltipWidth = 350;
+      const tooltipHeight = 200;
+      const margin = 20;
+      
+      // Keep tooltip within editor bounds horizontally
+      if (left + tooltipWidth > editorRect.width - margin) {
+        left = Math.max(margin, editorRect.width - tooltipWidth - margin);
+      }
+      
+      // Keep tooltip within editor bounds vertically
+      if (top + tooltipHeight > editorRect.height - margin) {
+        // Position above the word instead
+        top = Math.max(margin, (currentLine * lineHeight) + 20);
+      }
+    }
+
     newTooltips.push({
       error: currentError,
       position: {
-        top: (currentLine + 1) * lineHeight + 70, // Add padding for overlay
-        left: charInLine * charWidth + 32 // Add left padding
+        top: top,
+        left: left
       },
       visible: true
     });

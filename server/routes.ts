@@ -390,15 +390,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { generateAiResponse } = await import("./openai");
       
       // Limit errors to prevent overwhelming the AI and UI
-      const spellCheckPrompt = `Find the first 5 obvious misspelled words in: "${text}"
+      const spellCheckPrompt = `Find the first 5 misspelled words in: "${text}"
 
-RULES:
-1. Only flag clear typos (missing/extra/wrong letters)
-2. Stop after finding 5 errors maximum
-3. Provide 1 simple correction per word
-4. Be precise with word positions
+CRITICAL RULES:
+1. Each word must be separated by spaces - NEVER combine two words
+2. Only flag individual words that are clearly misspelled
+3. Check word boundaries carefully - spaces separate words
+4. Provide exact character positions for SINGLE words only
+5. Maximum 5 errors
 
-Return JSON: [{"word": "misspelled", "suggestions": ["correct"], "startIndex": 0, "endIndex": 10}]
+Examples:
+- "unfortunatelychocolate" should be treated as ONE misspelled word, not two
+- "unfortunately chocolate" are TWO separate words
+- Only flag if a single word is actually misspelled
+
+Return JSON: [{"word": "exact_single_word", "suggestions": ["correction"], "startIndex": 0, "endIndex": 10}]
 Return [] if no errors.`;
 
       const aiResponse = await generateAiResponse(spellCheckPrompt);
