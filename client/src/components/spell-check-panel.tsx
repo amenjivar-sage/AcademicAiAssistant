@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { CheckCircle, X, RefreshCw } from 'lucide-react';
-import { checkSpelling, applySpellCheckSuggestion, SpellCheckResult } from '@/utils/spell-check';
+import { checkSpelling, checkSpellingWithAI, applySpellCheckSuggestion, SpellCheckResult } from '@/utils/spell-check';
 
 interface SpellCheckPanelProps {
   content: string;
@@ -20,10 +20,18 @@ export default function SpellCheckPanel({ content, onContentChange, isOpen, onCl
   useEffect(() => {
     if (isOpen) {
       console.log('Checking spelling for content:', content);
-      const errors = checkSpelling(content);
-      console.log('Spell check results:', errors);
-      setSpellErrors(errors);
-      setProcessedErrors(new Set());
+      // Use AI-powered spell checking
+      checkSpellingWithAI(content).then(errors => {
+        console.log('AI spell check results:', errors);
+        setSpellErrors(errors);
+        setProcessedErrors(new Set());
+      }).catch(error => {
+        console.error('AI spell check failed, using fallback:', error);
+        // Fallback to basic spell checking if AI fails
+        const errors = checkSpelling(content);
+        setSpellErrors(errors);
+        setProcessedErrors(new Set());
+      });
     }
   }, [content, isOpen]);
 
@@ -61,9 +69,15 @@ export default function SpellCheckPanel({ content, onContentChange, isOpen, onCl
   };
 
   const handleRefreshCheck = () => {
-    const errors = checkSpelling(content);
-    setSpellErrors(errors);
-    setProcessedErrors(new Set());
+    checkSpellingWithAI(content).then(errors => {
+      setSpellErrors(errors);
+      setProcessedErrors(new Set());
+    }).catch(error => {
+      console.error('AI spell check failed, using fallback:', error);
+      const errors = checkSpelling(content);
+      setSpellErrors(errors);
+      setProcessedErrors(new Set());
+    });
   };
 
   if (!isOpen) return null;

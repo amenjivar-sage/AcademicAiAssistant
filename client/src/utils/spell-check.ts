@@ -99,23 +99,42 @@ export interface SpellCheckResult {
   endIndex: number;
 }
 
-// Enhanced spell checking that combines dictionary with pattern matching
+// AI-powered spell checking
+export async function checkSpellingWithAI(text: string): Promise<SpellCheckResult[]> {
+  try {
+    const response = await fetch('/api/ai/spell-check', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ text }),
+    });
+
+    if (!response.ok) {
+      throw new Error('AI spell check failed');
+    }
+
+    const data = await response.json();
+    return data.corrections || [];
+  } catch (error) {
+    console.error('AI spell check error:', error);
+    // Fallback to basic spell checking
+    return checkSpelling(text);
+  }
+}
+
+// Basic spell checking as fallback
 export function checkSpelling(text: string): SpellCheckResult[] {
   const results: SpellCheckResult[] = [];
   const words = text.match(/\b[a-zA-Z]+\b/g) || [];
   let currentIndex = 0;
 
-  console.log('Words found:', words);
-
   words.forEach(word => {
     const wordIndex = text.indexOf(word, currentIndex);
     const lowerWord = word.toLowerCase();
     
-    console.log(`Checking word: "${word}" (${lowerWord})`);
-    
     // Check against our dictionary first
     if (SPELL_CHECK_DICTIONARY[lowerWord]) {
-      console.log(`Found in dictionary: ${word} -> ${SPELL_CHECK_DICTIONARY[lowerWord]}`);
       results.push({
         word,
         suggestion: SPELL_CHECK_DICTIONARY[lowerWord],
@@ -124,12 +143,8 @@ export function checkSpelling(text: string): SpellCheckResult[] {
       });
     } else {
       // Check against comprehensive English word list
-      const isValid = isValidEnglishWord(word);
-      console.log(`Is "${word}" valid English word?`, isValid);
-      
-      if (!isValid) {
+      if (!isValidEnglishWord(word)) {
         const suggestion = detectSpellingError(word) || generateSuggestion(word);
-        console.log(`Generated suggestion for "${word}":`, suggestion);
         if (suggestion && suggestion !== lowerWord) {
           results.push({
             word,
@@ -144,7 +159,6 @@ export function checkSpelling(text: string): SpellCheckResult[] {
     currentIndex = wordIndex + word.length;
   });
 
-  console.log('Final spell check results:', results);
   return results;
 }
 

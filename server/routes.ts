@@ -377,6 +377,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // AI spell check endpoint
+  app.post("/api/ai/spell-check", async (req, res) => {
+    try {
+      const { text } = req.body;
+      
+      if (!text) {
+        return res.status(400).json({ message: "Text is required" });
+      }
+
+      // Import AI functions
+      const { generateAiResponse } = await import("./openai");
+      
+      const spellCheckPrompt = `Please identify all spelling errors in this text and provide corrections. Return your response as a JSON array with objects containing "word", "suggestion", "startIndex", and "endIndex" for each misspelling found.
+
+Text to check: "${text}"
+
+Respond with only the JSON array, no other text. If no errors are found, return an empty array [].`;
+
+      const aiResponse = await generateAiResponse(spellCheckPrompt);
+      
+      // Try to parse the AI response as JSON
+      let corrections = [];
+      try {
+        corrections = JSON.parse(aiResponse);
+      } catch (parseError) {
+        // If AI didn't return valid JSON, try to extract corrections from text
+        corrections = parseSpellCheckResponse(aiResponse, text);
+      }
+
+      res.json({ corrections });
+    } catch (error) {
+      console.error("AI spell check error:", error);
+      res.status(500).json({ message: "Failed to check spelling" });
+    }
+  });
+
   // AI chat assistance endpoint with adaptive learning
   app.post("/api/ai/chat", async (req, res) => {
     try {
@@ -994,4 +1030,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   const httpServer = createServer(app);
   return httpServer;
+}
+
+// Helper function to parse AI spell check responses when JSON parsing fails
+function parseSpellCheckResponse(aiResponse: string, originalText: string): any[] {
+  const corrections = [];
+  
+  // Try to extract word corrections from AI response
+  const lines = aiResponse.split('\n');
+  for (const line of lines) {
+    // Look for patterns like "word -> suggestion" or "word: suggestion"
+    const match = line.match(/["']?(\w+)["']?\s*(?:->|:|\s+)\s*["']?(\w+)["']?/);
+    if (match) {
+      const [, word, suggestion] = match;
+      const startIndex = originalText.toLowerCase().indexOf(word.toLowerCase());
+      if (startIndex !== -1) {
+        corrections.push({
+          word,
+          suggestion,
+          startIndex,
+          endIndex: startIndex + word.length
+        });
+      }
+    }
+  }
+  
+  return corrections;
 }
