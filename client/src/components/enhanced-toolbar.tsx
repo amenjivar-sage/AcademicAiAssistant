@@ -257,9 +257,12 @@ export default function EnhancedToolbar({
               Header/Footer
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent className="sm:max-w-[425px]" aria-describedby="header-footer-description">
             <DialogHeader>
               <DialogTitle>Page Header & Footer Settings</DialogTitle>
+              <p id="header-footer-description" className="text-sm text-muted-foreground">
+                Configure page headers, footers, and numbering options for your document.
+              </p>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">

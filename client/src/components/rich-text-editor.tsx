@@ -113,46 +113,20 @@ export default function RichTextEditor({
           selection.addRange(range);
         }
       } else if (command === 'insertUnorderedList' || command === 'insertOrderedList') {
-        // Handle lists by creating HTML elements directly
+        // Simple approach: use execCommand directly
         editorRef.current.focus();
+        const success = document.execCommand(command, false, value);
+        console.log('List command executed:', command, 'Success:', success);
         
-        const selection = window.getSelection();
-        if (selection && selection.rangeCount > 0) {
-          const range = selection.getRangeAt(0);
-          const selectedText = range.toString() || 'List item';
-          
-          // Create the appropriate list element
-          const listType = command === 'insertUnorderedList' ? 'ul' : 'ol';
-          const listElement = document.createElement(listType);
-          const listItem = document.createElement('li');
-          listItem.textContent = selectedText;
-          listElement.appendChild(listItem);
-          
-          // Insert the list at the current position
-          try {
-            range.deleteContents();
-            range.insertNode(listElement);
-            
-            // Position cursor after the list
-            const newRange = document.createRange();
-            newRange.setStartAfter(listElement);
-            newRange.collapse(true);
-            selection.removeAllRanges();
-            selection.addRange(newRange);
-            
-            console.log('List created successfully:', command);
-          } catch (e) {
-            console.error('Error creating list:', e);
-            // Fallback to execCommand
-            document.execCommand(command, false, value);
+        // Force the editor to maintain HTML formatting for lists
+        setTimeout(() => {
+          if (editorRef.current) {
+            // Preserve current HTML content to keep list structure
+            const currentHTML = editorRef.current.innerHTML;
+            console.log('Current HTML after list:', currentHTML);
+            handleInput();
           }
-        } else {
-          // Fallback if no selection
-          document.execCommand(command, false, value);
-        }
-        
-        // Update content
-        setTimeout(() => handleInput(), 10);
+        }, 10);
         return;
       } else {
         // Use execCommand for other formatting
