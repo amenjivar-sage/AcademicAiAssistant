@@ -7,6 +7,18 @@ import { checkRestrictedPrompt, generateAiResponse } from "./openai";
 
 export async function registerRoutes(app: Express): Promise<Server> {
 
+  // Debug middleware to log all requests
+  app.use((req, res, next) => {
+    if (req.url.includes('/api/writing-sessions/')) {
+      console.log('=== REQUEST DEBUG ===');
+      console.log('Method:', req.method);
+      console.log('URL:', req.url);
+      console.log('Params:', req.params);
+      console.log('Route matched so far...');
+    }
+    next();
+  });
+
   // Authentication routes
   app.post("/api/auth/login", async (req, res) => {
     try {
@@ -265,18 +277,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get or create writing session for assignment
+  // Simple working session retrieval route
   app.get("/api/writing-sessions/:sessionId", async (req, res) => {
-    console.log('=== ROUTE HIT: /api/writing-sessions/:sessionId ===');
-    console.log('Raw sessionId param:', req.params.sessionId);
-    console.log('Full request URL:', req.url);
-    console.log('Request method:', req.method);
-    
     const sessionId = parseInt(req.params.sessionId);
-    const { assignmentId } = req.query;
+    console.log('Session retrieval request for ID:', sessionId);
     
-    console.log('Parsed sessionId:', sessionId, 'Type:', typeof sessionId);
-    console.log('Assignment ID from query:', assignmentId);
+    try {
+      const session = await storage.getWritingSession(sessionId);
+      if (session) {
+        console.log('Session found:', session.id);
+        return res.json(session);
+      } else {
+        console.log('Session not found:', sessionId);
+        return res.status(404).json({ message: "Session not found" });
+      }
+    } catch (error) {
+      console.error('Error retrieving session:', error);
+      return res.status(500).json({ message: "Failed to get session" });
+    }
+  });
     
     try {
       // If sessionId is 0, create or find session for assignment
