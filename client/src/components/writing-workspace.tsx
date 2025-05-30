@@ -11,6 +11,7 @@ import AiAssistant from './ai-assistant';
 import CopyPasteDetector from './copy-paste-detector';
 import EnhancedToolbar from './enhanced-toolbar';
 import FeedbackViewer from './feedback-viewer';
+import SpellCheckPanel from './spell-check-panel';
 import type { WritingSession, Assignment } from '@shared/schema';
 
 interface PastedContent {
@@ -34,7 +35,8 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   const [wordCount, setWordCount] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
+  const [showSpellCheck, setShowSpellCheck] = useState(false);
+  const contentRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
@@ -390,6 +392,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
           <EnhancedToolbar
             onSave={handleSave}
             isSaving={isSaving}
+            onSpellCheck={() => setShowSpellCheck(true)}
           />
         </div>
 
@@ -484,6 +487,18 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
           currentContent={content}
         />
       </div>
+
+      {/* Spell Check Panel Overlay */}
+      {showSpellCheck && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <SpellCheckPanel
+            content={content}
+            onContentChange={setContent}
+            isOpen={showSpellCheck}
+            onClose={() => setShowSpellCheck(false)}
+          />
+        </div>
+      )}
     </div>
   );
 }

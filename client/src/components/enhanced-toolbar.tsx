@@ -41,12 +41,14 @@ interface EnhancedToolbarProps {
   onFormatting?: (command: string, value?: string) => void;
   onSave?: () => void;
   isSaving?: boolean;
+  onSpellCheck?: () => void;
 }
 
 export default function EnhancedToolbar({ 
   onFormatting, 
   onSave, 
-  isSaving = false 
+  isSaving = false,
+  onSpellCheck
 }: EnhancedToolbarProps) {
   const handleFormat = (command: string, value?: string) => {
     onFormatting?.(command, value);
@@ -267,6 +269,18 @@ export default function EnhancedToolbar({
           <Link className="h-4 w-4" />
         </Button>
       </div>
+
+      <Separator orientation="vertical" className="h-6" />
+
+      {/* Spell Check */}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={onSpellCheck}
+        title="Check spelling"
+      >
+        <SpellCheck className="h-4 w-4" />
+      </Button>
     </div>
   );
 }
