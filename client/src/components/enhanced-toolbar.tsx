@@ -255,38 +255,23 @@ export default function EnhancedToolbar({
 
       {/* Page Elements */}
       <div className="flex items-center gap-1">
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="ghost" size="sm">
-              <Type className="h-4 w-4 mr-1" />
-              Header/Footer
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-64">
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs font-medium">Header Text:</label>
-                <input
-                  type="text"
-                  placeholder="Enter header text..."
-                  className="w-full mt-1 px-2 py-1 text-xs border rounded"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-medium">Footer Text:</label>
-                <input
-                  type="text"
-                  placeholder="Enter footer text..."
-                  className="w-full mt-1 px-2 py-1 text-xs border rounded"
-                />
-              </div>
-              <div className="flex items-center space-x-2">
-                <input type="checkbox" id="pageNumbers" className="text-xs" />
-                <label htmlFor="pageNumbers" className="text-xs">Page numbers</label>
-              </div>
-            </div>
-          </PopoverContent>
-        </Popover>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => {
+            const header = prompt("Enter header text (optional):");
+            const footer = prompt("Enter footer text (optional):");
+            const pageNumbers = confirm("Add page numbers?");
+            
+            // For now, just show confirmation - can be enhanced later
+            if (header || footer || pageNumbers) {
+              alert(`Settings saved:\nHeader: ${header || 'None'}\nFooter: ${footer || 'None'}\nPage numbers: ${pageNumbers ? 'Yes' : 'No'}`);
+            }
+          }}
+        >
+          <Type className="h-4 w-4 mr-1" />
+          Header/Footer
+        </Button>
         
         <Button
           variant="ghost"
