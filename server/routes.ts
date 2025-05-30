@@ -380,7 +380,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // AI chat assistance endpoint with adaptive learning
   app.post("/api/ai/chat", async (req, res) => {
     try {
-      const { sessionId, prompt, userId } = req.body;
+      const { sessionId, prompt, userId, documentContent } = req.body;
       
       if (!prompt) {
         return res.status(400).json({ message: "Prompt is required" });
@@ -409,8 +409,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (isRestricted) {
         response = "❌ This type of assistance goes beyond what I can help with. Try asking for brainstorming ideas, writing feedback, or research guidance instead!";
       } else {
-        // Generate personalized AI response using student profile
-        response = await generateAiResponse(prompt, studentProfile);
+        // Generate personalized AI response using student profile and document content
+        response = await generateAiResponse(prompt, studentProfile, documentContent);
       }
 
       // Store the AI interaction if we have a valid session

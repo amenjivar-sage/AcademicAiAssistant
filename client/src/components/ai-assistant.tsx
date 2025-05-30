@@ -29,7 +29,7 @@ interface SmartPrompt {
   relevance: number;
 }
 
-export default function AiAssistant({ sessionId }: AiAssistantProps) {
+export default function AiAssistant({ sessionId, currentContent }: AiAssistantProps) {
   const [prompt, setPrompt] = useState("");
   const [lastResponse, setLastResponse] = useState<AiResponse | null>(null);
   const [smartPrompts, setSmartPrompts] = useState<SmartPrompt[]>([]);
@@ -61,6 +61,7 @@ export default function AiAssistant({ sessionId }: AiAssistantProps) {
         sessionId: currentSessionId,
         prompt: promptText,
         userId: 2, // Demo student ID - in real app, get from auth context
+        documentContent: currentContent, // Include current document content for context
       });
       return response.json();
     },

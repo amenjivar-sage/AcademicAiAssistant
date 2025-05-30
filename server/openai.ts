@@ -33,7 +33,7 @@ export function checkRestrictedPrompt(prompt: string): boolean {
   );
 }
 
-export async function generateAiResponse(prompt: string, studentProfile?: any): Promise<string> {
+export async function generateAiResponse(prompt: string, studentProfile?: any, documentContent?: string): Promise<string> {
   try {
     let personalizedContext = "";
     if (studentProfile) {
