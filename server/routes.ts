@@ -192,6 +192,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Student API routes
+  app.get("/api/student/writing-sessions", async (req, res) => {
+    try {
+      const studentId = currentDemoUserId; // Student user ID
+      const sessions = await storage.getUserWritingSessions(studentId);
+      res.json(sessions);
+    } catch (error) {
+      console.error("Error fetching student writing sessions:", error);
+      res.status(500).json({ message: "Failed to fetch sessions" });
+    }
+  });
+
+  app.get("/api/student/assignments", async (req, res) => {
+    try {
+      const studentId = currentDemoUserId;
+      const studentClassrooms = await storage.getStudentClassrooms(studentId);
+      const classroomIds = studentClassrooms.map(c => c.id);
+      
+      // Get all assignments for student's classrooms
+      const allAssignments = await storage.getTeacherAssignments(1); // Teacher 1's assignments
+      const studentAssignments = allAssignments.filter(a => 
+        classroomIds.includes(a.classroomId || 0)
+      );
+      
+      res.json(studentAssignments);
+    } catch (error) {
+      console.error("Error fetching student assignments:", error);
+      res.status(500).json({ message: "Failed to fetch assignments" });
+    }
+  });
+
+  app.get("/api/student/classes", async (req, res) => {
+    try {
+      const studentId = currentDemoUserId;
+      const classes = await storage.getStudentClassrooms(studentId);
+      res.json(classes);
+    } catch (error) {
+      console.error("Error fetching student classes:", error);
+      res.status(500).json({ message: "Failed to fetch classes" });
+    }
+  });
+
+  // Classroom management routes
+  app.post("/api/classrooms", async (req, res) => {
+    try {
+      const classroomData = req.body;
+      classroomData.teacherId = 1; // Demo teacher ID
+      const classroom = await storage.createClassroom(classroomData);
+      res.json(classroom);
+    } catch (error) {
+      console.error("Error creating classroom:", error);
+      res.status(500).json({ message: "Failed to create classroom" });
+    }
+  });
+
+  app.post("/api/classes/join", async (req, res) => {
+    try {
+      const { joinCode } = req.body;
+      const studentId = currentDemoUserId;
+      
+      // Find classroom by join code
+      const allClassrooms = await storage.getAllClassrooms();
+      const classroom = allClassrooms.find(c => c.joinCode === joinCode);
+      
+      if (!classroom) {
+        return res.status(404).json({ message: "Invalid join code" });
+      }
+      
+      // Enroll student in classroom
+      await storage.enrollStudentInClassroom(studentId, classroom.id);
+      res.json({ message: "Successfully joined classroom", classroom });
+    } catch (error) {
+      console.error("Error joining classroom:", error);
+      res.status(500).json({ message: "Failed to join classroom" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
