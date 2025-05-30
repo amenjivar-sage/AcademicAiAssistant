@@ -201,6 +201,7 @@ export default function InlineSpellCheck({
     if (!error) return;
 
     const newContent = applySpellCheckSuggestion(content, error, suggestion);
+    const lengthChange = suggestion.length - error.word.length;
     
     // Track the change for undo functionality
     setRecentChanges(prev => [...prev, {
@@ -209,13 +210,22 @@ export default function InlineSpellCheck({
       timestamp: Date.now()
     }]);
 
-    // Remove the corrected error from the list
-    const updatedErrors = spellErrors.filter((_, index) => index !== errorIndex);
-    setSpellErrors(updatedErrors);
+    // Update all remaining error positions to account for the text change
+    const updatedErrors = spellErrors
+      .filter((_, index) => index !== errorIndex)
+      .map(err => {
+        // If error is after the corrected word, adjust its position
+        if (err.startIndex > error.endIndex) {
+          return {
+            ...err,
+            startIndex: err.startIndex + lengthChange,
+            endIndex: err.endIndex + lengthChange
+          };
+        }
+        return err;
+      });
     
-    // Clear tooltips to remove red underlines
-    setTooltips([]);
-
+    setSpellErrors(updatedErrors);
     onContentChange(newContent);
     
     // Move to next error or close if done
@@ -224,12 +234,14 @@ export default function InlineSpellCheck({
       onSpellCheckStatusChange?.(false);
       onClose();
     } else {
-      // Adjust current error index if needed
-      if (currentErrorIndex >= updatedErrors.length) {
-        setCurrentErrorIndex(0);
-      }
-      // Don't re-run spell check automatically to prevent loops
-      // User can manually continue if there are more errors
+      // Keep the current index or move to the next available error
+      const newIndex = Math.min(currentErrorIndex, updatedErrors.length - 1);
+      setCurrentErrorIndex(newIndex);
+      
+      // Recalculate tooltips for the updated errors
+      setTimeout(() => {
+        calculateTooltipPositions(updatedErrors);
+      }, 100);
     }
   };
 
