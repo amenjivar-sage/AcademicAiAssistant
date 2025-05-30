@@ -32,11 +32,10 @@ export default function RichTextEditor({
   // Handle content updates from parent
   useEffect(() => {
     if (editorRef.current && !isUpdating) {
-      const currentContent = editorRef.current.innerHTML;
-      // Convert plain text content to HTML if needed
-      const htmlContent = content.includes('<') ? content : content.replace(/\n/g, '<br>');
-      if (currentContent !== htmlContent) {
-        editorRef.current.innerHTML = htmlContent;
+      const currentPlainText = editorRef.current.innerText || '';
+      if (currentPlainText !== content) {
+        // Set plain text content to avoid HTML entity issues
+        editorRef.current.innerText = content;
       }
     }
   }, [content, isUpdating]);
@@ -45,9 +44,8 @@ export default function RichTextEditor({
   const handleInput = () => {
     if (editorRef.current) {
       setIsUpdating(true);
-      const newContent = editorRef.current.innerHTML;
-      // Convert HTML back to plain text for storage compatibility
-      const plainContent = newContent.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]*>/g, '');
+      // Use innerText to get clean plain text content
+      const plainContent = editorRef.current.innerText || '';
       onContentChange(plainContent);
       setTimeout(() => setIsUpdating(false), 0);
     }
@@ -55,12 +53,21 @@ export default function RichTextEditor({
 
   // Handle formatting commands
   const executeCommand = (command: string, value?: string) => {
-    if (disabled) return;
+    if (disabled || !editorRef.current) return;
     
     try {
-      document.execCommand(command, false, value);
-      editorRef.current?.focus();
-      handleInput(); // Update content after formatting
+      // Focus the editor first to ensure proper selection
+      editorRef.current.focus();
+      
+      // Execute the formatting command
+      const success = document.execCommand(command, false, value);
+      
+      if (success) {
+        // Trigger content update after formatting
+        setTimeout(() => handleInput(), 10);
+      } else {
+        console.warn('Command failed:', command, value);
+      }
     } catch (error) {
       console.error('Error executing command:', command, error);
     }
@@ -100,6 +107,9 @@ export default function RichTextEditor({
         fontFamily: 'Georgia, serif',
         fontSize: '16px',
         lineHeight: '1.6',
+        direction: 'ltr',
+        textAlign: 'left',
+        unicodeBidi: 'normal',
         ...style
       }}
       data-placeholder={placeholder}
