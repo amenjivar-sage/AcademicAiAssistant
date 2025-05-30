@@ -112,17 +112,29 @@ export default function InlineSpellCheck({
   // Recalculate tooltip positions when errors or current index changes
   useEffect(() => {
     if (spellErrors.length > 0) {
+      console.log('Calculating tooltip positions for', spellErrors.length, 'errors, current index:', currentErrorIndex);
       calculateTooltipPositions(spellErrors);
+    } else {
+      console.log('No spell errors to show tooltips for');
+      setTooltips([]);
     }
   }, [spellErrors, currentErrorIndex, content]);
 
   const calculateTooltipPositions = (errors: SpellCheckResult[]) => {
-    if (errors.length === 0) return;
+    console.log('calculateTooltipPositions called with', errors.length, 'errors');
+    if (errors.length === 0) {
+      console.log('No errors to calculate positions for');
+      return;
+    }
 
     // Only show tooltip for the current error
     const currentError = errors[currentErrorIndex];
-    if (!currentError) return;
+    if (!currentError) {
+      console.log('No current error at index', currentErrorIndex);
+      return;
+    }
 
+    console.log('Creating tooltip for current error:', currentError);
     const newTooltips: SpellTooltip[] = [];
     
     // Simple positioning based on approximate character positions
@@ -168,15 +180,17 @@ export default function InlineSpellCheck({
       }
     }
 
-    newTooltips.push({
+    const tooltip = {
       error: currentError,
       position: {
         top: top,
         left: left
       },
       visible: true
-    });
+    };
 
+    console.log('Created tooltip:', tooltip);
+    newTooltips.push(tooltip);
     setTooltips(newTooltips);
   };
 
