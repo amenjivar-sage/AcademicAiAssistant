@@ -33,7 +33,7 @@ export default function InlineSpellCheck({
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editingWord, setEditingWord] = useState("");
-  const editorRef = useRef<HTMLDivElement>(null);
+  const editorRef = useRef<HTMLTextAreaElement>(null);
   const [recentChanges, setRecentChanges] = useState<Array<{original: string, corrected: string, timestamp: number}>>([]);
 
   // Debounced spell checking
@@ -82,16 +82,16 @@ export default function InlineSpellCheck({
   }, [spellErrors, currentErrorIndex, content]);
 
   const calculateTooltipPositions = (errors: SpellCheckResult[]) => {
-    if (!editorRef.current || errors.length === 0) return;
+    if (errors.length === 0) return;
 
-    // Only show tooltip for the current error (first error)
+    // Only show tooltip for the current error
     const currentError = errors[currentErrorIndex];
     if (!currentError) return;
 
     const newTooltips: SpellTooltip[] = [];
     
     // Simple positioning based on approximate character positions
-    const lineHeight = 24; // Approximate line height
+    const lineHeight = 25.6; // 16px * 1.6 line-height
     const charWidth = 9.6; // Approximate character width for Georgia serif
     
     // Count lines up to this word
@@ -103,7 +103,7 @@ export default function InlineSpellCheck({
     newTooltips.push({
       error: currentError,
       position: {
-        top: (currentLine + 1) * lineHeight + 40, // Add padding
+        top: (currentLine + 1) * lineHeight + 70, // Add padding for overlay
         left: charInLine * charWidth + 32 // Add left padding
       },
       visible: true
@@ -234,47 +234,86 @@ export default function InlineSpellCheck({
     return highlightedText;
   };
 
-  const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
-    const newContent = e.currentTarget.textContent || '';
-    onContentChange(newContent);
-  };
 
-  const getDisplayContent = () => {
-    if (isActive && spellErrors.length > 0) {
-      return createHighlightedContent();
-    }
-    return content;
-  };
 
   return (
     <div className="relative w-full min-h-full">
-      {/* Main text editor with inline highlighting */}
-      <div
+      {/* Main text editor */}
+      <textarea
         ref={editorRef}
-        contentEditable={!disabled}
-        onInput={handleInput}
-        className="w-full min-h-full p-8 focus:outline-none text-gray-900 leading-relaxed border-none bg-transparent relative z-20"
+        disabled={disabled}
+        value={content}
+        onChange={(e) => onContentChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full min-h-full p-8 focus:outline-none resize-none text-gray-900 leading-relaxed border-none bg-transparent relative z-20"
         style={{
           minHeight: '100%',
           fontFamily: 'Georgia, serif',
           fontSize: '16px',
           lineHeight: '1.6',
-          whiteSpace: 'pre-wrap',
-          wordWrap: 'break-word'
         }}
-        data-placeholder={placeholder}
-        dangerouslySetInnerHTML={{ __html: getDisplayContent() }}
-        suppressContentEditableWarning={true}
       />
       
-      {/* CSS for placeholder when empty */}
-      <style jsx>{`
-        div[contenteditable][data-placeholder]:empty:before {
-          content: attr(data-placeholder);
-          color: #9ca3af;
-          pointer-events: none;
-        }
-      `}</style>
+      {/* Spell check highlighting overlay */}
+      {isActive && spellErrors.length > 0 && (
+        <div
+          className="absolute inset-0 pointer-events-none z-30"
+          style={{
+            fontFamily: 'Georgia, serif',
+            fontSize: '16px',
+            lineHeight: '1.6',
+            padding: '32px',
+            whiteSpace: 'pre-wrap',
+            wordWrap: 'break-word',
+            overflow: 'hidden'
+          }}
+        >
+          {(() => {
+            const currentError = spellErrors[currentErrorIndex];
+            if (!currentError) return null;
+            
+            // Calculate position for the current error
+            const textBeforeError = content.substring(0, currentError.startIndex);
+            const lines = textBeforeError.split('\n');
+            const lineHeight = 25.6; // 16px * 1.6 line-height
+            const charWidth = 9.6;
+            
+            const currentLine = lines.length - 1;
+            const charInLine = lines[lines.length - 1].length;
+            
+            console.log('Positioning highlight:', {
+              currentError,
+              textBeforeError,
+              lines,
+              currentLine,
+              charInLine,
+              calculatedTop: currentLine * lineHeight,
+              calculatedLeft: charInLine * charWidth
+            });
+            
+            return (
+              <span
+                style={{
+                  position: 'absolute',
+                  top: `${currentLine * lineHeight}px`,
+                  left: `${charInLine * charWidth}px`,
+                  width: `${currentError.word.length * charWidth}px`,
+                  height: `${lineHeight}px`,
+                  background: 'rgba(239, 68, 68, 0.8)',
+                  borderBottom: '3px wavy #ef4444',
+                  border: '2px solid #ef4444',
+                  borderRadius: '4px',
+                  pointerEvents: 'none',
+                  zIndex: 999,
+                  boxShadow: '0 2px 4px rgba(239, 68, 68, 0.4)',
+                  display: 'block'
+                }}
+                title={`Misspelled: ${currentError.word}`}
+              />
+            );
+          })()}
+        </div>
+      )}
 
       {/* Inline tooltip for current error only */}
       {tooltips.map((tooltip, index) => (
