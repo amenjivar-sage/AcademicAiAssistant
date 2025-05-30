@@ -389,32 +389,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Import AI functions
       const { generateAiResponse } = await import("./openai");
       
-      const spellCheckPrompt = `You are a professional spell checker. Find misspelled words in: "${text}"
+      const spellCheckPrompt = `You are a precise spell checker. Find ONLY clearly misspelled words in this text: "${text}"
 
-CRITICAL RULES:
-1. Only suggest REAL, correctly spelled English words
-2. Suggestions must be dictionary words that make sense in context
-3. Do NOT create made-up words or add unnecessary suffixes
-4. Provide 1-3 accurate suggestions per misspelled word
+STRICT RULES:
+1. Only flag words that are OBVIOUSLY misspelled (missing letters, extra letters, transposed letters)
+2. Provide 1-2 simple, correct suggestions only
+3. Do NOT flag correctly spelled words
+4. Focus on the most obvious errors first
 
-Examples of CORRECT responses:
-- "teh" → ["the"]
-- "recieve" → ["receive"]  
-- "seperate" → ["separate"]
-- "unfeoauntly" → ["unfortunately"]
+Examples:
+- "teh" → ["the"] ✓
+- "recieve" → ["receive"] ✓
+- "seperate" → ["separate"] ✓
+- "yiou" → ["you"] ✓
 
-Examples of WRONG responses:
-- "unfortunately" → ["unfortunatelyely"] ❌ (made-up word)
-- "cat" → ["cats", "catch"] ❌ (original word is correct)
+IGNORE: contractions, proper nouns, technical terms, correctly spelled words
 
-Analyze: "${text}"
-
-Return only JSON array of actual misspellings:
+Return JSON with exact positions:
 [
-  {"word": "misspelled_word", "suggestions": ["correct1", "correct2"], "startIndex": X, "endIndex": Y}
+  {"word": "exact_misspelled_word", "suggestions": ["correct1"], "startIndex": number, "endIndex": number}
 ]
 
-If no misspellings found, return: []`;
+Be precise with positions. Return [] if no clear misspellings.`;
 
       const aiResponse = await generateAiResponse(spellCheckPrompt);
       

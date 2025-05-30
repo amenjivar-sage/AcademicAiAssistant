@@ -269,32 +269,15 @@ export default function InlineSpellCheck({
           }}
         >
           {spellErrors.map((error, index) => {
-            // Calculate position for each error
+            // Simple positioning - count characters and newlines
             const textBeforeError = content.substring(0, error.startIndex);
-            
-            // Handle line wrapping by measuring text width
-            const words = textBeforeError.split(' ');
+            const lines = textBeforeError.split('\n');
             const lineHeight = 25.6; // 16px * 1.6 line-height
             const charWidth = 8.0;
-            const maxCharsPerLine = Math.floor((window.innerWidth - 100) / charWidth); // Approximate
             
-            let currentLine = 0;
-            let currentLinePosition = 0;
-            let totalChars = 0;
-            
-            for (const word of words) {
-              const wordLength = word.length + 1; // +1 for space
-              if (currentLinePosition + wordLength > maxCharsPerLine && currentLinePosition > 0) {
-                currentLine++;
-                currentLinePosition = wordLength;
-              } else {
-                currentLinePosition += wordLength;
-              }
-              totalChars += wordLength;
-              if (totalChars >= textBeforeError.length) break;
-            }
-            
-            const charInLine = currentLinePosition - (words[words.length - 1]?.length || 0);
+            const currentLine = lines.length - 1;
+            const lastLineText = lines[lines.length - 1] || '';
+            const charInLine = lastLineText.length;
             
             // Highlight current error more prominently
             const isCurrentError = index === currentErrorIndex;
