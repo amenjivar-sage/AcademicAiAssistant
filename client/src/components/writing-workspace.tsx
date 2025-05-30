@@ -417,8 +417,12 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
           <div className="flex items-center justify-between">
             <EnhancedToolbar
               onFormatting={(command, value) => {
+                console.log('Toolbar formatting called:', command, value);
                 if (formatRef.current) {
+                  console.log('Calling formatRef.current with:', command, value);
                   formatRef.current(command, value);
+                } else {
+                  console.log('formatRef.current is null');
                 }
               }}
               onSave={handleSave}
