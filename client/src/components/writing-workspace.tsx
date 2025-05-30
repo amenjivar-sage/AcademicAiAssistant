@@ -404,27 +404,14 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
             className="min-h-full"
           >
             <div className="relative w-full min-h-full">
-              <textarea
-                ref={contentRef}
-                disabled={isSubmitted || isGraded}
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="Start writing your assignment here..."
-                className="w-full min-h-full p-8 focus:outline-none resize-none text-gray-900 leading-relaxed border-none bg-transparent relative z-20"
-                style={{
-                  minHeight: '100%',
-                  fontFamily: 'Georgia, serif',
-                  fontSize: '16px',
-                  lineHeight: '1.6',
-                }}
-              />
-              
               {/* Inline spell check overlay */}
               <InlineSpellCheck
                 content={content}
                 onContentChange={setContent}
                 isActive={showSpellCheck}
                 onClose={() => setShowSpellCheck(false)}
+                disabled={isSubmitted || isGraded}
+                placeholder="Start writing your assignment here..."
               />
             </div>
           </CopyPasteDetector>

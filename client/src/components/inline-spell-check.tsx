@@ -9,6 +9,8 @@ interface InlineSpellCheckProps {
   onContentChange: (content: string) => void;
   isActive: boolean;
   onClose: () => void;
+  disabled?: boolean;
+  placeholder?: string;
 }
 
 interface SpellTooltip {
@@ -21,7 +23,9 @@ export default function InlineSpellCheck({
   content,
   onContentChange,
   isActive,
-  onClose
+  onClose,
+  disabled = false,
+  placeholder = "Start writing..."
 }: InlineSpellCheckProps) {
   const [spellErrors, setSpellErrors] = useState<SpellCheckResult[]>([]);
   const [currentErrorIndex, setCurrentErrorIndex] = useState<number>(0);
@@ -230,71 +234,37 @@ export default function InlineSpellCheck({
     return highlightedText;
   };
 
-  if (!isActive) return null;
+  const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
+    const newContent = e.currentTarget.textContent || '';
+    onContentChange(newContent);
+  };
+
+  const getDisplayContent = () => {
+    if (isActive && spellErrors.length > 0) {
+      return createHighlightedContent();
+    }
+    return content || (content === '' ? `<span style="color: #9ca3af;">${placeholder}</span>` : content);
+  };
 
   return (
-    <div className="relative w-full h-full">
-      {/* Simple highlight spans positioned absolutely */}
-      {spellErrors.length > 0 && (
-        <div
-          ref={editorRef}
-          className="absolute inset-0 pointer-events-none z-50"
-          style={{
-            fontFamily: 'Georgia, serif',
-            fontSize: '16px',
-            lineHeight: '1.6',
-            padding: '32px',
-            whiteSpace: 'pre-wrap',
-            wordWrap: 'break-word',
-            overflow: 'hidden'
-          }}
-        >
-          {(() => {
-            const currentError = spellErrors[currentErrorIndex];
-            if (!currentError) return null;
-            
-            // Calculate position for the current error
-            const textBeforeError = content.substring(0, currentError.startIndex);
-            const lines = textBeforeError.split('\n');
-            const lineHeight = 25.6; // 16px * 1.6 line-height
-            const charWidth = 9.6;
-            
-            const currentLine = lines.length - 1;
-            const charInLine = lines[lines.length - 1].length;
-            
-            console.log('Positioning highlight:', {
-              currentError,
-              textBeforeError,
-              lines,
-              currentLine,
-              charInLine,
-              calculatedTop: currentLine * lineHeight,
-              calculatedLeft: charInLine * charWidth
-            });
-            
-            return (
-              <span
-                style={{
-                  position: 'absolute',
-                  top: `${currentLine * lineHeight}px`,
-                  left: `${charInLine * charWidth}px`,
-                  width: `${currentError.word.length * charWidth}px`,
-                  height: `${lineHeight}px`,
-                  background: 'rgba(239, 68, 68, 0.8)',
-                  borderBottom: '3px wavy #ef4444',
-                  border: '2px solid #ef4444',
-                  borderRadius: '4px',
-                  pointerEvents: 'none',
-                  zIndex: 999,
-                  boxShadow: '0 2px 4px rgba(239, 68, 68, 0.4)',
-                  display: 'block'
-                }}
-                title={`Misspelled: ${currentError.word}`}
-              />
-            );
-          })()}
-        </div>
-      )}
+    <div className="relative w-full min-h-full">
+      {/* Main text editor with inline highlighting */}
+      <div
+        ref={editorRef}
+        contentEditable={!disabled}
+        onInput={handleInput}
+        className="w-full min-h-full p-8 focus:outline-none text-gray-900 leading-relaxed border-none bg-transparent relative z-20"
+        style={{
+          minHeight: '100%',
+          fontFamily: 'Georgia, serif',
+          fontSize: '16px',
+          lineHeight: '1.6',
+          whiteSpace: 'pre-wrap',
+          wordWrap: 'break-word'
+        }}
+        dangerouslySetInnerHTML={{ __html: getDisplayContent() }}
+        suppressContentEditableWarning={true}
+      />
 
       {/* Inline tooltip for current error only */}
       {tooltips.map((tooltip, index) => (
