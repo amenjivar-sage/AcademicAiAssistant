@@ -112,15 +112,20 @@ export default function InlineSpellCheck({
       const tooltipHeight = 200;
       const margin = 20;
       
-      // Keep tooltip within editor bounds horizontally
-      if (left + tooltipWidth > editorRect.width - margin) {
-        left = Math.max(margin, editorRect.width - tooltipWidth - margin);
+      // Keep tooltip within editor bounds horizontally - use absolute positioning relative to editor
+      const maxLeft = editorRect.width - tooltipWidth - margin;
+      if (left > maxLeft) {
+        left = maxLeft;
+      }
+      if (left < margin) {
+        left = margin;
       }
       
       // Keep tooltip within editor bounds vertically
-      if (top + tooltipHeight > editorRect.height - margin) {
+      const maxTop = editorRect.height - tooltipHeight - margin;
+      if (top > maxTop) {
         // Position above the word instead
-        top = Math.max(margin, (currentLine * lineHeight) + 20);
+        top = Math.max(margin, (currentLine * lineHeight) - tooltipHeight - 10);
       }
     }
 

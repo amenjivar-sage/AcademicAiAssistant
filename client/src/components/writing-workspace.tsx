@@ -277,7 +277,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
           }
         }
       }
-    }, 2000);
+    }, 4000);
 
     return () => clearTimeout(timer);
   }, [title, content, session, sessionId, assignmentId, isSaving, pastedContents, updateSessionMutation, createSessionMutation]);
