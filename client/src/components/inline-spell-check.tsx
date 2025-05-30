@@ -211,13 +211,16 @@ export default function InlineSpellCheck({
 
     console.log('Text parts:', { beforeText, errorText, afterText });
 
-    // Highlight only the current error with a strong visual indicator
+    // Create a much more visible highlight
     const highlightedError = `<span style="
-      border-bottom: 2px wavy #ef4444;
-      background: rgba(239, 68, 68, 0.2);
-      border-radius: 3px;
-      padding: 1px 2px;
-      position: relative;
+      background: rgba(239, 68, 68, 0.4) !important;
+      border-bottom: 2px wavy #ef4444 !important;
+      color: inherit !important;
+      border-radius: 2px;
+      padding: 0 1px;
+      text-decoration: underline wavy #ef4444;
+      text-decoration-thickness: 2px;
+      text-underline-offset: 2px;
     " data-error-word="${errorText}">${errorText}</span>`;
     
     highlightedText = beforeText + highlightedError + afterText;
@@ -231,21 +234,52 @@ export default function InlineSpellCheck({
 
   return (
     <div className="relative w-full h-full">
-      {/* Highlighted content overlay */}
-      <div
-        ref={editorRef}
-        className="absolute inset-0 pointer-events-none z-10"
-        style={{
-          fontFamily: 'Georgia, serif',
-          fontSize: '16px',
-          lineHeight: '1.6',
-          padding: '32px',
-          color: 'transparent',
-          whiteSpace: 'pre-wrap',
-          wordWrap: 'break-word'
-        }}
-        dangerouslySetInnerHTML={{ __html: createHighlightedContent() }}
-      />
+      {/* Simple highlight spans positioned absolutely */}
+      {spellErrors.length > 0 && (
+        <div
+          ref={editorRef}
+          className="absolute inset-0 pointer-events-none z-10"
+          style={{
+            fontFamily: 'Georgia, serif',
+            fontSize: '16px',
+            lineHeight: '1.6',
+            padding: '32px',
+            whiteSpace: 'pre-wrap',
+            wordWrap: 'break-word',
+            overflow: 'hidden'
+          }}
+        >
+          {(() => {
+            const currentError = spellErrors[currentErrorIndex];
+            if (!currentError) return null;
+            
+            // Calculate position for the current error
+            const textBeforeError = content.substring(0, currentError.startIndex);
+            const lines = textBeforeError.split('\n');
+            const lineHeight = 25.6; // 16px * 1.6 line-height
+            const charWidth = 9.6;
+            
+            const currentLine = lines.length - 1;
+            const charInLine = lines[lines.length - 1].length;
+            
+            return (
+              <span
+                style={{
+                  position: 'absolute',
+                  top: `${currentLine * lineHeight}px`,
+                  left: `${charInLine * charWidth}px`,
+                  width: `${currentError.word.length * charWidth}px`,
+                  height: `${lineHeight}px`,
+                  background: 'rgba(239, 68, 68, 0.3)',
+                  borderBottom: '2px wavy #ef4444',
+                  borderRadius: '3px',
+                  pointerEvents: 'none'
+                }}
+              />
+            );
+          })()}
+        </div>
+      )}
 
       {/* Inline tooltip for current error only */}
       {tooltips.map((tooltip, index) => (
