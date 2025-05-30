@@ -17,6 +17,8 @@ export default function SpellCheckPanel({ content, onContentChange, isOpen, onCl
   const [spellErrors, setSpellErrors] = useState<SpellCheckResult[]>([]);
   const [processedErrors, setProcessedErrors] = useState<Set<number>>(new Set());
   const [isLoading, setIsLoading] = useState(false);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editingWord, setEditingWord] = useState<string>("");
 
   useEffect(() => {
     if (isOpen) {
@@ -75,6 +77,39 @@ export default function SpellCheckPanel({ content, onContentChange, isOpen, onCl
       setProcessedErrors(new Set());
       setIsLoading(false);
     });
+  };
+
+  const handleEditWord = (errorIndex: number) => {
+    const error = spellErrors[errorIndex];
+    setEditingIndex(errorIndex);
+    setEditingWord(error.word);
+  };
+
+  const handleGetNewSuggestions = async (errorIndex: number) => {
+    if (editingWord.trim() === "") return;
+    
+    setIsLoading(true);
+    try {
+      const newSuggestions = await checkSpellingWithAI(editingWord);
+      if (newSuggestions.length > 0) {
+        // Update the error with new suggestions
+        setSpellErrors(prev => prev.map((error, index) => 
+          index === errorIndex 
+            ? { ...error, word: editingWord, suggestions: newSuggestions[0].suggestions || [editingWord] }
+            : error
+        ));
+      }
+    } catch (error) {
+      console.error('Failed to get new suggestions:', error);
+    }
+    setIsLoading(false);
+    setEditingIndex(null);
+    setEditingWord("");
+  };
+
+  const handleCancelEdit = () => {
+    setEditingIndex(null);
+    setEditingWord("");
   };
 
   if (!isOpen) return null;
@@ -137,8 +172,47 @@ export default function SpellCheckPanel({ content, onContentChange, isOpen, onCl
               {activeErrors.map((error, index) => (
                 <div key={`${error.startIndex}-${error.word}`} className="border rounded-lg p-3 bg-gray-50">
                   <div className="mb-2">
-                    <span className="text-sm font-medium text-red-600">"{error.word}"</span>
-                    <span className="text-xs text-gray-500 ml-2">
+                    {editingIndex === index ? (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={editingWord}
+                          onChange={(e) => setEditingWord(e.target.value)}
+                          className="text-sm font-medium px-2 py-1 border rounded flex-1"
+                          placeholder="Edit word..."
+                          autoFocus
+                        />
+                        <Button
+                          size="sm"
+                          onClick={() => handleGetNewSuggestions(index)}
+                          disabled={isLoading}
+                          className="h-7 text-xs"
+                        >
+                          Get Suggestions
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={handleCancelEdit}
+                          className="h-7 text-xs"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-red-600">"{error.word}"</span>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleEditWord(index)}
+                          className="h-6 text-xs px-2 text-blue-600 hover:bg-blue-50"
+                        >
+                          Edit
+                        </Button>
+                      </div>
+                    )}
+                    <span className="text-xs text-gray-500">
                       Position: {error.startIndex}-{error.endIndex}
                     </span>
                   </div>
