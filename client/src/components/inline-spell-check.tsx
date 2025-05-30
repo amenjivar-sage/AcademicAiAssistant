@@ -24,8 +24,11 @@ export default function InlineSpellCheck({
   onClose
 }: InlineSpellCheckProps) {
   const [spellErrors, setSpellErrors] = useState<SpellCheckResult[]>([]);
+  const [currentErrorIndex, setCurrentErrorIndex] = useState<number>(0);
   const [tooltips, setTooltips] = useState<SpellTooltip[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingWord, setEditingWord] = useState("");
   const editorRef = useRef<HTMLDivElement>(null);
   const [recentChanges, setRecentChanges] = useState<Array<{original: string, corrected: string, timestamp: number}>>([]);
 
@@ -46,6 +49,7 @@ export default function InlineSpellCheck({
     // Use AI-powered spell checking
     checkSpellingWithAI(content).then(errors => {
       setSpellErrors(errors);
+      setCurrentErrorIndex(0);
       calculateTooltipPositions(errors);
       setIsLoading(false);
     }).catch(error => {
@@ -67,30 +71,31 @@ export default function InlineSpellCheck({
   }, [debouncedSpellCheck, isActive]);
 
   const calculateTooltipPositions = (errors: SpellCheckResult[]) => {
-    if (!editorRef.current) return;
+    if (!editorRef.current || errors.length === 0) return;
+
+    // Only show tooltip for the current error (first error)
+    const currentError = errors[currentErrorIndex];
+    if (!currentError) return;
 
     const newTooltips: SpellTooltip[] = [];
     
     // Simple positioning based on approximate character positions
-    errors.forEach((error, index) => {
-      // Approximate position calculation
-      const lineHeight = 24; // Approximate line height
-      const charWidth = 9.6; // Approximate character width for Georgia serif
-      
-      // Count lines up to this word
-      const textBeforeWord = content.substring(0, error.startIndex);
-      const lines = textBeforeWord.split('\n');
-      const currentLine = lines.length - 1;
-      const charInLine = lines[lines.length - 1].length;
-      
-      newTooltips.push({
-        error,
-        position: {
-          top: (currentLine + 1) * lineHeight + 40, // Add padding
-          left: charInLine * charWidth + 32 // Add left padding
-        },
-        visible: true
-      });
+    const lineHeight = 24; // Approximate line height
+    const charWidth = 9.6; // Approximate character width for Georgia serif
+    
+    // Count lines up to this word
+    const textBeforeWord = content.substring(0, currentError.startIndex);
+    const lines = textBeforeWord.split('\n');
+    const currentLine = lines.length - 1;
+    const charInLine = lines[lines.length - 1].length;
+    
+    newTooltips.push({
+      error: currentError,
+      position: {
+        top: (currentLine + 1) * lineHeight + 40, // Add padding
+        left: charInLine * charWidth + 32 // Add left padding
+      },
+      visible: true
     });
 
     setTooltips(newTooltips);
@@ -111,24 +116,73 @@ export default function InlineSpellCheck({
 
     onContentChange(newContent);
     
-    // Remove this error from the list
-    const newErrors = spellErrors.filter((_, index) => index !== errorIndex);
-    setSpellErrors(newErrors);
-    calculateTooltipPositions(newErrors);
-    
-    if (newErrors.length === 0) {
-      onClose();
-    }
+    // Move to next error or close if done
+    moveToNextError();
   };
 
   const handleIgnoreError = (errorIndex: number) => {
-    const newErrors = spellErrors.filter((_, index) => index !== errorIndex);
+    // Move to next error or close if done
+    moveToNextError();
+  };
+
+  const moveToNextError = () => {
+    const newErrors = [...spellErrors];
+    newErrors.splice(currentErrorIndex, 1);
     setSpellErrors(newErrors);
-    calculateTooltipPositions(newErrors);
     
     if (newErrors.length === 0) {
       onClose();
+    } else {
+      // Stay at same index if possible, or go to previous if at end
+      if (currentErrorIndex >= newErrors.length) {
+        setCurrentErrorIndex(Math.max(0, newErrors.length - 1));
+      }
+      calculateTooltipPositions(newErrors);
     }
+  };
+
+  const handleEditWord = () => {
+    const currentError = spellErrors[currentErrorIndex];
+    if (!currentError) return;
+    
+    setIsEditing(true);
+    setEditingWord(currentError.word);
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingWord.trim()) return;
+    
+    const currentError = spellErrors[currentErrorIndex];
+    if (!currentError) return;
+
+    // Check if the edited word is correct by spell checking it
+    checkSpellingWithAI(editingWord).then(suggestions => {
+      if (suggestions.length === 0) {
+        // Word is correct, apply it
+        handleAcceptSuggestion(currentErrorIndex, editingWord);
+      } else {
+        // Word still has errors, update the current error
+        const updatedErrors = [...spellErrors];
+        updatedErrors[currentErrorIndex] = {
+          ...currentError,
+          word: editingWord,
+          suggestions: suggestions[0].suggestions || []
+        };
+        setSpellErrors(updatedErrors);
+        calculateTooltipPositions(updatedErrors);
+      }
+      setIsEditing(false);
+      setEditingWord("");
+    }).catch(error => {
+      console.error('Failed to validate edited word:', error);
+      setIsEditing(false);
+      setEditingWord("");
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditingWord("");
   };
 
   const createHighlightedContent = () => {
@@ -136,27 +190,26 @@ export default function InlineSpellCheck({
       return content;
     }
 
+    // Only highlight the current error
+    const currentError = spellErrors[currentErrorIndex];
+    if (!currentError) return content;
+
     let highlightedText = content;
-    let offset = 0;
+    
+    const beforeText = highlightedText.substring(0, currentError.startIndex);
+    const errorText = highlightedText.substring(currentError.startIndex, currentError.endIndex);
+    const afterText = highlightedText.substring(currentError.endIndex);
 
-    // Sort errors by start index to process them in order
-    const sortedErrors = [...spellErrors].sort((a, b) => a.startIndex - b.startIndex);
-
-    sortedErrors.forEach((error) => {
-      const beforeText = highlightedText.substring(0, error.startIndex + offset);
-      const errorText = highlightedText.substring(error.startIndex + offset, error.endIndex + offset);
-      const afterText = highlightedText.substring(error.endIndex + offset);
-
-      // Highlight with a subtle red underline
-      const highlightedError = `<span style="
-        border-bottom: 2px wavy #ef4444;
-        background: rgba(239, 68, 68, 0.1);
-        position: relative;
-      " data-error-word="${errorText}">${errorText}</span>`;
-      
-      highlightedText = beforeText + highlightedError + afterText;
-      offset += highlightedError.length - errorText.length;
-    });
+    // Highlight only the current error with a strong visual indicator
+    const highlightedError = `<span style="
+      border-bottom: 2px wavy #ef4444;
+      background: rgba(239, 68, 68, 0.2);
+      border-radius: 3px;
+      padding: 1px 2px;
+      position: relative;
+    " data-error-word="${errorText}">${errorText}</span>`;
+    
+    highlightedText = beforeText + highlightedError + afterText;
 
     return highlightedText;
   };
@@ -181,53 +234,103 @@ export default function InlineSpellCheck({
         dangerouslySetInnerHTML={{ __html: createHighlightedContent() }}
       />
 
-      {/* Inline tooltips */}
+      {/* Inline tooltip for current error only */}
       {tooltips.map((tooltip, index) => (
         <div
           key={index}
-          className="absolute z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-3 min-w-64"
+          className="absolute z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-4 min-w-80"
           style={{
             top: `${tooltip.position.top}px`,
             left: `${tooltip.position.left}px`,
-            maxWidth: '300px'
+            maxWidth: '350px'
           }}
         >
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Badge variant="destructive" className="text-xs">
-                Misspelled
+                {currentErrorIndex + 1} of {spellErrors.length}
               </Badge>
               <span className="font-mono text-sm bg-red-50 px-2 py-1 rounded">
                 "{tooltip.error.word}"
               </span>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleIgnoreError(index)}
-              className="h-6 w-6 p-0"
-            >
-              <X className="h-3 w-3" />
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleEditWord}
+                className="h-6 w-6 p-0"
+                title="Edit word"
+              >
+                <Edit className="h-3 w-3" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleIgnoreError(index)}
+                className="h-6 w-6 p-0"
+                title="Ignore"
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
           </div>
 
-          {/* Suggestions */}
-          {tooltip.error.suggestions && tooltip.error.suggestions.length > 0 && (
-            <div className="space-y-1">
-              <p className="text-xs text-gray-600 mb-1">Suggestions:</p>
-              {tooltip.error.suggestions.slice(0, 3).map((suggestion, suggestionIndex) => (
+          {/* Edit mode */}
+          {isEditing ? (
+            <div className="space-y-2">
+              <input
+                type="text"
+                value={editingWord}
+                onChange={(e) => setEditingWord(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                placeholder="Type the correct word..."
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleSaveEdit();
+                  if (e.key === 'Escape') handleCancelEdit();
+                }}
+              />
+              <div className="flex gap-2">
                 <Button
-                  key={suggestionIndex}
+                  size="sm"
+                  onClick={handleSaveEdit}
+                  disabled={!editingWord.trim()}
+                  className="h-7 text-xs"
+                >
+                  Save
+                </Button>
+                <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleAcceptSuggestion(index, suggestion)}
-                  className="w-full justify-start h-7 text-xs hover:bg-green-50 hover:border-green-300"
+                  onClick={handleCancelEdit}
+                  className="h-7 text-xs"
                 >
-                  <Check className="h-3 w-3 mr-1" />
-                  {suggestion}
+                  Cancel
                 </Button>
-              ))}
+              </div>
             </div>
+          ) : (
+            <>
+              {/* Suggestions */}
+              {tooltip.error.suggestions && tooltip.error.suggestions.length > 0 && (
+                <div className="space-y-1">
+                  <p className="text-xs text-gray-600 mb-2">Suggestions:</p>
+                  {tooltip.error.suggestions.slice(0, 3).map((suggestion, suggestionIndex) => (
+                    <Button
+                      key={suggestionIndex}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleAcceptSuggestion(index, suggestion)}
+                      className="w-full justify-start h-8 text-sm hover:bg-green-50 hover:border-green-300"
+                    >
+                      <Check className="h-4 w-4 mr-2" />
+                      {suggestion}
+                    </Button>
+                  ))}
+                </div>
+              )}
+            </>
           )}
 
           {/* Triangle pointer */}
@@ -235,7 +338,7 @@ export default function InlineSpellCheck({
             className="absolute w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-white"
             style={{
               top: '-4px',
-              left: '20px'
+              left: '30px'
             }}
           />
         </div>
