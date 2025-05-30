@@ -269,6 +269,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Assignment creation route
+  app.post("/api/assignments", async (req, res) => {
+    try {
+      const assignmentData = req.body;
+      assignmentData.teacherId = 1; // Demo teacher ID
+      
+      console.log('Creating assignment:', assignmentData);
+      const assignment = await storage.createAssignment(assignmentData);
+      
+      console.log('Assignment created successfully:', assignment.id);
+      res.json(assignment);
+    } catch (error) {
+      console.error("Error creating assignment:", error);
+      res.status(500).json({ message: "Failed to create assignment" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
