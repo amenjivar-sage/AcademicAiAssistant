@@ -295,27 +295,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Otherwise get existing session - ensure it exists before returning
       console.log('Attempting to retrieve session:', sessionId);
       
-      // Always check user sessions first to avoid timing issues
+      // Direct lookup first to avoid cache timing issues
+      console.log('DatabaseStorage.getWritingSession - Direct lookup for session:', sessionId);
+      const session = await storage.getWritingSession(sessionId);
+      
+      if (session) {
+        console.log('Session retrieved successfully via direct lookup:', session.id);
+        return res.json(session);
+      }
+      
+      // Fallback to user sessions list
       const userId = currentDemoUserId;
+      console.log('Fallback: checking user sessions for user:', userId);
       const userSessions = await storage.getUserWritingSessions(userId);
       console.log('User has', userSessions.length, 'sessions total');
       const foundSession = userSessions.find(s => s.id === sessionId);
       
       if (foundSession) {
-        console.log('Found session via user sessions:', foundSession.id);
+        console.log('Found session via user sessions fallback:', foundSession.id);
         return res.json(foundSession);
       }
       
-      // Fallback to direct lookup
-      const session = await storage.getWritingSession(sessionId);
-      
-      if (!session) {
-        console.log('Session not found anywhere:', sessionId);
-        return res.status(404).json({ message: "Session not found" });
-      }
-      
-      console.log('Session retrieved successfully:', session.id);
-      res.json(session);
+      console.log('Session not found anywhere:', sessionId);
+      return res.status(404).json({ message: "Session not found" });
     } catch (error) {
       console.error('Error in writing session route:', error);
       res.status(500).json({ message: "Failed to get writing session" });
