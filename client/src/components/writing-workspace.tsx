@@ -83,13 +83,20 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       setLastSaved(new Date());
       setIsSaving(false);
       
+      // Preserve current content - don't overwrite what user is typing
+      if (!title && !content) {
+        setTitle(newSession.title || "");
+        setContent(newSession.content || "");
+      }
+      
       // Update URL to include the new session ID
       window.history.replaceState({}, '', `/assignment/${assignmentId}/session/${newSession.id}`);
       
+      // Cache the new session data to prevent retrieval issues
+      queryClient.setQueryData(['/api/writing-sessions', newSession.id], newSession);
       queryClient.invalidateQueries({ queryKey: ['/api/writing-sessions'] });
       queryClient.invalidateQueries({ queryKey: ['/api/student/writing-sessions'] });
       queryClient.invalidateQueries({ queryKey: ['/api/student/assignments'] });
-      queryClient.setQueryData(['/api/writing-sessions', newSession.id], newSession);
     },
     onError: (error) => {
       console.error('Error creating session:', error);
@@ -180,10 +187,15 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   useEffect(() => {
     if (session) {
       console.log('Writing workspace - Loading session data:', session.id, 'Title:', session.title, 'Content:', session.content);
-      setTitle(session.title);
-      setContent(session.content);
-      setPastedContents(session.pastedContent as PastedContent[] || []);
-      setWordCount(session.wordCount);
+      
+      // Only load session content if we don't already have content (to prevent overwriting during typing)
+      const hasCurrentContent = title.trim() || content.trim();
+      if (!hasCurrentContent) {
+        setTitle(session.title || "");
+        setContent(session.content || "");
+        setPastedContents(session.pastedContent as PastedContent[] || []);
+        setWordCount(session.wordCount || 0);
+      }
       
       // If we got a new session with a different ID, update our session ID state
       if (sessionId === 0 && session.id && session.id !== 0) {
