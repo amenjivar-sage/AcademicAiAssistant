@@ -389,68 +389,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Import AI functions
       const { generateAiResponse } = await import("./openai");
       
-      // Limit errors to prevent overwhelming the AI and UI
-      const spellCheckPrompt = `Find the first 5 misspelled words in: "${text}"
-
-CRITICAL RULES:
-1. Each word must be separated by spaces - NEVER combine two words
-2. Only flag individual words that are clearly misspelled
-3. Check word boundaries carefully - spaces separate words
-4. Provide exact character positions for SINGLE words only
-5. Maximum 5 errors
-
-Examples:
-- "unfortunatelychocolate" should be treated as ONE misspelled word, not two
-- "unfortunately chocolate" are TWO separate words
-- Only flag if a single word is actually misspelled
-
-Return JSON: [{"word": "exact_single_word", "suggestions": ["correction"], "startIndex": 0, "endIndex": 10}]
-Return [] if no errors.`;
-
-      const aiResponse = await generateAiResponse(spellCheckPrompt);
+      // Split text into individual words first to prevent AI confusion
+      const words = text.split(/\s+/);
+      let allCorrections = [];
+      let currentIndex = 0;
       
-      // Extract JSON from AI response (handle markdown formatting)
-      let corrections = [];
-      try {
-        // Try direct JSON parsing first
-        corrections = JSON.parse(aiResponse);
-      } catch (parseError) {
-        // Extract JSON from markdown code blocks
-        const jsonMatch = aiResponse.match(/```json\s*([\s\S]*?)\s*```/);
-        if (jsonMatch) {
-          try {
-            corrections = JSON.parse(jsonMatch[1]);
-          } catch (extractError) {
-            corrections = parseSpellCheckResponse(aiResponse, text);
-          }
-        } else {
-          // If no markdown, try to extract corrections from text
-          corrections = parseSpellCheckResponse(aiResponse, text);
-        }
-      }
-
-      // Validate and fix word positions
-      corrections = corrections.filter(correction => {
-        if (!correction.word || correction.startIndex === undefined || correction.endIndex === undefined) {
-          return false;
+      // Check each word individually with proper boundaries
+      for (let i = 0; i < Math.min(words.length, 10); i++) {
+        const word = words[i];
+        if (word.length < 2) {
+          currentIndex += word.length + 1; // +1 for space
+          continue;
         }
         
-        // Verify the word actually exists at the specified position
-        const actualWord = text.substring(correction.startIndex, correction.endIndex);
-        if (actualWord.toLowerCase() !== correction.word.toLowerCase()) {
-          // Try to find the correct position
-          const correctIndex = text.toLowerCase().indexOf(correction.word.toLowerCase());
-          if (correctIndex !== -1) {
-            correction.startIndex = correctIndex;
-            correction.endIndex = correctIndex + correction.word.length;
-            return true;
-          }
-          return false;
-        }
-        return true;
-      });
+        const wordCheckPrompt = `Is this word misspelled? Word: "${word}"
 
-      res.json({ corrections });
+RULES:
+1. Only respond "YES" if the word has clear spelling errors
+2. If YES, provide 1 simple correction
+3. Ignore proper nouns, contractions, technical terms
+
+Return JSON: {"misspelled": true/false, "word": "${word}", "suggestion": "correction", "startIndex": ${currentIndex}, "endIndex": ${currentIndex + word.length}}
+If not misspelled, return: {"misspelled": false}`;
+
+        try {
+          const aiResponse = await generateAiResponse(wordCheckPrompt);
+          const result = JSON.parse(aiResponse.replace(/```json\n?|\n?```/g, ''));
+          
+          if (result.misspelled && result.suggestion && allCorrections.length < 5) {
+            allCorrections.push({
+              word: result.word,
+              suggestions: [result.suggestion],
+              startIndex: result.startIndex,
+              endIndex: result.endIndex
+            });
+          }
+        } catch (error) {
+          console.error('Word check error:', error);
+        }
+        
+        currentIndex += word.length + 1; // +1 for space
+      }
+      
+      res.json({ corrections: allCorrections });
     } catch (error) {
       console.error("AI spell check error:", error);
       res.status(500).json({ message: "Failed to check spelling" });
