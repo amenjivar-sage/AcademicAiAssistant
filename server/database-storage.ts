@@ -103,27 +103,42 @@ export class DatabaseStorage implements IStorage {
   // Writing session operations
   async getWritingSession(id: number): Promise<WritingSession | undefined> {
     console.log('DatabaseStorage.getWritingSession called with ID:', id);
-    try {
-      // Direct query first
-      const sessions = await db.select().from(writingSessions).where(eq(writingSessions.id, id));
-      const session = sessions[0];
-      
-      console.log('Direct query returned:', session ? 'found' : 'not found');
-      if (session) {
-        console.log('Found session:', session.id, 'Title:', session.title, 'Content length:', session.content?.length || 0);
-        // Ensure pastedContent is properly handled
-        return {
-          ...session,
-          pastedContent: session.pastedContent || []
-        };
-      } else {
-        console.log('No session found with ID:', id);
-        return undefined;
+    
+    // Add retry logic for database read consistency
+    let attempts = 0;
+    const maxAttempts = 5;
+    const baseDelay = 50; // Start with 50ms
+    
+    while (attempts < maxAttempts) {
+      try {
+        const sessions = await db.select().from(writingSessions).where(eq(writingSessions.id, id));
+        const session = sessions[0];
+        
+        if (session) {
+          console.log('Found session:', session.id, 'Title:', session.title, 'Content length:', session.content?.length || 0);
+          return {
+            ...session,
+            pastedContent: session.pastedContent || []
+          };
+        }
+        
+        attempts++;
+        if (attempts < maxAttempts) {
+          const delay = baseDelay * Math.pow(2, attempts - 1); // Exponential backoff
+          console.log(`Session ${id} not found, retrying in ${delay}ms... (attempt ${attempts}/${maxAttempts})`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      } catch (error) {
+        console.error(`Database error in getWritingSession (attempt ${attempts + 1}):`, error);
+        attempts++;
+        if (attempts < maxAttempts) {
+          await new Promise(resolve => setTimeout(resolve, baseDelay * attempts));
+        }
       }
-    } catch (error) {
-      console.error('Database error in getWritingSession:', error);
-      return undefined;
     }
+    
+    console.error(`Session ${id} not found after ${maxAttempts} attempts`);
+    return undefined;
   }
 
   async createWritingSession(sessionData: InsertWritingSession): Promise<WritingSession> {
