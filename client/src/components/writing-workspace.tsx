@@ -42,6 +42,11 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [showSpellCheck, setShowSpellCheck] = useState(false);
   const [spellCheckActive, setSpellCheckActive] = useState(false);
+  const [headerFooterSettings, setHeaderFooterSettings] = useState({
+    header: "",
+    footer: "",
+    pageNumbers: false
+  });
 
   const contentRef = useRef<HTMLTextAreaElement>(null);
   const formatRef = useRef<((command: string, value?: string) => void) | null>(null);
@@ -428,6 +433,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
               onSave={handleManualSave}
               isSaving={isSaving}
               onSpellCheck={() => setShowSpellCheck(true)}
+              onHeaderFooterChange={setHeaderFooterSettings}
             />
             
             {/* View Info */}
@@ -474,7 +480,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                 </div>
                 
                 <div className="relative">
-                  <RichTextEditor
+                  <PageBasedEditor
                     content={content}
                     onContentChange={(newContent) => {
                       console.log('Content changed from document view:', newContent);
@@ -483,12 +489,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                     disabled={isSubmitted || isGraded}
                     onFormatRef={formatRef}
                     placeholder="Start writing your assignment here..."
-                    className="w-full min-h-[600px] p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    style={{
-                      fontFamily: 'Times New Roman, serif',
-                      fontSize: '14px',
-                      lineHeight: '1.6'
-                    }}
+                    headerFooterSettings={headerFooterSettings}
                   />
                   
                   {/* Enhanced Page Break Indicators */}

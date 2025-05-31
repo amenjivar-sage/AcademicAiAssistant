@@ -47,13 +47,15 @@ interface EnhancedToolbarProps {
   onSave?: () => void;
   isSaving?: boolean;
   onSpellCheck?: () => void;
+  onHeaderFooterChange?: (settings: { header: string; footer: string; pageNumbers: boolean }) => void;
 }
 
 export default function EnhancedToolbar({ 
   onFormatting, 
   onSave, 
   isSaving = false,
-  onSpellCheck
+  onSpellCheck,
+  onHeaderFooterChange
 }: EnhancedToolbarProps) {
   const handleFormat = (command: string, value?: string) => {
     onFormatting?.(command, value);
@@ -313,8 +315,12 @@ export default function EnhancedToolbar({
                     pageNumbers: showPageNumbers
                   });
                   
-                  // Show confirmation
-                  alert(`Settings saved!\nHeader: ${headerText || 'None'}\nFooter: ${footerText || 'None'}\nPage numbers: ${showPageNumbers ? 'Yes' : 'No'}`);
+                  // Call the callback to update the page settings
+                  onHeaderFooterChange?.({
+                    header: headerText,
+                    footer: footerText,
+                    pageNumbers: showPageNumbers
+                  });
                 }}
               >
                 Save Settings
