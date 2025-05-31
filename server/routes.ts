@@ -429,28 +429,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const chunk = text.substring(i, Math.min(i + chunkSize, text.length));
         
         // Use OpenAI for spell checking (temporary until deployment)
-        const spellCheckPrompt = `
-You are a professional spell checker. Analyze this text for spelling errors and provide corrections based on standard American English spelling.
-
-IMPORTANT: Only flag words that are definitively misspelled. Do NOT flag:
-- Proper nouns (names of people, places, companies)
-- Words that are correctly spelled but informal
-- Technical terms that may be legitimate
+        const spellCheckPrompt = `Find spelling errors in this text. Return ONLY a JSON array, no other text:
 
 Text: "${chunk}"
 
-Return a JSON array with this exact format:
-[
-  {
-    "word": "misspelled_word",
-    "suggestions": ["correct_spelling"],
-    "startIndex": position_in_text,
-    "endIndex": position_in_text_plus_word_length
-  }
-]
+Format: [{"word":"error","suggestions":["fix"],"startIndex":0,"endIndex":5}]
 
-If no errors found, return: []
-`;
+Return [] if no errors.`;
 
         try {
           const aiResponse = await generateAiResponse(spellCheckPrompt);
