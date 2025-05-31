@@ -44,9 +44,13 @@ export default function RichTextEditor({
   const handleInput = () => {
     if (editorRef.current) {
       setIsUpdating(true);
-      // Use innerText to get plain text content while preserving line breaks
+      // Use innerHTML to preserve formatting, fallback to innerText for plain content
+      const htmlContent = editorRef.current.innerHTML || '';
       const plainContent = editorRef.current.innerText || '';
-      onContentChange(plainContent);
+      
+      // If there's HTML formatting, use that, otherwise use plain text
+      const contentToSave = htmlContent.includes('<') ? htmlContent : plainContent;
+      onContentChange(contentToSave);
       setTimeout(() => setIsUpdating(false), 0);
     }
   };

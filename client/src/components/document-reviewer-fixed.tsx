@@ -174,18 +174,25 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
 
   // Helper function to highlight pasted content in red
   const highlightPastedContent = (text: string) => {
-    if (!session.pastedContent || !Array.isArray(session.pastedContent) || session.pastedContent.length === 0) {
+    if (!session.pastedContent || session.pastedContent.length === 0) {
       return text;
     }
 
     let result = text;
-    const pastedTexts = session.pastedContent.map((item: any) => 
-      typeof item === 'string' ? item : item.content || ''
-    ).filter(pastedText => pastedText.length > 10); // Only highlight substantial pastes
+    const pastedTexts = session.pastedContent.map((item: any) => {
+      if (typeof item === 'string') return item;
+      if (item && typeof item === 'object') {
+        return item.content || item.text || item.value || '';
+      }
+      return '';
+    }).filter(pastedText => pastedText && pastedText.length > 5); // Only highlight substantial pastes
 
     pastedTexts.forEach((pastedText, index) => {
-      const regex = new RegExp(pastedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-      result = result.replace(regex, `<span class="bg-red-200 border-b-2 border-red-400 text-red-800 font-medium" title="Copy-pasted content">${pastedText}</span>`);
+      if (pastedText && result.includes(pastedText)) {
+        const escapedText = pastedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(escapedText, 'gi');
+        result = result.replace(regex, `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600;" title="Copy-pasted content">${pastedText}</span>`);
+      }
     });
 
     return result;
