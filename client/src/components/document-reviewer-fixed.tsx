@@ -306,11 +306,24 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                 <TabsContent value="document" className="mt-4">
                   {session.pastedContent && Array.isArray(session.pastedContent) && session.pastedContent.length > 0 && (
                     <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3">
-                      <div className="flex items-center gap-2">
-                        <div className="h-2 w-2 bg-red-500 rounded-full"></div>
-                        <p className="text-sm text-red-700 font-medium">
-                          Copy-paste activity detected: {session.pastedContent.length} instance(s) highlighted in red below
-                        </p>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="h-2 w-2 bg-red-500 rounded-full"></div>
+                          <p className="text-sm text-red-700 font-medium">
+                            Copy-paste activity detected: {session.pastedContent.length} instance(s) highlighted in red below
+                          </p>
+                        </div>
+                        <div className="text-sm text-red-600 font-semibold">
+                          {(() => {
+                            const totalWords = session.content ? session.content.split(/\s+/).filter(w => w.trim()).length : 0;
+                            const pastedWords = session.pastedContent.reduce((total: number, item: any) => {
+                              const text = item.text || item.content || item.value || '';
+                              return total + (text ? text.split(/\s+/).filter((w: string) => w.trim()).length : 0);
+                            }, 0);
+                            const percentage = totalWords > 0 ? Math.round((pastedWords / totalWords) * 100) : 0;
+                            return `${percentage}% pasted content`;
+                          })()}
+                        </div>
                       </div>
                     </div>
                   )}
