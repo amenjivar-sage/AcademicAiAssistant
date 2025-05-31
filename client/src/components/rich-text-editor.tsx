@@ -116,20 +116,33 @@ export default function RichTextEditor({
           selection.addRange(range);
         }
       } else if (command === 'fontSize' && value) {
+        // Simple and direct approach for font size
+        editorRef.current.focus();
+        
         const selection = window.getSelection();
         if (selection && selection.rangeCount > 0) {
           const range = selection.getRangeAt(0);
-          const span = document.createElement('span');
-          span.style.fontSize = value;
-          try {
-            range.surroundContents(span);
-          } catch (e) {
-            const contents = range.extractContents();
-            span.appendChild(contents);
-            range.insertNode(span);
+          
+          if (!range.collapsed) {
+            // Create a span with the font size
+            const span = document.createElement('span');
+            span.style.fontSize = value;
+            
+            try {
+              range.surroundContents(span);
+            } catch (e) {
+              // If surroundContents fails, extract and wrap content
+              const contents = range.extractContents();
+              span.appendChild(contents);
+              range.insertNode(span);
+            }
+            
+            // Clear and restore selection
+            selection.removeAllRanges();
+            const newRange = document.createRange();
+            newRange.selectNodeContents(span);
+            selection.addRange(newRange);
           }
-          selection.removeAllRanges();
-          selection.addRange(range);
         }
       } else if (command === 'foreColor' && value) {
         // Handle text color specifically
