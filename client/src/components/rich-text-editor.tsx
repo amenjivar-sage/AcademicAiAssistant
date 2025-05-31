@@ -97,55 +97,51 @@ export default function RichTextEditor({
       // Focus the editor first to ensure proper selection
       editorRef.current.focus();
       
-      // For font family and size, we need to use a different approach
+      // Handle font formatting with proper cleanup to prevent nesting
       if (command === 'fontName' && value) {
         const selection = window.getSelection();
         if (selection && selection.rangeCount > 0) {
           const range = selection.getRangeAt(0);
           
           if (!range.collapsed && range.toString().trim()) {
-            // Only apply formatting if there's actually selected text
+            const selectedText = range.toString();
+            
+            // Clean approach: remove existing font spans and apply new one
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = selectedText;
+            
+            // Create a clean span with just the font family
             const span = document.createElement('span');
             span.style.fontFamily = value;
-            try {
-              range.surroundContents(span);
-            } catch (e) {
-              // If surroundContents fails, extract and wrap content
-              const contents = range.extractContents();
-              if (contents.textContent?.trim()) {
-                span.appendChild(contents);
-                range.insertNode(span);
-              }
-            }
+            span.textContent = selectedText;
+            
+            range.deleteContents();
+            range.insertNode(span);
+            
+            // Restore selection
             selection.removeAllRanges();
-            selection.addRange(range);
+            const newRange = document.createRange();
+            newRange.selectNodeContents(span);
+            selection.addRange(newRange);
           }
         }
       } else if (command === 'fontSize' && value) {
-        // Simple and direct approach for font size
-        editorRef.current.focus();
-        
         const selection = window.getSelection();
         if (selection && selection.rangeCount > 0) {
           const range = selection.getRangeAt(0);
           
           if (!range.collapsed && range.toString().trim()) {
-            // Only apply formatting if there's actually selected text
+            const selectedText = range.toString();
+            
+            // Create a clean span with just the font size
             const span = document.createElement('span');
             span.style.fontSize = value;
+            span.textContent = selectedText;
             
-            try {
-              range.surroundContents(span);
-            } catch (e) {
-              // If surroundContents fails, extract and wrap content
-              const contents = range.extractContents();
-              if (contents.textContent?.trim()) {
-                span.appendChild(contents);
-                range.insertNode(span);
-              }
-            }
+            range.deleteContents();
+            range.insertNode(span);
             
-            // Clear and restore selection
+            // Restore selection
             selection.removeAllRanges();
             const newRange = document.createRange();
             newRange.selectNodeContents(span);
@@ -229,7 +225,7 @@ export default function RichTextEditor({
       className={`outline-none ${className}`}
       style={{
         minHeight: '100%',
-        fontFamily: 'Georgia, serif',
+        fontFamily: '"Times New Roman", serif',
         fontSize: '16px',
         lineHeight: '1.6',
         direction: 'ltr',
