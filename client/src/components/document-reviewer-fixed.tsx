@@ -179,19 +179,24 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
     }
 
     let result = text;
+    console.log('Pasted content data:', session.pastedContent);
+    
     const pastedTexts = session.pastedContent.map((item: any) => {
       if (typeof item === 'string') return item;
       if (item && typeof item === 'object') {
-        return item.content || item.text || item.value || '';
+        // Handle the actual data structure from logs
+        return item.text || item.content || item.value || '';
       }
       return '';
     }).filter((pastedText: string) => pastedText && pastedText.length > 10); // Only highlight substantial pastes
+
+    console.log('Extracted pasted texts:', pastedTexts);
 
     pastedTexts.forEach((pastedText: string) => {
       if (pastedText && result.includes(pastedText)) {
         const escapedText = pastedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const regex = new RegExp(escapedText, 'gi');
-        result = result.replace(regex, `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600;" title="Copy-pasted content">${pastedText}</span>`);
+        result = result.replace(regex, `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected">${pastedText}</span>`);
       }
     });
 
