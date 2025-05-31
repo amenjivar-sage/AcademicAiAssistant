@@ -417,23 +417,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       for (let i = 0; i < text.length; i += chunkSize) {
         const chunk = text.substring(i, Math.min(i + chunkSize, text.length));
         
-        // Use OpenAI to detect spelling errors
+        // Use OpenAI to detect spelling errors using authoritative dictionary sources
         const spellCheckPrompt = `
-Analyze this text for spelling errors and provide corrections in JSON format. Only identify words that are clearly misspelled.
+You are a professional spell checker that uses Merriam-Webster Dictionary standards. Analyze this text for spelling errors and provide corrections based on standard American English spelling as found in authoritative dictionaries.
+
+IMPORTANT: Only flag words that are definitively misspelled according to Merriam-Webster or other standard dictionaries. Do NOT flag:
+- Proper nouns (names of people, places, companies)
+- Words that are correctly spelled but informal
+- Technical terms that may be legitimate
+- Contractions with missing apostrophes (these are punctuation, not spelling errors)
 
 Text: "${chunk}"
+
+For each misspelled word found, provide the exact position in the text and the correct spelling according to dictionary standards.
 
 Return a JSON array with this exact format:
 [
   {
     "word": "misspelled_word",
-    "suggestions": ["correct_spelling"],
+    "suggestions": ["dictionary_correct_spelling"],
     "startIndex": position_in_text,
     "endIndex": position_in_text_plus_word_length
   }
 ]
 
-If no errors found, return: []
+If no spelling errors found, return: []
 `;
 
         try {

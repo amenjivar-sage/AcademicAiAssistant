@@ -119,34 +119,19 @@ export async function checkSpellingWithAI(text: string): Promise<SpellCheckResul
     const data = await response.json();
     const aiResults = data.corrections || [];
     
-    // If AI returns no results, combine with basic spell checking for better coverage
+    // If AI returns no results and we need a reliable source, we should improve the AI
+    // rather than fall back to unreliable custom dictionaries
     if (aiResults.length === 0) {
-      console.log('AI returned no results, using fallback spell checking');
-      return checkSpelling(text);
+      console.log('AI returned no results - this suggests the AI service may need improvement');
+      return []; // Return empty rather than unreliable results
     }
     
-    // Merge AI results with basic spell checking for comprehensive coverage
-    const basicResults = checkSpelling(text);
-    const combinedResults = [...aiResults];
-    
-    // Add basic results that AI might have missed
-    basicResults.forEach(basicResult => {
-      const alreadyFound = aiResults.some(aiResult => 
-        aiResult.word.toLowerCase() === basicResult.word.toLowerCase() &&
-        Math.abs(aiResult.startIndex - basicResult.startIndex) < 5
-      );
-      
-      if (!alreadyFound) {
-        combinedResults.push(basicResult);
-      }
-    });
-    
-    return combinedResults.sort((a, b) => a.startIndex - b.startIndex);
+    return aiResults.sort((a, b) => a.startIndex - b.startIndex);
     
   } catch (error) {
     console.error('AI spell check error:', error);
-    // Always fallback to basic spell checking to ensure functionality
-    return checkSpelling(text);
+    // Return empty array - we only want dictionary-based results, not unreliable fallbacks
+    return [];
   }
 }
 
