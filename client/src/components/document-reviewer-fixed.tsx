@@ -199,21 +199,37 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
           const regex = new RegExp(escapedText, 'gi');
           result = result.replace(regex, `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected">${pastedText}</span>`);
         } else {
-          // If exact match fails, try to match by looking for similar structure
-          // Split into sentences and look for similar sentence patterns
-          const pastedSentences = pastedText.split(/[.!?]+/).filter(s => s.trim().length > 20);
-          pastedSentences.forEach((sentence: string) => {
-            const trimmedSentence = sentence.trim();
-            if (trimmedSentence) {
-              // Create a pattern that matches the general structure
-              const words = trimmedSentence.split(/\s+/).filter(w => w.length > 3); // Skip short words
-              if (words.length >= 4) {
-                // Look for sequences of these key words in the final text
-                const firstWord = words[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                const lastWord = words[words.length - 1].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                const pattern = new RegExp(`(${firstWord}[^.!?]*${lastWord})`, 'gi');
+          // More aggressive pattern matching for corrected text
+          // Split into meaningful chunks (phrases/clauses)
+          const chunks = pastedText.split(/[,.;!?]+/).filter(chunk => chunk.trim().length > 15);
+          
+          chunks.forEach((chunk: string) => {
+            const trimmedChunk = chunk.trim();
+            if (trimmedChunk) {
+              // Extract key words (longer than 3 characters, skip common words)
+              const skipWords = ['the', 'and', 'that', 'with', 'have', 'this', 'will', 'you', 'they', 'but', 'not', 'for', 'are', 'was', 'were', 'had'];
+              const keyWords = trimmedChunk.split(/\s+/)
+                .filter(w => w.length > 3 && !skipWords.includes(w.toLowerCase()))
+                .slice(0, 4); // Take first 4 key words
+              
+              if (keyWords.length >= 2) {
+                // Create flexible pattern matching multiple key words
+                const wordPatterns = keyWords.map(word => {
+                  // Create pattern that allows for spelling corrections
+                  const baseWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                  return `\\b\\w*${baseWord.substring(0, Math.max(3, baseWord.length - 2))}\\w*\\b`;
+                });
                 
-                result = result.replace(pattern, `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected (corrected)">$1</span>`);
+                // Look for sentences containing multiple key words
+                const pattern = new RegExp(`([^.!?]*${wordPatterns[0]}[^.!?]*${wordPatterns[1]}[^.!?]*[.!?]?)`, 'gi');
+                
+                result = result.replace(pattern, (match) => {
+                  // Only highlight if it's not already highlighted
+                  if (!match.includes('style="background-color: #fecaca')) {
+                    return `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected (corrected)">${match}</span>`;
+                  }
+                  return match;
+                });
               }
             }
           });
