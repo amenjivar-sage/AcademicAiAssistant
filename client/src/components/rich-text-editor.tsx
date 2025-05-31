@@ -44,12 +44,21 @@ export default function RichTextEditor({
   const handleInput = () => {
     if (editorRef.current) {
       setIsUpdating(true);
-      // Use innerHTML to preserve formatting, fallback to innerText for plain content
-      const htmlContent = editorRef.current.innerHTML || '';
-      const plainContent = editorRef.current.innerText || '';
+      // Get HTML content and clean it up
+      let htmlContent = editorRef.current.innerHTML || '';
       
-      // If there's HTML formatting, use that, otherwise use plain text
-      const contentToSave = htmlContent.includes('<') ? htmlContent : plainContent;
+      // Replace div line breaks with simple line breaks
+      htmlContent = htmlContent
+        .replace(/<div><br><\/div>/g, '\n')
+        .replace(/<div>/g, '\n')
+        .replace(/<\/div>/g, '')
+        .replace(/^<br>/, '') // Remove leading br
+        .replace(/<br>/g, '\n');
+      
+      // If there's still HTML formatting (like bold), keep it, otherwise use plain text
+      const hasFormatting = htmlContent.includes('<b>') || htmlContent.includes('<i>') || htmlContent.includes('<u>') || htmlContent.includes('<strong>') || htmlContent.includes('<em>');
+      const contentToSave = hasFormatting ? htmlContent : editorRef.current.innerText || '';
+      
       onContentChange(contentToSave);
       setTimeout(() => setIsUpdating(false), 0);
     }
