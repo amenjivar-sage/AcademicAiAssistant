@@ -327,41 +327,74 @@ function generateTypingErrorSuggestions(word: string): string[] {
 export function applySpellCheckSuggestion(text: string, result: SpellCheckResult, suggestion?: string): string {
   const replacement = suggestion || result.suggestion || (result.suggestions && result.suggestions[0]) || result.word;
   
-  // Ensure we're only replacing the exact word at the correct position
-  const beforeText = text.substring(0, result.startIndex);
-  const afterText = text.substring(result.endIndex);
+  console.log('Applying suggestion:', {
+    original: result.word,
+    replacement,
+    startIndex: result.startIndex,
+    endIndex: result.endIndex,
+    textLength: text.length
+  });
   
-  // Verify the word at the position matches what we expect
-  const originalWord = text.substring(result.startIndex, result.endIndex);
-  if (originalWord.toLowerCase() !== result.word.toLowerCase()) {
-    console.warn('Word mismatch during replacement:', originalWord, 'vs', result.word);
+  // Strategy 1: Try the original position first
+  if (result.startIndex >= 0 && result.endIndex <= text.length) {
+    const originalWord = text.substring(result.startIndex, result.endIndex);
+    console.log('Word at original position:', originalWord, 'vs expected:', result.word);
     
-    // Try multiple strategies to find the word
-    // Strategy 1: Find by word boundaries
-    const wordRegex = new RegExp(`\\b${result.word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
-    const match = wordRegex.exec(text);
-    
-    if (match && match.index !== undefined) {
-      const actualStartIndex = match.index;
-      const actualEndIndex = actualStartIndex + result.word.length;
-      return text.substring(0, actualStartIndex) + replacement + text.substring(actualEndIndex);
+    if (originalWord.toLowerCase() === result.word.toLowerCase()) {
+      const beforeText = text.substring(0, result.startIndex);
+      const afterText = text.substring(result.endIndex);
+      return beforeText + replacement + afterText;
     }
-    
-    // Strategy 2: Simple indexOf search (case insensitive)
-    const lowerText = text.toLowerCase();
-    const lowerWord = result.word.toLowerCase();
-    const findIndex = lowerText.indexOf(lowerWord);
-    
-    if (findIndex !== -1) {
-      const actualStartIndex = findIndex;
-      const actualEndIndex = actualStartIndex + result.word.length;
-      return text.substring(0, actualStartIndex) + replacement + text.substring(actualEndIndex);
-    }
-    
-    return text; // Don't replace if we can't find the word
   }
   
-  return beforeText + replacement + afterText;
+  console.warn('Word mismatch, trying fallback strategies');
+  
+  // Strategy 2: Find by word boundaries (most reliable)
+  const escapedWord = result.word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const wordRegex = new RegExp(`\\b${escapedWord}\\b`, 'gi');
+  let match;
+  const matches = [];
+  
+  // Find all matches
+  while ((match = wordRegex.exec(text)) !== null) {
+    matches.push({
+      index: match.index,
+      word: match[0]
+    });
+  }
+  
+  if (matches.length > 0) {
+    // Use the first match (or closest to original position)
+    let bestMatch = matches[0];
+    if (matches.length > 1 && result.startIndex >= 0) {
+      // Find the match closest to the original position
+      bestMatch = matches.reduce((closest, current) => {
+        const closestDiff = Math.abs(closest.index - result.startIndex);
+        const currentDiff = Math.abs(current.index - result.startIndex);
+        return currentDiff < closestDiff ? current : closest;
+      });
+    }
+    
+    const actualStartIndex = bestMatch.index;
+    const actualEndIndex = actualStartIndex + bestMatch.word.length;
+    console.log('Using word boundary match at:', actualStartIndex, '-', actualEndIndex);
+    return text.substring(0, actualStartIndex) + replacement + text.substring(actualEndIndex);
+  }
+  
+  // Strategy 3: Simple case-insensitive search
+  const lowerText = text.toLowerCase();
+  const lowerWord = result.word.toLowerCase();
+  const findIndex = lowerText.indexOf(lowerWord);
+  
+  if (findIndex !== -1) {
+    const actualStartIndex = findIndex;
+    const actualEndIndex = actualStartIndex + result.word.length;
+    console.log('Using simple search match at:', actualStartIndex, '-', actualEndIndex);
+    return text.substring(0, actualStartIndex) + replacement + text.substring(actualEndIndex);
+  }
+  
+  console.error('Could not find word to replace:', result.word, 'in text');
+  return text; // Don't replace if we can't find the word
 }
 
 // Auto-correct common typos without prompting
