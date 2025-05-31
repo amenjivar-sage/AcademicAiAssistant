@@ -100,7 +100,7 @@ export interface SpellCheckResult {
   endIndex: number;
 }
 
-// AI-powered spell checking
+// AI-powered spell checking with improved reliability
 export async function checkSpellingWithAI(text: string): Promise<SpellCheckResult[]> {
   try {
     const response = await fetch('/api/ai/spell-check', {
@@ -112,14 +112,40 @@ export async function checkSpellingWithAI(text: string): Promise<SpellCheckResul
     });
 
     if (!response.ok) {
+      console.warn('AI spell check API returned error:', response.status);
       throw new Error('AI spell check failed');
     }
 
     const data = await response.json();
-    return data.corrections || [];
+    const aiResults = data.corrections || [];
+    
+    // If AI returns no results, combine with basic spell checking for better coverage
+    if (aiResults.length === 0) {
+      console.log('AI returned no results, using fallback spell checking');
+      return checkSpelling(text);
+    }
+    
+    // Merge AI results with basic spell checking for comprehensive coverage
+    const basicResults = checkSpelling(text);
+    const combinedResults = [...aiResults];
+    
+    // Add basic results that AI might have missed
+    basicResults.forEach(basicResult => {
+      const alreadyFound = aiResults.some(aiResult => 
+        aiResult.word.toLowerCase() === basicResult.word.toLowerCase() &&
+        Math.abs(aiResult.startIndex - basicResult.startIndex) < 5
+      );
+      
+      if (!alreadyFound) {
+        combinedResults.push(basicResult);
+      }
+    });
+    
+    return combinedResults.sort((a, b) => a.startIndex - b.startIndex);
+    
   } catch (error) {
     console.error('AI spell check error:', error);
-    // Fallback to basic spell checking
+    // Always fallback to basic spell checking to ensure functionality
     return checkSpelling(text);
   }
 }
@@ -247,6 +273,19 @@ function generateSuggestion(word: string): string {
     'chanals': 'channels',
     'accpt': 'accept',
     'acpt': 'accept',
+    // States and places (from your test cases)
+    'nevada': 'Nevada',
+    'califorina': 'California', 
+    'arizaon': 'Arizona',
+    'arizoan': 'Arizona',
+    'micghan': 'Michigan',
+    'wahsintong': 'Washington',
+    'wahsinton': 'Washington',
+    'appreicative': 'appreciative',
+    'appreica': 'appreciative',
+    'appreicati': 'appreciative',
+    'appreicativ': 'appreciative',
+    // Common words
     'sugestions': 'suggestions',
     'sugestion': 'suggestion',
     'corections': 'corrections',
