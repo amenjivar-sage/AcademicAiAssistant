@@ -5,6 +5,8 @@ import { insertWritingSessionSchema, insertAiInteractionSchema, insertAssignment
 import { z } from "zod";
 import { checkRestrictedPrompt, generateAiResponse } from "./openai";
 
+
+
 export async function registerRoutes(app: Express): Promise<Server> {
 
   // Demo user ID for memory storage
@@ -417,50 +419,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
       for (let i = 0; i < text.length; i += chunkSize) {
         const chunk = text.substring(i, Math.min(i + chunkSize, text.length));
         
-        // Use OpenAI to detect spelling errors using authoritative dictionary sources
-        const spellCheckPrompt = `
-You are a professional spell checker that uses Merriam-Webster Dictionary standards. Analyze this text for spelling errors and provide corrections based on standard American English spelling as found in authoritative dictionaries.
-
-IMPORTANT: Only flag words that are definitively misspelled according to Merriam-Webster or other standard dictionaries. Do NOT flag:
-- Proper nouns (names of people, places, companies)
-- Words that are correctly spelled but informal
-- Technical terms that may be legitimate
-- Contractions with missing apostrophes (these are punctuation, not spelling errors)
-
-Text: "${chunk}"
-
-For each misspelled word found, provide the exact position in the text and the correct spelling according to dictionary standards.
-
-Return a JSON array with this exact format:
-[
-  {
-    "word": "misspelled_word",
-    "suggestions": ["dictionary_correct_spelling"],
-    "startIndex": position_in_text,
-    "endIndex": position_in_text_plus_word_length
-  }
-]
-
-If no spelling errors found, return: []
-`;
-
         try {
-          const aiResponse = await generateAiResponse(spellCheckPrompt);
-          const chunkCorrections = parseAiResponse(aiResponse);
-          
-          // Adjust indices for the full text position
-          const adjustedCorrections = chunkCorrections.map((correction: any) => ({
-            ...correction,
-            startIndex: (correction.startIndex || 0) + i,
-            endIndex: (correction.endIndex || 0) + i
-          }));
-          
-          allCorrections.push(...adjustedCorrections);
-        } catch (aiError) {
-          console.error("OpenAI spell check failed for chunk:", aiError);
-          // Fallback to basic word detection if AI fails
+          // Use Merriam-Webster API for reliable spell checking
+          const chunkCorrections: any[] = [];
           const words = chunk.match(/\b[a-zA-Z]+\b/g) || [];
-          // No corrections added if AI fails - this prevents false positives
+          let currentIndex = 0;
+          
+          for (const word of words) {
+            const wordIndex = chunk.indexOf(word, currentIndex);
+            
+            try {
+              // Check if word exists in Merriam-Webster dictionary
+              const response = await fetch(`https://www.dictionaryapi.com/api/v3/references/collegiate/json/${encodeURIComponent(word.toLowerCase())}?key=${process.env.MERRIAM_WEBSTER_API_KEY}`);
+              
+              if (!response.ok) {
+                console.warn(`Merriam-Webster API error for word "${word}":`, response.status);
+                currentIndex = wordIndex + word.length;
+                continue;
+              }
+              
+              const data = await response.json();
+              
+              // If the API returns an array of strings, it means the word was not found
+              // and these are spelling suggestions
+              if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'string') {
+                // Word not found - it's likely misspelled
+                const suggestions = data.slice(0, 3); // Take top 3 suggestions
+                
+                chunkCorrections.push({
+                  word: word,
+                  suggestions: suggestions,
+                  startIndex: i + wordIndex,
+                  endIndex: i + wordIndex + word.length
+                });
+              }
+              // If we get back dictionary entries (objects), the word is correctly spelled
+              
+            } catch (error) {
+              console.error(`Error checking word "${word}" with Merriam-Webster:`, error);
+            }
+            
+            currentIndex = wordIndex + word.length;
+          }
+          
+          // Corrections already have correct positions from chunk processing
+          allCorrections.push(...chunkCorrections);
+        } catch (merriamError) {
+          console.error("Merriam-Webster spell check failed for chunk:", merriamError);
+          // No fallback - we want reliable dictionary results only
         }
       }
 
