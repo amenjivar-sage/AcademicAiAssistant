@@ -317,6 +317,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update assignment
+  app.patch("/api/assignments/:id", async (req, res) => {
+    try {
+      const assignmentId = parseInt(req.params.id);
+      console.log('Updating assignment:', assignmentId, 'with data:', req.body);
+      
+      const assignment = await storage.updateAssignment(assignmentId, req.body);
+      
+      if (!assignment) {
+        return res.status(404).json({ message: "Assignment not found" });
+      }
+      
+      console.log('Assignment updated successfully:', assignment.id);
+      res.json(assignment);
+    } catch (error) {
+      console.error('Error updating assignment:', error);
+      res.status(500).json({ message: "Failed to update assignment" });
+    }
+  });
+
   // Inline comments routes
   app.get("/api/sessions/:sessionId/comments", async (req, res) => {
     try {
