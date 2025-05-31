@@ -174,7 +174,7 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
 
   // Helper function to highlight pasted content in red
   const highlightPastedContent = (text: string) => {
-    if (!session.pastedContent || session.pastedContent.length === 0) {
+    if (!session.pastedContent || !Array.isArray(session.pastedContent) || session.pastedContent.length === 0) {
       return text;
     }
 
@@ -185,9 +185,9 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
         return item.content || item.text || item.value || '';
       }
       return '';
-    }).filter(pastedText => pastedText && pastedText.length > 5); // Only highlight substantial pastes
+    }).filter((pastedText: string) => pastedText && pastedText.length > 10); // Only highlight substantial pastes
 
-    pastedTexts.forEach((pastedText, index) => {
+    pastedTexts.forEach((pastedText: string) => {
       if (pastedText && result.includes(pastedText)) {
         const escapedText = pastedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const regex = new RegExp(escapedText, 'gi');
