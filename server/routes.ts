@@ -445,7 +445,10 @@ If no errors found, return: []
 
         try {
           const aiResponse = await generateAiResponse(spellCheckPrompt);
+          console.log("OpenAI response for chunk:", aiResponse);
+          
           const chunkCorrections = parseAiResponse(aiResponse);
+          console.log("Parsed corrections:", chunkCorrections);
           
           // Adjust indices for the full text position
           const adjustedCorrections = chunkCorrections.map((correction: any) => ({
