@@ -202,19 +202,40 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     },
   });
 
-  // Define handleSave function before useEffect that uses it
-  const handleSave = React.useCallback(() => {
+  // Manual save function (always works regardless of auto-save state)
+  const handleManualSave = React.useCallback(() => {
+    console.log('Manual save triggered');
+    setIsSaving(true);
+    
+    const currentSessionId = session?.id || sessionId;
+    if (currentSessionId && currentSessionId !== 0) {
+      console.log('Manually updating existing session:', currentSessionId);
+      updateSessionMutation.mutate({ title, content, pastedContent: pastedContents });
+    } else if (assignmentId && (title.trim() || content.trim())) {
+      console.log('Manually creating new session for assignment:', assignmentId);
+      createSessionMutation.mutate({ 
+        assignmentId, 
+        title, 
+        content,
+        pastedContent: pastedContents 
+      });
+    } else {
+      setIsSaving(false);
+      console.log('No valid session or assignment to save');
+    }
+  }, [title, content, pastedContents, session, sessionId, assignmentId, updateSessionMutation, createSessionMutation]);
+
+  // Auto-save function (checks for changes and delays)
+  const handleAutoSave = React.useCallback(() => {
     if (!isSaving && (title !== session?.title || content !== session?.content || pastedContents.length !== (session?.pastedContent as PastedContent[] || []).length)) {
       setIsSaving(true);
       console.log('Auto-save triggered - session:', session?.id, 'sessionId:', sessionId, 'assignmentId:', assignmentId);
       
-      // Always use the session from the query data if available, otherwise use sessionId from props
       const currentSessionId = session?.id || sessionId;
       if (currentSessionId && currentSessionId !== 0) {
         console.log('Updating existing session:', currentSessionId);
         updateSessionMutation.mutate({ title, content, pastedContent: pastedContents });
       } else if (assignmentId && (title.trim() || content.trim()) && !createSessionMutation.isPending) {
-        // Create a new session for this assignment only if not already creating one
         console.log('Creating new session for assignment:', assignmentId);
         createSessionMutation.mutate({ 
           assignmentId, 
@@ -265,31 +286,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
 
     const timer = setTimeout(() => {
       if (title || content) {
-        console.log('Auto-save triggered - session:', session, 'sessionId:', sessionId, 'assignmentId:', assignmentId);
-        
-        if (!isSaving && (title || content) && (title !== session?.title || content !== session?.content || pastedContents.length !== (session?.pastedContent as PastedContent[] || []).length)) {
-          setIsSaving(true);
-          console.log('Auto-save executing - session:', session?.id, 'sessionId:', sessionId, 'assignmentId:', assignmentId);
-          
-          // Always use the session from the query data if available, otherwise use sessionId from props
-          const currentSessionId = session?.id || sessionId;
-          if (currentSessionId && currentSessionId !== 0) {
-            console.log('Updating existing session:', currentSessionId);
-            updateSessionMutation.mutate({ title, content, pastedContent: pastedContents });
-          } else if (assignmentId && (title.trim() || content.trim()) && !createSessionMutation.isPending) {
-            // Create a new session for this assignment only if not already creating one
-            console.log('Creating new session for assignment:', assignmentId);
-            createSessionMutation.mutate({ 
-              assignmentId, 
-              title, 
-              content,
-              pastedContent: pastedContents 
-            });
-          } else {
-            setIsSaving(false);
-            console.log('No valid session or assignment to save');
-          }
-        }
+        handleAutoSave();
       }
     }, 4000);
 
@@ -428,7 +425,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                   console.log('formatRef.current is null');
                 }
               }}
-              onSave={handleSave}
+              onSave={handleManualSave}
               isSaving={isSaving}
               onSpellCheck={() => setShowSpellCheck(true)}
             />
@@ -573,7 +570,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
               </Button>
               
               <Button
-                onClick={handleSave}
+                onClick={handleManualSave}
                 variant="outline"
                 disabled={isSubmitted || updateSessionMutation.isPending}
                 className="gap-2"
