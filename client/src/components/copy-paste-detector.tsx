@@ -42,21 +42,38 @@ export default function CopyPasteDetector({
         return;
       }
 
-      // Allow paste to happen naturally for textarea, but track it
-      // Don't prevent default - let the textarea handle the paste normally
+      // Allow paste to happen naturally, but track it
+      // Works with both textarea and contentEditable elements
       
-      // Get the textarea element
+      // Get the textarea or contentEditable element
       const textarea = container.querySelector('textarea');
-      if (textarea) {
-        const startIndex = textarea.selectionStart || 0;
+      const contentEditable = container.querySelector('[contenteditable="true"]');
+      const targetElement = textarea || contentEditable;
+      
+      if (targetElement) {
+        let startIndex = 0;
         
-        // Track the paste - we'll let the normal paste event update the textarea value
+        // Get cursor position differently for textarea vs contentEditable
+        if (textarea) {
+          startIndex = textarea.selectionStart || 0;
+        } else if (contentEditable) {
+          // For contentEditable, we'll use a simple approach - just track the text
+          const selection = window.getSelection();
+          if (selection && selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0);
+            startIndex = range.startOffset;
+          }
+        }
+        
+        // Track the paste
         const pastedContent: PastedContent = {
           text: pastedText,
           startIndex: startIndex,
           endIndex: startIndex + pastedText.length,
           timestamp: new Date()
         };
+        
+        console.log('Copy-paste detected:', pastedContent);
         
         // Delay the callback to let the paste complete first
         setTimeout(() => {
