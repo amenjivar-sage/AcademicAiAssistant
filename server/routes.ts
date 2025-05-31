@@ -417,134 +417,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
       for (let i = 0; i < text.length; i += chunkSize) {
         const chunk = text.substring(i, Math.min(i + chunkSize, text.length));
         
-        // Extract individual words and check each one
-        const words = chunk.match(/\b[a-zA-Z]+\b/g) || [];
-        const wordErrors: any[] = [];
-        
-        // Process each word individually for better accuracy
-        let chunkOffset = 0;
-        for (const word of words) {
-          const wordIndex = chunk.indexOf(word, chunkOffset);
-          if (wordIndex !== -1) {
-            // Common misspellings dictionary
-            const corrections: Record<string, string> = {
-              'accomodate': 'accommodate',
-              'acknowlege': 'acknowledge', 
-              'arguement': 'argument',
-              'beleive': 'believe',
-              'calender': 'calendar',
-              'comitmment': 'commitment',
-              'definately': 'definitely',
-              'embarass': 'embarrass',
-              'enviroment': 'environment',
-              'excercise': 'exercise',
-              'existance': 'existence',
-              'febuary': 'February',
-              'goverment': 'government',
-              'harrass': 'harass',
-              'heighth': 'height',
-              'independant': 'independent',
-              'inteligent': 'intelligent',
-              'interupt': 'interrupt',
-              'jewlery': 'jewelry',
-              'knowlege': 'knowledge',
-              'liason': 'liaison',
-              'maintanence': 'maintenance',
-              'medeval': 'medieval',
-              'mischievious': 'mischievous',
-              'neccessary': 'necessary',
-              'noticable': 'noticeable',
-              'occured': 'occurred',
-              'occassion': 'occasion',
-              'optomist': 'optimist',
-              'parallell': 'parallel',
-              'playwrite': 'playwright',
-              'posession': 'possession',
-              'privelege': 'privilege',
-              'pronounciation': 'pronunciation',
-              'recieve': 'receive',
-              'recomend': 'recommend',
-              'refered': 'referred',
-              'relevent': 'relevant',
-              'resevoir': 'reservoir',
-              'responsibilty': 'responsibility',
-              'rythym': 'rhythm',
-              'secretery': 'secretary',
-              'seperate': 'separate',
-              'sieze': 'seize',
-              'surprize': 'surprise',
-              'temprature': 'temperature',
-              'tounge': 'tongue',
-              'truely': 'truly',
-              'untill': 'until',
-              'vaccuum': 'vacuum',
-              'wierd': 'weird',
-              'writting': 'writing',
-              'adress': 'address',
-              'amatuer': 'amateur',
-              'arguementative': 'argumentative',
-              'athiest': 'atheist',
-              'bizzare': 'bizarre',
-              'buisness': 'business',
-              'catagory': 'category',
-              'concious': 'conscious',
-              'critisize': 'criticize',
-              'curiculum': 'curriculum',
-              'deisel': 'diesel',
-              'dissapear': 'disappear',
-              'exagerate': 'exaggerate',
-              'familier': 'familiar',
-              'finaly': 'finally',
-              'foriegner': 'foreigner',
-              'freind': 'friend',
-              'gaurd': 'guard',
-              'graffitti': 'graffiti',
-              'guidlines': 'guidelines',
-              'heirarchy': 'hierarchy',
-              'ignorence': 'ignorance',
-              'immediateley': 'immediately',
-              'incidently': 'incidentally',
-              'inculate': 'inculcate',
-              'integrety': 'integrity',
-              'judgement': 'judgment',
-              'knowlegeable': 'knowledgeable',
-              'leutenant': 'lieutenant',
-              'lisense': 'license',
-              'marraige': 'marriage',
-              'miniture': 'miniature',
-              'noticeing': 'noticing',
-              'ocasionaly': 'occasionally',
-              'ocurred': 'occurred',
-              'parrallel': 'parallel',
-              'pesonal': 'personal',
-              'preceed': 'precede',
-              'publically': 'publicly',
-              'recieveing': 'receiving',
-              'rediculous': 'ridiculous',
-              'referance': 'reference',
-              'releive': 'relieve',
-              'repetative': 'repetitive',
-              'restaraunt': 'restaurant',
-              'sargeant': 'sergeant',
-              'shedule': 'schedule',
-              'sucessful': 'successful'
-            };
-            
-            const lowerWord = word.toLowerCase();
-            if (corrections[lowerWord]) {
-              wordErrors.push({
-                word: word,
-                suggestions: [corrections[lowerWord]],
-                startIndex: i + wordIndex,
-                endIndex: i + wordIndex + word.length
-              });
-            }
-            
-            chunkOffset = wordIndex + word.length;
-          }
+        // Use OpenAI to detect spelling errors
+        const spellCheckPrompt = `
+Analyze this text for spelling errors and provide corrections in JSON format. Only identify words that are clearly misspelled.
+
+Text: "${chunk}"
+
+Return a JSON array with this exact format:
+[
+  {
+    "word": "misspelled_word",
+    "suggestions": ["correct_spelling"],
+    "startIndex": position_in_text,
+    "endIndex": position_in_text_plus_word_length
+  }
+]
+
+If no errors found, return: []
+`;
+
+        try {
+          const aiResponse = await generateAiResponse(spellCheckPrompt);
+          const chunkCorrections = parseAiResponse(aiResponse);
+          
+          // Adjust indices for the full text position
+          const adjustedCorrections = chunkCorrections.map((correction: any) => ({
+            ...correction,
+            startIndex: (correction.startIndex || 0) + i,
+            endIndex: (correction.endIndex || 0) + i
+          }));
+          
+          allCorrections.push(...adjustedCorrections);
+        } catch (aiError) {
+          console.error("OpenAI spell check failed for chunk:", aiError);
+          // Fallback to basic word detection if AI fails
+          const words = chunk.match(/\b[a-zA-Z]+\b/g) || [];
+          // No corrections added if AI fails - this prevents false positives
         }
-        
-        allCorrections.push(...wordErrors);
       }
 
       // Validate and filter corrections
