@@ -55,7 +55,13 @@ export default function RichTextEditor({
         .replace(/^<br>/, '') // Remove leading br
         .replace(/<br>/g, '\n');
       
-      // If there's still HTML formatting (like bold), keep it, otherwise use plain text
+      // Fix HTML encoding issues and preserve formatting
+      htmlContent = htmlContent
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&amp;/g, '&');
+      
+      // Check if there's still HTML formatting (like bold), keep it, otherwise use plain text
       const hasFormatting = htmlContent.includes('<b>') || htmlContent.includes('<i>') || htmlContent.includes('<u>') || htmlContent.includes('<strong>') || htmlContent.includes('<em>');
       const contentToSave = hasFormatting ? htmlContent : editorRef.current.innerText || '';
       
