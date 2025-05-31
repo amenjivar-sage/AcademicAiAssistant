@@ -550,8 +550,8 @@ export default function InlineSpellCheck({
                     </Button>
                   ))}
                   
-                  {/* Accept All button when there are many errors */}
-                  {spellErrors.length > 5 && (
+                  {/* Accept All button when there are multiple errors */}
+                  {spellErrors.length > 1 && (
                     <div className="pt-2 mt-2 border-t border-gray-200">
                       <Button
                         variant="default"
@@ -559,7 +559,7 @@ export default function InlineSpellCheck({
                         onClick={handleAcceptAllSuggestions}
                         className="w-full h-8 text-sm bg-blue-600 hover:bg-blue-700"
                       >
-                        Accept All {spellErrors.length} Corrections
+                        Correct All {spellErrors.length} Errors
                       </Button>
                     </div>
                   )}
