@@ -15,6 +15,11 @@ interface PageBasedEditorProps {
   placeholder?: string;
   wordsPerPage?: number;
   onFormatRef?: React.MutableRefObject<((command: string, value?: string) => void) | null>;
+  headerFooterSettings?: {
+    header: string;
+    footer: string;
+    pageNumbers: boolean;
+  };
 }
 
 interface PageSettings {
@@ -36,7 +41,8 @@ export default function PageBasedEditor({
   disabled = false,
   placeholder = "Start writing...",
   wordsPerPage = 250,
-  onFormatRef
+  onFormatRef,
+  headerFooterSettings
 }: PageBasedEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -52,6 +58,18 @@ export default function PageBasedEditor({
     headerPosition: 'center',
     footerPosition: 'center'
   });
+
+  // Update page settings when headerFooterSettings prop changes
+  useEffect(() => {
+    if (headerFooterSettings) {
+      setPageSettings(prev => ({
+        ...prev,
+        headerText: headerFooterSettings.header,
+        footerText: headerFooterSettings.footer,
+        showPageNumbers: headerFooterSettings.pageNumbers
+      }));
+    }
+  }, [headerFooterSettings]);
   
   // Calculate word count and total pages
   const wordCount = content.split(/\s+/).filter(word => word.length > 0).length;
