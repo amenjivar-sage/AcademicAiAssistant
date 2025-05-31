@@ -438,10 +438,39 @@ Format: [{"word":"error","suggestions":["fix"],"startIndex":0,"endIndex":5}]
 Return [] if no errors.`;
 
         try {
-          const aiResponse = await generateAiResponse(spellCheckPrompt);
+          // Use OpenAI directly for spell checking with JSON mode
+          const OpenAI = (await import("openai")).default;
+          const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+          
+          const response = await openai.chat.completions.create({
+            model: "gpt-4o",
+            messages: [
+              {
+                role: "system",
+                content: "You are a spell checker. Find spelling errors and return them as JSON array. Return only valid JSON, no other text."
+              },
+              {
+                role: "user",
+                content: `Find spelling errors in: "${chunk}"\n\nReturn format: [{"word":"error","suggestions":["fix"],"startIndex":0,"endIndex":5}]`
+              }
+            ],
+            response_format: { type: "json_object" },
+            max_tokens: 1000,
+            temperature: 0
+          });
+
+          const aiResponse = response.choices[0].message.content;
           console.log("OpenAI response for chunk:", aiResponse);
           
-          const chunkCorrections = parseAiResponse(aiResponse);
+          let chunkCorrections: any[] = [];
+          try {
+            const parsed = JSON.parse(aiResponse || "{}");
+            chunkCorrections = parsed.corrections || parsed.errors || (Array.isArray(parsed) ? parsed : []);
+          } catch (parseError) {
+            console.error("Failed to parse spell check response:", aiResponse);
+            chunkCorrections = [];
+          }
+          
           console.log("Parsed corrections:", chunkCorrections);
           
           // Adjust indices for the full text position
