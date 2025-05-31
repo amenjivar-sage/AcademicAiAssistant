@@ -102,18 +102,24 @@ export default function RichTextEditor({
         const selection = window.getSelection();
         if (selection && selection.rangeCount > 0) {
           const range = selection.getRangeAt(0);
-          const span = document.createElement('span');
-          span.style.fontFamily = value;
-          try {
-            range.surroundContents(span);
-          } catch (e) {
-            // If surroundContents fails, extract and wrap content
-            const contents = range.extractContents();
-            span.appendChild(contents);
-            range.insertNode(span);
+          
+          if (!range.collapsed && range.toString().trim()) {
+            // Only apply formatting if there's actually selected text
+            const span = document.createElement('span');
+            span.style.fontFamily = value;
+            try {
+              range.surroundContents(span);
+            } catch (e) {
+              // If surroundContents fails, extract and wrap content
+              const contents = range.extractContents();
+              if (contents.textContent?.trim()) {
+                span.appendChild(contents);
+                range.insertNode(span);
+              }
+            }
+            selection.removeAllRanges();
+            selection.addRange(range);
           }
-          selection.removeAllRanges();
-          selection.addRange(range);
         }
       } else if (command === 'fontSize' && value) {
         // Simple and direct approach for font size
@@ -123,8 +129,8 @@ export default function RichTextEditor({
         if (selection && selection.rangeCount > 0) {
           const range = selection.getRangeAt(0);
           
-          if (!range.collapsed) {
-            // Create a span with the font size
+          if (!range.collapsed && range.toString().trim()) {
+            // Only apply formatting if there's actually selected text
             const span = document.createElement('span');
             span.style.fontSize = value;
             
@@ -133,8 +139,10 @@ export default function RichTextEditor({
             } catch (e) {
               // If surroundContents fails, extract and wrap content
               const contents = range.extractContents();
-              span.appendChild(contents);
-              range.insertNode(span);
+              if (contents.textContent?.trim()) {
+                span.appendChild(contents);
+                range.insertNode(span);
+              }
             }
             
             // Clear and restore selection
