@@ -32,10 +32,22 @@ export default function RichTextEditor({
   // Handle content updates from parent
   useEffect(() => {
     if (editorRef.current && !isUpdating) {
+      const currentHTML = editorRef.current.innerHTML || '';
       const currentText = editorRef.current.innerText || '';
-      if (currentText !== content) {
-        // Set plain text content and preserve line breaks
-        editorRef.current.innerText = content;
+      
+      // Check if content has HTML formatting
+      const hasHTMLFormatting = content.includes('<') && content.includes('>');
+      
+      if (hasHTMLFormatting) {
+        // If content has HTML, set as innerHTML to preserve formatting
+        if (currentHTML !== content) {
+          editorRef.current.innerHTML = content;
+        }
+      } else {
+        // If content is plain text, set as innerText
+        if (currentText !== content) {
+          editorRef.current.innerText = content;
+        }
       }
     }
   }, [content, isUpdating]);
@@ -61,8 +73,13 @@ export default function RichTextEditor({
         .replace(/&gt;/g, '>')
         .replace(/&amp;/g, '&');
       
-      // Check if there's still HTML formatting (like bold), keep it, otherwise use plain text
-      const hasFormatting = htmlContent.includes('<b>') || htmlContent.includes('<i>') || htmlContent.includes('<u>') || htmlContent.includes('<strong>') || htmlContent.includes('<em>');
+      // Check if there's still HTML formatting (like bold, italic, underline, strong, em, lists, spans)
+      const hasFormatting = htmlContent.includes('<b>') || htmlContent.includes('<i>') || 
+                           htmlContent.includes('<u>') || htmlContent.includes('<strong>') || 
+                           htmlContent.includes('<em>') || htmlContent.includes('<span') ||
+                           htmlContent.includes('<ul>') || htmlContent.includes('<ol>') ||
+                           htmlContent.includes('<li>');
+      
       const contentToSave = hasFormatting ? htmlContent : editorRef.current.innerText || '';
       
       onContentChange(contentToSave);
