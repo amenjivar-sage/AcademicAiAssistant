@@ -395,15 +395,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const parseAiResponse = (aiResponse: string): any[] => {
         let corrections: any[] = [];
         try {
+          // First try direct JSON parsing
           corrections = JSON.parse(aiResponse);
         } catch (parseError) {
-          const jsonMatch = aiResponse.match(/```json\s*([\s\S]*?)\s*```/);
-          if (jsonMatch) {
-            try {
+          try {
+            // Look for JSON in code blocks
+            const jsonMatch = aiResponse.match(/```json\s*([\s\S]*?)\s*```/);
+            if (jsonMatch) {
               corrections = JSON.parse(jsonMatch[1]);
-            } catch (extractError) {
-              corrections = [];
+            } else {
+              // Look for JSON array anywhere in the response
+              const arrayMatch = aiResponse.match(/\[([\s\S]*?)\]/);
+              if (arrayMatch) {
+                corrections = JSON.parse(arrayMatch[0]);
+              }
             }
+          } catch (extractError) {
+            console.error("Failed to parse AI response:", aiResponse.substring(0, 500));
+            corrections = [];
           }
         }
         return corrections;
