@@ -563,11 +563,65 @@ Return [] if no errors.`;
         return res.status(400).json({ message: "Prompt is required" });
       }
 
+      // Check assignment permissions if we have a session
+      let assignment = null;
+      if (sessionId) {
+        try {
+          const session = await storage.getWritingSession(sessionId);
+          if (session && session.assignmentId) {
+            assignment = await storage.getAssignment(session.assignmentId);
+          }
+        } catch (error) {
+          console.error("Failed to get assignment for permission check:", error);
+        }
+      }
+
       // Import AI functions
       const { checkRestrictedPrompt, generateAiResponse } = await import("./openai");
       
       // Check if the prompt is restricted
       const isRestricted = checkRestrictedPrompt(prompt);
+      
+      // Check assignment-specific permissions
+      let permissionDenied = false;
+      let permissionMessage = "";
+      
+      if (assignment) {
+        const promptLower = prompt.toLowerCase();
+        
+        // Check brainstorming permission
+        if (!assignment.allowBrainstorming && 
+            (promptLower.includes('brainstorm') || promptLower.includes('ideas') || 
+             promptLower.includes('topic') || promptLower.includes('outline') ||
+             promptLower.includes('structure') || promptLower.includes('organize'))) {
+          permissionDenied = true;
+          permissionMessage = "❌ Brainstorming and outlining assistance is disabled for this assignment.";
+        }
+        
+        // Check outlining permission
+        else if (!assignment.allowOutlining && 
+                 (promptLower.includes('outline') || promptLower.includes('structure') || 
+                  promptLower.includes('organize') || promptLower.includes('format'))) {
+          permissionDenied = true;
+          permissionMessage = "❌ Outlining assistance is disabled for this assignment.";
+        }
+        
+        // Check research help permission
+        else if (!assignment.allowResearchHelp && 
+                 (promptLower.includes('research') || promptLower.includes('sources') || 
+                  promptLower.includes('citation') || promptLower.includes('reference'))) {
+          permissionDenied = true;
+          permissionMessage = "❌ Research assistance is disabled for this assignment.";
+        }
+        
+        // Check grammar check permission
+        else if (!assignment.allowGrammarCheck && 
+                 (promptLower.includes('grammar') || promptLower.includes('spelling') || 
+                  promptLower.includes('correct') || promptLower.includes('fix'))) {
+          permissionDenied = true;
+          permissionMessage = "❌ Grammar and spelling assistance is disabled for this assignment.";
+        }
+      }
       
       // Get student profile for personalized responses
       let studentProfile;
@@ -583,7 +637,11 @@ Return [] if no errors.`;
       }
       
       let response;
-      if (isRestricted) {
+      let finalIsRestricted = isRestricted || permissionDenied;
+      
+      if (permissionDenied) {
+        response = permissionMessage + " Only grammar checking is available for this assignment.";
+      } else if (isRestricted) {
         response = "❌ This type of assistance goes beyond what I can help with. Try asking for brainstorming ideas, writing feedback, or research guidance instead!";
       } else {
         // Generate personalized AI response using student profile and document content
@@ -598,7 +656,7 @@ Return [] if no errors.`;
             sessionId,
             prompt,
             response,
-            isRestricted,
+            isRestricted: finalIsRestricted,
           });
           console.log("AI interaction saved:", interaction.id);
         } catch (error) {
@@ -608,7 +666,7 @@ Return [] if no errors.`;
 
       res.json({
         response,
-        isRestricted,
+        isRestricted: finalIsRestricted,
       });
     } catch (error) {
       console.error("AI help error:", error);
