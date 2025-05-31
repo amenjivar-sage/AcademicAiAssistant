@@ -184,19 +184,40 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
     const pastedTexts = session.pastedContent.map((item: any) => {
       if (typeof item === 'string') return item;
       if (item && typeof item === 'object') {
-        // Handle the actual data structure from logs
         return item.text || item.content || item.value || '';
       }
       return '';
-    }).filter((pastedText: string) => pastedText && pastedText.length > 10); // Only highlight substantial pastes
+    }).filter((pastedText: string) => pastedText && pastedText.length > 10);
 
     console.log('Extracted pasted texts:', pastedTexts);
 
     pastedTexts.forEach((pastedText: string) => {
-      if (pastedText && result.includes(pastedText)) {
-        const escapedText = pastedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(escapedText, 'gi');
-        result = result.replace(regex, `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected">${pastedText}</span>`);
+      if (pastedText) {
+        // Try exact match first
+        if (result.includes(pastedText)) {
+          const escapedText = pastedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const regex = new RegExp(escapedText, 'gi');
+          result = result.replace(regex, `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected">${pastedText}</span>`);
+        } else {
+          // If exact match fails, try to match by looking for similar structure
+          // Split into sentences and look for similar sentence patterns
+          const pastedSentences = pastedText.split(/[.!?]+/).filter(s => s.trim().length > 20);
+          pastedSentences.forEach((sentence: string) => {
+            const trimmedSentence = sentence.trim();
+            if (trimmedSentence) {
+              // Create a pattern that matches the general structure
+              const words = trimmedSentence.split(/\s+/).filter(w => w.length > 3); // Skip short words
+              if (words.length >= 4) {
+                // Look for sequences of these key words in the final text
+                const firstWord = words[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const lastWord = words[words.length - 1].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const pattern = new RegExp(`(${firstWord}[^.!?]*${lastWord})`, 'gi');
+                
+                result = result.replace(pattern, `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected (corrected)">$1</span>`);
+              }
+            }
+          });
+        }
       }
     });
 
