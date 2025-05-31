@@ -465,7 +465,19 @@ Return [] if no errors.`;
           let chunkCorrections: any[] = [];
           try {
             const parsed = JSON.parse(aiResponse || "{}");
-            chunkCorrections = parsed.corrections || parsed.errors || (Array.isArray(parsed) ? parsed : []);
+            // Handle different response formats
+            if (Array.isArray(parsed)) {
+              chunkCorrections = parsed;
+            } else if (parsed.errors && Array.isArray(parsed.errors)) {
+              chunkCorrections = parsed.errors;
+            } else if (parsed.corrections && Array.isArray(parsed.corrections)) {
+              chunkCorrections = parsed.corrections;
+            } else if (parsed.word && parsed.suggestions) {
+              // Single word error
+              chunkCorrections = [parsed];
+            } else {
+              chunkCorrections = [];
+            }
           } catch (parseError) {
             console.error("Failed to parse spell check response:", aiResponse);
             chunkCorrections = [];
