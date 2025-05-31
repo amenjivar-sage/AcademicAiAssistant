@@ -163,28 +163,21 @@ export default function InlineSpellCheck({
     const tooltipHeight = 200;
     const margin = 20;
     
-    // Get editor bounds to constrain tooltip
-    const editorElement = document.querySelector('.writing-editor') as HTMLElement;
-    if (editorElement) {
-      const editorRect = editorElement.getBoundingClientRect();
-      
-      // Center the tooltip horizontally in the editor
-      left = Math.max(margin, (editorRect.width - tooltipWidth) / 2);
-      
-      // Position tooltip in the upper portion of the editor for visibility
-      // If the error is near the top, position tooltip below it
-      // If error is further down, position tooltip in the top area
-      if (currentLine < 5) {
-        // Error is near top, position tooltip below
-        top = Math.min(150, (currentLine + 2) * lineHeight + 50);
-      } else {
-        // Error is further down, position tooltip in top area for visibility
-        top = 100;
-      }
-      
-      // Ensure tooltip stays within bounds
-      top = Math.max(margin, Math.min(top, editorRect.height - tooltipHeight - margin));
+    // Use simpler, more reliable positioning
+    // Position tooltip in a fixed, visible location within the editor
+    left = Math.max(50, 200); // Fixed horizontal position that's always visible
+    
+    // Position tooltip vertically based on error location
+    if (currentLine < 5) {
+      // Error is near top, position tooltip below
+      top = Math.max(120, (currentLine + 2) * lineHeight + 50);
+    } else {
+      // Error is further down, position tooltip in top area for visibility
+      top = 80;
     }
+    
+    // Ensure minimum/maximum bounds for visibility
+    top = Math.max(50, Math.min(top, 300));
 
     const tooltip = {
       error: currentError,
