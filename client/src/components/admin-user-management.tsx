@@ -172,9 +172,18 @@ export default function AdminUserManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/user-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/analytics"] });
       toast({
         title: "User Deleted",
         description: "User has been removed from the system.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete user. Please try again.",
+        variant: "destructive",
       });
     },
   });
