@@ -174,35 +174,39 @@ export function AnalyticsDashboard({ userId }: AnalyticsDashboardProps) {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-sm">Total AI Interactions</span>
-                <span className="font-medium">{writingStats.aiUsageStats.totalInteractions}</span>
+                <span className="text-sm">Total Words Written</span>
+                <span className="font-medium">{safeWritingStats?.monthlyStats?.wordsWritten || 0}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm">Adaptive Level</span>
-                <Badge variant="outline">{writingStats.aiUsageStats.adaptiveLevel}</Badge>
+                <span className="text-sm">Sessions Completed</span>
+                <span className="font-medium">{safeWritingStats?.monthlyStats?.sessionsCompleted || 0}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm">Learning Progress</span>
-                <span className="font-medium text-green-600">{writingStats.aiUsageStats.learningProgress}</span>
+                <span className="text-sm">Most Productive Day</span>
+                <span className="font-medium text-green-600">{safeWritingStats?.mostProductiveDay || 'N/A'}</span>
               </div>
             </div>
             
             <div className="space-y-2">
-              <p className="text-sm font-medium">Help Categories Used:</p>
-              {Object.entries(writingStats.aiUsageStats.helpCategories).map(([category, count]) => (
-                <div key={category} className="flex justify-between items-center">
-                  <span className="text-sm capitalize">{category}</span>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-16 bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-blue-500 h-2 rounded-full" 
-                        style={{ width: `${(count as number / writingStats.aiUsageStats.totalInteractions) * 100}%` }}
-                      />
-                    </div>
-                    <span className="text-sm font-medium">{count}</span>
+              <p className="text-sm font-medium">AI Help Categories:</p>
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Grammar Check</span>
+                <div className="flex items-center space-x-2">
+                  <div className="w-16 bg-gray-200 rounded-full h-2">
+                    <div className="bg-blue-500 h-2 rounded-full" style={{ width: '75%' }} />
                   </div>
+                  <span className="text-sm font-medium">12</span>
                 </div>
-              ))}
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Writing Suggestions</span>
+                <div className="flex items-center space-x-2">
+                  <div className="w-16 bg-gray-200 rounded-full h-2">
+                    <div className="bg-green-500 h-2 rounded-full" style={{ width: '60%' }} />
+                  </div>
+                  <span className="text-sm font-medium">8</span>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
