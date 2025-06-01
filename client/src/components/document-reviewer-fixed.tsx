@@ -274,9 +274,9 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                     console.log('Match analysis for sentence:', docSentTrimmed, 
                                'Exact:', exactMatches, 'Close:', closeMatches, 'Percentage:', matchPercentage);
                     
-                    // Simple criteria: catch most copy-pasted content
-                    const meetsThreshold = matchPercentage >= 0.6;
-                    const hasEnoughExactMatches = exactMatches >= Math.floor(pastedWords.length * 0.3);
+                    // Very simple criteria: catch copy-pasted content
+                    const meetsThreshold = matchPercentage >= 0.4;
+                    const hasEnoughExactMatches = exactMatches >= 2;
                     const hasMinLength = pastedWords.length >= 4 && docWords.length >= 4;
                     
                     console.log('Criteria check for:', docSentTrimmed);
