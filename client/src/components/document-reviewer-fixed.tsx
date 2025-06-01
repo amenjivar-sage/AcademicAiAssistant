@@ -274,9 +274,9 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                     console.log('Match analysis for sentence:', docSentTrimmed, 
                                'Exact:', exactMatches, 'Close:', closeMatches, 'Percentage:', matchPercentage);
                     
-                    // Very strict criteria: need 85%+ match with mostly exact word matches
-                    if (matchPercentage >= 0.85 && exactMatches >= Math.floor(pastedWords.length * 0.6) && 
-                        pastedWords.length >= 6 && docWords.length >= 6) {
+                    // Balanced criteria: good match percentage with reasonable exact matches
+                    if (matchPercentage >= 0.75 && exactMatches >= Math.floor(pastedWords.length * 0.4) && 
+                        pastedWords.length >= 5 && docWords.length >= 5) {
                       
                       // Double-check this isn't original content by looking for common original writing patterns
                       const hasOriginalPatterns = /\b(sky|hello|how are you|doing|good morning|dear|sincerely)\b/i.test(docSentTrimmed);
