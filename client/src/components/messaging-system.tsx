@@ -45,7 +45,7 @@ const messageSchema = z.object({
 
 type MessageForm = z.infer<typeof messageSchema>;
 
-export default function MessagingSystem({ 
+function MessagingSystem({ 
   currentUserId, 
   currentUserRole, 
   recipientId, 
@@ -347,3 +347,5 @@ export default function MessagingSystem({
     </Dialog>
   );
 }
+
+export default MessagingSystem;
