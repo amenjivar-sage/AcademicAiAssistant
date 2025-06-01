@@ -1284,7 +1284,8 @@ Return [] if no errors.`;
 
       // Calculate real metrics from actual data
       const totalWordsWritten = allSessions.reduce((acc, session) => acc + (session.wordCount || 0), 0);
-      const completionRate = allAssignments.length > 0 ? Math.round((completedSessions.length / allAssignments.length) * 100) : 0;
+      const completionRate = allAssignments.length > 0 ? 
+        Math.min(100, Math.round((completedSessions.length / allAssignments.length) * 100)) : 0;
       const totalAiInteractions = allInteractions.length;
       const averageGradingTime = gradedSessions.length > 0 ? 2.4 : 0;
       const averageSessionTime = allSessions.length > 0 ? Math.round(totalWordsWritten / allSessions.length / 20) : 0;
