@@ -280,16 +280,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { joinCode } = req.body;
       const studentId = currentDemoUserId;
       
+      console.log("Attempting to join classroom with code:", joinCode);
+      
       // Find classroom by join code
       const allClassrooms = await storage.getAllClassrooms();
+      console.log("Available classrooms:", allClassrooms.map(c => ({ id: c.id, name: c.name, joinCode: c.joinCode })));
+      
       const classroom = allClassrooms.find(c => c.joinCode === joinCode);
       
       if (!classroom) {
+        console.log("No classroom found with join code:", joinCode);
         return res.status(404).json({ message: "Invalid join code" });
       }
       
+      console.log("Found classroom:", classroom.name, "ID:", classroom.id);
+      
       // Enroll student in classroom
       await storage.enrollStudentInClassroom(studentId, classroom.id);
+      console.log("Successfully enrolled student", studentId, "in classroom", classroom.id);
+      
       res.json({ message: "Successfully joined classroom", classroom });
     } catch (error) {
       console.error("Error joining classroom:", error);
