@@ -62,46 +62,45 @@ export default function Login() {
     setDialogOpen(true);
   };
 
-  const confirmDemoLogin = () => {
-    const correctPassword = "demo2024";
-    
-    if (demoPassword !== correctPassword) {
+  const demoLoginMutation = useMutation({
+    mutationFn: async (data: { role: string; demoPassword: string }) => {
+      const response = await apiRequest("POST", "/api/auth/demo-login", data);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      localStorage.setItem("user", JSON.stringify(data.user));
+      
+      if (data.user.role === "teacher") {
+        setLocation("/teacher");
+      } else if (data.user.role === "admin") {
+        setLocation("/admin");
+      } else {
+        setLocation("/student");
+      }
+      
       toast({
-        title: "Incorrect Password",
-        description: "Please enter the correct demo password.",
+        title: "Welcome back!",
+        description: `Logged in as ${data.user.firstName} ${data.user.lastName}`,
+      });
+
+      setDialogOpen(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Demo Login Failed",
+        description: error.message || "Invalid demo password",
         variant: "destructive",
       });
-      return;
-    }
+    },
+  });
 
-    if (!selectedRole) return;
-
-    // For demo purposes, directly navigate to the appropriate page
-    const userData = {
-      teacher: { id: 1, username: "teacher", firstName: "Sarah", lastName: "Johnson", email: "teacher@zoeedu.com" },
-      student: { id: 2, username: "student", firstName: "Alex", lastName: "Smith", email: "student@zoeedu.com" },
-      admin: { id: 0, username: "admin", firstName: "System", lastName: "Administrator", email: "admin@zoeedu.com" }
-    };
-
-    localStorage.setItem("user", JSON.stringify({
-      ...userData[selectedRole],
-      role: selectedRole
-    }));
+  const confirmDemoLogin = () => {
+    if (!selectedRole || !demoPassword) return;
     
-    if (selectedRole === "teacher") {
-      setLocation("/teacher");
-    } else if (selectedRole === "admin") {
-      setLocation("/admin");
-    } else {
-      setLocation("/student");
-    }
-    
-    toast({
-      title: "Welcome back!",
-      description: `Logged in as ${userData[selectedRole].firstName} ${userData[selectedRole].lastName}`,
+    demoLoginMutation.mutate({
+      role: selectedRole,
+      demoPassword: demoPassword
     });
-
-    setDialogOpen(false);
   };
 
   return (

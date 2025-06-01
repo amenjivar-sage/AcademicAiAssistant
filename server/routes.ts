@@ -54,6 +54,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Demo login endpoint for authorized demo access
+  app.post("/api/auth/demo-login", async (req, res) => {
+    try {
+      const { role, demoPassword } = req.body;
+      
+      if (demoPassword !== "demo2024") {
+        return res.status(401).json({ message: "Invalid demo password" });
+      }
+
+      // Create demo user sessions
+      const demoUsers = {
+        teacher: { id: 1, username: "teacher", firstName: "Sarah", lastName: "Johnson", email: "teacher@sage-demo.com", role: "teacher" },
+        student: { id: 2, username: "student", firstName: "Alex", lastName: "Smith", email: "student@sage-demo.com", role: "student" },
+        admin: { id: 0, username: "admin", firstName: "System", lastName: "Administrator", email: "admin@sage-demo.com", role: "admin" }
+      };
+
+      const user = demoUsers[role as keyof typeof demoUsers];
+      if (!user) {
+        return res.status(400).json({ message: "Invalid demo role" });
+      }
+
+      // Create session
+      (req as any).session = (req as any).session || {};
+      (req as any).session.userId = user.id;
+      (req as any).session.user = user;
+
+      console.log(`Demo login successful for ${role}: ${user.firstName} ${user.lastName}`);
+      
+      res.json({
+        user: user,
+        message: "Demo login successful"
+      });
+    } catch (error) {
+      console.error("Demo login error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Email verification for registration
   app.post("/api/auth/check-email", async (req, res) => {
     try {
