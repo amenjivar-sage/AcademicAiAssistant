@@ -350,28 +350,32 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
         
         console.log('Section to check for position-based highlighting:', sectionToCheck);
         
-        // If this section has substantial content and hasn't been highlighted yet, highlight it
+        // If this section has substantial content, highlight everything after the "sky" part
         if (sectionToCheck && sectionToCheck.length > 30) {
-          const sentences = sectionToCheck.split(/[.!?]+/).filter(s => s.trim().length > 15);
+          // Remove the "sky Hello how are you doing" part and highlight the rest
+          const contentAfterSky = sectionToCheck.replace(/^.*?sky Hello how are you doing\s*/i, '');
+          console.log('Content after sky removal:', contentAfterSky);
           
-          sentences.forEach(sentence => {
-            const trimmed = sentence.trim();
-            // Skip obvious original content but allow highlighting
-            if (trimmed && !/\b(sky|hello|how are you)\b/i.test(trimmed)) {
-              
-              console.log('Position-based highlighting:', trimmed);
-              const escapedSentence = trimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-              const sentenceRegex = new RegExp(escapedSentence, 'gi');
-              
-              result = result.replace(sentenceRegex, (match) => {
-                if (!match.includes('style="background-color: #fecaca')) {
-                  console.log('Applied position-based red highlighting to:', match);
-                  return `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected (position-based)">${match}</span>`;
-                }
-                return match;
-              });
-            }
-          });
+          if (contentAfterSky && contentAfterSky.length > 20) {
+            const sentences = contentAfterSky.split(/[.!?]+/).filter(s => s.trim().length > 10);
+            
+            sentences.forEach(sentence => {
+              const trimmed = sentence.trim();
+              if (trimmed) {
+                console.log('Position-based highlighting:', trimmed);
+                const escapedSentence = trimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const sentenceRegex = new RegExp(escapedSentence, 'gi');
+                
+                result = result.replace(sentenceRegex, (match) => {
+                  if (!match.includes('style="background-color: #fecaca')) {
+                    console.log('Applied position-based red highlighting to:', match);
+                    return `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected (position-based)">${match}</span>`;
+                  }
+                  return match;
+                });
+              }
+            });
+          }
         }
       }
     });
