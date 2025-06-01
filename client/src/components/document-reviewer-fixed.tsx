@@ -73,6 +73,11 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
   const contentRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
+  // Get current user information
+  const { data: currentUser } = useQuery({
+    queryKey: ["/api/auth/user"],
+  });
+
   // Fetch inline comments from database
   const { data: inlineComments = [], isLoading } = useQuery({
     queryKey: [`/api/sessions/${session.id}/comments`],
@@ -109,7 +114,7 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
     mutationFn: async (commentData: any) => {
       const response = await apiRequest("POST", `/api/sessions/${session.id}/comments`, {
         ...commentData,
-        teacherId: 1, // Demo teacher ID
+        teacherId: currentUser?.id || 1,
       });
       return response.json();
     },
