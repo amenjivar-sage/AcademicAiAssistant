@@ -117,16 +117,37 @@ export async function checkSpellingWithAI(text: string): Promise<SpellCheckResul
     }
 
     const data = await response.json();
-    const aiResults = data.corrections || [];
+    console.log('Raw API response:', data);
     
-    // If AI returns no results and we need a reliable source, we should improve the AI
-    // rather than fall back to unreliable custom dictionaries
+    // The API returns the results directly as an array
+    const aiResults = Array.isArray(data) ? data : [];
+    
     if (aiResults.length === 0) {
       console.log('AI returned no results - this suggests the AI service may need improvement');
-      return []; // Return empty rather than unreliable results
+      return [];
     }
     
-    return aiResults.sort((a, b) => a.startIndex - b.startIndex);
+    // Convert AI results to our SpellCheckResult format with word positions
+    const spellCheckResults: SpellCheckResult[] = [];
+    let searchIndex = 0;
+    
+    aiResults.forEach((error: any) => {
+      if (error.word && error.suggestions) {
+        const wordIndex = text.indexOf(error.word, searchIndex);
+        if (wordIndex !== -1) {
+          spellCheckResults.push({
+            word: error.word,
+            suggestions: error.suggestions,
+            startIndex: wordIndex,
+            endIndex: wordIndex + error.word.length
+          });
+          searchIndex = wordIndex + error.word.length;
+        }
+      }
+    });
+    
+    console.log('Converted to SpellCheckResult format:', spellCheckResults);
+    return spellCheckResults.sort((a, b) => a.startIndex - b.startIndex);
     
   } catch (error) {
     console.error('AI spell check error:', error);
