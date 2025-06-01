@@ -52,8 +52,33 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, UserPlus, School, Mail, Shield, Edit, Trash2, Download, Upload, Key, Archive, MoreHorizontal, Search } from "lucide-react";
 import type { User } from "@shared/schema";
 
+// Educational domain validation for FERPA compliance
+const isEducationalEmail = (email: string): boolean => {
+  const educationalDomains = [
+    '.edu',     // Higher education
+    '.k12',     // K-12 schools
+    '.us',      // Public schools
+    '.org',     // Educational organizations
+    '.gov',     // Government educational institutions
+    'school',   // Contains "school" in domain
+    'district', // School districts
+    'academy',  // Educational academies
+    'college',  // Colleges
+    'university' // Universities
+  ];
+  
+  const domain = email.toLowerCase();
+  return educationalDomains.some(suffix => 
+    domain.endsWith(suffix) || domain.includes(suffix)
+  );
+};
+
 const createUserSchema = z.object({
-  email: z.string().email("Please enter a valid school email address"),
+  email: z.string()
+    .email("Please enter a valid email address")
+    .refine(isEducationalEmail, {
+      message: "Email must be from an educational institution (.edu, .k12, .us, .org, or contain school/district/academy/college/university)"
+    }),
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   role: z.enum(["teacher", "student"], {
