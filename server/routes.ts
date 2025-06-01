@@ -210,7 +210,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Send recovery email with username and password reset instructions
+      // Send recovery email with username and temporary password
       try {
         const emailResult = await emailService.sendPasswordResetEmail({
           firstName: user.firstName,
@@ -220,11 +220,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
           role: user.role
         });
         
+        // Update user's password to the temporary password
+        if (emailResult.temporaryPassword) {
+          // Update the user's password in storage with the temporary password
+          if (storage.updateUserPassword) {
+            await storage.updateUserPassword(user.id, emailResult.temporaryPassword);
+          } else {
+            // For memory storage, manually update the password
+            const memUser = await storage.getUser(user.id);
+            if (memUser) {
+              memUser.password = emailResult.temporaryPassword;
+            }
+          }
+          
+          console.log(`🔑 Temporary password set for user ${user.email}`);
+        }
+        
         console.log(`📧 Password reset email sent to ${user.email}: ${emailResult.message}`);
         
         res.json({ 
           success: true, 
-          message: "Recovery instructions have been sent to your email address." 
+          message: "Recovery instructions with temporary password have been sent to your email address." 
         });
       } catch (emailError) {
         console.error('⚠️ Failed to send password reset email:', emailError);

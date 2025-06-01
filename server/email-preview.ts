@@ -33,13 +33,14 @@ export function setupEmailPreview(app: Express) {
     try {
       const email = decodeURIComponent(req.params.email);
       
-      // Generate sample password recovery email content
+      // Generate sample password recovery email content with temporary password
       const emailResult = await emailService.sendPasswordResetEmail({
         firstName: "Alexander",
         lastName: "Menjivar", 
         email: email,
         username: "alexander.menjivar",
-        role: "student"
+        role: "student",
+        temporaryPassword: "TempPass2024!"
       });
       
       if (emailResult.emailContent) {

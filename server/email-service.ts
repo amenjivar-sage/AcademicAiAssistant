@@ -14,6 +14,10 @@ interface WelcomeEmailData {
   role: string;
 }
 
+interface PasswordResetEmailData extends WelcomeEmailData {
+  temporaryPassword?: string;
+}
+
 export class EmailService {
   private mailService?: MailService;
   private fromEmail = 'noreply@sage-edu.app'; // Default sender email
@@ -128,7 +132,7 @@ export class EmailService {
   /**
    * Generate password reset email HTML with Sage branding
    */
-  private generatePasswordResetEmailHTML(data: WelcomeEmailData): string {
+  private generatePasswordResetEmailHTML(data: PasswordResetEmailData): string {
     const roleText = data.role === 'student' ? 'Student' : 'Teacher';
     
     return `
@@ -184,18 +188,36 @@ export class EmailService {
                 <small style="color: #6c757d;">Use this username to log in</small>
             </div>
             
+            ${data.temporaryPassword ? `
+            <div style="background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center;">
+                <h3 style="color: #856404; margin-top: 0;">🔑 Temporary Password</h3>
+                <div style="font-size: 24px; font-weight: bold; color: #856404; margin: 10px 0; font-family: monospace; background: white; padding: 10px; border-radius: 4px; border: 1px solid #ffc107;">${data.temporaryPassword}</div>
+                <small style="color: #856404;">This temporary password expires in 24 hours</small>
+            </div>
+            ` : ''}
+            
             <div class="instructions">
                 <h3>🔑 How to Access Your Account:</h3>
                 <ol>
                     <li>Go to the Sage platform login page</li>
                     <li>Enter either your <strong>email address</strong> (${data.email}) or your <strong>username</strong> (${data.username})</li>
-                    <li>Use your existing password</li>
+                    <li>${data.temporaryPassword ? `Use your <strong>temporary password</strong> above` : `Use your existing password`}</li>
+                    ${data.temporaryPassword ? `<li>You'll be prompted to create a new password on first login</li>` : ''}
                 </ol>
             </div>
             
             <div class="warning">
-                <h3>⚠️ Need to Reset Your Password?</h3>
+                <h3>⚠️ Important Security Information:</h3>
+                ${data.temporaryPassword ? `
+                <ul style="text-align: left; margin: 10px 0;">
+                    <li>This temporary password expires in 24 hours</li>
+                    <li>You must change it on your first login</li>
+                    <li>Do not share this password with anyone</li>
+                    <li>If you did not request this reset, contact your administrator immediately</li>
+                </ul>
+                ` : `
                 <p>If you've forgotten your password, please contact your school administrator or IT support for assistance with password reset.</p>
+                `}
             </div>
             
             <h3>📚 Your Sage Account Includes:</h3>
@@ -278,17 +300,35 @@ export class EmailService {
   }
 
   /**
+   * Generate a secure temporary password
+   */
+  private generateTemporaryPassword(): string {
+    const length = 12;
+    const charset = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%";
+    let password = "";
+    for (let i = 0; i < length; i++) {
+      password += charset.charAt(Math.floor(Math.random() * charset.length));
+    }
+    return password;
+  }
+
+  /**
    * Send password reset email with username recovery
    */
-  async sendPasswordResetEmail(data: WelcomeEmailData): Promise<{ success: boolean; message: string; emailContent?: string }> {
-    const subject = `Sage - Username Recovery for ${data.firstName} ${data.lastName}`;
-    const htmlContent = this.generatePasswordResetEmailHTML(data);
+  async sendPasswordResetEmail(data: PasswordResetEmailData): Promise<{ success: boolean; message: string; emailContent?: string; temporaryPassword?: string }> {
+    // Generate temporary password if not provided
+    const temporaryPassword = data.temporaryPassword || this.generateTemporaryPassword();
+    const dataWithTempPassword = { ...data, temporaryPassword };
+    
+    const subject = `Sage - Password Reset for ${data.firstName} ${data.lastName}`;
+    const htmlContent = this.generatePasswordResetEmailHTML(dataWithTempPassword);
     
     // Always log the email for debugging/manual sending
     console.log('\n📧 PASSWORD RESET EMAIL GENERATED:');
     console.log('To:', data.email);
     console.log('Subject:', subject);
     console.log('Username:', data.username);
+    console.log('Temporary Password:', temporaryPassword);
     console.log('Role:', data.role);
     
     if (this.mailService) {
@@ -304,14 +344,16 @@ export class EmailService {
         return { 
           success: true, 
           message: 'Password reset email sent successfully',
-          emailContent: htmlContent
+          emailContent: htmlContent,
+          temporaryPassword
         };
       } catch (error) {
         console.error('❌ Failed to send password reset email:', error);
         return { 
           success: false, 
           message: 'Failed to send email - saved for manual delivery',
-          emailContent: htmlContent
+          emailContent: htmlContent,
+          temporaryPassword
         };
       }
     } else {
@@ -320,7 +362,8 @@ export class EmailService {
       return { 
         success: true, 
         message: 'Password reset email generated successfully - ready for delivery when SendGrid is configured',
-        emailContent: htmlContent
+        emailContent: htmlContent,
+        temporaryPassword
       };
     }
   }
