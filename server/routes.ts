@@ -332,6 +332,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin endpoints
+  app.get("/api/admin/users", async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      // Filter out archived users (only show active users)
+      const activeUsers = users.filter(user => user.isActive);
+      res.json(activeUsers);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  app.get("/api/admin/archived-users", async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      // Filter to show only archived users
+      const archivedUsers = users.filter(user => !user.isActive);
+      res.json(archivedUsers);
+    } catch (error) {
+      console.error("Error fetching archived users:", error);
+      res.status(500).json({ message: "Failed to fetch archived users" });
+    }
+  });
+
+  app.get("/api/admin/user-stats", async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      const stats = {
+        totalUsers: users.length,
+        activeUsers: users.filter(u => u.isActive).length,
+        teachers: users.filter(u => u.role === 'teacher').length,
+        students: users.filter(u => u.role === 'student').length,
+        admins: users.filter(u => u.role === 'admin').length
+      };
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching user stats:", error);
+      res.status(500).json({ message: "Failed to fetch user stats" });
+    }
+  });
+
+  app.get("/api/admin/analytics", async (req, res) => {
+    try {
+      // Get basic analytics data
+      const users = await storage.getAllUsers();
+      const assignments = await storage.checkOverdueAssignments(); // Reuse this for total count
+      
+      const analytics = {
+        totalUsers: users.length,
+        activeUsers: users.filter(u => u.isActive).length,
+        totalAssignments: assignments.length || 0,
+        completedAssignments: 0, // Placeholder for now
+        averageGrade: "B+", // Placeholder
+        engagementRate: "85%", // Placeholder
+        weeklyGrowth: 12, // Placeholder
+        monthlyGrowth: 8 // Placeholder
+      };
+      
+      res.json(analytics);
+    } catch (error) {
+      console.error("Error fetching analytics:", error);
+      res.status(500).json({ message: "Failed to fetch analytics" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
