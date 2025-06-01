@@ -46,8 +46,15 @@ export default function TeacherDashboard() {
   });
 
   // Logout function
-  const handleLogout = () => {
-    window.location.href = "/api/auth/logout";
+  const handleLogout = async () => {
+    try {
+      await apiRequest("/api/auth/logout", { method: "POST" });
+      window.location.href = "/";
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Even if logout fails, redirect to home page
+      window.location.href = "/";
+    }
   };
 
   // Helper function to count completed assignments
@@ -110,6 +117,14 @@ export default function TeacherDashboard() {
                   Create Assignment
                 </Button>
               </AssignmentForm>
+              <Button 
+                variant="outline" 
+                onClick={handleLogout}
+                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
+              </Button>
             </div>
           </div>
         </div>

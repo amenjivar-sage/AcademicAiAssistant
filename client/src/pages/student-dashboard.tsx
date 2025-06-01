@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpen, PenTool, Target, Trophy, Clock, Users, Plus, MessageSquare } from "lucide-react";
+import { BookOpen, PenTool, Target, Trophy, Clock, Users, Plus, MessageSquare, LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import SageLogo from "@/components/sage-logo";
@@ -24,6 +24,18 @@ export default function StudentDashboard() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+
+  // Logout function
+  const handleLogout = async () => {
+    try {
+      await apiRequest("/api/auth/logout", { method: "POST" });
+      window.location.href = "/";
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Even if logout fails, redirect to home page
+      window.location.href = "/";
+    }
+  };
 
   // Get student's enrolled classes
   const { data: classes = [], isLoading: classesLoading } = useQuery<Classroom[]>({
@@ -62,6 +74,20 @@ export default function StudentDashboard() {
                 <Trophy className="h-3 w-3 mr-1" />
                 Level {Math.floor(totalWordCount / 500) + 1}
               </Badge>
+              <MessagingSystem currentUserId={2} currentUserRole="student">
+                <Button variant="outline" className="relative">
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Messages
+                </Button>
+              </MessagingSystem>
+              <Button 
+                variant="outline" 
+                onClick={handleLogout}
+                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
+              </Button>
             </div>
           </div>
         </div>

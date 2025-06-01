@@ -163,6 +163,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Logout endpoint
+  app.post("/api/auth/logout", async (req, res) => {
+    try {
+      // Clear any session data (for demo purposes, we'll just return success)
+      // In a real app, this would clear server-side sessions
+      res.json({ message: "Logged out successfully" });
+    } catch (error) {
+      console.error("Error during logout:", error);
+      res.status(500).json({ message: "Logout failed" });
+    }
+  });
+
   // Demo login endpoint
   app.post("/api/auth/demo-login", async (req, res) => {
     try {
