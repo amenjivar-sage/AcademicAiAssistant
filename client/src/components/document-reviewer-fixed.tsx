@@ -252,26 +252,28 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                     let exactMatches = 0;
                     let closeMatches = 0;
                     
+                    // Simple approach: if pasted content and document content have similar structure, it's likely copy-pasted
+                    const pastedStructure = pastedWords.join(' ').replace(/[.,!?;]/g, '').toLowerCase();
+                    const docStructure = docWords.join(' ').replace(/[.,!?;]/g, '').toLowerCase();
+                    
+                    // Count how many pasted words have matches in the document sentence
                     pastedWords.forEach((pastedWord: string) => {
                       const cleanPastedWord = pastedWord.replace(/[.,!?;]/g, '');
                       
                       docWords.forEach((docWord: string) => {
-                        // Exact match (after cleaning punctuation)
+                        // Exact match
                         if (cleanPastedWord === docWord) {
                           exactMatches += 1;
                         }
-                        // Very loose matching for spell-corrected words
+                        // Spell-corrected match (similar root words)
                         else if (cleanPastedWord.length >= 3 && docWord.length >= 3) {
-                          // Match if words start similarly or have common letters
-                          const similarStart = cleanPastedWord.substring(0, 2) === docWord.substring(0, 2);
-                          const similarLength = Math.abs(cleanPastedWord.length - docWord.length) <= 2;
+                          // Match common spelling corrections like tryed->tried, ignor->ignore
+                          const rootMatch = cleanPastedWord.substring(0, 3) === docWord.substring(0, 3) ||
+                                          (cleanPastedWord.includes('tr') && docWord.includes('tr')) ||
+                                          (cleanPastedWord.includes('ig') && docWord.includes('ig')) ||
+                                          (cleanPastedWord.includes('co') && docWord.includes('co'));
                           
-                          if (similarStart && similarLength) {
-                            closeMatches += 1;
-                          }
-                          // Also count as match if one word contains most of the other
-                          else if (cleanPastedWord.length >= 4 && docWord.length >= 4 &&
-                                  (cleanPastedWord.includes(docWord.substring(0, 3)) || docWord.includes(cleanPastedWord.substring(0, 3)))) {
+                          if (rootMatch && Math.abs(cleanPastedWord.length - docWord.length) <= 3) {
                             closeMatches += 1;
                           }
                         }
