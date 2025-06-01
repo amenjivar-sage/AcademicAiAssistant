@@ -233,6 +233,22 @@ export default function AdminUserManagement() {
     }
   };
 
+  // Filter function for search
+  const filterUsers = (userList: User[] | undefined) => {
+    if (!userList) return [];
+    if (!searchQuery.trim()) return userList;
+    
+    const query = searchQuery.toLowerCase();
+    return userList.filter(user => 
+      user.firstName.toLowerCase().includes(query) ||
+      user.lastName.toLowerCase().includes(query) ||
+      user.email.toLowerCase().includes(query) ||
+      user.username.toLowerCase().includes(query) ||
+      (user.department && user.department.toLowerCase().includes(query)) ||
+      (user.grade && user.grade.toLowerCase().includes(query))
+    );
+  };
+
   const exportUsers = () => {
     if (!users) return;
     
@@ -422,6 +438,17 @@ export default function AdminUserManagement() {
           <TabsTrigger value="archived">Archived Users</TabsTrigger>
         </TabsList>
 
+        {/* Search bar for user tabs */}
+        <div className="relative w-full max-w-sm">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            placeholder="Search users by name, email, username..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+
         <TabsContent value="overview">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card>
@@ -490,7 +517,7 @@ export default function AdminUserManagement() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {users?.map((user) => (
+                    {filterUsers(users)?.map((user) => (
                       <TableRow key={user.id}>
                         <TableCell className="font-medium">
                           {user.firstName} {user.lastName}
@@ -569,7 +596,7 @@ export default function AdminUserManagement() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {users?.filter(user => user.role === 'teacher').map((teacher) => (
+                  {filterUsers(users)?.filter(user => user.role === 'teacher').map((teacher) => (
                     <TableRow key={teacher.id}>
                       <TableCell className="font-medium">
                         {teacher.firstName} {teacher.lastName}
@@ -617,7 +644,7 @@ export default function AdminUserManagement() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {users?.filter(user => user.role === 'student').map((student) => (
+                  {filterUsers(users)?.filter(user => user.role === 'student').map((student) => (
                     <TableRow key={student.id}>
                       <TableCell className="font-medium">
                         {student.firstName} {student.lastName}
@@ -669,7 +696,7 @@ export default function AdminUserManagement() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {archivedUsers.map((user) => (
+                    {filterUsers(archivedUsers).map((user) => (
                       <TableRow key={user.id}>
                         <TableCell className="font-medium">
                           {user.firstName} {user.lastName}
