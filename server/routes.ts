@@ -729,6 +729,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get session interactions (chat history)
+  app.get("/api/session/:sessionId/interactions", async (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.sessionId);
+      const interactions = await storage.getSessionInteractions(sessionId);
+      res.json(interactions);
+    } catch (error) {
+      console.error("Error fetching interactions:", error);
+      res.status(500).json({ message: "Failed to fetch chat history" });
+    }
+  });
+
+  // AI assistance endpoint
+  app.post("/api/ai/chat", async (req, res) => {
+    try {
+      const { sessionId, prompt, documentContent } = req.body;
+      
+      if (!prompt) {
+        return res.status(400).json({ message: "Prompt is required" });
+      }
+
+      // Import OpenAI functions
+      const { checkRestrictedPrompt, generateAiResponse } = await import('./openai');
+
+      // Check if prompt is restricted
+      const isRestricted = checkRestrictedPrompt(prompt);
+      
+      let response: string;
+      
+      if (isRestricted) {
+        response = "❌ Sorry! This type of AI help isn't allowed. Try asking for brainstorming, outlining, or feedback instead. I'm here to help you learn and improve your own writing skills, not to do the work for you.";
+      } else {
+        // Generate helpful AI response using OpenAI with document context
+        response = await generateAiResponse(prompt, undefined, documentContent);
+      }
+
+      // Store the interaction if we have a valid session
+      if (sessionId && sessionId > 0) {
+        await storage.createAiInteraction({
+          sessionId: parseInt(sessionId),
+          prompt,
+          response,
+          isRestricted,
+        });
+      }
+
+      res.json({
+        response,
+        isRestricted,
+        sessionId: sessionId || null
+      });
+      
+    } catch (error) {
+      console.error("AI chat error:", error);
+      res.status(500).json({ 
+        message: "Failed to generate AI response",
+        response: "Sorry, I'm having trouble connecting right now. Please try again in a moment.",
+        isRestricted: false
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
