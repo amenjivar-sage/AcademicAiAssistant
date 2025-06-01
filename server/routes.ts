@@ -26,22 +26,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Try to find user by username first, then by email
-      console.log('Attempting login for:', username);
       let user = await storage.getUserByUsername(username);
-      console.log('Username lookup result:', user ? `Found: ${user.firstName} ${user.lastName}` : 'Not found');
-      
       if (!user && username.includes('@')) {
-        console.log('Trying email lookup for:', username);
         // If username looks like an email, try to find by email
         user = await storage.getUserByEmail(username);
-        console.log('Email lookup result:', user ? `Found: ${user.firstName} ${user.lastName}` : 'Not found');
       }
-      
-
-      
-      console.log('Login debug - User found:', user ? `${user.firstName} ${user.lastName}` : 'null');
-      console.log('Login debug - Password provided:', password ? '[HIDDEN]' : 'null');
-      console.log('Login debug - Password match:', user ? (user.password === password ? 'YES' : 'NO') : 'N/A');
       
       if (!user || user.password !== password) {
         return res.status(401).json({ message: "Invalid credentials" });
@@ -434,8 +423,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Student API routes
   app.get("/api/student/writing-sessions", async (req, res) => {
     try {
-      const studentId = currentDemoUserId; // Student user ID
-      const sessions = await storage.getUserWritingSessions(studentId);
+      const userId = (req as any).session?.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "Not logged in" });
+      }
+      
+      const sessions = await storage.getUserWritingSessions(userId);
       res.json(sessions);
     } catch (error) {
       console.error("Error fetching student writing sessions:", error);
@@ -445,8 +438,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/student/assignments", async (req, res) => {
     try {
-      const studentId = currentDemoUserId;
-      const studentClassrooms = await storage.getStudentClassrooms(studentId);
+      const userId = (req as any).session?.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "Not logged in" });
+      }
+      
+      const studentClassrooms = await storage.getStudentClassrooms(userId);
       const classroomIds = studentClassrooms.map(c => c.id);
       
       // Get all assignments for student's classrooms
@@ -464,10 +461,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/student/classes", async (req, res) => {
     try {
-      const studentId = currentDemoUserId;
-      console.log("Fetching classes for student ID:", studentId);
+      const userId = (req as any).session?.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "Not logged in" });
+      }
       
-      const classes = await storage.getStudentClassrooms(studentId);
+      console.log("Fetching classes for student ID:", userId);
+      
+      const classes = await storage.getStudentClassrooms(userId);
       console.log("Student classes found:", classes);
       
       res.json(classes);
