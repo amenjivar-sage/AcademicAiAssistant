@@ -619,6 +619,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const studentId = session.userId;
+      console.log("Session data:", session);
       console.log("Attempting to join classroom with code:", joinCode, "for student ID:", studentId);
       
       // Find classroom by join code
