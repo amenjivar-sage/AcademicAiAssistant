@@ -356,10 +356,8 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
           
           sentences.forEach(sentence => {
             const trimmed = sentence.trim();
-            // Skip obvious original content and already highlighted content
-            if (trimmed && 
-                !/\b(sky|hello|how are you)\b/i.test(trimmed) && 
-                !result.includes(`style="background-color: #fecaca`)) {
+            // Skip obvious original content but allow highlighting
+            if (trimmed && !/\b(sky|hello|how are you)\b/i.test(trimmed)) {
               
               console.log('Position-based highlighting:', trimmed);
               const escapedSentence = trimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
