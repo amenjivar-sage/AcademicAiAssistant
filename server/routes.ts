@@ -437,6 +437,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Class enrollment route
+  app.post("/api/classes/join", async (req, res) => {
+    try {
+      const { joinCode, studentId } = req.body;
+      
+      if (!joinCode || !studentId) {
+        return res.status(400).json({ message: "Join code and student ID are required" });
+      }
+      
+      // Find classroom by join code across all teachers
+      const allClassrooms = await storage.getAllClassrooms();
+      const classroom = allClassrooms.find(c => c.joinCode === joinCode.toUpperCase());
+      
+      if (!classroom) {
+        return res.status(404).json({ message: "Class not found with this join code" });
+      }
+      
+      // Enroll the student in the classroom
+      await storage.enrollStudentInClassroom(studentId, classroom.id);
+      
+      // Return the classroom data
+      res.json(classroom);
+    } catch (error) {
+      console.error("Error joining class:", error);
+      res.status(500).json({ message: "Failed to join class" });
+    }
+  });
+
+  // Create classroom
+  app.post("/api/classrooms", async (req, res) => {
+    try {
+      const currentUser = await getCurrentUser();
+      if (!currentUser || currentUser.role !== 'teacher') {
+        return res.status(401).json({ message: "Teacher authentication required" });
+      }
+      
+      const classroomData = {
+        ...req.body,
+        teacherId: currentUser.id // Ensure the classroom is assigned to the current teacher
+      };
+      
+      const classroom = await storage.createClassroom(classroomData);
+      res.json(classroom);
+    } catch (error) {
+      console.error("Error creating classroom:", error);
+      res.status(500).json({ message: "Failed to create classroom" });
+    }
+  });
+
   // Get assignment submissions with student data
   app.get("/api/assignments/:assignmentId/submissions", async (req, res) => {
     try {
