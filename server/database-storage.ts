@@ -369,7 +369,12 @@ export class DatabaseStorage implements IStorage {
       })
       .from(classrooms)
       .leftJoin(classroomEnrollments, eq(classrooms.id, classroomEnrollments.classroomId))
-      .where(eq(classroomEnrollments.studentId, studentId));
+      .where(
+        and(
+          eq(classroomEnrollments.studentId, studentId),
+          eq(classrooms.isActive, true)
+        )
+      );
 
     return classroomData;
   }

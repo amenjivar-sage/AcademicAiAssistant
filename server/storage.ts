@@ -767,7 +767,7 @@ Despite these challenges, the momentum toward renewable energy appears unstoppab
       .map(key => parseInt(key.split('-')[1]));
     
     return Array.from(this.classrooms.values())
-      .filter(classroom => enrolledClassroomIds.includes(classroom.id));
+      .filter(classroom => enrolledClassroomIds.includes(classroom.id) && classroom.isActive);
   }
 
   async enrollStudentInClassroom(studentId: number, classroomId: number): Promise<void> {
