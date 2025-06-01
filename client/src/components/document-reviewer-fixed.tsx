@@ -237,52 +237,70 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
             }
           });
           
-          // Approach 2: More conservative sequence matching
-          // Only highlight if we can find substantial consecutive word sequences that match
+          // Approach 2: Balanced sequence matching for spell-corrected content
+          // Look for sequences that match with reasonable confidence but avoid false positives
           const pastedWords = pastedText.split(/\s+/).filter(w => w.length >= 3);
           
-          // Look for sequences of 6+ consecutive words with high confidence
-          for (let seqLength = 6; seqLength <= Math.min(10, pastedWords.length); seqLength++) {
+          // Try different sequence lengths to catch corrected content
+          for (let seqLength = 5; seqLength <= Math.min(8, pastedWords.length); seqLength++) {
             for (let i = 0; i <= pastedWords.length - seqLength; i++) {
               const sequence = pastedWords.slice(i, i + seqLength);
               
-              // Create pattern that requires at least 80% of words to match closely
-              const highConfidencePattern = sequence.map(word => {
+              // Create flexible pattern for spell-corrected words
+              const flexiblePattern = sequence.map(word => {
                 if (word.length <= 4) {
-                  // For short words, require exact match
-                  return word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                  // For short words, be more flexible with common misspellings
+                  const base = word.substring(0, Math.max(2, word.length - 1));
+                  return `\\w*${base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\w*`;
                 } else {
-                  // For longer words, allow for 1-2 character spelling changes
-                  const core = word.substring(0, Math.max(3, word.length - 2));
-                  return `\\w*${core.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\w{0,3}`;
+                  // For longer words, allow significant spelling variations
+                  const core = word.substring(0, Math.max(2, Math.min(4, word.length - 2)));
+                  return `\\w*${core.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\w*`;
                 }
               }).join('\\s+');
               
-              const sequenceRegex = new RegExp(`\\b${highConfidencePattern}\\b`, 'gi');
+              const sequenceRegex = new RegExp(`\\b${flexiblePattern}\\b`, 'gi');
               
               result = result.replace(sequenceRegex, (match) => {
-                // Additional validation: check that this match contains enough original words
                 const matchWords = match.split(/\s+/);
-                let exactMatches = 0;
+                let similarityScore = 0;
                 
+                // Calculate similarity score with more nuanced matching
                 sequence.forEach((origWord: string, idx: number) => {
                   if (matchWords[idx]) {
                     const origLower = origWord.toLowerCase();
                     const matchLower = matchWords[idx].toLowerCase();
                     
-                    // Count as exact if same word or very close spelling
-                    if (origLower === matchLower || 
-                        (origLower.length >= 4 && matchLower.length >= 4 && 
-                         origLower.substring(0, 4) === matchLower.substring(0, 4))) {
-                      exactMatches++;
+                    // Exact match gets full points
+                    if (origLower === matchLower) {
+                      similarityScore += 1.0;
+                    }
+                    // Very close spelling (first 3-4 chars match)
+                    else if (origLower.length >= 4 && matchLower.length >= 4 && 
+                             origLower.substring(0, Math.min(4, origLower.length)) === 
+                             matchLower.substring(0, Math.min(4, matchLower.length))) {
+                      similarityScore += 0.9;
+                    }
+                    // Reasonable spelling variation (first 2-3 chars match)
+                    else if (origLower.length >= 3 && matchLower.length >= 3 && 
+                             origLower.substring(0, 3) === matchLower.substring(0, 3)) {
+                      similarityScore += 0.7;
+                    }
+                    // Weak match (first 2 chars)
+                    else if (origLower.length >= 2 && matchLower.length >= 2 && 
+                             origLower.substring(0, 2) === matchLower.substring(0, 2)) {
+                      similarityScore += 0.3;
                     }
                   }
                 });
                 
-                // Only highlight if we have high confidence (80%+ word similarity)
-                if (exactMatches >= Math.ceil(sequence.length * 0.8) && 
-                    !match.includes('style="background-color: #fecaca')) {
-                  return `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected (high confidence)">${match}</span>`;
+                // Calculate percentage similarity
+                const similarity = similarityScore / sequence.length;
+                
+                // Highlight if similarity is good enough (60%+ for sequences of 5+ words)
+                // This catches spell-corrected content while avoiding most false positives
+                if (similarity >= 0.6 && !match.includes('style="background-color: #fecaca')) {
+                  return `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected (${Math.round(similarity * 100)}% match)">${match}</span>`;
                 }
                 return match;
               });
