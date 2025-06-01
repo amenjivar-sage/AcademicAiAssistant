@@ -199,73 +199,92 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
           const regex = new RegExp(escapedText, 'gi');
           result = result.replace(regex, `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected">${pastedText}</span>`);
         } else {
-          // Enhanced pattern matching for corrected text
-          // Split into sentences for better accuracy
-          const sentences = pastedText.split(/[.!?]+/).filter(s => s.trim().length > 10);
+          // Enhanced pattern matching for heavily corrected text
+          // Try multiple approaches to catch spell-corrected content
           
-          sentences.forEach((sentence: string) => {
-            const trimmedSentence = sentence.trim();
-            if (trimmedSentence) {
-              // Extract significant words (excluding very common words)
-              const skipWords = ['the', 'and', 'that', 'with', 'have', 'this', 'will', 'you', 'they', 'but', 'not', 'for', 'are', 'was', 'were', 'had', 'his', 'her', 'him', 'she', 'can', 'all', 'who', 'oil', 'its', 'now', 'how', 'two', 'may', 'way', 'day', 'use', 'man', 'new', 'old', 'see', 'get', 'has', 'had', 'let', 'put', 'say', 'too', 'any', 'may', 'try'];
-              const significantWords = trimmedSentence.split(/\s+/)
-                .filter(w => w.length > 3 && !skipWords.includes(w.toLowerCase()))
-                .slice(0, 6); // Take more words for better matching
+          // Approach 1: Break into smaller chunks and use very flexible matching
+          const chunks = pastedText.split(/[.!?]+/).filter(chunk => chunk.trim().length > 8);
+          
+          chunks.forEach((chunk: string) => {
+            const trimmedChunk = chunk.trim();
+            if (trimmedChunk) {
+              // Get all substantial words (3+ chars) 
+              const words = trimmedChunk.split(/\s+/).filter(w => w.length >= 3);
               
-              if (significantWords.length >= 3) {
-                // Create flexible patterns that account for spelling corrections
-                const wordPatterns = significantWords.map(word => {
-                  const cleanWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                  // More flexible pattern that allows for spelling variations
-                  const basePattern = cleanWord.substring(0, Math.max(2, cleanWord.length - 3));
-                  return `\\b\\w*${basePattern}\\w*\\b`;
-                });
-                
-                // Create pattern that looks for sentences with at least 3 of these words
-                const flexiblePattern = new RegExp(
-                  `([^.!?]*(?:${wordPatterns.join('|')})[^.!?]*(?:${wordPatterns.join('|')})[^.!?]*(?:${wordPatterns.join('|')})[^.!?]*[.!?]?)`,
-                  'gi'
-                );
-                
-                result = result.replace(flexiblePattern, (match) => {
-                  // Count how many pattern words are in this match
-                  const matchCount = wordPatterns.filter(pattern => 
-                    new RegExp(pattern, 'i').test(match)
-                  ).length;
+              // Try sliding window approach with very flexible patterns
+              for (let windowSize = 4; windowSize <= Math.min(8, words.length); windowSize++) {
+                for (let i = 0; i <= words.length - windowSize; i++) {
+                  const window = words.slice(i, i + windowSize);
                   
-                  // Only highlight if we have good confidence (3+ word matches) and not already highlighted
-                  if (matchCount >= 3 && !match.includes('style="background-color: #fecaca')) {
-                    return `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected (spelling corrected)">${match}</span>`;
-                  }
-                  return match;
-                });
-              }
-              
-              // Also try word-by-word approach for remaining unmatched content
-              const words = trimmedSentence.split(/\s+/);
-              if (words.length >= 5) {
-                // Look for sequences of 5+ consecutive words that match with spelling variations
-                for (let i = 0; i <= words.length - 5; i++) {
-                  const sequence = words.slice(i, i + 5).join(' ');
-                  const flexibleSequence = sequence
-                    .split(/\s+/)
-                    .map(w => {
-                      if (w.length <= 3) return w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                      const base = w.substring(0, Math.max(2, w.length - 2));
-                      return `\\w*${base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\w*`;
-                    })
-                    .join('\\s+');
+                  // Create very flexible pattern that allows for significant spelling changes
+                  const flexPattern = window.map(word => {
+                    if (word.length <= 3) return word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    // Use first 2-3 characters as anchor, allow anything after
+                    const anchor = word.substring(0, Math.min(3, Math.max(2, word.length - 3)));
+                    return `\\w*${anchor.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\w*`;
+                  }).join('\\s+');
                   
-                  const sequencePattern = new RegExp(`\\b${flexibleSequence}\\b`, 'gi');
+                  const pattern = new RegExp(`\\b${flexPattern}\\b`, 'gi');
                   
-                  result = result.replace(sequencePattern, (match) => {
+                  result = result.replace(pattern, (match) => {
                     if (!match.includes('style="background-color: #fecaca')) {
-                      return `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected (sequence match)">${match}</span>`;
+                      return `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected (pattern match)">${match}</span>`;
                     }
                     return match;
                   });
                 }
               }
+            }
+          });
+          
+          // Approach 2: Look for structural similarity (sentence patterns)
+          // Split the pasted text into sentences and look for similar sentence structures
+          const pastedSentences = pastedText.split(/[.!?]+/).filter(s => s.trim().length > 10);
+          const contentSentences = result.split(/[.!?]+/).filter(s => s.trim().length > 10);
+          
+          pastedSentences.forEach((pastedSent: string) => {
+            const pastedWords = pastedSent.trim().split(/\s+/);
+            if (pastedWords.length >= 4) {
+              
+              contentSentences.forEach((contentSent: string) => {
+                const contentWords = contentSent.trim().split(/\s+/);
+                
+                // Check if sentence structures are similar (similar length and some word matches)
+                if (Math.abs(contentWords.length - pastedWords.length) <= 3) {
+                  let matches = 0;
+                  
+                  // Count words that match (allowing for spelling corrections)
+                  pastedWords.forEach((pWord: string) => {
+                    contentWords.forEach((cWord: string) => {
+                      if (pWord.length >= 3 && cWord.length >= 3) {
+                        // Check if words are similar (same first 2-3 chars)
+                        const pStart = pWord.toLowerCase().substring(0, Math.min(3, pWord.length));
+                        const cStart = cWord.toLowerCase().substring(0, Math.min(3, cWord.length));
+                        if (pStart === cStart || 
+                            (pWord.length >= 4 && cWord.length >= 4 && 
+                             pWord.toLowerCase().substring(0, 4) === cWord.toLowerCase().substring(0, 4))) {
+                          matches++;
+                        }
+                      }
+                    });
+                  });
+                  
+                  // If we have enough matches, highlight this sentence
+                  if (matches >= Math.min(3, Math.floor(pastedWords.length * 0.4))) {
+                    const sentenceToHighlight = contentSent.trim();
+                    if (sentenceToHighlight && !result.includes(`<span style="background-color: #fecaca`)) {
+                      const escapedSentence = sentenceToHighlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                      const sentenceRegex = new RegExp(escapedSentence, 'gi');
+                      result = result.replace(sentenceRegex, (match) => {
+                        if (!match.includes('style="background-color: #fecaca')) {
+                          return `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected (structure match)">${match}</span>`;
+                        }
+                        return match;
+                      });
+                    }
+                  }
+                }
+              });
             }
           });
         }
