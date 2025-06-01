@@ -1080,21 +1080,33 @@ Return [] if no errors.`;
     try {
       const teacherId = parseInt(req.params.teacherId);
       
-      // Get real students from actual user data
-      const allUsers = await storage.getAllUsers();
-      const students = allUsers.filter(u => u.role === 'student' && u.isActive);
+      // Get teacher's classrooms
+      const teacherClassrooms = await storage.getTeacherClassrooms(teacherId);
+      const classroomIds = teacherClassrooms.map(c => c.id);
       
-      // Return empty array if no students exist yet
-      res.json(students.map(student => ({
-        id: student.id,
-        name: `${student.firstName} ${student.lastName}`,
-        email: student.email,
-        avatar: `${student.firstName[0]}${student.lastName[0]}`,
-        status: "active",
-        totalWords: 0,
-        assignmentsCompleted: 0,
-        assignmentsPending: 0
-      })));
+      // Get all students enrolled in teacher's classrooms
+      const allUsers = await storage.getAllUsers();
+      const enrolledStudents = [];
+      
+      for (const student of allUsers.filter(u => u.role === 'student' && u.isActive)) {
+        const studentClassrooms = await storage.getStudentClassrooms(student.id);
+        const isEnrolledInTeacherClass = studentClassrooms.some(c => classroomIds.includes(c.id));
+        
+        if (isEnrolledInTeacherClass) {
+          enrolledStudents.push({
+            id: student.id,
+            name: `${student.firstName} ${student.lastName}`,
+            email: student.email,
+            avatar: `${student.firstName?.[0] || ''}${student.lastName?.[0] || ''}`,
+            status: "active",
+            totalWords: 0,
+            assignmentsCompleted: 0,
+            assignmentsPending: 0
+          });
+        }
+      }
+      
+      res.json(enrolledStudents);
     } catch (error) {
       console.error("Error fetching students:", error);
       res.status(500).json({ message: "Failed to fetch students" });
