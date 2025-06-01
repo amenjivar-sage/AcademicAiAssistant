@@ -53,6 +53,20 @@ export class DatabaseStorage implements IStorage {
     await db.delete(users).where(eq(users.id, id));
   }
 
+  async updateUserPassword(id: number, newPassword: string): Promise<void> {
+    await db
+      .update(users)
+      .set({ password: newPassword, updatedAt: new Date() })
+      .where(eq(users.id, id));
+  }
+
+  async updateUserStatus(id: number, isActive: boolean): Promise<void> {
+    await db
+      .update(users)
+      .set({ isActive, updatedAt: new Date() })
+      .where(eq(users.id, id));
+  }
+
   // Assignment operations
   async getAssignment(id: number): Promise<Assignment | undefined> {
     const [assignment] = await db.select().from(assignments).where(eq(assignments.id, id));

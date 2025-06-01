@@ -10,6 +10,8 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   getAllUsers(): Promise<User[]>;
   deleteUser(id: number): Promise<void>;
+  updateUserPassword(id: number, newPassword: string): Promise<void>;
+  updateUserStatus(id: number, isActive: boolean): Promise<void>;
   
   getAssignment(id: number): Promise<Assignment | undefined>;
   createAssignment(assignment: InsertAssignment): Promise<Assignment>;
@@ -503,6 +505,24 @@ Despite these challenges, the momentum toward renewable energy appears unstoppab
 
   async deleteUser(id: number): Promise<void> {
     this.users.delete(id);
+  }
+
+  async updateUserPassword(id: number, newPassword: string): Promise<void> {
+    const user = this.users.get(id);
+    if (user) {
+      user.password = newPassword;
+      user.updatedAt = new Date();
+      this.users.set(id, user);
+    }
+  }
+
+  async updateUserStatus(id: number, isActive: boolean): Promise<void> {
+    const user = this.users.get(id);
+    if (user) {
+      user.isActive = isActive;
+      user.updatedAt = new Date();
+      this.users.set(id, user);
+    }
   }
 
   async getAssignment(id: number): Promise<Assignment | undefined> {

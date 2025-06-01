@@ -1457,6 +1457,65 @@ Return [] if no errors.`;
     }
   });
 
+  // Password reset endpoint for admin
+  app.post("/api/admin/users/:userId/reset-password", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Send password reset email with temporary password
+      const emailResult = await emailService.sendPasswordResetEmail({
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        username: user.username,
+        role: user.role
+      });
+      
+      // Update user's password to the temporary password
+      if (emailResult.temporaryPassword && storage.updateUserPassword) {
+        await storage.updateUserPassword(user.id, emailResult.temporaryPassword);
+      }
+      
+      res.json({ 
+        success: true, 
+        message: "Password reset email sent successfully" 
+      });
+    } catch (error) {
+      console.error("Error resetting password:", error);
+      res.status(500).json({ message: "Failed to reset password" });
+    }
+  });
+
+  // Archive user endpoint for admin
+  app.patch("/api/admin/users/:userId/archive", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Archive user by setting isActive to false
+      if (storage.updateUserStatus) {
+        await storage.updateUserStatus(userId, false);
+      }
+      
+      res.json({ 
+        success: true, 
+        message: "User archived successfully" 
+      });
+    } catch (error) {
+      console.error("Error archiving user:", error);
+      res.status(500).json({ message: "Failed to archive user" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
