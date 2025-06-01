@@ -173,9 +173,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Invalid demo password" });
       }
 
-      // Get demo users by role
+      // Get demo users by role - use specific demo accounts
       const allUsers = await storage.getAllUsers();
-      const demoUser = allUsers.find(user => user.role === role);
+      let demoUser;
+      
+      if (role === 'teacher') {
+        // Always use Sarah Johnson (prof.johnson) as the demo teacher
+        demoUser = allUsers.find(user => user.username === 'prof.johnson');
+      } else if (role === 'student') {
+        // Always use Alex Chen (alex.chen) as the demo student
+        demoUser = allUsers.find(user => user.username === 'alex.chen');
+      } else if (role === 'admin') {
+        // Always use Dr. Patricia Williams (admin) as the demo admin
+        demoUser = allUsers.find(user => user.username === 'admin');
+      }
       
       if (!demoUser) {
         return res.status(404).json({ message: "Demo user not found for this role" });
