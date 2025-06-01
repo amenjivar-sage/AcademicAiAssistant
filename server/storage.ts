@@ -98,9 +98,10 @@ export class MemStorage implements IStorage {
     this.currentMessageId = 1;
     this.currentClassroomId = 1;
 
-    this.initializeDefaultUsers();
-    this.initializeSampleClassrooms();
-    this.initializeSampleSubmissions();
+    // Start with completely empty storage - no sample data
+    // this.initializeDefaultUsers();
+    // this.initializeSampleClassrooms();
+    // this.initializeSampleSubmissions();
   }
 
   private initializeDefaultUsers() {
