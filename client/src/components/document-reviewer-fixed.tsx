@@ -219,57 +219,80 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
               console.log('Pasted words:', pastedWords);
               
               if (pastedWords.length >= 4) {
-                // Look for content in the document that contains most of these words
-                const documentSentences = result.split(/[.!?]+/).filter(s => s.trim().length > 10);
+                // Get clean document text (without HTML highlighting) for accurate comparison
+                const cleanDocumentText = result.replace(/<span[^>]*style="background-color: #fecaca[^>]*>([^<]*)<\/span>/gi, '$1');
+                const documentSentences = cleanDocumentText.split(/[.!?]+/).filter(s => s.trim().length > 10);
+                
+                // Additional safeguard: only check content that comes after the paste detection area
+                // This helps avoid flagging content that was written before the paste
+                const pasteStart = session.copyPasteData?.[0]?.startIndex || 0;
                 
                 documentSentences.forEach((docSent: string) => {
-                  const docWords = docSent.trim().split(/\s+/)
-                    .filter(w => w.length >= 3)
-                    .map(w => w.toLowerCase());
+                  const docSentTrimmed = docSent.trim();
                   
-                  if (docWords.length >= 3) {
-                    // Count how many pasted words appear in this document sentence
-                    // Allow for spelling variations by matching first 3-4 characters
-                    let matchCount = 0;
+                  // Skip sentences that appear before the paste area (likely original work)
+                  const sentencePosition = cleanDocumentText.indexOf(docSentTrimmed);
+                  if (sentencePosition >= 0 && sentencePosition < pasteStart - 50) {
+                    console.log('Skipping sentence before paste area:', docSentTrimmed);
+                    return;
+                  }
+                  
+                  // Skip already highlighted content
+                  if (result.includes(`<span style="background-color: #fecaca`) && 
+                      result.includes(docSentTrimmed.substring(0, Math.min(20, docSentTrimmed.length)))) {
+                    return;
+                  }
+                  
+                  const docWords = docSentTrimmed.split(/\s+/)
+                    .filter(w => w.length >= 3)
+                    .map(w => w.toLowerCase().replace(/[.,!?;]/g, ''));
+                  
+                  if (docWords.length >= 5) {
+                    // More precise matching - require exact or very close matches for most words
+                    let exactMatches = 0;
+                    let closeMatches = 0;
                     
                     pastedWords.forEach((pastedWord: string) => {
+                      const cleanPastedWord = pastedWord.replace(/[.,!?;]/g, '');
+                      
                       docWords.forEach((docWord: string) => {
-                        // Exact match
-                        if (pastedWord === docWord) {
-                          matchCount += 1.0;
+                        // Exact match (after cleaning punctuation)
+                        if (cleanPastedWord === docWord) {
+                          exactMatches += 1;
                         }
-                        // Close spelling match (first 3-4 chars)
-                        else if (pastedWord.length >= 4 && docWord.length >= 4 &&
-                                pastedWord.substring(0, 4) === docWord.substring(0, 4)) {
-                          matchCount += 0.8;
-                        }
-                        // Partial match (first 3 chars)
-                        else if (pastedWord.length >= 3 && docWord.length >= 3 &&
-                                pastedWord.substring(0, 3) === docWord.substring(0, 3)) {
-                          matchCount += 0.6;
+                        // Very close spelling match (first 4+ chars match for longer words)
+                        else if (cleanPastedWord.length >= 5 && docWord.length >= 5 &&
+                                cleanPastedWord.substring(0, 4) === docWord.substring(0, 4)) {
+                          closeMatches += 1;
                         }
                       });
                     });
                     
-                    // Calculate match percentage
-                    const matchPercentage = matchCount / pastedWords.length;
-                    console.log('Match percentage for sentence:', docSent.trim(), matchPercentage);
+                    // Calculate match strength - require mostly exact matches
+                    const totalMatches = exactMatches + (closeMatches * 0.7);
+                    const matchPercentage = totalMatches / pastedWords.length;
+                    console.log('Match analysis for sentence:', docSentTrimmed, 
+                               'Exact:', exactMatches, 'Close:', closeMatches, 'Percentage:', matchPercentage);
                     
-                    // Only highlight if we have very high confidence (80%+ match) AND the sentence is reasonably long
-                    // This prevents false positives from short common phrases
-                    if (matchPercentage >= 0.8 && pastedWords.length >= 5 && docWords.length >= 5 && 
-                        !docSent.includes('style="background-color: #fecaca')) {
-                      const sentenceToHighlight = docSent.trim();
-                      const escapedSentence = sentenceToHighlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                      const sentenceRegex = new RegExp(escapedSentence, 'gi');
+                    // Very strict criteria: need 85%+ match with mostly exact word matches
+                    if (matchPercentage >= 0.85 && exactMatches >= Math.floor(pastedWords.length * 0.6) && 
+                        pastedWords.length >= 6 && docWords.length >= 6) {
                       
-                      result = result.replace(sentenceRegex, (match) => {
-                        if (!match.includes('style="background-color: #fecaca')) {
-                          console.log('Highlighting sentence:', match);
-                          return `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected (${Math.round(matchPercentage * 100)}% match)">${match}</span>`;
-                        }
-                        return match;
-                      });
+                      // Double-check this isn't original content by looking for common original writing patterns
+                      const hasOriginalPatterns = /\b(sky|hello|how are you|doing|good morning|dear|sincerely)\b/i.test(docSentTrimmed);
+                      
+                      if (!hasOriginalPatterns && !result.includes(docSentTrimmed)) {
+                        const escapedSentence = docSentTrimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                        const sentenceRegex = new RegExp(escapedSentence, 'gi');
+                        
+                        result = result.replace(sentenceRegex, (match) => {
+                          if (!match.includes('style="background-color: #fecaca')) {
+                            console.log('Highlighting high-confidence match:', match);
+                            return `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected (${Math.round(matchPercentage * 100)}% match)">${match}</span>`;
+                          }
+                          return match;
+                        });
+                      }
                     }
                   }
                 });
