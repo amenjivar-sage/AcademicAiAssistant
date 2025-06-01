@@ -3,8 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, Copy, Settings, Eye, MoreHorizontal, ArrowRight, ArrowLeft, FileText, PlusCircle, Calendar, BarChart3 } from "lucide-react";
+import { Users, Copy, Settings, Eye, MoreHorizontal, ArrowRight, ArrowLeft, FileText, PlusCircle, Calendar, BarChart3, Archive, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import ClassroomForm from "./classroom-form";
 import AssignmentForm from "./assignment-form";
 import GradingInterface from "./grading-interface";
@@ -17,6 +19,7 @@ interface ClassroomManagementProps {
 export default function ClassroomManagement({ teacherId }: ClassroomManagementProps) {
   const { toast } = useToast();
   const [selectedClassroom, setSelectedClassroom] = useState<Classroom | null>(null);
+  const queryClient = useQueryClient();
 
   const { data: classrooms, isLoading } = useQuery<Classroom[]>({
     queryKey: ["/api/teacher/classrooms"],
@@ -44,6 +47,54 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
       description: `Share code "${joinCode}" with students for ${className}`,
     });
   };
+
+  // Archive/close classroom mutation
+  const archiveClassroomMutation = useMutation({
+    mutationFn: async (classroomId: number) => {
+      const response = await apiRequest("PATCH", `/api/classrooms/${classroomId}`, {
+        isActive: false
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Class Archived",
+        description: "The class has been archived and is no longer visible to students.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/teacher/classrooms"] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to archive the class. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Reactivate classroom mutation
+  const reactivateClassroomMutation = useMutation({
+    mutationFn: async (classroomId: number) => {
+      const response = await apiRequest("PATCH", `/api/classrooms/${classroomId}`, {
+        isActive: true
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Class Reactivated",
+        description: "The class is now active and visible to students again.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/teacher/classrooms"] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to reactivate the class. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
 
   const getClassroomStats = (classroom: Classroom) => {
     // In real implementation, these would come from the API
@@ -103,7 +154,7 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
           {classrooms?.map((classroom) => {
             const stats = getClassroomStats(classroom);
             return (
-              <Card key={classroom.id} className="border-l-4 border-l-blue-500">
+              <Card key={classroom.id} className={`border-l-4 ${classroom.isActive ? 'border-l-blue-500' : 'border-l-gray-400 opacity-75'}`}>
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
@@ -113,6 +164,12 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
                           <Badge variant="outline">{classroom.subject}</Badge>
                           {classroom.gradeLevel && (
                             <Badge variant="outline">{classroom.gradeLevel}</Badge>
+                          )}
+                          {!classroom.isActive && (
+                            <Badge variant="secondary" className="bg-gray-100 text-gray-600">
+                              <Archive className="h-3 w-3 mr-1" />
+                              Archived
+                            </Badge>
                           )}
                         </div>
                       </div>
@@ -172,6 +229,29 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
                             Edit
                           </Button>
                         </ClassroomForm>
+                        {classroom.isActive ? (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => archiveClassroomMutation.mutate(classroom.id)}
+                            disabled={archiveClassroomMutation.isPending}
+                            className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                          >
+                            <Archive className="h-4 w-4 mr-1" />
+                            Archive
+                          </Button>
+                        ) : (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => reactivateClassroomMutation.mutate(classroom.id)}
+                            disabled={reactivateClassroomMutation.isPending}
+                            className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                          >
+                            <Archive className="h-4 w-4 mr-1" />
+                            Reactivate
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>
