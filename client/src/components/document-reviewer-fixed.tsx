@@ -332,12 +332,19 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                         <div className="text-sm text-red-600 font-semibold">
                           {(() => {
                             const totalWords = session.content ? session.content.split(/\s+/).filter(w => w.trim()).length : 0;
-                            const pastedWords = session.pastedContent.reduce((total: number, item: any) => {
+                            const originalPastedWords = session.pastedContent.reduce((total: number, item: any) => {
                               const text = item.text || item.content || item.value || '';
                               return total + (text ? text.split(/\s+/).filter((w: string) => w.trim()).length : 0);
                             }, 0);
-                            const percentage = totalWords > 0 ? Math.round((pastedWords / totalWords) * 100) : 0;
-                            return `${percentage}% pasted content`;
+                            
+                            // Calculate percentage based on original pasted content length vs total content
+                            // This gives a more accurate representation since pasted content may be spell-corrected
+                            const percentage = totalWords > 0 ? Math.round((originalPastedWords / totalWords) * 100) : 0;
+                            
+                            // Cap at 100% to avoid over-reporting due to corrections/edits
+                            const cappedPercentage = Math.min(percentage, 100);
+                            
+                            return `${cappedPercentage}% pasted content`;
                           })()}
                         </div>
                       </div>
