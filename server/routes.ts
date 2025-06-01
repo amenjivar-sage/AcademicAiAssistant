@@ -18,10 +18,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { username, password } = req.body;
       
       if (!username || !password) {
-        return res.status(400).json({ message: "Username and password are required" });
+        return res.status(400).json({ message: "Email/username and password are required" });
       }
 
-      const user = await storage.getUserByUsername(username);
+      // Try to find user by username first, then by email
+      let user = await storage.getUserByUsername(username);
+      if (!user && username.includes('@')) {
+        // If username looks like an email, try to find by email
+        user = await storage.getUserByEmail(username);
+      }
+      
+      console.log('Login attempt for:', username);
+      console.log('User found:', user ? `${user.firstName} ${user.lastName} (${user.email})` : 'null');
+      console.log('Password match:', user ? user.password === password : 'no user');
       
       if (!user || user.password !== password) {
         return res.status(401).json({ message: "Invalid credentials" });
