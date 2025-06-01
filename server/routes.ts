@@ -133,6 +133,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get current authenticated user endpoint  
   app.get("/api/auth/user", async (req, res) => {
     try {
+      console.log("Auth check - currentLoggedInUser:", currentLoggedInUser ? `${currentLoggedInUser.firstName} ${currentLoggedInUser.lastName}` : "null");
+      
       if (!currentLoggedInUser) {
         return res.status(401).json({ message: "Not authenticated" });
       }
@@ -166,6 +168,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Remove password from response
       const { password: _, ...userWithoutPassword } = demoUser;
+      
+      // Set current logged-in user
+      currentLoggedInUser = demoUser;
       
       console.log(`Demo login successful for ${role}: ${demoUser.firstName} ${demoUser.lastName}`);
       
