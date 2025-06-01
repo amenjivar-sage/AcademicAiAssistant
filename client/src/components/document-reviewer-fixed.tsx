@@ -237,56 +237,57 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
             }
           });
           
-          // Approach 2: Look for structural similarity (sentence patterns)
-          // Split the pasted text into sentences and look for similar sentence structures
-          const pastedSentences = pastedText.split(/[.!?]+/).filter(s => s.trim().length > 10);
-          const contentSentences = result.split(/[.!?]+/).filter(s => s.trim().length > 10);
+          // Approach 2: More conservative sequence matching
+          // Only highlight if we can find substantial consecutive word sequences that match
+          const pastedWords = pastedText.split(/\s+/).filter(w => w.length >= 3);
           
-          pastedSentences.forEach((pastedSent: string) => {
-            const pastedWords = pastedSent.trim().split(/\s+/);
-            if (pastedWords.length >= 4) {
+          // Look for sequences of 6+ consecutive words with high confidence
+          for (let seqLength = 6; seqLength <= Math.min(10, pastedWords.length); seqLength++) {
+            for (let i = 0; i <= pastedWords.length - seqLength; i++) {
+              const sequence = pastedWords.slice(i, i + seqLength);
               
-              contentSentences.forEach((contentSent: string) => {
-                const contentWords = contentSent.trim().split(/\s+/);
+              // Create pattern that requires at least 80% of words to match closely
+              const highConfidencePattern = sequence.map(word => {
+                if (word.length <= 4) {
+                  // For short words, require exact match
+                  return word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                } else {
+                  // For longer words, allow for 1-2 character spelling changes
+                  const core = word.substring(0, Math.max(3, word.length - 2));
+                  return `\\w*${core.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\w{0,3}`;
+                }
+              }).join('\\s+');
+              
+              const sequenceRegex = new RegExp(`\\b${highConfidencePattern}\\b`, 'gi');
+              
+              result = result.replace(sequenceRegex, (match) => {
+                // Additional validation: check that this match contains enough original words
+                const matchWords = match.split(/\s+/);
+                let exactMatches = 0;
                 
-                // Check if sentence structures are similar (similar length and some word matches)
-                if (Math.abs(contentWords.length - pastedWords.length) <= 3) {
-                  let matches = 0;
-                  
-                  // Count words that match (allowing for spelling corrections)
-                  pastedWords.forEach((pWord: string) => {
-                    contentWords.forEach((cWord: string) => {
-                      if (pWord.length >= 3 && cWord.length >= 3) {
-                        // Check if words are similar (same first 2-3 chars)
-                        const pStart = pWord.toLowerCase().substring(0, Math.min(3, pWord.length));
-                        const cStart = cWord.toLowerCase().substring(0, Math.min(3, cWord.length));
-                        if (pStart === cStart || 
-                            (pWord.length >= 4 && cWord.length >= 4 && 
-                             pWord.toLowerCase().substring(0, 4) === cWord.toLowerCase().substring(0, 4))) {
-                          matches++;
-                        }
-                      }
-                    });
-                  });
-                  
-                  // If we have enough matches, highlight this sentence
-                  if (matches >= Math.min(3, Math.floor(pastedWords.length * 0.4))) {
-                    const sentenceToHighlight = contentSent.trim();
-                    if (sentenceToHighlight && !result.includes(`<span style="background-color: #fecaca`)) {
-                      const escapedSentence = sentenceToHighlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                      const sentenceRegex = new RegExp(escapedSentence, 'gi');
-                      result = result.replace(sentenceRegex, (match) => {
-                        if (!match.includes('style="background-color: #fecaca')) {
-                          return `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected (structure match)">${match}</span>`;
-                        }
-                        return match;
-                      });
+                sequence.forEach((origWord: string, idx: number) => {
+                  if (matchWords[idx]) {
+                    const origLower = origWord.toLowerCase();
+                    const matchLower = matchWords[idx].toLowerCase();
+                    
+                    // Count as exact if same word or very close spelling
+                    if (origLower === matchLower || 
+                        (origLower.length >= 4 && matchLower.length >= 4 && 
+                         origLower.substring(0, 4) === matchLower.substring(0, 4))) {
+                      exactMatches++;
                     }
                   }
+                });
+                
+                // Only highlight if we have high confidence (80%+ word similarity)
+                if (exactMatches >= Math.ceil(sequence.length * 0.8) && 
+                    !match.includes('style="background-color: #fecaca')) {
+                  return `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected (high confidence)">${match}</span>`;
                 }
+                return match;
               });
             }
-          });
+          }
         }
       }
     });
