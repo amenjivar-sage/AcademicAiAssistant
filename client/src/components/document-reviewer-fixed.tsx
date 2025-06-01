@@ -199,37 +199,72 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
           const regex = new RegExp(escapedText, 'gi');
           result = result.replace(regex, `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected">${pastedText}</span>`);
         } else {
-          // More aggressive pattern matching for corrected text
-          // Split into meaningful chunks (phrases/clauses)
-          const chunks = pastedText.split(/[,.;!?]+/).filter(chunk => chunk.trim().length > 15);
+          // Enhanced pattern matching for corrected text
+          // Split into sentences for better accuracy
+          const sentences = pastedText.split(/[.!?]+/).filter(s => s.trim().length > 10);
           
-          chunks.forEach((chunk: string) => {
-            const trimmedChunk = chunk.trim();
-            if (trimmedChunk) {
-              // Extract key words (longer than 3 characters, skip common words)
-              const skipWords = ['the', 'and', 'that', 'with', 'have', 'this', 'will', 'you', 'they', 'but', 'not', 'for', 'are', 'was', 'were', 'had'];
-              const keyWords = trimmedChunk.split(/\s+/)
+          sentences.forEach((sentence: string) => {
+            const trimmedSentence = sentence.trim();
+            if (trimmedSentence) {
+              // Extract significant words (excluding very common words)
+              const skipWords = ['the', 'and', 'that', 'with', 'have', 'this', 'will', 'you', 'they', 'but', 'not', 'for', 'are', 'was', 'were', 'had', 'his', 'her', 'him', 'she', 'can', 'all', 'who', 'oil', 'its', 'now', 'how', 'two', 'may', 'way', 'day', 'use', 'man', 'new', 'old', 'see', 'get', 'has', 'had', 'let', 'put', 'say', 'too', 'any', 'may', 'try'];
+              const significantWords = trimmedSentence.split(/\s+/)
                 .filter(w => w.length > 3 && !skipWords.includes(w.toLowerCase()))
-                .slice(0, 4); // Take first 4 key words
+                .slice(0, 6); // Take more words for better matching
               
-              if (keyWords.length >= 2) {
-                // Create flexible pattern matching multiple key words
-                const wordPatterns = keyWords.map(word => {
-                  // Create pattern that allows for spelling corrections
-                  const baseWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                  return `\\b\\w*${baseWord.substring(0, Math.max(3, baseWord.length - 2))}\\w*\\b`;
+              if (significantWords.length >= 3) {
+                // Create flexible patterns that account for spelling corrections
+                const wordPatterns = significantWords.map(word => {
+                  const cleanWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                  // More flexible pattern that allows for spelling variations
+                  const basePattern = cleanWord.substring(0, Math.max(2, cleanWord.length - 3));
+                  return `\\b\\w*${basePattern}\\w*\\b`;
                 });
                 
-                // Look for sentences containing multiple key words
-                const pattern = new RegExp(`([^.!?]*${wordPatterns[0]}[^.!?]*${wordPatterns[1]}[^.!?]*[.!?]?)`, 'gi');
+                // Create pattern that looks for sentences with at least 3 of these words
+                const flexiblePattern = new RegExp(
+                  `([^.!?]*(?:${wordPatterns.join('|')})[^.!?]*(?:${wordPatterns.join('|')})[^.!?]*(?:${wordPatterns.join('|')})[^.!?]*[.!?]?)`,
+                  'gi'
+                );
                 
-                result = result.replace(pattern, (match) => {
-                  // Only highlight if it's not already highlighted
-                  if (!match.includes('style="background-color: #fecaca')) {
-                    return `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected (corrected)">${match}</span>`;
+                result = result.replace(flexiblePattern, (match) => {
+                  // Count how many pattern words are in this match
+                  const matchCount = wordPatterns.filter(pattern => 
+                    new RegExp(pattern, 'i').test(match)
+                  ).length;
+                  
+                  // Only highlight if we have good confidence (3+ word matches) and not already highlighted
+                  if (matchCount >= 3 && !match.includes('style="background-color: #fecaca')) {
+                    return `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected (spelling corrected)">${match}</span>`;
                   }
                   return match;
                 });
+              }
+              
+              // Also try word-by-word approach for remaining unmatched content
+              const words = trimmedSentence.split(/\s+/);
+              if (words.length >= 5) {
+                // Look for sequences of 5+ consecutive words that match with spelling variations
+                for (let i = 0; i <= words.length - 5; i++) {
+                  const sequence = words.slice(i, i + 5).join(' ');
+                  const flexibleSequence = sequence
+                    .split(/\s+/)
+                    .map(w => {
+                      if (w.length <= 3) return w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                      const base = w.substring(0, Math.max(2, w.length - 2));
+                      return `\\w*${base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\w*`;
+                    })
+                    .join('\\s+');
+                  
+                  const sequencePattern = new RegExp(`\\b${flexibleSequence}\\b`, 'gi');
+                  
+                  result = result.replace(sequencePattern, (match) => {
+                    if (!match.includes('style="background-color: #fecaca')) {
+                      return `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected (sequence match)">${match}</span>`;
+                    }
+                    return match;
+                  });
+                }
               }
             }
           });
