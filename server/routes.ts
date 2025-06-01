@@ -27,6 +27,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
+      // Store user in session
+      (req as any).session = (req as any).session || {};
+      (req as any).session.userId = user.id;
+      (req as any).session.user = user;
+
       // Remove password from response
       const { password: _, ...userWithoutPassword } = user;
       
@@ -158,10 +163,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get current user (demo implementation)
+  // Get current user from session
   app.get("/api/auth/user", async (req, res) => {
     try {
-      const user = await storage.getUser(currentDemoUserId);
+      const session = (req as any).session;
+      if (!session || !session.userId) {
+        return res.status(401).json({ message: "Not logged in" });
+      }
+
+      const user = await storage.getUser(session.userId);
       if (!user) {
         return res.status(401).json({ message: "User not found" });
       }

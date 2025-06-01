@@ -18,6 +18,11 @@ import type { Assignment, Classroom } from "@shared/schema";
 export default function TeacherDashboard() {
   const [activeTab, setActiveTab] = useState("classes");
 
+  // Get current user information
+  const { data: currentUser } = useQuery({
+    queryKey: ["/api/auth/user"],
+  });
+
   // Get teacher's assignments
   const { data: assignments, isLoading: assignmentsLoading } = useQuery<Assignment[]>({
     queryKey: ["/api/teacher/assignments"],
@@ -81,7 +86,9 @@ export default function TeacherDashboard() {
               </div>
               <div>
                 <h1 className="text-xl font-semibold text-edu-neutral">Sage Teacher Portal</h1>
-                <p className="text-sm text-gray-500">Welcome, Prof. Johnson</p>
+                <p className="text-sm text-gray-500">
+                  Welcome, {currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : 'Teacher'}
+                </p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
