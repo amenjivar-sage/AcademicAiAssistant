@@ -191,6 +191,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get teacher assignments (alternative endpoint used by frontend)
+  app.get("/api/teacher/assignments", async (req, res) => {
+    try {
+      // Use teacher ID 1 for demo (Sarah Johnson)
+      const teacherId = 1;
+      const assignments = await storage.getTeacherAssignments(teacherId);
+      res.json(assignments);
+    } catch (error) {
+      console.error("Error fetching teacher assignments:", error);
+      res.status(500).json({ message: "Failed to fetch teacher assignments" });
+    }
+  });
+
+  // Get teacher classrooms (endpoint used by frontend)
+  app.get("/api/teacher/classrooms", async (req, res) => {
+    try {
+      // Use teacher ID 1 for demo (Sarah Johnson)
+      const teacherId = 1;
+      const classrooms = await storage.getTeacherClassrooms(teacherId);
+      res.json(classrooms);
+    } catch (error) {
+      console.error("Error fetching teacher classrooms:", error);
+      res.status(500).json({ message: "Failed to fetch teacher classrooms" });
+    }
+  });
+
   // Get assignment submissions with student data
   app.get("/api/assignments/:assignmentId/submissions", async (req, res) => {
     try {
