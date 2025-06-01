@@ -257,6 +257,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update classroom
+  app.patch("/api/classrooms/:id", async (req, res) => {
+    try {
+      const classroomId = parseInt(req.params.id);
+      const updates = req.body;
+      const classroom = await storage.updateClassroom(classroomId, updates);
+      
+      if (!classroom) {
+        return res.status(404).json({ message: "Classroom not found" });
+      }
+      
+      res.json(classroom);
+    } catch (error) {
+      console.error("Error updating classroom:", error);
+      res.status(500).json({ message: "Failed to update classroom" });
+    }
+  });
+
   app.post("/api/classes/join", async (req, res) => {
     try {
       const { joinCode } = req.body;
