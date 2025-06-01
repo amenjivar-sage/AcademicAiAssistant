@@ -98,8 +98,9 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
 
   const getClassroomStats = (classroom: Classroom) => {
     // In real implementation, these would come from the API
+    const classSize = classroom.classSize || 30;
     return {
-      enrolledStudents: Math.floor(Math.random() * classroom.classSize!),
+      enrolledStudents: Math.floor(Math.random() * classSize),
       activeAssignments: Math.floor(Math.random() * 5) + 1,
       pendingSubmissions: Math.floor(Math.random() * 10),
     };
@@ -197,15 +198,15 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
                     
                     <div className="grid grid-cols-3 gap-4">
                       <div className="text-center p-3 bg-blue-50 rounded-lg">
-                        <div className="text-lg font-bold text-blue-600">{stats.enrolledStudents}</div>
+                        <div className="text-lg font-bold text-blue-600">{stats.enrolledStudents || 0}</div>
                         <p className="text-xs text-gray-600">Students Enrolled</p>
                       </div>
                       <div className="text-center p-3 bg-green-50 rounded-lg">
-                        <div className="text-lg font-bold text-green-600">{stats.activeAssignments}</div>
+                        <div className="text-lg font-bold text-green-600">{stats.activeAssignments || 0}</div>
                         <p className="text-xs text-gray-600">Active Assignments</p>
                       </div>
                       <div className="text-center p-3 bg-orange-50 rounded-lg">
-                        <div className="text-lg font-bold text-orange-600">{stats.pendingSubmissions}</div>
+                        <div className="text-lg font-bold text-orange-600">{stats.pendingSubmissions || 0}</div>
                         <p className="text-xs text-gray-600">Pending Reviews</p>
                       </div>
                     </div>
