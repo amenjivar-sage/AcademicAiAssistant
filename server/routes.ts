@@ -58,6 +58,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/check-email", async (req, res) => {
     try {
       const { email } = req.body;
+      console.log('Starting email check for:', email);
       
       if (!email) {
         return res.status(400).json({ message: "Email is required" });
