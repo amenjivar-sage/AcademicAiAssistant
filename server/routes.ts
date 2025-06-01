@@ -115,12 +115,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Remove password from response
       const { password: _, ...userWithoutPassword } = user;
       
+      // Set current logged-in user
+      currentLoggedInUser = user;
+      
       res.json({
         user: userWithoutPassword,
         message: "Login successful"
       });
     } catch (error) {
       res.status(500).json({ message: "Login failed" });
+    }
+  });
+
+  // Track current logged-in user (simple approach for demo)
+  let currentLoggedInUser: any = null;
+
+  // Get current authenticated user endpoint  
+  app.get("/api/auth/user", async (req, res) => {
+    try {
+      if (!currentLoggedInUser) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      // Remove password from response
+      const { password: _, ...userWithoutPassword } = currentLoggedInUser;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Error fetching current user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
     }
   });
 
