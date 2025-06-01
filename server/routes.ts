@@ -64,13 +64,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // FERPA/COPPA Compliance: Verify educational institution domains
-      const eduDomains = [
-        '.edu', '.ac.', 'school.', 'university.', 'college.',
-        'k12.', 'district.', '.org' // Many schools use .org
+      const educationalDomains = [
+        '.edu',        // Higher education
+        '.k12',        // K-12 schools
+        '.us',         // Public schools
+        '.org',        // Educational organizations
+        '.gov',        // Government educational institutions
+        'school',      // Contains "school" in domain
+        'district',    // School districts
+        'academy',     // Educational academies
+        'college',     // Colleges
+        'university',  // Universities
+        'elementary',  // Elementary schools
+        'middle',      // Middle schools
+        'high',        // High schools
+        'prep',        // Preparatory schools
+        'charter',     // Charter schools
+        'montessori',  // Montessori schools
+        'waldorf',     // Waldorf schools
+        'christian',   // Christian schools
+        'catholic',    // Catholic schools
+        'jewish',      // Jewish schools
+        'islamic',     // Islamic schools
+        'private',     // Private schools
+        'independent', // Independent schools
+        'seminary',    // Seminaries
+        'preschool',   // Preschools
+        'daycare',     // Educational daycare
+        'learning',    // Learning centers
+        'education'    // Educational institutions
       ];
       
-      const isEducationalEmail = eduDomains.some(domain => 
-        email.toLowerCase().includes(domain)
+      const domain = email.toLowerCase();
+      const isEducationalEmail = educationalDomains.some(suffix => 
+        domain.endsWith(suffix) || domain.includes(suffix)
       );
 
       if (!isEducationalEmail) {
