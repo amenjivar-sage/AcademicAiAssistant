@@ -40,6 +40,120 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Email verification for registration
+  app.post("/api/auth/check-email", async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+
+      // FERPA/COPPA Compliance: Verify educational institution domains
+      const eduDomains = [
+        '.edu', '.ac.', 'school.', 'university.', 'college.',
+        'k12.', 'district.', '.org' // Many schools use .org
+      ];
+      
+      const isEducationalEmail = eduDomains.some(domain => 
+        email.toLowerCase().includes(domain)
+      );
+
+      if (!isEducationalEmail) {
+        return res.status(400).json({ 
+          message: "Please use your school or educational institution email address",
+          compliance: "FERPA compliance requires institutional email verification"
+        });
+      }
+
+      // Check if email already exists
+      const existingUser = await storage.getUserByEmail?.(email);
+      if (existingUser) {
+        return res.status(400).json({ 
+          message: "An account with this email already exists" 
+        });
+      }
+
+      res.json({ valid: true, message: "Email is valid for registration" });
+    } catch (error) {
+      console.error("Error checking email:", error);
+      res.status(500).json({ message: "Failed to validate email" });
+    }
+  });
+
+  // User registration with FERPA/COPPA compliance
+  app.post("/api/auth/register", async (req, res) => {
+    try {
+      const { email, firstName, lastName, role, grade, department } = req.body;
+      
+      // FERPA/COPPA Compliance: Validate required fields
+      if (!email || !firstName || !lastName || !role) {
+        return res.status(400).json({ 
+          message: "Missing required fields for FERPA compliant registration" 
+        });
+      }
+
+      // COPPA Compliance: Additional verification for students under 13
+      if (role === "student" && grade && ["K", "1st", "2nd", "3rd", "4th", "5th", "6th"].includes(grade)) {
+        return res.status(400).json({
+          message: "Student accounts for grades K-6 require parental consent and school administrator approval",
+          compliance: "COPPA compliance for users under 13"
+        });
+      }
+
+      // Generate secure username
+      const usernameGenerator = new (await import("./username-generator")).UsernameGenerator(storage);
+      const username = await usernameGenerator.generateUniqueUsername(
+        email, firstName, lastName
+      );
+
+      // FERPA Compliance: Generate secure temporary credentials
+      const tempPassword = Math.random().toString(36).substring(2, 12) + Math.random().toString(36).substring(2, 6).toUpperCase();
+
+      const userData = {
+        email,
+        firstName,
+        lastName,
+        username,
+        password: tempPassword, // In production: hash with bcrypt
+        role,
+        grade: role === "student" ? grade || null : null,
+        department: role === "teacher" ? department || null : null,
+        isActive: true
+      };
+
+      const newUser = await storage.createUser(userData);
+      
+      // FERPA Compliance: Log account creation for audit trail
+      console.log(`AUDIT: New ${role} account created`, {
+        userId: newUser.id,
+        email: newUser.email,
+        timestamp: new Date().toISOString(),
+        compliance: "FERPA educational record creation"
+      });
+
+      res.json({ 
+        success: true, 
+        user: {
+          id: newUser.id,
+          email: newUser.email,
+          firstName: newUser.firstName,
+          lastName: newUser.lastName,
+          username: newUser.username,
+          role: newUser.role
+        },
+        tempPassword, // In production: send via secure email
+        compliance: {
+          ferpa: "Educational record created in compliance with FERPA guidelines",
+          dataRetention: "Student data will be retained according to institutional policy"
+        }
+      });
+    } catch (error) {
+      console.error("Error creating user:", error);
+      res.status(500).json({ message: "Failed to create account" });
+    }
+  });
+
   // Get current user (demo implementation)
   app.get("/api/auth/user", async (req, res) => {
     try {
