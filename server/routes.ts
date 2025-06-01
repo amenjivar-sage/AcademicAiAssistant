@@ -1538,6 +1538,29 @@ Return [] if no errors.`;
     }
   });
 
+  // Delete user endpoint for admin
+  app.delete("/api/admin/users/:userId", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Delete user permanently
+      await storage.deleteUser(userId);
+      
+      res.json({ 
+        success: true, 
+        message: "User deleted successfully" 
+      });
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      res.status(500).json({ message: "Failed to delete user" });
+    }
+  });
+
   // Archive user endpoint for admin
   app.patch("/api/admin/users/:userId/archive", async (req, res) => {
     try {
