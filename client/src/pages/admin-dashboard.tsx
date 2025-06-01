@@ -212,33 +212,33 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="text-center p-4 bg-gray-50 rounded-lg">
-                <div className="text-3xl font-bold text-gray-700 mb-2">
-                  {analytics?.peakUsageHour || "2-4 PM"}
+              <div className="text-center p-4 bg-blue-50 rounded-lg">
+                <div className="text-3xl font-bold text-blue-700 mb-2">
+                  {analytics?.totalAssignments || 0}
                 </div>
-                <div className="text-sm text-gray-600">Peak Usage Hours</div>
-                <div className="text-xs text-gray-500 mt-1">
-                  Optimal for system maintenance outside these hours
-                </div>
-              </div>
-              
-              <div className="text-center p-4 bg-gray-50 rounded-lg">
-                <div className="text-3xl font-bold text-gray-700 mb-2">
-                  {analytics?.featureAdoption || "87"}%
-                </div>
-                <div className="text-sm text-gray-600">Feature Adoption Rate</div>
-                <div className="text-xs text-gray-500 mt-1">
-                  Students actively using AI tools and formatting
+                <div className="text-sm text-blue-600">Total Assignments Created</div>
+                <div className="text-xs text-blue-500 mt-1">
+                  Real assignments created by teachers
                 </div>
               </div>
               
-              <div className="text-center p-4 bg-gray-50 rounded-lg">
-                <div className="text-3xl font-bold text-gray-700 mb-2">
-                  {analytics?.systemUptime || "99.8"}%
+              <div className="text-center p-4 bg-green-50 rounded-lg">
+                <div className="text-3xl font-bold text-green-700 mb-2">
+                  {analytics?.averageWordGrowth || 0}
                 </div>
-                <div className="text-sm text-gray-600">System Uptime</div>
-                <div className="text-xs text-gray-500 mt-1">
-                  Reliable platform performance for uninterrupted learning
+                <div className="text-sm text-green-600">Average Words Per Session</div>
+                <div className="text-xs text-green-500 mt-1">
+                  From actual student writing sessions
+                </div>
+              </div>
+              
+              <div className="text-center p-4 bg-purple-50 rounded-lg">
+                <div className="text-3xl font-bold text-purple-700 mb-2">
+                  {analytics?.totalAiInteractions || 0}
+                </div>
+                <div className="text-sm text-purple-600">AI Assistance Interactions</div>
+                <div className="text-xs text-purple-500 mt-1">
+                  Real AI help requests from students
                 </div>
               </div>
             </div>

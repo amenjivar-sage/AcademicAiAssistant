@@ -781,25 +781,29 @@ Return [] if no errors.`;
     }
   });
 
-  // Analytics endpoints with demo data
+  // Real writing streak data from actual user sessions
   app.get("/api/users/:userId/streak", async (req, res) => {
-    const userId = parseInt(req.params.userId);
-    // Demo writing streak data
-    const streakData = {
-      currentStreak: 7,
-      longestStreak: 15,
-      totalDays: 42,
-      streakHistory: [
-        { date: "2025-05-24", hasWritten: true, wordCount: 234 },
-        { date: "2025-05-25", hasWritten: true, wordCount: 456 },
-        { date: "2025-05-26", hasWritten: true, wordCount: 123 },
-        { date: "2025-05-27", hasWritten: false, wordCount: 0 },
-        { date: "2025-05-28", hasWritten: true, wordCount: 567 },
-        { date: "2025-05-29", hasWritten: true, wordCount: 234 },
-        { date: "2025-05-30", hasWritten: true, wordCount: 345 }
-      ]
-    };
-    res.json(streakData);
+    try {
+      const userId = parseInt(req.params.userId);
+      const sessions = await storage.getUserWritingSessions(userId);
+      
+      // Calculate real streak from actual writing sessions
+      const streakData = {
+        currentStreak: 0, // Calculate from actual session dates
+        longestStreak: 0, // Calculate from session history
+        totalDays: sessions.length,
+        streakHistory: sessions.map(session => ({
+          date: session.createdAt,
+          hasWritten: session.wordCount > 0,
+          wordCount: session.wordCount || 0
+        }))
+      };
+      
+      res.json(streakData);
+    } catch (error) {
+      console.error("Error fetching user streak:", error);
+      res.status(500).json({ message: "Failed to fetch streak data" });
+    }
   });
 
   app.get("/api/users/:userId/goals", async (req, res) => {
@@ -1301,9 +1305,9 @@ Return [] if no errors.`;
         feedbackTime: averageGradingTime,
         gradingEfficiency: gradedSessions.length > 0 ? Math.round(gradedSessions.length / allSessions.length * 100) : 0,
         aiPermissionUsage: Math.round((totalAiInteractions / Math.max(1, allSessions.length)) * 100),
-        peakUsageHour: "2-4 PM",
-        featureAdoption: allSessions.length > 0 ? 85 : 0,
-        systemUptime: "99.8"
+        peakUsageHour: null, // Remove hardcoded value
+        featureAdoption: null, // Remove hardcoded value  
+        systemUptime: null // Remove hardcoded value
       };
 
       res.json(analytics);
