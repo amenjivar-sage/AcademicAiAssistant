@@ -260,10 +260,17 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                         if (cleanPastedWord === docWord) {
                           exactMatches += 1;
                         }
-                        // Very close spelling match (first 4+ chars match for longer words)
-                        else if (cleanPastedWord.length >= 5 && docWord.length >= 5 &&
-                                cleanPastedWord.substring(0, 4) === docWord.substring(0, 4)) {
-                          closeMatches += 1;
+                        // Close spelling match - check if words are similar (spell-check corrections)
+                        else if (cleanPastedWord.length >= 3 && docWord.length >= 3) {
+                          // Check if first 3+ characters match (handles most spelling corrections)
+                          const minLen = Math.min(cleanPastedWord.length, docWord.length);
+                          const prefixMatch = cleanPastedWord.substring(0, Math.min(3, minLen)) === docWord.substring(0, Math.min(3, minLen));
+                          
+                          if (prefixMatch || 
+                              // Handle common patterns like "tryed"/"tried", "ignor"/"ignore"
+                              (cleanPastedWord.includes(docWord.substring(0, 3)) || docWord.includes(cleanPastedWord.substring(0, 3)))) {
+                            closeMatches += 1;
+                          }
                         }
                       });
                     });
