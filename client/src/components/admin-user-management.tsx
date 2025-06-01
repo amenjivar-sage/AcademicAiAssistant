@@ -55,16 +55,34 @@ import type { User } from "@shared/schema";
 // Educational domain validation for FERPA compliance
 const isEducationalEmail = (email: string): boolean => {
   const educationalDomains = [
-    '.edu',     // Higher education
-    '.k12',     // K-12 schools
-    '.us',      // Public schools
-    '.org',     // Educational organizations
-    '.gov',     // Government educational institutions
-    'school',   // Contains "school" in domain
-    'district', // School districts
-    'academy',  // Educational academies
-    'college',  // Colleges
-    'university' // Universities
+    '.edu',        // Higher education
+    '.k12',        // K-12 schools
+    '.us',         // Public schools
+    '.org',        // Educational organizations
+    '.gov',        // Government educational institutions
+    'school',      // Contains "school" in domain
+    'district',    // School districts
+    'academy',     // Educational academies
+    'college',     // Colleges
+    'university',  // Universities
+    'elementary',  // Elementary schools
+    'middle',      // Middle schools
+    'high',        // High schools
+    'prep',        // Preparatory schools
+    'charter',     // Charter schools
+    'montessori',  // Montessori schools
+    'waldorf',     // Waldorf schools
+    'christian',   // Christian schools
+    'catholic',    // Catholic schools
+    'jewish',      // Jewish schools
+    'islamic',     // Islamic schools
+    'private',     // Private schools
+    'independent', // Independent schools
+    'seminary',    // Seminaries
+    'preschool',   // Preschools
+    'daycare',     // Educational daycare
+    'learning',    // Learning centers
+    'education'    // Educational institutions
   ];
   
   const domain = email.toLowerCase();
