@@ -58,7 +58,19 @@ export class EmailService {
 <body>
     <div class="container">
         <div class="header">
-            <div class="logo">🌟 Sage</div>
+            <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 12px;">
+                    <rect x="21" y="30" width="6" height="12" rx="3" fill="white"/>
+                    <path d="M24 6L30 12L24 18L18 12L24 6Z" fill="white"/>
+                    <path d="M12 18L18 24L12 30L6 24L12 18Z" fill="white"/>
+                    <path d="M36 18L42 24L36 30L30 24L36 18Z" fill="white"/>
+                    <circle cx="15" cy="15" r="3" fill="rgba(255,255,255,0.8)"/>
+                    <circle cx="33" cy="15" r="3" fill="rgba(255,255,255,0.8)"/>
+                    <circle cx="9" cy="27" r="2" fill="rgba(255,255,255,0.7)"/>
+                    <circle cx="39" cy="27" r="2" fill="rgba(255,255,255,0.7)"/>
+                </svg>
+                <div class="logo">Sage</div>
+            </div>
             <p>AI-Powered Academic Writing Platform</p>
         </div>
         
@@ -143,7 +155,19 @@ export class EmailService {
 <body>
     <div class="container">
         <div class="header">
-            <div class="logo">🌟 Sage</div>
+            <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 12px;">
+                    <rect x="21" y="30" width="6" height="12" rx="3" fill="white"/>
+                    <path d="M24 6L30 12L24 18L18 12L24 6Z" fill="white"/>
+                    <path d="M12 18L18 24L12 30L6 24L12 18Z" fill="white"/>
+                    <path d="M36 18L42 24L36 30L30 24L36 18Z" fill="white"/>
+                    <circle cx="15" cy="15" r="3" fill="rgba(255,255,255,0.8)"/>
+                    <circle cx="33" cy="15" r="3" fill="rgba(255,255,255,0.8)"/>
+                    <circle cx="9" cy="27" r="2" fill="rgba(255,255,255,0.7)"/>
+                    <circle cx="39" cy="27" r="2" fill="rgba(255,255,255,0.7)"/>
+                </svg>
+                <div class="logo">Sage</div>
+            </div>
             <p>AI-Powered Academic Writing Platform</p>
         </div>
         
