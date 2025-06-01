@@ -96,9 +96,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ];
       
       const domain = email.toLowerCase();
-      const isEducationalEmail = educationalDomains.some(suffix => 
-        domain.endsWith(suffix) || domain.includes(suffix)
-      );
+      console.log('Checking email:', email);
+      console.log('Domain:', domain);
+      
+      // Check for exact domain endings first (like .edu, .us, .org, .gov, .k12)
+      const exactDomainEndings = ['.edu', '.k12', '.us', '.org', '.gov'];
+      const hasValidDomainEnding = exactDomainEndings.some(ending => domain.endsWith(ending));
+      console.log('Has valid domain ending:', hasValidDomainEnding);
+      
+      // Check for educational keywords in domain
+      const educationalKeywords = [
+        'school', 'district', 'academy', 'college', 'university',
+        'elementary', 'middle', 'high', 'prep', 'charter',
+        'montessori', 'waldorf', 'christian', 'catholic', 'jewish',
+        'islamic', 'private', 'independent', 'seminary', 'preschool',
+        'daycare', 'learning', 'education'
+      ];
+      const hasEducationalKeyword = educationalKeywords.some(keyword => domain.includes(keyword));
+      console.log('Has educational keyword:', hasEducationalKeyword);
+      
+      const isEducationalEmail = hasValidDomainEnding || hasEducationalKeyword;
+      console.log('Final result:', isEducationalEmail);
 
       if (!isEducationalEmail) {
         return res.status(400).json({ 
