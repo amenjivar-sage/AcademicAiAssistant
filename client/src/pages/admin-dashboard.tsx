@@ -1,5 +1,4 @@
 import AdminUserManagement from "@/components/admin-user-management";
-import DemoUsers from "@/components/demo-users";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Shield, Users, TrendingUp, Clock, BookOpen, Brain, Target, Award, Settings } from "lucide-react";
@@ -245,11 +244,6 @@ export default function AdminDashboard() {
             </div>
           </CardContent>
         </Card>
-
-        {/* Demo Section */}
-        <div className="mb-8">
-          <DemoUsers />
-        </div>
 
         {/* User Management Section */}
         <Card>
