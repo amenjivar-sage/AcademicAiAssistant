@@ -147,7 +147,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           username: newUser.username,
           role: newUser.role
         },
-        tempPassword, // In production: send via secure email
         compliance: {
           ferpa: "Educational record created in compliance with FERPA guidelines",
           dataRetention: "Student data will be retained according to institutional policy"
