@@ -50,7 +50,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteUser(id: number): Promise<void> {
-    await db.delete(users).where(eq(users.id, id));
+    console.log(`DatabaseStorage: Deleting user with ID ${id}`);
+    const result = await db.delete(users).where(eq(users.id, id.toString()));
+    console.log(`DatabaseStorage: Delete result:`, result);
   }
 
   async updateUserPassword(id: number, newPassword: string): Promise<void> {

@@ -1549,7 +1549,9 @@ Return [] if no errors.`;
       }
 
       // Delete user permanently
+      console.log(`Attempting to delete user ID: ${userId}`);
       await storage.deleteUser(userId);
+      console.log(`User ${userId} deleted successfully from storage`);
       
       // Add cache-busting headers to force fresh data
       res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
