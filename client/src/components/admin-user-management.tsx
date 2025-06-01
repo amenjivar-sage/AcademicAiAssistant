@@ -37,12 +37,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, UserPlus, School, Mail, Shield, Edit, Trash2, Download, Upload } from "lucide-react";
+import { Plus, UserPlus, School, Mail, Shield, Edit, Trash2, Download, Upload, Key, Archive, MoreHorizontal } from "lucide-react";
 import type { User } from "@shared/schema";
 
 const createUserSchema = z.object({
@@ -123,6 +130,47 @@ export default function AdminUserManagement() {
     },
   });
 
+  const resetPasswordMutation = useMutation({
+    mutationFn: async (userId: number) => {
+      const response = await apiRequest("POST", `/api/admin/users/${userId}/reset-password`);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Password Reset",
+        description: `New temporary password has been sent to the user's email address.`,
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to reset password. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const archiveUserMutation = useMutation({
+    mutationFn: async (userId: number) => {
+      const response = await apiRequest("PATCH", `/api/admin/users/${userId}/archive`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({
+        title: "User Archived",
+        description: "User has been archived and can no longer access the system.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to archive user. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const generateTemporaryPassword = () => {
     // Generate a secure temporary password
     return Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8).toUpperCase();
@@ -135,6 +183,18 @@ export default function AdminUserManagement() {
   const handleDeleteUser = (userId: number, userName: string) => {
     if (window.confirm(`Are you sure you want to delete ${userName}? This action cannot be undone.`)) {
       deleteUserMutation.mutate(userId);
+    }
+  };
+
+  const handleResetPassword = (userId: number, userName: string) => {
+    if (window.confirm(`Reset password for ${userName}? A new temporary password will be sent to their email.`)) {
+      resetPasswordMutation.mutate(userId);
+    }
+  };
+
+  const handleArchiveUser = (userId: number, userName: string) => {
+    if (window.confirm(`Archive ${userName}? They will no longer be able to access the system.`)) {
+      archiveUserMutation.mutate(userId);
     }
   };
 
@@ -418,18 +478,31 @@ export default function AdminUserManagement() {
                         </TableCell>
                         <TableCell>{user.department || "—"}</TableCell>
                         <TableCell>
-                          <div className="flex gap-2">
-                            <Button variant="ghost" size="sm">
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => handleDeleteUser(user.id, `${user.firstName} ${user.lastName}`)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleResetPassword(user.id, `${user.firstName} ${user.lastName}`)}>
+                                <Key className="h-4 w-4 mr-2" />
+                                Reset Password
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleArchiveUser(user.id, `${user.firstName} ${user.lastName}`)}>
+                                <Archive className="h-4 w-4 mr-2" />
+                                Archive User
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem 
+                                onClick={() => handleDeleteUser(user.id, `${user.firstName} ${user.lastName}`)}
+                                className="text-red-600"
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete User
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </TableCell>
                       </TableRow>
                     ))}
