@@ -895,6 +895,4 @@ Despite these challenges, the momentum toward renewable energy appears unstoppab
   }
 }
 
-import { DatabaseStorage } from "./database-storage";
-
 export const storage = new MemStorage();

@@ -408,4 +408,32 @@ export class DatabaseStorage implements IStorage {
   async deleteInlineComment(commentId: number): Promise<void> {
     await db.delete(inlineComments).where(eq(inlineComments.id, commentId));
   }
+
+  // User email lookup method
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
+
+  // Student profile methods (simplified for now)
+  async getStudentProfile(userId: number): Promise<any | undefined> {
+    // Return basic user info as profile for now
+    const user = await this.getUser(userId);
+    return user ? { userId: user.id, name: `${user.firstName} ${user.lastName}` } : undefined;
+  }
+
+  async createStudentProfile(profile: any): Promise<any> {
+    // For now, just return the profile data
+    return profile;
+  }
+
+  async updateStudentProfile(userId: number, updates: any): Promise<any | undefined> {
+    // For now, just return the updates
+    return { userId, ...updates };
+  }
+
+  async updateLearningProgress(userId: number, interactionData: any): Promise<void> {
+    // For now, just log the progress update
+    console.log(`Learning progress updated for user ${userId}:`, interactionData);
+  }
 }

@@ -28,9 +28,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         user = await storage.getUserByEmail(username);
       }
       
-      console.log('Login attempt for:', username);
-      console.log('User found:', user ? `${user.firstName} ${user.lastName} (${user.email})` : 'null');
-      console.log('Password match:', user ? user.password === password : 'no user');
+
       
       if (!user || user.password !== password) {
         return res.status(401).json({ message: "Invalid credentials" });
