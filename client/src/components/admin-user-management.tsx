@@ -49,7 +49,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, UserPlus, School, Mail, Shield, Edit, Trash2, Download, Upload, Key, Archive, MoreHorizontal } from "lucide-react";
+import { Plus, UserPlus, School, Mail, Shield, Edit, Trash2, Download, Upload, Key, Archive, MoreHorizontal, Search } from "lucide-react";
 import type { User } from "@shared/schema";
 
 const createUserSchema = z.object({
@@ -69,6 +69,7 @@ export default function AdminUserManagement() {
   const [open, setOpen] = useState(false);
   const [bulkImportOpen, setBulkImportOpen] = useState(false);
   const [generatedUsername, setGeneratedUsername] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -87,6 +88,11 @@ export default function AdminUserManagement() {
   // Fetch all users for admin management
   const { data: users, isLoading } = useQuery<User[]>({
     queryKey: ["/api/admin/users"],
+  });
+
+  // Fetch archived users
+  const { data: archivedUsers, isLoading: isLoadingArchived } = useQuery<User[]>({
+    queryKey: ["/api/admin/archived-users"],
   });
 
   const createUserMutation = useMutation({
@@ -157,6 +163,7 @@ export default function AdminUserManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/archived-users"] });
       toast({
         title: "User Archived",
         description: "User has been archived and can no longer access the system.",
@@ -166,6 +173,28 @@ export default function AdminUserManagement() {
       toast({
         title: "Error",
         description: "Failed to archive user. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const reactivateUserMutation = useMutation({
+    mutationFn: async (userId: number) => {
+      const response = await apiRequest("PATCH", `/api/admin/users/${userId}/reactivate`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/archived-users"] });
+      toast({
+        title: "User Reactivated",
+        description: "User has been reactivated and can now access the system.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to reactivate user. Please try again.",
         variant: "destructive",
       });
     },
@@ -195,6 +224,12 @@ export default function AdminUserManagement() {
   const handleArchiveUser = (userId: number, userName: string) => {
     if (window.confirm(`Archive ${userName}? They will no longer be able to access the system.`)) {
       archiveUserMutation.mutate(userId);
+    }
+  };
+
+  const handleReactivateUser = (userId: number, userName: string) => {
+    if (window.confirm(`Reactivate ${userName}? They will regain access to the system.`)) {
+      reactivateUserMutation.mutate(userId);
     }
   };
 
@@ -381,9 +416,10 @@ export default function AdminUserManagement() {
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="users">All Users</TabsTrigger>
+          <TabsTrigger value="users">Active Users</TabsTrigger>
           <TabsTrigger value="teachers">Teachers</TabsTrigger>
           <TabsTrigger value="students">Students</TabsTrigger>
+          <TabsTrigger value="archived">Archived Users</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
@@ -602,6 +638,80 @@ export default function AdminUserManagement() {
                   ))}
                 </TableBody>
               </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="archived">
+          <Card>
+            <CardHeader>
+              <CardTitle>Archived Users</CardTitle>
+              <CardDescription>
+                Users who have been archived and no longer have access to the system
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isLoadingArchived ? (
+                <div className="text-center py-8">
+                  <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                  <p>Loading archived users...</p>
+                </div>
+              ) : archivedUsers && archivedUsers.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Username</TableHead>
+                      <TableHead>Role</TableHead>
+                      <TableHead>Archived Date</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {archivedUsers.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell className="font-medium">
+                          {user.firstName} {user.lastName}
+                        </TableCell>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell>{user.username}</TableCell>
+                        <TableCell>
+                          <Badge variant={user.role === 'teacher' ? 'default' : 'secondary'}>
+                            {user.role === 'teacher' ? (
+                              <>
+                                <School className="h-3 w-3 mr-1" />
+                                Teacher
+                              </>
+                            ) : (
+                              <>
+                                <Mail className="h-3 w-3 mr-1" />
+                                Student
+                              </>
+                            )}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{new Date(user.updatedAt).toLocaleDateString()}</TableCell>
+                        <TableCell>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleReactivateUser(user.id, `${user.firstName} ${user.lastName}`)}
+                          >
+                            Reactivate
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <Archive className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No archived users found</p>
+                  <p className="text-sm">Users that are archived will appear here</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

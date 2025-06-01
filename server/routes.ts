@@ -1517,6 +1517,48 @@ Return [] if no errors.`;
     }
   });
 
+  // Get archived users endpoint for admin
+  app.get("/api/admin/archived-users", async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      // Filter to only show archived users and remove passwords for security
+      const archivedUsers = users.filter(user => !user.isActive);
+      const safeUsers = archivedUsers.map(user => {
+        const { password, ...safeUser } = user;
+        return safeUser;
+      });
+      res.json(safeUsers);
+    } catch (error) {
+      console.error("Error fetching archived users:", error);
+      res.status(500).json({ message: "Failed to fetch archived users" });
+    }
+  });
+
+  // Reactivate user endpoint for admin
+  app.patch("/api/admin/users/:userId/reactivate", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Reactivate user by setting isActive to true
+      if (storage.updateUserStatus) {
+        await storage.updateUserStatus(userId, true);
+      }
+      
+      res.json({ 
+        success: true, 
+        message: "User reactivated successfully" 
+      });
+    } catch (error) {
+      console.error("Error reactivating user:", error);
+      res.status(500).json({ message: "Failed to reactivate user" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
