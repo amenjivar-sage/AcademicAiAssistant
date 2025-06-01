@@ -52,6 +52,9 @@ export default function StudentDashboard() {
     queryKey: ["/api/student/classes"],
   });
 
+  // Debug logging for classes
+  console.log("Classes data:", classes, "Loading:", classesLoading);
+
   // Get student's assignments across all classes
   const { data: assignments = [], isLoading: assignmentsLoading } = useQuery<Assignment[]>({
     queryKey: ["/api/student/assignments"],
@@ -174,7 +177,7 @@ export default function StudentDashboard() {
               <>
                 <div className="flex items-center justify-between">
                   <h2 className="text-2xl font-bold text-gray-900">My Classes</h2>
-                  <JoinClass studentId={1}>
+                  <JoinClass studentId={user?.id || 1}>
                     <Button>
                       <Plus className="h-4 w-4 mr-2" />
                       Join New Class
@@ -188,7 +191,7 @@ export default function StudentDashboard() {
                       <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
                       <h3 className="text-lg font-medium text-gray-900 mb-2">No classes joined</h3>
                       <p className="text-gray-500 mb-6">Enter a class code from your teacher to get started</p>
-                      <JoinClass studentId={1}>
+                      <JoinClass studentId={user?.id || 1}>
                         <Button>
                           <Plus className="h-4 w-4 mr-2" />
                           Join Your First Class
