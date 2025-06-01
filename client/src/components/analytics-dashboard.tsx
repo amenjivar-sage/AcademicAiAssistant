@@ -145,20 +145,20 @@ export function AnalyticsDashboard({ userId }: AnalyticsDashboardProps) {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-sm">Average Words/Session</span>
-                <span className="font-medium">{writingStats.averageWordsPerSession}</span>
+                <span className="text-sm">Average Words/Day</span>
+                <span className="font-medium">{safeWritingStats?.avgWordsPerDay || 0}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm">Writing Speed</span>
-                <span className="font-medium">{writingStats.writingSpeed.wordsPerMinute} WPM</span>
+                <span className="text-sm">Most Productive Day</span>
+                <span className="font-medium">{safeWritingStats?.mostProductiveDay || 'N/A'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm">Grammar Accuracy</span>
-                <span className="font-medium">{writingStats.grammarProgress.accuracy}%</span>
+                <span className="text-sm">Weekly Goal</span>
+                <span className="font-medium">{safeWritingStats?.weeklyGoal || 0} words</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm">Vocabulary Growth</span>
-                <span className="font-medium">{writingStats.vocabularyGrowth.uniqueWords} words</span>
+                <span className="text-sm">Sessions Completed</span>
+                <span className="font-medium">{safeWritingStats?.monthlyStats?.sessionsCompleted || 0}</span>
               </div>
             </div>
           </CardContent>
