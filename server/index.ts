@@ -39,7 +39,7 @@ app.use((req, res, next) => {
 
 (async () => {
   // Seed the database with initial data
-  await seedDatabase();
+  // await seedDatabase(); // Disabled to start with authentic data only
   
   const server = await registerRoutes(app);
 
