@@ -672,15 +672,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Text is required" });
       }
 
-      // Import the OpenAI spell check function
-      const { generateAiResponse } = await import('./openai');
+      // Use OpenAI directly for spell checking to avoid formatting issues
+      const OpenAI = (await import('openai')).default;
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
       
-      // Create a spell check prompt
-      const prompt = `You are a spell checker. Check the following text for spelling errors only. Return ONLY a JSON array in this exact format: [{"word": "misspelled_word", "suggestions": ["correction1", "correction2"]}]. If no errors are found, return []. Do not include any other text, explanations, or formatting.
+      // Create a spell check prompt that ensures JSON response
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "system",
+            content: "You are a spell checker. You must respond ONLY with valid JSON. No other text or formatting."
+          },
+          {
+            role: "user", 
+            content: `Check this text for spelling errors. Return JSON array: [{"word": "misspelled_word", "suggestions": ["correction1", "correction2"]}]. If no errors, return [].
 
-Text: ${text}`;
+Text: ${text}`
+          }
+        ],
+        response_format: { type: "json_object" },
+        max_tokens: 500,
+        temperature: 0.1
+      });
 
-      const response = await generateAiResponse(prompt);
+      const response = completion.choices[0].message.content;
       
       // Try to parse the AI response as JSON
       let errors = [];
