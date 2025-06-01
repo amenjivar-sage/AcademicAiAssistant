@@ -63,15 +63,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Invalid demo password" });
       }
 
-      // Create demo user sessions
-      const demoUsers = {
-        teacher: { id: 1, username: "teacher", firstName: "Sarah", lastName: "Johnson", email: "teacher@sage-demo.com", role: "teacher" },
-        student: { id: 2, username: "student", firstName: "Alex", lastName: "Smith", email: "student@sage-demo.com", role: "student" },
-        admin: { id: 0, username: "admin", firstName: "System", lastName: "Administrator", email: "admin@sage-demo.com", role: "admin" }
-      };
-
-      const user = demoUsers[role as keyof typeof demoUsers];
-      if (!user) {
+      let user;
+      
+      if (role === "student") {
+        // Find an actual student account to use for demo
+        const allUsers = await storage.getAllUsers();
+        const studentUser = allUsers.find(u => u.role === "student");
+        if (studentUser) {
+          user = studentUser;
+        } else {
+          user = { id: 2, username: "student", firstName: "Alex", lastName: "Smith", email: "student@sage-demo.com", role: "student" };
+        }
+      } else if (role === "teacher") {
+        // Find an actual teacher account
+        const allUsers = await storage.getAllUsers();
+        const teacherUser = allUsers.find(u => u.role === "teacher");
+        if (teacherUser) {
+          user = teacherUser;
+        } else {
+          user = { id: 1, username: "teacher", firstName: "Sarah", lastName: "Johnson", email: "teacher@sage-demo.com", role: "teacher" };
+        }
+      } else if (role === "admin") {
+        user = { id: 0, username: "admin", firstName: "System", lastName: "Administrator", email: "admin@sage-demo.com", role: "admin" };
+      } else {
         return res.status(400).json({ message: "Invalid demo role" });
       }
 
@@ -80,7 +94,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       (req as any).session.userId = user.id;
       (req as any).session.user = user;
 
-      console.log(`Demo login successful for ${role}: ${user.firstName} ${user.lastName}`);
+      console.log(`Demo login successful for ${role}: ${user.firstName} ${user.lastName} (ID: ${user.id})`);
       
       res.json({
         user: user,
