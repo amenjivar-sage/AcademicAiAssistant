@@ -232,15 +232,20 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
 
   // Auto-save function (checks for changes and delays)
   const handleAutoSave = React.useCallback(() => {
-    if (!isSaving && (title !== session?.title || content !== session?.content || pastedContents.length !== (session?.pastedContent as PastedContent[] || []).length)) {
+    // Don't save if content is just whitespace or minimal content
+    const hasSubstantialContent = title.trim().length > 0 || content.trim().length > 2;
+    const hasChanges = title !== session?.title || content !== session?.content || pastedContents.length !== (session?.pastedContent as PastedContent[] || []).length;
+    
+    if (!isSaving && hasChanges && hasSubstantialContent) {
       setIsSaving(true);
       console.log('Auto-save triggered - session:', session?.id, 'sessionId:', sessionId, 'assignmentId:', assignmentId);
+      console.log('Content being saved:', content.substring(0, 50), '... (length:', content.length, ')');
       
       const currentSessionId = session?.id || sessionId;
       if (currentSessionId && currentSessionId !== 0) {
         console.log('Updating existing session:', currentSessionId);
         updateSessionMutation.mutate({ title, content, pastedContent: pastedContents });
-      } else if (assignmentId && (title.trim() || content.trim()) && !createSessionMutation.isPending) {
+      } else if (assignmentId && hasSubstantialContent && !createSessionMutation.isPending) {
         console.log('Creating new session for assignment:', assignmentId);
         createSessionMutation.mutate({ 
           assignmentId, 
@@ -250,7 +255,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
         });
       } else {
         setIsSaving(false);
-        console.log('No valid session or assignment to save');
+        console.log('No valid session or assignment to save, or content too minimal');
       }
     }
   }, [title, content, pastedContents, session, sessionId, assignmentId, isSaving, updateSessionMutation, createSessionMutation]);
