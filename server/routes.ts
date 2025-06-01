@@ -5,10 +5,13 @@ import { insertWritingSessionSchema, insertAiInteractionSchema, insertAssignment
 import { z } from "zod";
 import { checkRestrictedPrompt, generateAiResponse } from "./openai";
 import { emailService } from "./email-service";
+import { setupEmailPreview } from "./email-preview";
 
 
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup email preview functionality
+  setupEmailPreview(app);
 
   // Demo user ID for memory storage
   const currentDemoUserId = 1; // Student user ID
