@@ -285,27 +285,25 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                     console.log('- Has min length:', hasMinLength, 'pasted:', pastedWords.length, 'doc:', docWords.length);
                     
                     if (meetsThreshold && hasEnoughExactMatches && hasMinLength) {
-                      // Check for obvious original content patterns
+                      // Simple check: avoid highlighting obvious original content
                       const hasOriginalPatterns = /\b(sky|hello|how are you|doing|good morning|dear|sincerely)\b/i.test(docSentTrimmed);
-                      const alreadyInResult = result.includes(docSentTrimmed);
                       
                       console.log('- Has original patterns:', hasOriginalPatterns);
-                      console.log('- Already in result:', alreadyInResult);
                       
-                      if (!hasOriginalPatterns && !alreadyInResult) {
-                        console.log('✓ All criteria met, highlighting sentence:', docSentTrimmed);
+                      if (!hasOriginalPatterns) {
+                        console.log('✓ Highlighting copy-pasted content:', docSentTrimmed);
                         const escapedSentence = docSentTrimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
                         const sentenceRegex = new RegExp(escapedSentence, 'gi');
                         
                         result = result.replace(sentenceRegex, (match) => {
                           if (!match.includes('style="background-color: #fecaca')) {
-                            console.log('Highlighting high-confidence match:', match);
+                            console.log('Applied red highlighting to:', match);
                             return `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected (${Math.round(matchPercentage * 100)}% match)">${match}</span>`;
                           }
                           return match;
                         });
                       } else {
-                        console.log('✗ Blocked by filters');
+                        console.log('✗ Skipped original content');
                       }
                     } else {
                       console.log('✗ Does not meet criteria');
