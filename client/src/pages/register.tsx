@@ -23,19 +23,15 @@ export default function Register() {
 
   const checkEmailMutation = useMutation({
     mutationFn: async (email: string) => {
-      return await apiRequest("/api/auth/check-email", {
-        method: "POST",
-        body: JSON.stringify({ email })
-      });
+      const response = await apiRequest("POST", "/api/auth/check-email", { email });
+      return response.json();
     }
   });
 
   const registerMutation = useMutation({
     mutationFn: async (userData: any) => {
-      return await apiRequest("/api/auth/register", {
-        method: "POST",
-        body: JSON.stringify(userData)
-      });
+      const response = await apiRequest("POST", "/api/auth/register", userData);
+      return response.json();
     }
   });
 

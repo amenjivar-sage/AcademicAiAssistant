@@ -102,9 +102,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Generate secure username
-      const usernameGenerator = new (await import("./username-generator")).UsernameGenerator(storage);
+      const { UsernameGenerator } = await import("./username-generator");
+      const usernameGenerator = new UsernameGenerator(storage);
       const username = await usernameGenerator.generateUniqueUsername(
-        email, firstName, lastName
+        email, firstName, lastName, ""
       );
 
       // FERPA Compliance: Generate secure temporary credentials

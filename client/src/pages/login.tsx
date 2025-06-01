@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -221,6 +221,15 @@ export default function Login() {
                 Use the demo accounts above to explore Sage's features for teachers, students, and administrators.
               </AlertDescription>
             </Alert>
+
+            <div className="text-center">
+              <p className="text-sm text-gray-600">
+                Need an account?{" "}
+                <Link href="/register" className="text-blue-600 hover:underline font-medium">
+                  Create Account
+                </Link>
+              </p>
+            </div>
           </CardContent>
         </Card>
 
