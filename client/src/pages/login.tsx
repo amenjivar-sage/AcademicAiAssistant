@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { GraduationCap, Users, BookOpen, Shield } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -17,6 +18,9 @@ export default function Login() {
     username: "",
     password: "",
   });
+  const [demoPassword, setDemoPassword] = useState("");
+  const [selectedRole, setSelectedRole] = useState<"teacher" | "student" | "admin" | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const loginMutation = useMutation({
@@ -52,7 +56,26 @@ export default function Login() {
     loginMutation.mutate(formData);
   };
 
-  const quickLogin = (role: "teacher" | "student" | "admin") => {
+  const handleDemoLogin = (role: "teacher" | "student" | "admin") => {
+    setSelectedRole(role);
+    setDemoPassword("");
+    setDialogOpen(true);
+  };
+
+  const confirmDemoLogin = () => {
+    const correctPassword = "demo2024";
+    
+    if (demoPassword !== correctPassword) {
+      toast({
+        title: "Incorrect Password",
+        description: "Please enter the correct demo password.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!selectedRole) return;
+
     // For demo purposes, directly navigate to the appropriate page
     const userData = {
       teacher: { id: 1, username: "teacher", firstName: "Sarah", lastName: "Johnson", email: "teacher@zoeedu.com" },
@@ -61,13 +84,13 @@ export default function Login() {
     };
 
     localStorage.setItem("user", JSON.stringify({
-      ...userData[role],
-      role: role
+      ...userData[selectedRole],
+      role: selectedRole
     }));
     
-    if (role === "teacher") {
+    if (selectedRole === "teacher") {
       setLocation("/teacher");
-    } else if (role === "admin") {
+    } else if (selectedRole === "admin") {
       setLocation("/admin");
     } else {
       setLocation("/student");
@@ -75,8 +98,10 @@ export default function Login() {
     
     toast({
       title: "Welcome back!",
-      description: `Logged in as ${userData[role].firstName} ${userData[role].lastName}`,
+      description: `Logged in as ${userData[selectedRole].firstName} ${userData[selectedRole].lastName}`,
     });
+
+    setDialogOpen(false);
   };
 
   return (
@@ -182,38 +207,137 @@ export default function Login() {
             </div>
 
             <div className="grid grid-cols-3 gap-2">
-              <Button
-                variant="outline"
-                onClick={() => quickLogin("teacher")}
-                disabled={loginMutation.isPending}
-                className="flex flex-col items-center py-4 h-auto"
-              >
-                <Users className="h-5 w-5 mb-1 text-edu-blue" />
-                <span className="text-xs font-medium">Teacher</span>
-                <span className="text-xs text-gray-500">Demo</span>
-              </Button>
+              <Dialog open={dialogOpen && selectedRole === "teacher"} onOpenChange={setDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    onClick={() => handleDemoLogin("teacher")}
+                    disabled={loginMutation.isPending}
+                    className="flex flex-col items-center py-4 h-auto"
+                  >
+                    <Users className="h-5 w-5 mb-1 text-edu-blue" />
+                    <span className="text-xs font-medium">Teacher</span>
+                    <span className="text-xs text-gray-500">Demo</span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Teacher Demo Access</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <p className="text-sm text-gray-600">
+                      Enter the demo password to access the teacher interface.
+                    </p>
+                    <div className="space-y-2">
+                      <Label htmlFor="demo-password">Demo Password</Label>
+                      <Input
+                        id="demo-password"
+                        type="password"
+                        value={demoPassword}
+                        onChange={(e) => setDemoPassword(e.target.value)}
+                        placeholder="Enter demo password"
+                        onKeyDown={(e) => e.key === "Enter" && confirmDemoLogin()}
+                      />
+                    </div>
+                    <div className="flex justify-end space-x-2">
+                      <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={confirmDemoLogin}>
+                        Access Demo
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
               
-              <Button
-                variant="outline"
-                onClick={() => quickLogin("student")}
-                disabled={loginMutation.isPending}
-                className="flex flex-col items-center py-4 h-auto"
-              >
-                <BookOpen className="h-5 w-5 mb-1 text-edu-success" />
-                <span className="text-xs font-medium">Student</span>
-                <span className="text-xs text-gray-500">Demo</span>
-              </Button>
+              <Dialog open={dialogOpen && selectedRole === "student"} onOpenChange={setDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    onClick={() => handleDemoLogin("student")}
+                    disabled={loginMutation.isPending}
+                    className="flex flex-col items-center py-4 h-auto"
+                  >
+                    <BookOpen className="h-5 w-5 mb-1 text-edu-success" />
+                    <span className="text-xs font-medium">Student</span>
+                    <span className="text-xs text-gray-500">Demo</span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Student Demo Access</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <p className="text-sm text-gray-600">
+                      Enter the demo password to access the student interface.
+                    </p>
+                    <div className="space-y-2">
+                      <Label htmlFor="demo-password">Demo Password</Label>
+                      <Input
+                        id="demo-password"
+                        type="password"
+                        value={demoPassword}
+                        onChange={(e) => setDemoPassword(e.target.value)}
+                        placeholder="Enter demo password"
+                        onKeyDown={(e) => e.key === "Enter" && confirmDemoLogin()}
+                      />
+                    </div>
+                    <div className="flex justify-end space-x-2">
+                      <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={confirmDemoLogin}>
+                        Access Demo
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
               
-              <Button
-                variant="outline"
-                onClick={() => quickLogin("admin")}
-                disabled={loginMutation.isPending}
-                className="flex flex-col items-center py-4 h-auto"
-              >
-                <Shield className="h-5 w-5 mb-1 text-red-600" />
-                <span className="text-xs font-medium">Admin</span>
-                <span className="text-xs text-gray-500">Demo</span>
-              </Button>
+              <Dialog open={dialogOpen && selectedRole === "admin"} onOpenChange={setDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    onClick={() => handleDemoLogin("admin")}
+                    disabled={loginMutation.isPending}
+                    className="flex flex-col items-center py-4 h-auto"
+                  >
+                    <Shield className="h-5 w-5 mb-1 text-red-600" />
+                    <span className="text-xs font-medium">Admin</span>
+                    <span className="text-xs text-gray-500">Demo</span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Admin Demo Access</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <p className="text-sm text-gray-600">
+                      Enter the demo password to access the administrator interface.
+                    </p>
+                    <div className="space-y-2">
+                      <Label htmlFor="demo-password">Demo Password</Label>
+                      <Input
+                        id="demo-password"
+                        type="password"
+                        value={demoPassword}
+                        onChange={(e) => setDemoPassword(e.target.value)}
+                        placeholder="Enter demo password"
+                        onKeyDown={(e) => e.key === "Enter" && confirmDemoLogin()}
+                      />
+                    </div>
+                    <div className="flex justify-end space-x-2">
+                      <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={confirmDemoLogin}>
+                        Access Demo
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
 
             <Alert>
