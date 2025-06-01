@@ -9,32 +9,47 @@ interface AnalyticsDashboardProps {
 }
 
 export function AnalyticsDashboard({ userId }: AnalyticsDashboardProps) {
-  const { data: streakData } = useQuery({
+  const { data: streakData, isLoading: streakLoading } = useQuery({
     queryKey: [`/api/users/${userId}/streak`],
   });
 
-  const { data: goals } = useQuery({
+  const { data: goals, isLoading: goalsLoading } = useQuery({
     queryKey: [`/api/users/${userId}/goals`],
   });
 
-  const { data: achievements } = useQuery({
+  const { data: achievements, isLoading: achievementsLoading } = useQuery({
     queryKey: [`/api/users/${userId}/achievements`],
   });
 
-  const { data: sessionStats } = useQuery({
+  const { data: sessionStats, isLoading: sessionStatsLoading } = useQuery({
     queryKey: [`/api/analytics/${userId}/sessions`],
   });
 
-  const { data: writingStats } = useQuery({
+  const { data: writingStats, isLoading: writingStatsLoading } = useQuery({
     queryKey: [`/api/analytics/${userId}/writing-stats`],
   });
 
-  if (!streakData || !goals || !achievements || !sessionStats || !writingStats) {
-    return <div>Loading analytics...</div>;
+  const isLoading = streakLoading || goalsLoading || achievementsLoading || sessionStatsLoading || writingStatsLoading;
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center p-8 text-gray-500">Loading analytics...</div>;
   }
 
-  const unlockedAchievements = achievements.filter((a: any) => a.unlockedAt);
-  const lockedAchievements = achievements.filter((a: any) => !a.unlockedAt);
+  // Provide default values for missing data
+  const safeStreakData = streakData || { currentStreak: 0, longestStreak: 0 };
+  const safeGoals = Array.isArray(goals) ? goals : [];
+  const safeAchievements = Array.isArray(achievements) ? achievements : [];
+  const safeSessionStats = sessionStats || { totalSessions: 0, avgWordsPerSession: 0, totalWords: 0 };
+  const safeWritingStats = writingStats || { 
+    weeklyProgress: [], 
+    monthlyStats: { wordsWritten: 0, sessionsCompleted: 0 },
+    avgWordsPerDay: 0,
+    mostProductiveDay: 'Monday',
+    weeklyGoal: 500
+  };
+
+  const unlockedAchievements = safeAchievements.filter((a: any) => a.unlockedAt);
+  const lockedAchievements = safeAchievements.filter((a: any) => !a.unlockedAt);
 
   return (
     <div className="space-y-6">
@@ -45,7 +60,7 @@ export function AnalyticsDashboard({ userId }: AnalyticsDashboardProps) {
             <div className="flex items-center space-x-2">
               <Flame className="h-8 w-8 text-orange-500" />
               <div>
-                <p className="text-2xl font-bold">{streakData.currentStreak}</p>
+                <p className="text-2xl font-bold">{safeStreakData.currentStreak}</p>
                 <p className="text-sm text-muted-foreground">Day Streak</p>
               </div>
             </div>

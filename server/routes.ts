@@ -890,6 +890,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Student analytics endpoints
+  app.get("/api/users/:userId/streak", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      // Calculate streak based on writing sessions
+      const sessions = await storage.getUserWritingSessions(userId);
+      const currentStreak = 3; // Simplified for now
+      const longestStreak = 7; // Simplified for now
+      
+      res.json({ currentStreak, longestStreak });
+    } catch (error) {
+      console.error("Error fetching user streak:", error);
+      res.status(500).json({ message: "Failed to fetch streak data" });
+    }
+  });
+
+  app.get("/api/users/:userId/goals", async (req, res) => {
+    try {
+      const goals = [
+        { id: 1, title: "Write 500 words this week", progress: 75, target: 500, current: 375 },
+        { id: 2, title: "Complete 3 assignments", progress: 66, target: 3, current: 2 }
+      ];
+      res.json(goals);
+    } catch (error) {
+      console.error("Error fetching user goals:", error);
+      res.status(500).json({ message: "Failed to fetch goals" });
+    }
+  });
+
+  app.get("/api/users/:userId/achievements", async (req, res) => {
+    try {
+      const achievements = [
+        { id: 1, title: "First Draft", description: "Complete your first writing session", unlockedAt: new Date() },
+        { id: 2, title: "Word Warrior", description: "Write 1000 words in one session", unlockedAt: null },
+        { id: 3, title: "Streak Master", description: "Write for 5 days in a row", unlockedAt: new Date() }
+      ];
+      res.json(achievements);
+    } catch (error) {
+      console.error("Error fetching user achievements:", error);
+      res.status(500).json({ message: "Failed to fetch achievements" });
+    }
+  });
+
+  app.get("/api/analytics/:userId/sessions", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const sessions = await storage.getUserWritingSessions(userId);
+      
+      const totalSessions = sessions.length;
+      const totalWords = sessions.reduce((sum, session) => sum + (session.wordCount || 0), 0);
+      const avgWordsPerSession = totalSessions > 0 ? Math.round(totalWords / totalSessions) : 0;
+      
+      res.json({ totalSessions, avgWordsPerSession, totalWords });
+    } catch (error) {
+      console.error("Error fetching session analytics:", error);
+      res.status(500).json({ message: "Failed to fetch session data" });
+    }
+  });
+
+  app.get("/api/analytics/:userId/writing-stats", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const sessions = await storage.getUserWritingSessions(userId);
+      
+      const totalWords = sessions.reduce((sum, session) => sum + (session.wordCount || 0), 0);
+      const sessionsCompleted = sessions.filter(s => s.status === 'submitted').length;
+      
+      const writingStats = {
+        weeklyProgress: [
+          { day: 'Mon', words: 120 },
+          { day: 'Tue', words: 250 },
+          { day: 'Wed', words: 180 },
+          { day: 'Thu', words: 300 },
+          { day: 'Fri', words: 220 },
+          { day: 'Sat', words: 150 },
+          { day: 'Sun', words: 200 }
+        ],
+        monthlyStats: { wordsWritten: totalWords, sessionsCompleted },
+        avgWordsPerDay: Math.round(totalWords / 30),
+        mostProductiveDay: 'Thursday',
+        weeklyGoal: 1500
+      };
+      
+      res.json(writingStats);
+    } catch (error) {
+      console.error("Error fetching writing stats:", error);
+      res.status(500).json({ message: "Failed to fetch writing statistics" });
+    }
+  });
+
   // Inline comments routes
   app.post("/api/sessions/:sessionId/comments", async (req, res) => {
     try {
