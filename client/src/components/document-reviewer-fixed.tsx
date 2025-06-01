@@ -255,8 +255,10 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                     const matchPercentage = matchCount / pastedWords.length;
                     console.log('Match percentage for sentence:', docSent.trim(), matchPercentage);
                     
-                    // If we have a good match (50%+ of words match), highlight this sentence
-                    if (matchPercentage >= 0.5 && !docSent.includes('style="background-color: #fecaca')) {
+                    // Only highlight if we have very high confidence (80%+ match) AND the sentence is reasonably long
+                    // This prevents false positives from short common phrases
+                    if (matchPercentage >= 0.8 && pastedWords.length >= 5 && docWords.length >= 5 && 
+                        !docSent.includes('style="background-color: #fecaca')) {
                       const sentenceToHighlight = docSent.trim();
                       const escapedSentence = sentenceToHighlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
                       const sentenceRegex = new RegExp(escapedSentence, 'gi');
