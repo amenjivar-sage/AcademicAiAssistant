@@ -8,6 +8,7 @@ import { BookOpen, PenTool, Target, Trophy, Clock, Users, Plus, MessageSquare } 
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import SageLogo from "@/components/sage-logo";
+import { useAuth } from "@/hooks/useAuth";
 
 import JoinClass from "@/components/join-class";
 import MessagingSystem from "@/components/messaging-system";
@@ -22,6 +23,7 @@ export default function StudentDashboard() {
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   // Get student's enrolled classes
   const { data: classes = [], isLoading: classesLoading } = useQuery<Classroom[]>({
@@ -52,7 +54,7 @@ export default function StudentDashboard() {
               <SageLogo className="h-8 w-8" />
               <div>
                 <h1 className="text-xl font-bold text-gray-900">Student Dashboard</h1>
-                <p className="text-sm text-gray-600">Welcome back, Alex!</p>
+                <p className="text-sm text-gray-600">Welcome back, {user?.firstName || 'Student'}!</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
