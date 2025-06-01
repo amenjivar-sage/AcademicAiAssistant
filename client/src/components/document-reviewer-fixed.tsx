@@ -275,13 +275,25 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                                'Exact:', exactMatches, 'Close:', closeMatches, 'Percentage:', matchPercentage);
                     
                     // Balanced criteria: good match percentage with reasonable exact matches
-                    if (matchPercentage >= 0.75 && exactMatches >= Math.floor(pastedWords.length * 0.4) && 
-                        pastedWords.length >= 5 && docWords.length >= 5) {
-                      
-                      // Double-check this isn't original content by looking for common original writing patterns
+                    const meetsThreshold = matchPercentage >= 0.75;
+                    const hasEnoughExactMatches = exactMatches >= Math.floor(pastedWords.length * 0.4);
+                    const hasMinLength = pastedWords.length >= 5 && docWords.length >= 5;
+                    
+                    console.log('Criteria check for:', docSentTrimmed);
+                    console.log('- Meets threshold (75%):', meetsThreshold, matchPercentage);
+                    console.log('- Has enough exact matches (40%):', hasEnoughExactMatches, exactMatches, 'needed:', Math.floor(pastedWords.length * 0.4));
+                    console.log('- Has min length:', hasMinLength, 'pasted:', pastedWords.length, 'doc:', docWords.length);
+                    
+                    if (meetsThreshold && hasEnoughExactMatches && hasMinLength) {
+                      // Check for obvious original content patterns
                       const hasOriginalPatterns = /\b(sky|hello|how are you|doing|good morning|dear|sincerely)\b/i.test(docSentTrimmed);
+                      const alreadyInResult = result.includes(docSentTrimmed);
                       
-                      if (!hasOriginalPatterns && !result.includes(docSentTrimmed)) {
+                      console.log('- Has original patterns:', hasOriginalPatterns);
+                      console.log('- Already in result:', alreadyInResult);
+                      
+                      if (!hasOriginalPatterns && !alreadyInResult) {
+                        console.log('✓ All criteria met, highlighting sentence:', docSentTrimmed);
                         const escapedSentence = docSentTrimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
                         const sentenceRegex = new RegExp(escapedSentence, 'gi');
                         
@@ -292,7 +304,11 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                           }
                           return match;
                         });
+                      } else {
+                        console.log('✗ Blocked by filters');
                       }
+                    } else {
+                      console.log('✗ Does not meet criteria');
                     }
                   }
                 });
