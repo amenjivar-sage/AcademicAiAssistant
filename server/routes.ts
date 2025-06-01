@@ -672,31 +672,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Text is required" });
       }
 
-      // Use OpenAI directly for spell checking to avoid formatting issues
+      // Create a fresh OpenAI instance for spell checking
       const OpenAI = (await import('openai')).default;
-      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
       
-      // Create a spell check prompt that ensures JSON response
+      if (!process.env.OPENAI_API_KEY) {
+        console.error('OpenAI API key not found');
+        return res.json([]);
+      }
+      
+      const openai = new OpenAI({ 
+        apiKey: process.env.OPENAI_API_KEY
+      });
+      
+      console.log('Making spell check API call...');
+      
       const completion = await openai.chat.completions.create({
         model: "gpt-4o",
         messages: [
           {
             role: "system",
-            content: "You are a spell checker. You must respond ONLY with valid JSON. No other text or formatting."
+            content: "You are a spell checker. Return ONLY a valid JSON array with no additional text. Format: [{\"word\": \"misspelled_word\", \"suggestions\": [\"correction1\", \"correction2\"]}]. If no errors found, return: []"
           },
           {
             role: "user", 
-            content: `Check this text for spelling errors. Return JSON array: [{"word": "misspelled_word", "suggestions": ["correction1", "correction2"]}]. If no errors, return [].
-
-Text: ${text}`
+            content: `Identify spelling errors in this text: "${text}"`
           }
         ],
-        response_format: { type: "json_object" },
         max_tokens: 500,
-        temperature: 0.1
+        temperature: 0
       });
 
       const response = completion.choices[0].message.content;
+      console.log('Raw OpenAI response:', response);
+      
+      if (!response) {
+        return res.json([]);
+      }
       
       // Try to parse the AI response as JSON
       let errors = [];
