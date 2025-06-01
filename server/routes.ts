@@ -26,10 +26,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Try to find user by username first, then by email
+      console.log('Attempting login for:', username);
       let user = await storage.getUserByUsername(username);
+      console.log('Username lookup result:', user ? `Found: ${user.firstName} ${user.lastName}` : 'Not found');
+      
       if (!user && username.includes('@')) {
+        console.log('Trying email lookup for:', username);
         // If username looks like an email, try to find by email
         user = await storage.getUserByEmail(username);
+        console.log('Email lookup result:', user ? `Found: ${user.firstName} ${user.lastName}` : 'Not found');
       }
       
 
