@@ -1429,8 +1429,9 @@ Return [] if no errors.`;
   app.get("/api/admin/users", async (req, res) => {
     try {
       const users = await storage.getAllUsers();
-      // Remove passwords for security
-      const safeUsers = users.map(user => {
+      // Filter to only show active users and remove passwords for security
+      const activeUsers = users.filter(user => user.isActive);
+      const safeUsers = activeUsers.map(user => {
         const { password, ...safeUser } = user;
         return safeUser;
       });
