@@ -112,11 +112,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
+      // Update user's timestamp to mark as current session
+      await storage.updateUserStatus(user.id, true);
+      
       // Remove password from response
       const { password: _, ...userWithoutPassword } = user;
-      
-      // Set current logged-in user
-      currentLoggedInUser = user;
       
       res.json({
         user: userWithoutPassword,
@@ -127,20 +127,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Track current logged-in user (simple approach for demo)
-  let currentLoggedInUser: any = null;
+  // Simple session store using database
+  const getCurrentUser = async (): Promise<any> => {
+    try {
+      // For demo purposes, we'll store the current user ID in a simple way
+      // In a real app, this would use proper session management
+      const allUsers = await storage.getAllUsers();
+      // Find the most recently updated user as a simple session approach
+      const sortedUsers = allUsers.sort((a, b) => 
+        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      );
+      return sortedUsers[0] || null;
+    } catch (error) {
+      console.error("Error getting current user:", error);
+      return null;
+    }
+  };
 
   // Get current authenticated user endpoint  
   app.get("/api/auth/user", async (req, res) => {
     try {
-      console.log("Auth check - currentLoggedInUser:", currentLoggedInUser ? `${currentLoggedInUser.firstName} ${currentLoggedInUser.lastName}` : "null");
+      const currentUser = await getCurrentUser();
+      console.log("Auth check - current user:", currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : "null");
       
-      if (!currentLoggedInUser) {
+      if (!currentUser) {
         return res.status(401).json({ message: "Not authenticated" });
       }
       
       // Remove password from response
-      const { password: _, ...userWithoutPassword } = currentLoggedInUser;
+      const { password: _, ...userWithoutPassword } = currentUser;
       res.json(userWithoutPassword);
     } catch (error) {
       console.error("Error fetching current user:", error);
@@ -166,11 +181,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Demo user not found for this role" });
       }
 
+      // Update user's timestamp to mark as current session
+      await storage.updateUserStatus(demoUser.id, true);
+      
       // Remove password from response
       const { password: _, ...userWithoutPassword } = demoUser;
-      
-      // Set current logged-in user
-      currentLoggedInUser = demoUser;
       
       console.log(`Demo login successful for ${role}: ${demoUser.firstName} ${demoUser.lastName}`);
       
