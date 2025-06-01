@@ -260,15 +260,18 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                         if (cleanPastedWord === docWord) {
                           exactMatches += 1;
                         }
-                        // Close spelling match - check if words are similar (spell-check corrections)
+                        // Very loose matching for spell-corrected words
                         else if (cleanPastedWord.length >= 3 && docWord.length >= 3) {
-                          // Check if first 3+ characters match (handles most spelling corrections)
-                          const minLen = Math.min(cleanPastedWord.length, docWord.length);
-                          const prefixMatch = cleanPastedWord.substring(0, Math.min(3, minLen)) === docWord.substring(0, Math.min(3, minLen));
+                          // Match if words start similarly or have common letters
+                          const similarStart = cleanPastedWord.substring(0, 2) === docWord.substring(0, 2);
+                          const similarLength = Math.abs(cleanPastedWord.length - docWord.length) <= 2;
                           
-                          if (prefixMatch || 
-                              // Handle common patterns like "tryed"/"tried", "ignor"/"ignore"
-                              (cleanPastedWord.includes(docWord.substring(0, 3)) || docWord.includes(cleanPastedWord.substring(0, 3)))) {
+                          if (similarStart && similarLength) {
+                            closeMatches += 1;
+                          }
+                          // Also count as match if one word contains most of the other
+                          else if (cleanPastedWord.length >= 4 && docWord.length >= 4 &&
+                                  (cleanPastedWord.includes(docWord.substring(0, 3)) || docWord.includes(cleanPastedWord.substring(0, 3)))) {
                             closeMatches += 1;
                           }
                         }
