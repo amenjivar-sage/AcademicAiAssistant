@@ -486,6 +486,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get specific assignment by ID
+  app.get("/api/assignments/:id", async (req, res) => {
+    try {
+      const assignmentId = parseInt(req.params.id);
+      const assignment = await storage.getAssignment(assignmentId);
+      if (!assignment) {
+        return res.status(404).json({ message: "Assignment not found" });
+      }
+      res.json(assignment);
+    } catch (error) {
+      console.error("Error fetching assignment:", error);
+      res.status(500).json({ message: "Failed to get assignment" });
+    }
+  });
+
+  // Create assignment
+  app.post("/api/assignments", async (req, res) => {
+    try {
+      const currentUser = await getCurrentUser();
+      if (!currentUser || currentUser.role !== 'teacher') {
+        return res.status(401).json({ message: "Teacher authentication required" });
+      }
+      
+      const assignmentData = {
+        ...req.body,
+        teacherId: currentUser.id // Ensure assignment is assigned to current teacher
+      };
+      
+      console.log('Creating assignment with data:', assignmentData);
+      const assignment = await storage.createAssignment(assignmentData);
+      console.log('Assignment created successfully:', assignment.id);
+      res.json(assignment);
+    } catch (error) {
+      console.error('Error creating assignment:', error);
+      res.status(500).json({ message: "Failed to create assignment" });
+    }
+  });
+
   // Get assignment submissions with student data
   app.get("/api/assignments/:assignmentId/submissions", async (req, res) => {
     try {
