@@ -142,7 +142,24 @@ export class MemStorage implements IStorage {
     };
     this.users.set(2, student);
 
-    this.currentUserId = 3;
+    // Add admin user for demo
+    const admin: User = {
+      id: 3,
+      username: "admin",
+      password: "demo2024",
+      role: "admin",
+      firstName: "Dr. Patricia",
+      lastName: "Williams",
+      email: "admin@sage.com",
+      grade: null,
+      department: "Administration",
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.users.set(3, admin);
+
+    this.currentUserId = 4;
   }
 
   private initializeSampleClassrooms() {
@@ -245,7 +262,7 @@ export class MemStorage implements IStorage {
 
     // Add more student users
     const maria: User = {
-      id: 3,
+      id: 4,
       username: "maria.gonzalez",
       password: "password123",
       role: "student",
@@ -258,10 +275,10 @@ export class MemStorage implements IStorage {
       createdAt: new Date(),
       updatedAt: new Date(),
     };
-    this.users.set(3, maria);
+    this.users.set(4, maria);
 
     const alex: User = {
-      id: 4,
+      id: 5,
       username: "alex.chen",
       password: "password123",
       role: "student",
@@ -274,9 +291,9 @@ export class MemStorage implements IStorage {
       createdAt: new Date(),
       updatedAt: new Date(),
     };
-    this.users.set(4, alex);
+    this.users.set(5, alex);
 
-    this.currentUserId = 5;
+    this.currentUserId = 6;
 
     // Sample student submissions
     const submission1: WritingSession = {
