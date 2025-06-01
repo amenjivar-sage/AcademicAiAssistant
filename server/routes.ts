@@ -517,6 +517,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Class not found with this join code" });
       }
       
+      // Check if student is already enrolled
+      const studentClasses = await storage.getStudentClassrooms(studentId);
+      const alreadyEnrolled = studentClasses.some(c => c.id === classroom.id);
+      
+      if (alreadyEnrolled) {
+        return res.status(409).json({ message: "Student is already enrolled in this class" });
+      }
+      
       // Enroll the student in the classroom
       await storage.enrollStudentInClassroom(studentId, classroom.id);
       
@@ -524,6 +532,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(classroom);
     } catch (error) {
       console.error("Error joining class:", error);
+      if (error.message && error.message.includes("already enrolled")) {
+        return res.status(409).json({ message: "Student is already enrolled in this class" });
+      }
       res.status(500).json({ message: "Failed to join class" });
     }
   });

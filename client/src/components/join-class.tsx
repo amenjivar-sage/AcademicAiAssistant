@@ -67,13 +67,13 @@ export default function JoinClass({ studentId, children }: JoinClassProps) {
       form.reset();
     },
     onError: (error: any) => {
-      if (error.message?.includes("not found")) {
+      if (error.message?.includes("not found") || error.message?.includes("404")) {
         toast({
           title: "Invalid Class Code",
           description: "Please check the code and try again. Make sure you entered it exactly as your teacher provided.",
           variant: "destructive",
         });
-      } else if (error.message?.includes("already enrolled")) {
+      } else if (error.message?.includes("already enrolled") || error.message?.includes("409")) {
         toast({
           title: "Already Enrolled",
           description: "You're already a member of this class.",
