@@ -1551,6 +1551,11 @@ Return [] if no errors.`;
       // Delete user permanently
       await storage.deleteUser(userId);
       
+      // Add cache-busting headers to force fresh data
+      res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
+      
       res.json({ 
         success: true, 
         message: "User deleted successfully" 

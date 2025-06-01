@@ -180,9 +180,17 @@ export default function AdminUserManagement() {
       }
     },
     onSuccess: () => {
+      // Force immediate cache invalidation and refetch
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/user-stats"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/analytics"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/archived-users"] });
+      
+      // Force refetch with fresh data
+      queryClient.refetchQueries({ queryKey: ["/api/admin/users"] });
+      queryClient.refetchQueries({ queryKey: ["/api/admin/user-stats"] });
+      queryClient.refetchQueries({ queryKey: ["/api/admin/analytics"] });
+      
       toast({
         title: "User Deleted",
         description: "User has been removed from the system.",
