@@ -371,7 +371,7 @@ export default function StudentDashboard() {
             </div>
             
             <AchievementSystem 
-              userId={1} 
+              userId={user?.id || 1} 
               totalWordCount={totalWordCount}
               completedAssignments={completedAssignments}
             />
@@ -384,7 +384,7 @@ export default function StudentDashboard() {
               <Badge variant="outline">Track your improvement</Badge>
             </div>
             
-            <AnalyticsDashboard userId={1} />
+            <AnalyticsDashboard userId={user?.id || 1} />
           </TabsContent>
         </Tabs>
 
