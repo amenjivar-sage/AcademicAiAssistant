@@ -34,6 +34,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
 
       
+      console.log('Login debug - User found:', user ? `${user.firstName} ${user.lastName}` : 'null');
+      console.log('Login debug - Password provided:', password ? '[HIDDEN]' : 'null');
+      console.log('Login debug - Password match:', user ? (user.password === password ? 'YES' : 'NO') : 'N/A');
+      
       if (!user || user.password !== password) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
