@@ -43,6 +43,7 @@ export interface IStorage {
   getTeacherClassrooms(teacherId: number): Promise<Classroom[]>;
   getAllClassrooms(): Promise<Classroom[]>;
   getStudentClassrooms(studentId: number): Promise<Classroom[]>;
+  getClassroomStudents(classroomId: number): Promise<User[]>;
   enrollStudentInClassroom(studentId: number, classroomId: number): Promise<void>;
   updateClassroom(id: number, updates: Partial<InsertClassroom>): Promise<Classroom | undefined>;
   
@@ -823,6 +824,26 @@ Despite these challenges, the momentum toward renewable energy appears unstoppab
     
     console.log("Student classrooms result:", studentClassrooms);
     return studentClassrooms;
+  }
+
+  async getClassroomStudents(classroomId: number): Promise<User[]> {
+    const students: User[] = [];
+    
+    // Find all enrollments for this classroom
+    Array.from(this.enrollments.entries()).forEach(([enrollmentKey, isEnrolled]) => {
+      if (isEnrolled) {
+        const [studentIdStr, classroomIdStr] = enrollmentKey.split('-');
+        if (parseInt(classroomIdStr) === classroomId) {
+          const studentId = parseInt(studentIdStr);
+          const student = this.users.get(studentId);
+          if (student && student.role === 'student') {
+            students.push(student);
+          }
+        }
+      }
+    });
+    
+    return students;
   }
 
   async enrollStudentInClassroom(studentId: number, classroomId: number): Promise<void> {

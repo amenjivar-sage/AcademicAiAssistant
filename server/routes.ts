@@ -814,6 +814,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get students for a specific teacher
+  app.get("/api/teacher/:teacherId/students", async (req, res) => {
+    try {
+      const teacherId = parseInt(req.params.teacherId);
+      
+      // Get teacher's classrooms
+      const classrooms = await storage.getTeacherClassrooms(teacherId);
+      
+      // Get all students enrolled in these classrooms
+      const allStudents: any[] = [];
+      const studentIds = new Set<number>();
+      
+      for (const classroom of classrooms) {
+        const studentsInClass = await storage.getClassroomStudents(classroom.id);
+        for (const student of studentsInClass) {
+          if (!studentIds.has(student.id)) {
+            studentIds.add(student.id);
+            // Get student's writing sessions for performance metrics
+            const sessions = await storage.getUserWritingSessions(student.id);
+            const completedAssignments = sessions.filter(s => s.status === 'submitted').length;
+            const totalWords = sessions.reduce((sum, s) => sum + (s.wordCount || 0), 0);
+            
+            allStudents.push({
+              id: student.id,
+              name: `${student.firstName} ${student.lastName}`,
+              email: student.email,
+              grade: student.grade,
+              status: completedAssignments > 2 ? 'excellent' : completedAssignments > 0 ? 'active' : 'needs_attention',
+              completedAssignments,
+              totalWords,
+              lastActivity: sessions.length > 0 ? sessions[sessions.length - 1].updatedAt : student.createdAt,
+              progress: Math.min(100, (completedAssignments / 3) * 100),
+              streak: Math.min(completedAssignments, 7),
+              classrooms: [classroom.name]
+            });
+          }
+        }
+      }
+      
+      res.json(allStudents);
+    } catch (error) {
+      console.error("Error fetching teacher students:", error);
+      res.status(500).json({ message: "Failed to fetch students" });
+    }
+  });
+
+  // Get student insights for teacher dashboard
+  app.get("/api/teacher/:teacherId/student-insights", async (req, res) => {
+    try {
+      res.json([]); // Return empty array for now
+    } catch (error) {
+      console.error("Error fetching student insights:", error);
+      res.status(500).json({ message: "Failed to fetch student insights" });
+    }
+  });
+
+  // Get leaderboard for teacher dashboard
+  app.get("/api/teacher/:teacherId/leaderboard", async (req, res) => {
+    try {
+      res.json([]); // Return empty array for now
+    } catch (error) {
+      console.error("Error fetching leaderboard:", error);
+      res.status(500).json({ message: "Failed to fetch leaderboard" });
+    }
+  });
+
+  // Get teacher goals
+  app.get("/api/teacher/:teacherId/goals", async (req, res) => {
+    try {
+      res.json([]); // Return empty array for now
+    } catch (error) {
+      console.error("Error fetching teacher goals:", error);
+      res.status(500).json({ message: "Failed to fetch goals" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

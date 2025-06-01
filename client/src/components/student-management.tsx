@@ -40,7 +40,7 @@ function StudentManagement({ teacherId }: StudentManagementProps) {
 
   // Get students from API instead of using demo data
   const { data: studentData } = useQuery({
-    queryKey: [`/api/teacher/1/students`],
+    queryKey: [`/api/teacher/${teacherId}/students`],
   });
 
   const students = studentData || [];
