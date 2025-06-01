@@ -211,10 +211,10 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
             if (trimmedSentence) {
               console.log('Looking for sentence:', trimmedSentence);
               
-              // Get significant words from the pasted sentence
+              // Get significant words from the pasted sentence (clean punctuation)
               const pastedWords = trimmedSentence.split(/\s+/)
                 .filter(w => w.length >= 3)
-                .map(w => w.toLowerCase());
+                .map(w => w.toLowerCase().replace(/[.,!?;]/g, ''));
               
               console.log('Pasted words:', pastedWords);
               
