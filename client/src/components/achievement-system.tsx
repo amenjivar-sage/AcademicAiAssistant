@@ -90,22 +90,24 @@ export default function AchievementSystem({ userId, totalWordCount, completedAss
           </CardHeader>
           <CardContent className="space-y-4">
             {activeGoals.map((goal) => {
-              const progress = Math.min((goal.currentProgress / goal.targetWords) * 100, 100);
+              const current = goal.currentProgress || 0;
+              const target = goal.targetWords || 1;
+              const progress = Math.min((current / target) * 100, 100);
               return (
                 <div key={goal.id} className="space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-gray-500" />
                       <span className="font-medium capitalize">{goal.type} Goal</span>
-                      <Badge variant="outline">{goal.targetWords.toLocaleString()} words</Badge>
+                      <Badge variant="outline">{(goal.targetWords || 0).toLocaleString()} words</Badge>
                     </div>
                     <span className="text-sm text-gray-600">
-                      {goal.currentProgress.toLocaleString()} / {goal.targetWords.toLocaleString()}
+                      {current.toLocaleString()} / {target.toLocaleString()}
                     </span>
                   </div>
-                  <Progress value={progress} className="h-2" />
+                  <Progress value={isNaN(progress) ? 0 : progress} className="h-2" />
                   <p className="text-xs text-gray-500">
-                    {progress.toFixed(1)}% complete
+                    {isNaN(progress) ? 0 : progress.toFixed(1)}% complete
                     {goal.endDate && ` • Due ${new Date(goal.endDate).toLocaleDateString()}`}
                   </p>
                 </div>
