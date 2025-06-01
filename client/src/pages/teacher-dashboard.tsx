@@ -45,6 +45,11 @@ export default function TeacherDashboard() {
     },
   });
 
+  // Logout function
+  const handleLogout = () => {
+    window.location.href = "/api/auth/logout";
+  };
+
   // Helper function to count completed assignments
   const getCompletedAssignments = () => {
     return assignments?.filter(a => a.status === "completed").length || 0;
