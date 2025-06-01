@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { insertWritingSessionSchema, insertAiInteractionSchema, insertAssignmentSchema, insertMessageSchema } from "@shared/schema";
 import { z } from "zod";
 import { checkRestrictedPrompt, generateAiResponse } from "./openai";
+import { emailService } from "./email-service";
 
 
 
@@ -148,6 +149,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         timestamp: new Date().toISOString(),
         compliance: "FERPA educational record creation"
       });
+
+      // Send welcome email with username
+      try {
+        const emailResult = await emailService.sendWelcomeEmail({
+          firstName: newUser.firstName,
+          lastName: newUser.lastName,
+          email: newUser.email,
+          username: newUser.username,
+          role: newUser.role
+        });
+        
+        console.log(`📧 Email notification result for ${newUser.email}: ${emailResult.message}`);
+      } catch (emailError) {
+        console.error('⚠️ Failed to send welcome email:', emailError);
+        // Don't fail registration if email fails
+      }
 
       res.json({ 
         success: true, 
