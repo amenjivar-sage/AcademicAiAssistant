@@ -11,7 +11,7 @@ import MessagingSystem from "@/components/messaging-system";
 import TeacherInsights from "@/components/teacher-insights";
 import { TeacherGoalManagement } from "@/components/teacher-goal-management";
 import StudentManagement from "@/components/student-management";
-import { PlusCircle, Users, FileText, BarChart3, MessageSquare, Target } from "lucide-react";
+import { PlusCircle, Users, FileText, BarChart3, MessageSquare, Target, LogOut } from "lucide-react";
 import SageLogo from "@/components/sage-logo";
 import type { Assignment, Classroom } from "@shared/schema";
 
