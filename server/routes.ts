@@ -611,9 +611,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/classes/join", async (req, res) => {
     try {
       const { joinCode } = req.body;
-      const studentId = currentDemoUserId;
       
-      console.log("Attempting to join classroom with code:", joinCode);
+      // Get student ID from session
+      const session = (req as any).session;
+      if (!session || !session.userId) {
+        return res.status(401).json({ message: "Not logged in" });
+      }
+      
+      const studentId = session.userId;
+      console.log("Attempting to join classroom with code:", joinCode, "for student ID:", studentId);
       
       // Find classroom by join code
       const allClassrooms = await storage.getAllClassrooms();
