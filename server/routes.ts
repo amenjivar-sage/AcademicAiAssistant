@@ -960,84 +960,49 @@ Return [] if no errors.`;
 
   // Teacher analytics for class overview
   app.get("/api/analytics/teacher/:teacherId/class-overview", async (req, res) => {
-    const teacherId = parseInt(req.params.teacherId);
-    // Demo class analytics
-    const classOverview = {
-      totalStudents: 24,
-      activeWriters: 18,
-      averageClassGrade: "B+",
-      assignmentCompletion: 78,
-      aiUsageTrends: {
-        studentsUsingAI: 16,
-        averageInteractionsPerStudent: 12,
-        mostCommonHelpType: "brainstorming"
-      },
-      classProgress: {
-        wordsWrittenThisMonth: 45678,
-        averageWordsPerStudent: 1903,
-        improvementRate: "+18%"
-      },
-      strugglingStudents: [
-        { name: "Alex Johnson", issue: "Low engagement", lastActive: "3 days ago" },
-        { name: "Sarah Chen", issue: "Grammar patterns", improvement: "needed" }
-      ],
-      topPerformers: [
-        { name: "Maria Rodriguez", achievement: "Consistent A grades", streak: 12 },
-        { name: "David Kim", achievement: "Most improved", growth: "+45%" }
-      ]
-    };
-    res.json(classOverview);
+    try {
+      const teacherId = parseInt(req.params.teacherId);
+      
+      // Get real data from storage
+      const allUsers = await storage.getAllUsers();
+      const students = allUsers.filter(u => u.role === 'student' && u.isActive);
+      const assignments = await storage.getTeacherAssignments(teacherId);
+      
+      const classOverview = {
+        totalStudents: students.length,
+        activeWriters: 0,
+        averageClassGrade: "N/A",
+        assignmentCompletion: 0,
+        aiUsageTrends: {
+          studentsUsingAI: 0,
+          averageInteractionsPerStudent: 0,
+          mostCommonHelpType: "none"
+        },
+        classProgress: {
+          wordsWrittenThisMonth: 0,
+          averageWordsPerStudent: 0,
+          improvementRate: "0%"
+        },
+        strugglingStudents: [],
+        topPerformers: []
+      };
+      res.json(classOverview);
+    } catch (error) {
+      console.error("Error fetching class overview:", error);
+      res.status(500).json({ message: "Failed to fetch class overview" });
+    }
   });
 
   // Teacher goal management endpoints
   app.get("/api/teacher/:teacherId/goals", async (req, res) => {
-    const teacherId = parseInt(req.params.teacherId);
-    // Demo teacher goals
-    const goals = [
-      {
-        id: 1,
-        teacherId,
-        classroomId: 1,
-        type: "daily_words",
-        title: "Daily Writing Practice",
-        description: "Students should write at least 250 words every day to build consistency",
-        target: 250,
-        deadline: "2025-06-30",
-        isActive: true,
-        assignedStudents: 18,
-        completionRate: 67,
-        createdAt: "2025-05-20"
-      },
-      {
-        id: 2,
-        teacherId,
-        classroomId: 1,
-        type: "weekly_sessions",
-        title: "Weekly Writing Sessions",
-        description: "Complete at least 4 writing sessions per week",
-        target: 4,
-        deadline: "2025-06-07",
-        isActive: true,
-        assignedStudents: 18,
-        completionRate: 83,
-        createdAt: "2025-05-25"
-      },
-      {
-        id: 3,
-        teacherId,
-        classroomId: 1,
-        type: "grammar_accuracy",
-        title: "Grammar Improvement",
-        description: "Achieve 90% grammar accuracy in writing assignments",
-        target: 90,
-        deadline: "2025-07-15",
-        isActive: true,
-        assignedStudents: 18,
-        completionRate: 45,
-        createdAt: "2025-05-28"
-      }
-    ];
-    res.json(goals);
+    try {
+      const teacherId = parseInt(req.params.teacherId);
+      // Return empty array - no demo goals
+      res.json([]);
+    } catch (error) {
+      console.error("Error fetching goals:", error);
+      res.status(500).json({ message: "Failed to fetch goals" });
+    }
   });
 
   app.post("/api/teacher/goals", async (req, res) => {
