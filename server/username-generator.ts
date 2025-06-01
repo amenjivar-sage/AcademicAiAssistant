@@ -168,3 +168,16 @@ export class UsernameGenerator {
     return suggestions.slice(0, 5); // Return top 5 suggestions
   }
 }
+
+// Helper function for easy import
+export async function generateUsernameFromEmail(email: string, storage: IStorage): Promise<string> {
+  const generator = new UsernameGenerator(storage);
+  
+  // Extract basic info from email for fallback
+  const emailPrefix = email.split('@')[0];
+  const nameParts = emailPrefix.split(/[._-]/);
+  const firstName = nameParts[0] || 'user';
+  const lastName = nameParts[1] || 'student';
+  
+  return generator.generateUniqueUsername(email, firstName, lastName, 'student');
+}

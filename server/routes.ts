@@ -19,6 +19,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
     next();
   });
 
+  // Check email endpoint for registration
+  app.post("/api/auth/check-email", async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+
+      // Check if email is already registered
+      const existingUser = await storage.getUserByEmail(email);
+      
+      if (existingUser) {
+        return res.status(400).json({ 
+          valid: false, 
+          message: "Email is already registered" 
+        });
+      }
+
+      // For demo purposes, accept any valid email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ 
+          valid: false, 
+          message: "Invalid email format" 
+        });
+      }
+
+      res.json({ valid: true, message: "Email is available" });
+    } catch (error) {
+      console.error("Error checking email:", error);
+      res.status(500).json({ message: "Failed to check email" });
+    }
+  });
+
+  // Registration endpoint
+  app.post("/api/auth/register", async (req, res) => {
+    try {
+      const { email, firstName, lastName, role, grade, department, password } = req.body;
+      
+      // Validate required fields
+      if (!email || !firstName || !lastName || !role || !password) {
+        return res.status(400).json({ message: "All required fields must be provided" });
+      }
+
+      // Check if email is already registered
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: "Email is already registered" });
+      }
+
+      // Generate username using the username generator
+      const { generateUsernameFromEmail } = await import('./username-generator');
+      const username = await generateUsernameFromEmail(email, storage);
+
+      // Create new user
+      const newUser = await storage.createUser({
+        username,
+        password,
+        email,
+        firstName,
+        lastName,
+        role,
+        grade: grade || null,
+        department: department || null
+      });
+
+      res.json({ 
+        success: true, 
+        message: "Account created successfully",
+        username: newUser.username
+      });
+    } catch (error) {
+      console.error("Error registering user:", error);
+      res.status(500).json({ message: "Failed to create account" });
+    }
+  });
+
   // Authentication routes
   app.post("/api/auth/login", async (req, res) => {
     try {
