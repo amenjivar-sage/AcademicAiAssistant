@@ -1088,165 +1088,52 @@ Return [] if no errors.`;
 
   // Get students in a classroom
   app.get("/api/teacher/classrooms/:classroomId/students", async (req, res) => {
-    const classroomId = parseInt(req.params.classroomId);
-    // Demo student list
-    const students = [
-      { id: 1, name: "Alice Johnson", email: "alice.j@school.edu", progress: 85 },
-      { id: 2, name: "Bob Smith", email: "bob.s@school.edu", progress: 72 },
-      { id: 3, name: "Maria Rodriguez", email: "maria.r@school.edu", progress: 94 },
-      { id: 4, name: "David Kim", email: "david.k@school.edu", progress: 78 },
-      { id: 5, name: "Sarah Chen", email: "sarah.c@school.edu", progress: 61 }
-    ];
-    res.json(students);
+    try {
+      const classroomId = parseInt(req.params.classroomId);
+      
+      // Get real students enrolled in this classroom
+      const allUsers = await storage.getAllUsers();
+      const studentsInClass = allUsers.filter(u => u.role === 'student' && u.isActive);
+      
+      // Return empty array if no students are enrolled yet
+      const students = studentsInClass.map(student => ({
+        id: student.id,
+        name: `${student.firstName} ${student.lastName}`,
+        email: student.email,
+        progress: 0
+      }));
+      
+      res.json(students);
+    } catch (error) {
+      console.error("Error fetching classroom students:", error);
+      res.status(500).json({ message: "Failed to fetch students" });
+    }
   });
 
   // Get detailed student management data for teachers
   app.get("/api/teacher/:teacherId/students", async (req, res) => {
-    const teacherId = parseInt(req.params.teacherId);
-    // Comprehensive student management data
-    const students = [
-      {
-        id: 1,
-        name: "Alice Johnson",
-        email: "alice.j@school.edu",
-        avatar: "AJ",
-        classroomId: 1,
-        classroomName: "Creative Writing 101",
+    try {
+      const teacherId = parseInt(req.params.teacherId);
+      
+      // Get real students from actual user data
+      const allUsers = await storage.getAllUsers();
+      const students = allUsers.filter(u => u.role === 'student' && u.isActive);
+      
+      // Return empty array if no students exist yet
+      res.json(students.map(student => ({
+        id: student.id,
+        name: `${student.firstName} ${student.lastName}`,
+        email: student.email,
+        avatar: `${student.firstName[0]}${student.lastName[0]}`,
         status: "active",
-        lastActive: "2 hours ago",
-        totalWords: 2847,
-        assignmentsCompleted: 8,
-        assignmentsPending: 2,
-        currentStreak: 12,
-        writingQuality: 87,
-        grammarAccuracy: 91,
-        vocabularyScore: 82,
-        aiInteractions: 23,
-        improvementTrend: "+15%",
-        recentActivity: [
-          { type: "submission", title: "Personal Narrative Essay", date: "2025-05-30", grade: "A-" },
-          { type: "ai_help", title: "Grammar Check Session", date: "2025-05-29" },
-          { type: "achievement", title: "Writing Streak: 12 Days", date: "2025-05-28" }
-        ],
-        goals: [
-          { title: "Daily Writing Goal", progress: 85, target: "250 words/day" },
-          { title: "Grammar Improvement", progress: 91, target: "90% accuracy" }
-        ]
-      },
-      {
-        id: 2,
-        name: "Bob Smith",
-        email: "bob.s@school.edu",
-        avatar: "BS",
-        classroomId: 1,
-        classroomName: "Creative Writing 101",
-        status: "needs_attention",
-        lastActive: "3 days ago",
-        totalWords: 1234,
-        assignmentsCompleted: 4,
-        assignmentsPending: 6,
-        currentStreak: 0,
-        writingQuality: 62,
-        grammarAccuracy: 73,
-        vocabularyScore: 68,
-        aiInteractions: 45,
-        improvementTrend: "-8%",
-        recentActivity: [
-          { type: "overdue", title: "Character Development Essay", date: "2025-05-27", status: "3 days overdue" },
-          { type: "ai_help", title: "Brainstorming Session", date: "2025-05-27" },
-          { type: "submission", title: "Short Story Draft", date: "2025-05-25", grade: "C+" }
-        ],
-        goals: [
-          { title: "Daily Writing Goal", progress: 32, target: "250 words/day" },
-          { title: "Weekly Sessions", progress: 50, target: "4 sessions/week" }
-        ]
-      },
-      {
-        id: 3,
-        name: "Maria Rodriguez",
-        email: "maria.r@school.edu",
-        avatar: "MR",
-        classroomId: 1,
-        classroomName: "Creative Writing 101",
-        status: "excellent",
-        lastActive: "1 hour ago",
-        totalWords: 4521,
-        assignmentsCompleted: 12,
-        assignmentsPending: 0,
-        currentStreak: 24,
-        writingQuality: 94,
-        grammarAccuracy: 96,
-        vocabularyScore: 89,
-        aiInteractions: 18,
-        improvementTrend: "+22%",
-        recentActivity: [
-          { type: "submission", title: "Research Paper Final", date: "2025-05-30", grade: "A+" },
-          { type: "achievement", title: "Perfect Assignment Streak", date: "2025-05-29" },
-          { type: "ai_help", title: "Citation Review", date: "2025-05-28" }
-        ],
-        goals: [
-          { title: "Advanced Vocabulary", progress: 89, target: "500 new words" },
-          { title: "Research Skills", progress: 100, target: "Complete research module" }
-        ]
-      },
-      {
-        id: 4,
-        name: "David Kim",
-        email: "david.k@school.edu",
-        avatar: "DK",
-        classroomId: 1,
-        classroomName: "Creative Writing 101",
-        status: "improving",
-        lastActive: "5 hours ago",
-        totalWords: 1876,
-        assignmentsCompleted: 6,
-        assignmentsPending: 3,
-        currentStreak: 7,
-        writingQuality: 78,
-        grammarAccuracy: 84,
-        vocabularyScore: 75,
-        aiInteractions: 31,
-        improvementTrend: "+18%",
-        recentActivity: [
-          { type: "submission", title: "Poetry Collection", date: "2025-05-29", grade: "B+" },
-          { type: "ai_help", title: "Style Improvement", date: "2025-05-29" },
-          { type: "achievement", title: "Most Improved Writer", date: "2025-05-26" }
-        ],
-        goals: [
-          { title: "Writing Quality", progress: 78, target: "80% quality score" },
-          { title: "Consistent Practice", progress: 70, target: "Daily writing habit" }
-        ]
-      },
-      {
-        id: 5,
-        name: "Sarah Chen",
-        email: "sarah.c@school.edu",
-        avatar: "SC",
-        classroomId: 1,
-        classroomName: "Creative Writing 101",
-        status: "at_risk",
-        lastActive: "1 week ago",
-        totalWords: 567,
-        assignmentsCompleted: 2,
-        assignmentsPending: 8,
-        currentStreak: 0,
-        writingQuality: 54,
-        grammarAccuracy: 67,
-        vocabularyScore: 59,
-        aiInteractions: 12,
-        improvementTrend: "-12%",
-        recentActivity: [
-          { type: "missed", title: "Weekly Writing Assignment", date: "2025-05-23", status: "No submission" },
-          { type: "ai_help", title: "Getting Started Help", date: "2025-05-22" },
-          { type: "submission", title: "Introduction Paragraph", date: "2025-05-20", grade: "D+" }
-        ],
-        goals: [
-          { title: "Basic Writing Skills", progress: 25, target: "Foundation level" },
-          { title: "Regular Engagement", progress: 15, target: "Weekly participation" }
-        ]
-      }
-    ];
-    res.json(students);
+        totalWords: 0,
+        assignmentsCompleted: 0,
+        assignmentsPending: 0
+      })));
+    } catch (error) {
+      console.error("Error fetching students:", error);
+      res.status(500).json({ message: "Failed to fetch students" });
+    }
   });
 
   // Admin analytics endpoints
