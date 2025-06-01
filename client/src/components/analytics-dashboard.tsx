@@ -60,7 +60,7 @@ export function AnalyticsDashboard({ userId }: AnalyticsDashboardProps) {
             <div className="flex items-center space-x-2">
               <Flame className="h-8 w-8 text-orange-500" />
               <div>
-                <p className="text-2xl font-bold">{safeStreakData.currentStreak}</p>
+                <p className="text-2xl font-bold">{safeStreakData?.currentStreak || 0}</p>
                 <p className="text-sm text-muted-foreground">Day Streak</p>
               </div>
             </div>
@@ -72,7 +72,7 @@ export function AnalyticsDashboard({ userId }: AnalyticsDashboardProps) {
             <div className="flex items-center space-x-2">
               <BookOpen className="h-8 w-8 text-blue-500" />
               <div>
-                <p className="text-2xl font-bold">{sessionStats.totalSessions}</p>
+                <p className="text-2xl font-bold">{safeSessionStats?.totalSessions || 0}</p>
                 <p className="text-sm text-muted-foreground">Total Sessions</p>
               </div>
             </div>
@@ -84,7 +84,7 @@ export function AnalyticsDashboard({ userId }: AnalyticsDashboardProps) {
             <div className="flex items-center space-x-2">
               <TrendingUp className="h-8 w-8 text-green-500" />
               <div>
-                <p className="text-2xl font-bold">{sessionStats.totalWordsWritten.toLocaleString()}</p>
+                <p className="text-2xl font-bold">{safeSessionStats.totalWords?.toLocaleString() || 0}</p>
                 <p className="text-sm text-muted-foreground">Words Written</p>
               </div>
             </div>
