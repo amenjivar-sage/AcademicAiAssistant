@@ -314,9 +314,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get teacher assignments (alternative endpoint used by frontend)
   app.get("/api/teacher/assignments", async (req, res) => {
     try {
-      // Use teacher ID 1 for demo (Sarah Johnson)
-      const teacherId = 1;
-      const assignments = await storage.getTeacherAssignments(teacherId);
+      const currentUser = await getCurrentUser();
+      if (!currentUser || currentUser.role !== 'teacher') {
+        return res.status(401).json({ message: "Teacher authentication required" });
+      }
+      
+      const assignments = await storage.getTeacherAssignments(currentUser.id);
       res.json(assignments);
     } catch (error) {
       console.error("Error fetching teacher assignments:", error);
@@ -327,13 +330,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get teacher classrooms (endpoint used by frontend)
   app.get("/api/teacher/classrooms", async (req, res) => {
     try {
-      // Use teacher ID 1 for demo (Sarah Johnson)
-      const teacherId = 1;
-      const classrooms = await storage.getTeacherClassrooms(teacherId);
+      const currentUser = await getCurrentUser();
+      if (!currentUser || currentUser.role !== 'teacher') {
+        return res.status(401).json({ message: "Teacher authentication required" });
+      }
+      
+      const classrooms = await storage.getTeacherClassrooms(currentUser.id);
       res.json(classrooms);
     } catch (error) {
       console.error("Error fetching teacher classrooms:", error);
       res.status(500).json({ message: "Failed to fetch teacher classrooms" });
+    }
+  });
+
+  // Get student's classes
+  app.get("/api/student/classes", async (req, res) => {
+    try {
+      const currentUser = await getCurrentUser();
+      if (!currentUser || currentUser.role !== 'student') {
+        return res.status(401).json({ message: "Student authentication required" });
+      }
+      
+      const classes = await storage.getStudentClassrooms(currentUser.id);
+      res.json(classes);
+    } catch (error) {
+      console.error("Error fetching student classes:", error);
+      res.status(500).json({ message: "Failed to fetch classes" });
+    }
+  });
+
+  // Get student's assignments
+  app.get("/api/student/assignments", async (req, res) => {
+    try {
+      const currentUser = await getCurrentUser();
+      if (!currentUser || currentUser.role !== 'student') {
+        return res.status(401).json({ message: "Student authentication required" });
+      }
+      
+      // Get student's enrolled classes
+      const studentClasses = await storage.getStudentClassrooms(currentUser.id);
+      
+      // Get all assignments for classes the student is enrolled in
+      let allAssignments: any[] = [];
+      for (const classroom of studentClasses) {
+        // For now, we'll get assignments from all teachers
+        // In a real app, this would be filtered by classroom
+        const assignments = await storage.getTeacherAssignments(classroom.teacherId || 1);
+        allAssignments = allAssignments.concat(assignments.filter(a => a.classroomId === classroom.id));
+      }
+      
+      // Get user's writing sessions to determine status
+      const sessions = await storage.getUserWritingSessions(currentUser.id);
+      
+      // Add status to each assignment based on writing sessions
+      const assignmentsWithStatus = allAssignments.map(assignment => {
+        const session = sessions.find(s => s.assignmentId === assignment.id);
+        
+        let status = 'not_started';
+        if (session) {
+          if (session.status === 'submitted') {
+            status = 'submitted';
+          } else if (session.content && session.content.trim().length > 0) {
+            status = 'in_progress';
+          }
+        }
+        
+        return {
+          ...assignment,
+          status,
+          sessionId: session?.id || null
+        };
+      });
+      
+      res.json(assignmentsWithStatus);
+    } catch (error) {
+      console.error("Error fetching student assignments:", error);
+      res.status(500).json({ message: "Failed to fetch assignments" });
+    }
+  });
+
+  // Get student's writing sessions
+  app.get("/api/student/writing-sessions", async (req, res) => {
+    try {
+      const currentUser = await getCurrentUser();
+      if (!currentUser || currentUser.role !== 'student') {
+        return res.status(401).json({ message: "Student authentication required" });
+      }
+      
+      const sessions = await storage.getUserWritingSessions(currentUser.id);
+      console.log('Student sessions for user', currentUser.id, ':', sessions.map(s => ({ id: s.id, assignmentId: s.assignmentId, hasContent: !!(s.content && s.content.trim()) })));
+      res.json(sessions);
+    } catch (error) {
+      console.error("Error fetching student writing sessions:", error);
+      res.status(500).json({ message: "Failed to fetch sessions" });
     }
   });
 
