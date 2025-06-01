@@ -763,16 +763,26 @@ Despite these challenges, the momentum toward renewable energy appears unstoppab
   }
 
   async getStudentClassrooms(studentId: number): Promise<any[]> {
+    console.log("Getting student classrooms for student ID:", studentId);
+    console.log("All enrollments:", Array.from(this.enrollments.keys()));
+    
     const enrolledClassroomIds = Array.from(this.enrollments.keys())
       .filter(key => key.startsWith(`${studentId}-`))
       .map(key => parseInt(key.split('-')[1]));
     
-    return Array.from(this.classrooms.values())
+    console.log("Enrolled classroom IDs:", enrolledClassroomIds);
+    console.log("All classrooms:", Array.from(this.classrooms.values()).map(c => ({ id: c.id, name: c.name, isActive: c.isActive })));
+    
+    const studentClassrooms = Array.from(this.classrooms.values())
       .filter(classroom => enrolledClassroomIds.includes(classroom.id) && classroom.isActive);
+    
+    console.log("Student classrooms result:", studentClassrooms);
+    return studentClassrooms;
   }
 
   async enrollStudentInClassroom(studentId: number, classroomId: number): Promise<void> {
     const enrollmentKey = `${studentId}-${classroomId}`;
+    console.log("Enrolling student with key:", enrollmentKey);
     this.enrollments.set(enrollmentKey, true);
   }
 

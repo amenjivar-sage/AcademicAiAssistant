@@ -236,7 +236,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/student/classes", async (req, res) => {
     try {
       const studentId = currentDemoUserId;
+      console.log("Fetching classes for student ID:", studentId);
+      
       const classes = await storage.getStudentClassrooms(studentId);
+      console.log("Student classes found:", classes);
+      
       res.json(classes);
     } catch (error) {
       console.error("Error fetching student classes:", error);
