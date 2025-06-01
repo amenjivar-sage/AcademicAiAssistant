@@ -50,11 +50,13 @@ export default function JoinClass({ studentId, children }: JoinClassProps) {
 
   const joinClassMutation = useMutation({
     mutationFn: async (data: JoinClassForm) => {
-      const response = await apiRequest("POST", "/api/classes/join", {
-        joinCode: data.joinCode.toUpperCase(),
-        studentId,
+      return await apiRequest("/api/classes/join", {
+        method: "POST",
+        body: JSON.stringify({
+          joinCode: data.joinCode.toUpperCase(),
+          studentId,
+        }),
       });
-      return await response.json();
     },
     onSuccess: (classroom) => {
       queryClient.invalidateQueries({ queryKey: ["/api/student/classes"] });

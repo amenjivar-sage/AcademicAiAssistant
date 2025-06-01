@@ -28,8 +28,18 @@ export default function StudentDashboard() {
   // Logout function
   const handleLogout = async () => {
     try {
-      await apiRequest("/api/auth/logout", { method: "POST" });
-      window.location.href = "/";
+      const response = await fetch("/api/auth/logout", { 
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      
+      if (response.ok) {
+        window.location.href = "/";
+      } else {
+        throw new Error("Logout failed");
+      }
     } catch (error) {
       console.error("Logout error:", error);
       // Even if logout fails, redirect to home page
