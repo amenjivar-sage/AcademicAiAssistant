@@ -745,6 +745,7 @@ Despite these challenges, the momentum toward renewable energy appears unstoppab
       ...classroomData,
       id,
       joinCode,
+      isActive: true,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
