@@ -663,6 +663,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // AI spell check endpoint
+  app.post("/api/ai/spell-check", async (req, res) => {
+    try {
+      const { text } = req.body;
+      
+      if (!text || typeof text !== 'string') {
+        return res.status(400).json({ error: "Text is required" });
+      }
+
+      // Import the OpenAI spell check function
+      const { generateAiResponse } = await import('./openai');
+      
+      // Create a spell check prompt
+      const prompt = `You are a spell checker. Check the following text for spelling errors only. Return ONLY a JSON array in this exact format: [{"word": "misspelled_word", "suggestions": ["correction1", "correction2"]}]. If no errors are found, return []. Do not include any other text, explanations, or formatting.
+
+Text: ${text}`;
+
+      const response = await generateAiResponse(prompt);
+      
+      // Try to parse the AI response as JSON
+      let errors = [];
+      try {
+        errors = JSON.parse(response);
+        if (!Array.isArray(errors)) {
+          errors = [];
+        }
+      } catch (parseError) {
+        console.error("Failed to parse AI spell check response:", parseError);
+        errors = [];
+      }
+      
+      res.json(errors);
+      
+    } catch (error) {
+      console.error("Spell check error:", error);
+      res.json([]); // Return empty array instead of error to prevent UI issues
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
