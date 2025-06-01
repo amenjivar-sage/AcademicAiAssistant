@@ -1310,6 +1310,21 @@ Return [] if no errors.`;
     }
   });
 
+  app.get("/api/admin/users", async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      // Remove passwords for security
+      const safeUsers = users.map(user => {
+        const { password, ...safeUser } = user;
+        return safeUser;
+      });
+      res.json(safeUsers);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
   app.get("/api/admin/user-stats", async (req, res) => {
     try {
       const users = await storage.getAllUsers();
