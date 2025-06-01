@@ -397,6 +397,35 @@ export class DatabaseStorage implements IStorage {
     return classroomData;
   }
 
+  async getClassroomStudents(classroomId: number): Promise<User[]> {
+    const studentData = await db
+      .select({
+        id: users.id,
+        username: users.username,
+        email: users.email,
+        password: users.password,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        role: users.role,
+        department: users.department,
+        grade: users.grade,
+        isActive: users.isActive,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+      })
+      .from(users)
+      .leftJoin(classroomEnrollments, eq(users.id, classroomEnrollments.studentId))
+      .where(
+        and(
+          eq(classroomEnrollments.classroomId, classroomId),
+          eq(users.role, 'student'),
+          eq(users.isActive, true)
+        )
+      );
+
+    return studentData;
+  }
+
   async enrollStudentInClassroom(studentId: number, classroomId: number): Promise<void> {
     await db.insert(classroomEnrollments).values({
       studentId,
