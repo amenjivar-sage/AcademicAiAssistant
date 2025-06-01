@@ -266,6 +266,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "User not found" });
       }
       
+      console.log('Auth user endpoint returning:', `${user.firstName} ${user.lastName} (ID: ${user.id})`);
       const { password: _, ...userWithoutPassword } = user;
       res.json(userWithoutPassword);
     } catch (error) {
