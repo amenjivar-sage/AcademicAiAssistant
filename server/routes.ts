@@ -213,7 +213,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update writing session content with proper auto-save
   app.patch("/api/writing-sessions/:id", async (req, res) => {
     try {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
       const sessionId = parseInt(req.params.id);
+      
+      // First verify the session exists and belongs to the current user
+      const existingSession = await storage.getWritingSession(sessionId);
+      if (!existingSession) {
+        return res.status(404).json({ message: "Session not found" });
+      }
+      
+      if (existingSession.userId !== currentUser.id) {
+        return res.status(403).json({ message: "Access denied: You can only update your own sessions" });
+      }
+      
       const updateData = req.body;
       
       console.log('Auto-saving session:', sessionId, 'with data:', Object.keys(updateData));
@@ -266,7 +282,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create new writing session
   app.post("/api/writing-sessions", async (req, res) => {
     try {
-      const sessionData = req.body;
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const sessionData = {
+        ...req.body,
+        userId: currentUser.id // Always use the authenticated user's ID
+      };
+      
+      console.log('Creating session with data:', sessionData);
       
       // Calculate word count if content is provided
       if (sessionData.content) {
@@ -275,6 +301,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const newSession = await storage.createWritingSession(sessionData);
+      console.log('Session created in database:', newSession.id);
+      
+      // Verify the session was created
+      const verificationSession = await storage.getWritingSession(newSession.id);
+      if (!verificationSession) {
+        console.error('Session creation verification failed for session:', newSession.id);
+        return res.status(500).json({ message: "Failed to verify session creation" });
+      }
+      
+      console.log('Session creation verified successfully:', verificationSession.id);
       console.log('Created new session:', newSession.id, 'for assignment:', sessionData.assignmentId);
       
       res.json(newSession);
