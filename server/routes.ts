@@ -46,6 +46,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Demo login endpoint
+  app.post("/api/auth/demo-login", async (req, res) => {
+    try {
+      const { role, demoPassword } = req.body;
+      
+      // Check demo password
+      if (demoPassword !== "demo2024") {
+        return res.status(401).json({ message: "Invalid demo password" });
+      }
+
+      // Get demo users by role
+      const allUsers = await storage.getAllUsers();
+      const demoUser = allUsers.find(user => user.role === role);
+      
+      if (!demoUser) {
+        return res.status(404).json({ message: "Demo user not found for this role" });
+      }
+
+      // Remove password from response
+      const { password: _, ...userWithoutPassword } = demoUser;
+      
+      console.log(`Demo login successful for ${role}: ${demoUser.firstName} ${demoUser.lastName}`);
+      
+      res.json({
+        user: userWithoutPassword,
+        message: "Demo login successful"
+      });
+    } catch (error) {
+      console.error("Demo login error:", error);
+      res.status(500).json({ message: "Demo login failed" });
+    }
+  });
+
   // Update writing session content with proper auto-save
   app.patch("/api/writing-sessions/:id", async (req, res) => {
     try {
