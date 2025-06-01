@@ -890,6 +890,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Inline comments routes
+  app.post("/api/sessions/:sessionId/comments", async (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.sessionId);
+      const currentUser = await getCurrentUser();
+      
+      const commentData = {
+        ...req.body,
+        sessionId,
+        teacherId: currentUser?.id || req.body.teacherId || 1
+      };
+      
+      console.log("Creating inline comment:", commentData);
+      const comment = await storage.createInlineComment(commentData);
+      console.log("Created comment:", comment);
+      res.json(comment);
+    } catch (error) {
+      console.error("Error creating inline comment:", error);
+      res.status(500).json({ error: "Failed to create comment" });
+    }
+  });
+
+  app.get("/api/sessions/:sessionId/comments", async (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.sessionId);
+      console.log("Fetching comments for session:", sessionId);
+      const comments = await storage.getSessionInlineComments(sessionId);
+      console.log("Found comments:", comments);
+      res.json(comments);
+    } catch (error) {
+      console.error("Error fetching inline comments:", error);
+      res.status(500).json({ error: "Failed to fetch comments" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
