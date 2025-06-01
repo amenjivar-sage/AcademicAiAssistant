@@ -17,9 +17,12 @@ export default function Register() {
     lastName: "",
     role: "",
     grade: "",
-    department: ""
+    department: "",
+    password: "",
+    confirmPassword: ""
   });
   const [step, setStep] = useState(1); // 1: Email, 2: Details, 3: Confirmation
+  const [error, setError] = useState("");
 
   const checkEmailMutation = useMutation({
     mutationFn: async (email: string) => {
@@ -52,6 +55,18 @@ export default function Register() {
   const handleRegistrationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validate passwords match
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    // Validate password strength
+    if (!formData.password || formData.password.length < 6) {
+      setError("Password must be at least 6 characters long");
+      return;
+    }
+    
     try {
       await registerMutation.mutateAsync(formData);
       setStep(3);
@@ -62,6 +77,8 @@ export default function Register() {
 
   const updateFormData = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear error when user makes changes
+    if (error) setError("");
   };
 
   if (step === 3) {
@@ -227,6 +244,39 @@ export default function Register() {
                     </SelectContent>
                   </Select>
                 </div>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={formData.password || ""}
+                  onChange={(e) => updateFormData("password", e.target.value)}
+                  placeholder="Create a secure password"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={formData.confirmPassword || ""}
+                  onChange={(e) => updateFormData("confirmPassword", e.target.value)}
+                  placeholder="Confirm your password"
+                  required
+                />
+              </div>
+
+              {error && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    {error}
+                  </AlertDescription>
+                </Alert>
               )}
 
               {registerMutation.error && (
