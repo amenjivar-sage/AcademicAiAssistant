@@ -84,12 +84,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User registration with FERPA/COPPA compliance
   app.post("/api/auth/register", async (req, res) => {
     try {
-      const { email, firstName, lastName, role, grade, department } = req.body;
+      const { email, firstName, lastName, role, grade, department, password } = req.body;
       
       // FERPA/COPPA Compliance: Validate required fields
-      if (!email || !firstName || !lastName || !role) {
+      if (!email || !firstName || !lastName || !role || !password) {
         return res.status(400).json({ 
           message: "Missing required fields for FERPA compliant registration" 
+        });
+      }
+
+      // Validate password strength
+      if (password.length < 6) {
+        return res.status(400).json({
+          message: "Password must be at least 6 characters long"
         });
       }
 
@@ -108,15 +115,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email, firstName, lastName, ""
       );
 
-      // FERPA Compliance: Generate secure temporary credentials
-      const tempPassword = Math.random().toString(36).substring(2, 12) + Math.random().toString(36).substring(2, 6).toUpperCase();
-
       const userData = {
         email,
         firstName,
         lastName,
         username,
-        password: tempPassword, // In production: hash with bcrypt
+        password, // User's chosen password - in production: hash with bcrypt
         role,
         grade: role === "student" ? grade || null : null,
         department: role === "teacher" ? department || null : null,
