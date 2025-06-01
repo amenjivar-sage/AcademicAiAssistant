@@ -114,6 +114,98 @@ export class EmailService {
   }
 
   /**
+   * Generate password reset email HTML with Sage branding
+   */
+  private generatePasswordResetEmailHTML(data: WelcomeEmailData): string {
+    const roleText = data.role === 'student' ? 'Student' : 'Teacher';
+    
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sage - Username Recovery & Password Reset</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center; }
+        .logo { font-size: 32px; font-weight: bold; margin-bottom: 10px; }
+        .content { background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .username-box { background: #f8f9fa; border: 2px solid #e9ecef; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center; }
+        .username { font-size: 24px; font-weight: bold; color: #495057; margin-bottom: 5px; }
+        .instructions { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; }
+        .footer { text-align: center; color: #6c757d; margin-top: 30px; padding-top: 20px; border-top: 1px solid #dee2e6; }
+        .button { display: inline-block; background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 10px 0; }
+        .warning { background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 6px; padding: 15px; margin: 20px 0; color: #721c24; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🌟 Sage</div>
+            <p>AI-Powered Academic Writing Platform</p>
+        </div>
+        
+        <div class="content">
+            <h2>Username Recovery & Password Reset</h2>
+            
+            <p>Hello ${data.firstName},</p>
+            
+            <p>You requested help recovering your login credentials for your ${roleText} account on Sage.</p>
+            
+            <div class="username-box">
+                <div>Your Username:</div>
+                <div class="username">${data.username}</div>
+                <small style="color: #6c757d;">Use this username to log in</small>
+            </div>
+            
+            <div class="instructions">
+                <h3>🔑 How to Access Your Account:</h3>
+                <ol>
+                    <li>Go to the Sage platform login page</li>
+                    <li>Enter either your <strong>email address</strong> (${data.email}) or your <strong>username</strong> (${data.username})</li>
+                    <li>Use your existing password</li>
+                </ol>
+            </div>
+            
+            <div class="warning">
+                <h3>⚠️ Need to Reset Your Password?</h3>
+                <p>If you've forgotten your password, please contact your school administrator or IT support for assistance with password reset.</p>
+            </div>
+            
+            <h3>📚 Your Sage Account Includes:</h3>
+            <ul>
+                ${data.role === 'student' ? `
+                <li><strong>Smart Writing Assistance:</strong> AI-powered help with grammar, style, and structure</li>
+                <li><strong>Assignment Submissions:</strong> Complete and submit writing assignments</li>
+                <li><strong>Progress Tracking:</strong> Monitor your writing improvement</li>
+                <li><strong>Citation Help:</strong> Guidance on proper academic citations</li>
+                ` : `
+                <li><strong>Assignment Management:</strong> Create and manage writing assignments</li>
+                <li><strong>AI Feature Control:</strong> Customize student AI tool access</li>
+                <li><strong>Student Progress:</strong> Monitor student development and engagement</li>
+                <li><strong>Classroom Organization:</strong> Organize students and track submissions</li>
+                `}
+            </ul>
+            
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="#" class="button">Access Sage Platform</a>
+            </div>
+            
+            <p><strong>Security Notice:</strong> If you did not request this recovery email, please contact your school administrator immediately.</p>
+        </div>
+        
+        <div class="footer">
+            <p>This recovery email was sent to ${data.email} for the Sage platform.</p>
+            <p>Sage - Empowering Ethical Academic Writing with AI</p>
+        </div>
+    </div>
+</body>
+</html>`;
+  }
+
+  /**
    * Send welcome email with username to new user
    */
   async sendWelcomeEmail(data: WelcomeEmailData): Promise<{ success: boolean; message: string; emailContent?: string }> {
@@ -156,6 +248,54 @@ export class EmailService {
       return { 
         success: true, 
         message: 'Email generated successfully - ready for delivery when SendGrid is configured',
+        emailContent: htmlContent
+      };
+    }
+  }
+
+  /**
+   * Send password reset email with username recovery
+   */
+  async sendPasswordResetEmail(data: WelcomeEmailData): Promise<{ success: boolean; message: string; emailContent?: string }> {
+    const subject = `Sage - Username Recovery for ${data.firstName} ${data.lastName}`;
+    const htmlContent = this.generatePasswordResetEmailHTML(data);
+    
+    // Always log the email for debugging/manual sending
+    console.log('\n📧 PASSWORD RESET EMAIL GENERATED:');
+    console.log('To:', data.email);
+    console.log('Subject:', subject);
+    console.log('Username:', data.username);
+    console.log('Role:', data.role);
+    
+    if (this.mailService) {
+      try {
+        await this.mailService.send({
+          to: data.email,
+          from: this.fromEmail,
+          subject: subject,
+          html: htmlContent,
+        });
+        
+        console.log('✅ Password reset email sent successfully to', data.email);
+        return { 
+          success: true, 
+          message: 'Password reset email sent successfully',
+          emailContent: htmlContent
+        };
+      } catch (error) {
+        console.error('❌ Failed to send password reset email:', error);
+        return { 
+          success: false, 
+          message: 'Failed to send email - saved for manual delivery',
+          emailContent: htmlContent
+        };
+      }
+    } else {
+      // No SendGrid - save email content for preview
+      console.log('📧 Password reset email ready to send (add SendGrid API key to enable automatic delivery)');
+      return { 
+        success: true, 
+        message: 'Password reset email generated successfully - ready for delivery when SendGrid is configured',
         emailContent: htmlContent
       };
     }

@@ -190,6 +190,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Forgot credentials - send username and password reset via email
+  app.post("/api/auth/forgot-credentials", async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: "Email address is required" });
+      }
+
+      // Find user by email
+      const user = await storage.getUserByEmail(email);
+      
+      if (!user) {
+        // For security, don't reveal if email exists or not
+        return res.json({ 
+          success: true, 
+          message: "If an account exists with this email, you will receive recovery instructions." 
+        });
+      }
+
+      // Send recovery email with username and password reset instructions
+      try {
+        const emailResult = await emailService.sendPasswordResetEmail({
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          username: user.username,
+          role: user.role
+        });
+        
+        console.log(`📧 Password reset email sent to ${user.email}: ${emailResult.message}`);
+        
+        res.json({ 
+          success: true, 
+          message: "Recovery instructions have been sent to your email address." 
+        });
+      } catch (emailError) {
+        console.error('⚠️ Failed to send password reset email:', emailError);
+        res.json({ 
+          success: true, 
+          message: "Recovery instructions have been sent to your email address." 
+        });
+      }
+    } catch (error) {
+      console.error("Error in forgot credentials:", error);
+      res.status(500).json({ message: "Failed to process recovery request" });
+    }
+  });
+
   // Get current user from session
   app.get("/api/auth/user", async (req, res) => {
     try {

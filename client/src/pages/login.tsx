@@ -222,7 +222,12 @@ export default function Login() {
               </AlertDescription>
             </Alert>
 
-            <div className="text-center">
+            <div className="text-center space-y-2">
+              <p className="text-sm text-gray-600">
+                <Link href="/forgot-credentials" className="text-blue-600 hover:underline font-medium">
+                  Forgot Username or Password?
+                </Link>
+              </p>
               <p className="text-sm text-gray-600">
                 Need an account?{" "}
                 <Link href="/register" className="text-blue-600 hover:underline font-medium">
