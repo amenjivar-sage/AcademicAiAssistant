@@ -25,10 +25,17 @@ export default function TeacherDashboard() {
 
   // Get teacher's assignments
   const { data: assignments, isLoading: assignmentsLoading } = useQuery<Assignment[]>({
-    queryKey: ["/api/teacher/assignments"],
+    queryKey: ["/api/teacher/assignments", Date.now()], // Force fresh query each time
     staleTime: 0, // Always fetch fresh data
     cacheTime: 0, // Don't cache results
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
+
+  // Debug: Log assignments data
+  console.log('Assignments data in frontend:', assignments);
+  console.log('Assignments loading:', assignmentsLoading);
+  console.log('Number of assignments:', assignments?.length || 0);
 
   // Get teacher's classrooms
   const { data: classrooms, isLoading: classroomsLoading } = useQuery<Classroom[]>({
