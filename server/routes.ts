@@ -452,11 +452,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get all assignments for classes the student is enrolled in
       let allAssignments: any[] = [];
+      const seenAssignmentIds = new Set();
+      
       for (const classroom of studentClasses) {
-        // For now, we'll get assignments from all teachers
-        // In a real app, this would be filtered by classroom
         const assignments = await storage.getTeacherAssignments(classroom.teacherId || 1);
-        allAssignments = allAssignments.concat(assignments.filter(a => a.classroomId === classroom.id));
+        // Include both classroom-specific assignments AND general assignments from this teacher
+        const relevantAssignments = assignments.filter(a => 
+          a.classroomId === classroom.id || a.classroomId === null
+        );
+        
+        // Avoid duplicates when students are in multiple classes from same teacher
+        for (const assignment of relevantAssignments) {
+          if (!seenAssignmentIds.has(assignment.id)) {
+            allAssignments.push(assignment);
+            seenAssignmentIds.add(assignment.id);
+          }
+        }
       }
       
       // Get user's writing sessions to determine status
