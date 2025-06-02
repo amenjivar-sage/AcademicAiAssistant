@@ -26,6 +26,8 @@ export default function TeacherDashboard() {
   // Get teacher's assignments
   const { data: assignments, isLoading: assignmentsLoading } = useQuery<Assignment[]>({
     queryKey: ["/api/teacher/assignments"],
+    staleTime: 0, // Always fetch fresh data
+    cacheTime: 0, // Don't cache results
   });
 
   // Get teacher's classrooms
