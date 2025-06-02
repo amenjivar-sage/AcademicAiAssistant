@@ -571,7 +571,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const assignmentData = {
         ...req.body,
-        teacherId: currentUser.id // Ensure assignment is assigned to current teacher
+        teacherId: currentUser.id, // Ensure assignment is assigned to current teacher
+        dueDate: req.body.dueDate ? new Date(req.body.dueDate) : null // Convert date string to Date object
       };
       
       console.log('Creating assignment with data:', assignmentData);
