@@ -30,9 +30,11 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
     queryKey: ["/api/teacher/assignments"],
   });
 
-  // Filter assignments for the selected classroom
+  // Filter assignments for the selected classroom (include both classroom-specific and general assignments)
   const classroomAssignments = selectedClassroom 
-    ? assignments?.filter(assignment => assignment.classroomId === selectedClassroom.id) || []
+    ? assignments?.filter(assignment => 
+        assignment.classroomId === selectedClassroom.id || assignment.classroomId === null
+      ) || []
     : [];
 
   // Debug logging
