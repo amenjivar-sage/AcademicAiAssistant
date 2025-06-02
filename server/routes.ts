@@ -455,11 +455,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const seenAssignmentIds = new Set();
       
       for (const classroom of studentClasses) {
+        console.log(`Getting assignments for classroom ${classroom.id} (teacher ${classroom.teacherId})`);
         const assignments = await storage.getTeacherAssignments(classroom.teacherId || 1);
+        console.log(`Teacher ${classroom.teacherId} has ${assignments.length} total assignments`);
+        
         // Include both classroom-specific assignments AND general assignments from this teacher
         const relevantAssignments = assignments.filter(a => 
           a.classroomId === classroom.id || a.classroomId === null
         );
+        console.log(`Filtered to ${relevantAssignments.length} relevant assignments for student`);
         
         // Avoid duplicates when students are in multiple classes from same teacher
         for (const assignment of relevantAssignments) {
@@ -469,6 +473,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
       }
+      
+      console.log(`Final student assignment count: ${allAssignments.length}`);
       
       // Get user's writing sessions to determine status
       const sessions = await storage.getUserWritingSessions(currentUser.id);
