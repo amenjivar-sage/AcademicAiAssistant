@@ -219,12 +219,23 @@ export default function TeacherDashboard() {
           <TabsContent value="assignments" className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold text-gray-900">All Assignments</h2>
-              <AssignmentForm teacherId={currentUser?.id || 1}>
-                <Button className="bg-edu-blue hover:bg-blue-700">
-                  <PlusCircle className="h-4 w-4 mr-2" />
-                  Create Assignment
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    console.log('Manual refresh clicked');
+                    queryClient.invalidateQueries({ queryKey: ["/api/teacher/assignments"] });
+                  }}
+                >
+                  Refresh
                 </Button>
-              </AssignmentForm>
+                <AssignmentForm teacherId={currentUser?.id || 1}>
+                  <Button className="bg-edu-blue hover:bg-blue-700">
+                    <PlusCircle className="h-4 w-4 mr-2" />
+                    Create Assignment
+                  </Button>
+                </AssignmentForm>
+              </div>
             </div>
             
             {assignments && assignments.length > 0 ? (
