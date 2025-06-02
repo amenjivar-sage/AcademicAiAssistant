@@ -238,9 +238,9 @@ export default function TeacherDashboard() {
               </div>
             </div>
             
-            {assignments && assignments.length > 0 ? (
+            {assignments && Array.isArray(assignments) && assignments.length > 0 ? (
               <div className="grid gap-4">
-                {assignments.map((assignment) => (
+                {assignments.map((assignment: any) => (
                   <Card key={assignment.id} className="border-l-4 border-l-blue-500">
                     <CardHeader>
                       <div className="flex items-center justify-between">
