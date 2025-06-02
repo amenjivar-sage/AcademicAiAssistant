@@ -250,8 +250,9 @@ export default function TeacherDashboard() {
               <div className="grid gap-4" style={{ minHeight: 'auto', overflow: 'visible' }}>
                 {assignments.map((assignment: any, index: number) => {
                   console.log(`Rendering assignment ${index + 1}:`, assignment.id, assignment.title);
+                  console.log(`Card being created for assignment ${assignment.id}`);
                   return (
-                    <Card key={assignment.id} className="border-l-4 border-l-blue-500">
+                    <Card key={assignment.id} className="border-l-4 border-l-blue-500" style={{ border: '2px solid red', marginBottom: '10px' }}>
                       <CardHeader>
                         <div className="flex items-center justify-between">
                           <div>
