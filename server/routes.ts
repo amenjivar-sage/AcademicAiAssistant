@@ -127,17 +127,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Simple session store using database
+  // Simple session store - in production this would use proper session management
+  let currentSessionUserId: number | null = null;
+
   const getCurrentUser = async (): Promise<any> => {
     try {
-      // For demo purposes, we'll store the current user ID in a simple way
-      // In a real app, this would use proper session management
-      const allUsers = await storage.getAllUsers();
-      // Find the most recently updated user as a simple session approach
-      const sortedUsers = allUsers.sort((a, b) => 
-        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-      );
-      return sortedUsers[0] || null;
+      if (!currentSessionUserId) {
+        // Default to teacher for demo - user can switch via login
+        currentSessionUserId = 12; // Jason Menjivar (teacher)
+      }
+      
+      const user = await storage.getUser(currentSessionUserId);
+      return user;
     } catch (error) {
       console.error("Error getting current user:", error);
       return null;
