@@ -208,87 +208,12 @@ export default function TeacherDashboard() {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="assignments">Assignments</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="classes">Classes</TabsTrigger>
             <TabsTrigger value="submissions">Students</TabsTrigger>
             <TabsTrigger value="goals">Goals</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
-
-          <TabsContent value="assignments" className="space-y-6" style={{ maxHeight: 'none', overflow: 'visible' }}>
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-900">All Assignments</h2>
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    console.log('Manual refresh clicked');
-                    queryClient.invalidateQueries({ queryKey: ["/api/teacher/assignments"] });
-                  }}
-                >
-                  Refresh
-                </Button>
-                <AssignmentForm teacherId={currentUser?.id || 1}>
-                  <Button className="bg-edu-blue hover:bg-blue-700">
-                    <PlusCircle className="h-4 w-4 mr-2" />
-                    Create Assignment
-                  </Button>
-                </AssignmentForm>
-              </div>
-            </div>
-            
-            {(() => {
-              console.log('About to render assignments. Total count:', assignments?.length || 0);
-              if (assignments) {
-                console.log('Assignment titles:', assignments.map((a: any) => `ID: ${a.id}, Title: ${a.title}`));
-              }
-              return null;
-            })()}
-            
-            <div style={{ backgroundColor: 'white', padding: '20px', fontSize: '16px' }}>
-              <h3 style={{ fontSize: '24px', marginBottom: '20px' }}>ALL ASSIGNMENTS LIST:</h3>
-              {assignments && Array.isArray(assignments) ? (
-                <div>
-                  <p style={{ fontSize: '18px', color: 'red', fontWeight: 'bold' }}>
-                    Total Count: {assignments.length}
-                  </p>
-                  <ol style={{ fontSize: '18px', lineHeight: '2' }}>
-                    {assignments.map((assignment: any, index: number) => {
-                      console.log(`Listing assignment ${index + 1}:`, assignment.id, assignment.title);
-                      return (
-                        <li key={assignment.id} style={{ marginBottom: '10px', color: 'black' }}>
-                          <strong>Assignment #{assignment.id}</strong>: "{assignment.title}" 
-                          (Status: {assignment.status}, Classroom: {assignment.classroomId || 'None'})
-                        </li>
-                      );
-                    })}
-                  </ol>
-                </div>
-              ) : (
-                <p>No assignments found</p>
-              )}
-            </div>
-            
-            {assignments && Array.isArray(assignments) && assignments.length > 0 ? (
-              <div style={{ display: 'none' }}></div>
-            ) : (
-              <Card>
-                <CardContent className="p-12 text-center">
-                  <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No assignments yet</h3>
-                  <p className="text-gray-500 mb-6">Create your first assignment to get started</p>
-                  <AssignmentForm teacherId={currentUser?.id || 1}>
-                    <Button>
-                      <PlusCircle className="h-4 w-4 mr-2" />
-                      Create Your First Assignment
-                    </Button>
-                  </AssignmentForm>
-                </CardContent>
-              </Card>
-            )}
-            
-          </TabsContent>
 
           <TabsContent value="classes" className="space-y-8">
             <ClassroomManagement teacherId={currentUser?.id || 1} />
