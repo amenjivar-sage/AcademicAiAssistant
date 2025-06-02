@@ -394,7 +394,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Teacher authentication required" });
       }
       
+      console.log(`Fetching assignments for teacher ID: ${currentUser.id}`);
       const assignments = await storage.getTeacherAssignments(currentUser.id);
+      console.log(`Found ${assignments.length} assignments:`, assignments.map(a => ({ id: a.id, title: a.title, teacherId: a.teacherId })));
       res.json(assignments);
     } catch (error) {
       console.error("Error fetching teacher assignments:", error);
