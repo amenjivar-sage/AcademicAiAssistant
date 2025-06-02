@@ -112,6 +112,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
+      // Update session to current user
+      currentSessionUserId = user.id;
+      
       // Update user's timestamp to mark as current session
       await storage.updateUserStatus(user.id, true);
       
@@ -167,8 +170,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Logout endpoint
   app.post("/api/auth/logout", async (req, res) => {
     try {
-      // Clear any session data (for demo purposes, we'll just return success)
-      // In a real app, this would clear server-side sessions
+      // Clear session data
+      currentSessionUserId = null;
       res.json({ message: "Logged out successfully" });
     } catch (error) {
       console.error("Error during logout:", error);
