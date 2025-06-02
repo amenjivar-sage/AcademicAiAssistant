@@ -202,7 +202,9 @@ export default function StudentDashboard() {
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {classes?.map((classroom) => {
-                      const classAssignments = assignments?.filter(a => a.classroomId === classroom.id) || [];
+                      const classAssignments = assignments?.filter(a => 
+                        a.classroomId === classroom.id || (a.classroomId === null && a.teacherId === classroom.teacherId)
+                      ) || [];
                       const pendingCount = classAssignments.filter(a => {
                         const session = sessions?.find(s => s.assignmentId === a.id);
                         return !session || session.status !== 'submitted';
@@ -249,14 +251,18 @@ export default function StudentDashboard() {
                     </div>
                   </div>
                   <Badge variant="outline">
-                    {assignments?.filter(a => a.classroomId === selectedClassroom.id).length || 0} assignments
+                    {assignments?.filter(a => 
+                      a.classroomId === selectedClassroom.id || (a.classroomId === null && a.teacherId === selectedClassroom.teacherId)
+                    ).length || 0} assignments
                   </Badge>
                 </div>
                 
                 {/* Show assignments for the selected classroom */}
                 <div className="space-y-4">
                   {(() => {
-                    const classAssignments = assignments?.filter(a => a.classroomId === selectedClassroom.id) || [];
+                    const classAssignments = assignments?.filter(a => 
+                      a.classroomId === selectedClassroom.id || (a.classroomId === null && a.teacherId === selectedClassroom.teacherId)
+                    ) || [];
                     
                     if (classAssignments.length === 0) {
                       return (
