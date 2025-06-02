@@ -246,33 +246,32 @@ export default function TeacherDashboard() {
               return null;
             })()}
             
+            <div style={{ backgroundColor: 'white', padding: '20px', fontSize: '16px' }}>
+              <h3 style={{ fontSize: '24px', marginBottom: '20px' }}>ALL ASSIGNMENTS LIST:</h3>
+              {assignments && Array.isArray(assignments) ? (
+                <div>
+                  <p style={{ fontSize: '18px', color: 'red', fontWeight: 'bold' }}>
+                    Total Count: {assignments.length}
+                  </p>
+                  <ol style={{ fontSize: '18px', lineHeight: '2' }}>
+                    {assignments.map((assignment: any, index: number) => {
+                      console.log(`Listing assignment ${index + 1}:`, assignment.id, assignment.title);
+                      return (
+                        <li key={assignment.id} style={{ marginBottom: '10px', color: 'black' }}>
+                          <strong>Assignment #{assignment.id}</strong>: "{assignment.title}" 
+                          (Status: {assignment.status}, Classroom: {assignment.classroomId || 'None'})
+                        </li>
+                      );
+                    })}
+                  </ol>
+                </div>
+              ) : (
+                <p>No assignments found</p>
+              )}
+            </div>
+            
             {assignments && Array.isArray(assignments) && assignments.length > 0 ? (
-              <div className="flex flex-col gap-4" style={{ minHeight: 'auto', overflow: 'visible', width: '100%' }}>
-                {assignments.map((assignment: any, index: number) => {
-                  console.log(`Rendering assignment ${index + 1}:`, assignment.id, assignment.title);
-                  console.log(`Card being created for assignment ${assignment.id}`);
-                  return (
-                    <div key={assignment.id} style={{ 
-                      border: '5px solid red', 
-                      padding: '25px', 
-                      margin: '20px 0',
-                      backgroundColor: 'yellow',
-                      minHeight: '120px',
-                      fontSize: '20px',
-                      fontWeight: 'bold',
-                      zIndex: 999,
-                      position: 'relative'
-                    }}>
-                      <div style={{ color: 'black' }}>
-                        ASSIGNMENT #{assignment.id}: "{assignment.title}" 
-                      </div>
-                      <div style={{ color: 'blue', fontSize: '16px' }}>
-                        Status: {assignment.status} | Classroom: {assignment.classroomId || 'None'}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+              <div style={{ display: 'none' }}></div>
             ) : (
               <Card>
                 <CardContent className="p-12 text-center">
@@ -288,6 +287,7 @@ export default function TeacherDashboard() {
                 </CardContent>
               </Card>
             )}
+            
           </TabsContent>
 
           <TabsContent value="classes" className="space-y-8">
