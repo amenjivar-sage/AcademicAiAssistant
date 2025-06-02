@@ -798,7 +798,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Import OpenAI functions
-      const { checkRestrictedPrompt, generateAiResponse } = await import('./openai');
+      const { checkRestrictedPrompt, generateAiResponseWithHistory } = await import('./openai');
 
       // Check if prompt is restricted
       const isRestricted = checkRestrictedPrompt(prompt);
@@ -808,8 +808,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (isRestricted) {
         response = "❌ Sorry! This type of AI help isn't allowed. Try asking for brainstorming, outlining, or feedback instead. I'm here to help you learn and improve your own writing skills, not to do the work for you.";
       } else {
-        // Generate helpful AI response using OpenAI with document context
-        response = await generateAiResponse(prompt, undefined, documentContent);
+        // Get conversation history for context if we have a session
+        let conversationHistory: any[] = [];
+        if (sessionId && sessionId > 0) {
+          conversationHistory = await storage.getSessionInteractions(sessionId);
+        }
+        
+        // Generate helpful AI response using OpenAI with conversation history and document context
+        response = await generateAiResponseWithHistory(prompt, conversationHistory, documentContent);
       }
 
       // Store the interaction if we have a valid session

@@ -33,6 +33,73 @@ export function checkRestrictedPrompt(prompt: string): boolean {
   );
 }
 
+export async function generateAiResponseWithHistory(prompt: string, conversationHistory: any[] = [], documentContent?: string): Promise<string> {
+  try {
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+    // Build conversation context from history
+    const messages: any[] = [
+      {
+        role: "system",
+        content: `You are ZoË, a friendly and ethical AI writing assistant for students. Your goal is to help students develop their own writing skills through guidance, brainstorming, and educational support.
+
+CORE PRINCIPLES:
+- Help students learn and improve their writing skills
+- Provide educational guidance rather than doing work for them
+- Maintain conversation context and stay focused on topics being discussed
+- Give concrete examples and practical frameworks
+- Encourage original thinking and analysis
+
+CONVERSATION CONTEXT RULES:
+- Pay close attention to the conversation history to maintain topic focus
+- Build upon previous discussion points naturally
+- If the student changes topics, acknowledge the shift but stay engaged
+- Reference earlier parts of the conversation when relevant
+
+CURRENT DOCUMENT CONTEXT: ${documentContent ? `The student is working on: "${documentContent.substring(0, 200)}..."` : "No document content provided"}
+
+Provide helpful, educational responses that guide students toward better writing while maintaining the flow of conversation.`
+      }
+    ];
+
+    // Add conversation history to maintain context
+    conversationHistory.forEach((interaction: any) => {
+      messages.push({
+        role: "user",
+        content: interaction.prompt
+      });
+      messages.push({
+        role: "assistant",
+        content: interaction.response
+      });
+    });
+
+    // Add the current prompt
+    messages.push({
+      role: "user",
+      content: prompt
+    });
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+      messages: messages,
+      max_tokens: 500,
+      temperature: 0.7,
+    });
+
+    const aiResponse = response.choices[0].message.content;
+    
+    if (!aiResponse) {
+      throw new Error("No response generated from OpenAI");
+    }
+
+    return aiResponse;
+  } catch (error) {
+    console.error("OpenAI API error:", error);
+    throw new Error("Failed to generate AI response");
+  }
+}
+
 export async function generateAiResponse(prompt: string, studentProfile?: any, documentContent?: string): Promise<string> {
   try {
     let personalizedContext = "";
