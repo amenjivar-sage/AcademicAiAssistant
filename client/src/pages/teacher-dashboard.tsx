@@ -148,7 +148,7 @@ export default function TeacherDashboard() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" style={{ minHeight: 'auto', overflow: 'visible' }}>
         {/* Overview Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card>
@@ -253,17 +253,22 @@ export default function TeacherDashboard() {
                   console.log(`Card being created for assignment ${assignment.id}`);
                   return (
                     <div key={assignment.id} style={{ 
-                      border: '3px solid red', 
-                      padding: '20px', 
-                      marginBottom: '15px',
-                      backgroundColor: 'white',
-                      minHeight: '80px'
+                      border: '5px solid red', 
+                      padding: '25px', 
+                      margin: '20px 0',
+                      backgroundColor: 'yellow',
+                      minHeight: '120px',
+                      fontSize: '20px',
+                      fontWeight: 'bold',
+                      zIndex: 999,
+                      position: 'relative'
                     }}>
-                      <h3 style={{ fontSize: '18px', fontWeight: 'bold' }}>
-                        Assignment #{assignment.id}: {assignment.title}
-                      </h3>
-                      <p>Status: {assignment.status}</p>
-                      <p>Classroom: {assignment.classroomId || 'None'}</p>
+                      <div style={{ color: 'black' }}>
+                        ASSIGNMENT #{assignment.id}: "{assignment.title}" 
+                      </div>
+                      <div style={{ color: 'blue', fontSize: '16px' }}>
+                        Status: {assignment.status} | Classroom: {assignment.classroomId || 'None'}
+                      </div>
                     </div>
                   );
                 })}
