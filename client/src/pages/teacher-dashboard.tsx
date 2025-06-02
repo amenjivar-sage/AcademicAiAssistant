@@ -200,12 +200,91 @@ export default function TeacherDashboard() {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="assignments">Assignments</TabsTrigger>
             <TabsTrigger value="classes">Classes</TabsTrigger>
             <TabsTrigger value="submissions">Students</TabsTrigger>
             <TabsTrigger value="goals">Goals</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="assignments" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-gray-900">All Assignments</h2>
+              <AssignmentForm teacherId={currentUser?.id || 1}>
+                <Button className="bg-edu-blue hover:bg-blue-700">
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  Create Assignment
+                </Button>
+              </AssignmentForm>
+            </div>
+            
+            {assignments && assignments.length > 0 ? (
+              <div className="grid gap-4">
+                {assignments.map((assignment) => (
+                  <Card key={assignment.id} className="border-l-4 border-l-blue-500">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle className="text-lg">{assignment.title}</CardTitle>
+                          <p className="text-gray-600 mt-1">{assignment.description || "No description"}</p>
+                          <div className="flex items-center gap-2 mt-2">
+                            <Badge variant="outline">ID: {assignment.id}</Badge>
+                            {assignment.classroomId ? (
+                              <Badge variant="secondary">Classroom: {assignment.classroomId}</Badge>
+                            ) : (
+                              <Badge variant="outline">No Classroom</Badge>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant={assignment.status === 'completed' ? 'default' : 'secondary'}>
+                            {assignment.status || 'active'}
+                          </Badge>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm text-gray-500">
+                          Created {new Date(assignment.createdAt).toLocaleDateString()}
+                          {assignment.dueDate && (
+                            <span className="ml-4">
+                              Due {new Date(assignment.dueDate).toLocaleDateString()}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm">
+                            View Submissions
+                          </Button>
+                          <AssignmentForm teacherId={currentUser?.id || 1} assignment={assignment} mode="edit">
+                            <Button variant="outline" size="sm">
+                              Edit
+                            </Button>
+                          </AssignmentForm>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="p-12 text-center">
+                  <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No assignments yet</h3>
+                  <p className="text-gray-500 mb-6">Create your first assignment to get started</p>
+                  <AssignmentForm teacherId={currentUser?.id || 1}>
+                    <Button>
+                      <PlusCircle className="h-4 w-4 mr-2" />
+                      Create Your First Assignment
+                    </Button>
+                  </AssignmentForm>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
 
           <TabsContent value="classes" className="space-y-8">
             <ClassroomManagement teacherId={currentUser?.id || 1} />
