@@ -247,7 +247,7 @@ export default function TeacherDashboard() {
             })()}
             
             {assignments && Array.isArray(assignments) && assignments.length > 0 ? (
-              <div className="grid gap-4" style={{ minHeight: 'auto', overflow: 'visible' }}>
+              <div className="flex flex-col gap-4" style={{ minHeight: 'auto', overflow: 'visible', width: '100%' }}>
                 {assignments.map((assignment: any, index: number) => {
                   console.log(`Rendering assignment ${index + 1}:`, assignment.id, assignment.title);
                   console.log(`Card being created for assignment ${assignment.id}`);
