@@ -216,7 +216,7 @@ export default function TeacherDashboard() {
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="assignments" className="space-y-6">
+          <TabsContent value="assignments" className="space-y-6" style={{ maxHeight: 'none', overflow: 'visible' }}>
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold text-gray-900">All Assignments</h2>
               <div className="flex gap-2">
@@ -247,7 +247,7 @@ export default function TeacherDashboard() {
             })()}
             
             {assignments && Array.isArray(assignments) && assignments.length > 0 ? (
-              <div className="grid gap-4">
+              <div className="grid gap-4" style={{ minHeight: 'auto', overflow: 'visible' }}>
                 {assignments.map((assignment: any, index: number) => {
                   console.log(`Rendering assignment ${index + 1}:`, assignment.id, assignment.title);
                   return (
