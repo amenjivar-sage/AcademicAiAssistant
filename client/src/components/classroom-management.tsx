@@ -359,7 +359,7 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
                   </CardContent>
                 </Card>
               ) : (
-                <div className="grid gap-4">
+                <div className="flex flex-col gap-4">
                   {classroomAssignments.map((assignment) => (
                     <Card key={assignment.id} className="border-l-4 border-l-blue-500">
                       <CardHeader>
