@@ -238,55 +238,66 @@ export default function TeacherDashboard() {
               </div>
             </div>
             
+            {(() => {
+              console.log('About to render assignments. Total count:', assignments?.length || 0);
+              if (assignments) {
+                console.log('Assignment titles:', assignments.map((a: any) => `ID: ${a.id}, Title: ${a.title}`));
+              }
+              return null;
+            })()}
+            
             {assignments && Array.isArray(assignments) && assignments.length > 0 ? (
               <div className="grid gap-4">
-                {assignments.map((assignment: any) => (
-                  <Card key={assignment.id} className="border-l-4 border-l-blue-500">
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <CardTitle className="text-lg">{assignment.title}</CardTitle>
-                          <p className="text-gray-600 mt-1">{assignment.description || "No description"}</p>
-                          <div className="flex items-center gap-2 mt-2">
-                            <Badge variant="outline">ID: {assignment.id}</Badge>
-                            {assignment.classroomId ? (
-                              <Badge variant="secondary">Classroom: {assignment.classroomId}</Badge>
-                            ) : (
-                              <Badge variant="outline">No Classroom</Badge>
-                            )}
+                {assignments.map((assignment: any, index: number) => {
+                  console.log(`Rendering assignment ${index + 1}:`, assignment.id, assignment.title);
+                  return (
+                    <Card key={assignment.id} className="border-l-4 border-l-blue-500">
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <CardTitle className="text-lg">{assignment.title}</CardTitle>
+                            <p className="text-gray-600 mt-1">{assignment.description || "No description"}</p>
+                            <div className="flex items-center gap-2 mt-2">
+                              <Badge variant="outline">ID: {assignment.id}</Badge>
+                              {assignment.classroomId ? (
+                                <Badge variant="secondary">Classroom: {assignment.classroomId}</Badge>
+                              ) : (
+                                <Badge variant="outline">No Classroom</Badge>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant={assignment.status === 'completed' ? 'default' : 'secondary'}>
+                              {assignment.status || 'active'}
+                            </Badge>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant={assignment.status === 'completed' ? 'default' : 'secondary'}>
-                            {assignment.status || 'active'}
-                          </Badge>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center justify-between">
-                        <div className="text-sm text-gray-500">
-                          Created {new Date(assignment.createdAt).toLocaleDateString()}
-                          {assignment.dueDate && (
-                            <span className="ml-4">
-                              Due {new Date(assignment.dueDate).toLocaleDateString()}
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm">
-                            View Submissions
-                          </Button>
-                          <AssignmentForm teacherId={currentUser?.id || 1} assignment={assignment} mode="edit">
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm text-gray-500">
+                            Created {new Date(assignment.createdAt).toLocaleDateString()}
+                            {assignment.dueDate && (
+                              <span className="ml-4">
+                                Due {new Date(assignment.dueDate).toLocaleDateString()}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex gap-2">
                             <Button variant="outline" size="sm">
-                              Edit
+                              View Submissions
                             </Button>
-                          </AssignmentForm>
+                            <AssignmentForm teacherId={currentUser?.id || 1} assignment={assignment} mode="edit">
+                              <Button variant="outline" size="sm">
+                                Edit
+                              </Button>
+                            </AssignmentForm>
+                          </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             ) : (
               <Card>
