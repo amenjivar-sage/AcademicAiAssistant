@@ -303,16 +303,21 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       const hasCurrentContent = title.trim() || content.trim();
       console.log('Has current content:', hasCurrentContent);
       
-      // Load session data only if we don't currently have content (initial load scenario)
-      if (!hasCurrentContent) {
-        console.log('✓ Loading session content into editor');
-        setTitle(session.title || "");
-        setContent(session.content || "");
-        setPastedContents(session.pastedContent as PastedContent[] || []);
-        setWordCount(session.wordCount || 0);
-      } else {
-        console.log('✗ Skipping session load - editor already has content');
-      }
+      // Always sync with session data to ensure we have the most current content
+      console.log('✓ Syncing with session content');
+      setTitle(session.title || "");
+      setContent(session.content || "");
+      setPastedContents(session.pastedContent as PastedContent[] || []);
+      
+      // Calculate actual word count from content
+      const actualWordCount = (session.content || "").split(/\s+/).filter(word => word.length > 0).length;
+      setWordCount(actualWordCount);
+      
+      console.log('Content sync complete:', {
+        contentLength: (session.content || "").length,
+        actualWordCount,
+        dbWordCount: session.wordCount
+      });
       
       // If we got a new session with a different ID, update our session ID state
       if (sessionId === 0 && session.id && session.id !== 0) {

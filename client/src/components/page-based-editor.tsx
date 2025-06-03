@@ -71,9 +71,19 @@ export default function PageBasedEditor({
     }
   }, [headerFooterSettings]);
   
-  // Calculate word count and total pages
-  const wordCount = content.split(/\s+/).filter(word => word.length > 0).length;
+  // Calculate word count and total pages with debug logging
+  const words = content.split(/\s+/).filter(word => word.length > 0);
+  const wordCount = words.length;
   const totalPages = Math.max(1, Math.ceil(wordCount / wordsPerPage));
+  
+  // Debug logging for page calculation
+  console.log('Page calculation:', {
+    contentLength: content.length,
+    wordCount,
+    wordsPerPage,
+    totalPages,
+    shouldShowMultiplePages: totalPages > 1
+  });
   
   // Auto-focus the textarea
   useEffect(() => {
