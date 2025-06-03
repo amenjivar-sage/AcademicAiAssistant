@@ -19,7 +19,7 @@ export default function Login() {
     password: "",
   });
   const [demoPassword, setDemoPassword] = useState("");
-  const [selectedRole, setSelectedRole] = useState<"teacher" | "student" | "admin" | null>(null);
+  const [selectedRole, setSelectedRole] = useState<"teacher" | "student" | "admin" | "school_admin" | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const { toast } = useToast();
 
@@ -205,7 +205,7 @@ export default function Login() {
               </div>
             </div>
 
-            <div className="flex justify-center">
+            <div className="grid grid-cols-2 gap-2">
               <Dialog open={dialogOpen && selectedRole === "admin"} onOpenChange={setDialogOpen}>
                 <DialogTrigger asChild>
                   <Button

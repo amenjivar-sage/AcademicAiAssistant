@@ -1,0 +1,726 @@
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { 
+  Users, 
+  GraduationCap, 
+  BookOpen, 
+  BarChart3, 
+  FileText, 
+  Calendar,
+  Search,
+  Eye,
+  TrendingUp,
+  AlertCircle
+} from "lucide-react";
+
+interface User {
+  id: number;
+  username: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+  department?: string;
+  grade?: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+interface Assignment {
+  id: number;
+  teacherId: number;
+  classroomId?: number;
+  title: string;
+  description: string;
+  status: string;
+  createdAt: string;
+  dueDate?: string;
+}
+
+interface WritingSession {
+  id: number;
+  userId: number;
+  assignmentId: number;
+  title: string;
+  wordCount: number;
+  status: string;
+  grade?: string;
+  submittedAt?: string;
+  createdAt: string;
+}
+
+interface Classroom {
+  id: number;
+  teacherId: number;
+  name: string;
+  subject: string;
+  gradeLevel: string;
+  classSize: number;
+  joinCode: string;
+}
+
+export default function SchoolAdminDashboard() {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedTeacher, setSelectedTeacher] = useState<number | null>(null);
+  const [selectedStudent, setSelectedStudent] = useState<number | null>(null);
+
+  // Fetch all system data
+  const { data: allUsers = [] } = useQuery({
+    queryKey: ["/api/admin/users"],
+  });
+
+  const { data: allAssignments = [] } = useQuery({
+    queryKey: ["/api/admin/assignments"],
+  });
+
+  const { data: allSessions = [] } = useQuery({
+    queryKey: ["/api/admin/writing-sessions"],
+  });
+
+  const { data: allClassrooms = [] } = useQuery({
+    queryKey: ["/api/admin/classrooms"],
+  });
+
+  const teachers = allUsers.filter((user: User) => user.role === 'teacher');
+  const students = allUsers.filter((user: User) => user.role === 'student');
+
+  // Calculate system statistics
+  const totalAssignments = allAssignments.length;
+  const completedAssignments = allSessions.filter((s: WritingSession) => s.status === 'submitted' || s.status === 'graded').length;
+  const activeClassrooms = allClassrooms.filter((c: Classroom) => c.classSize > 0).length;
+  const averageGrades = allSessions.filter((s: WritingSession) => s.grade).length;
+
+  // Filter data based on search
+  const filteredTeachers = teachers.filter((teacher: User) => 
+    `${teacher.firstName} ${teacher.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    teacher.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const filteredStudents = students.filter((student: User) => 
+    `${student.firstName} ${student.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    student.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const getTeacherAssignments = (teacherId: number) => {
+    return allAssignments.filter((a: Assignment) => a.teacherId === teacherId);
+  };
+
+  const getTeacherClassrooms = (teacherId: number) => {
+    return allClassrooms.filter((c: Classroom) => c.teacherId === teacherId);
+  };
+
+  const getStudentSessions = (studentId: number) => {
+    return allSessions.filter((s: WritingSession) => s.userId === studentId);
+  };
+
+  const getAssignmentSubmissions = (assignmentId: number) => {
+    return allSessions.filter((s: WritingSession) => s.assignmentId === assignmentId);
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">School Administration Dashboard</h1>
+            <p className="text-gray-600">Complete oversight of educational activities and performance</p>
+          </div>
+          <div className="flex items-center space-x-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Search teachers, students..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 w-64"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-6">
+        {/* Overview Statistics */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <Users className="h-8 w-8 text-blue-600" />
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Total Teachers</p>
+                  <p className="text-2xl font-bold text-gray-900">{teachers.length}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <GraduationCap className="h-8 w-8 text-green-600" />
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Total Students</p>
+                  <p className="text-2xl font-bold text-gray-900">{students.length}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <BookOpen className="h-8 w-8 text-purple-600" />
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Active Classrooms</p>
+                  <p className="text-2xl font-bold text-gray-900">{activeClassrooms}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <FileText className="h-8 w-8 text-orange-600" />
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Total Assignments</p>
+                  <p className="text-2xl font-bold text-gray-900">{totalAssignments}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Main Content Tabs */}
+        <Tabs defaultValue="teachers" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="teachers">Teachers Overview</TabsTrigger>
+            <TabsTrigger value="students">Students Overview</TabsTrigger>
+            <TabsTrigger value="assignments">Assignments</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          </TabsList>
+
+          {/* Teachers Overview */}
+          <TabsContent value="teachers" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-1">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Teachers ({filteredTeachers.length})</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ScrollArea className="h-96">
+                      <div className="space-y-2">
+                        {filteredTeachers.map((teacher: User) => {
+                          const teacherAssignments = getTeacherAssignments(teacher.id);
+                          const teacherClassrooms = getTeacherClassrooms(teacher.id);
+                          
+                          return (
+                            <div
+                              key={teacher.id}
+                              className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                                selectedTeacher === teacher.id 
+                                  ? 'bg-blue-50 border-blue-200' 
+                                  : 'bg-white border-gray-200 hover:bg-gray-50'
+                              }`}
+                              onClick={() => setSelectedTeacher(teacher.id)}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <p className="font-medium text-gray-900">
+                                    {teacher.firstName} {teacher.lastName}
+                                  </p>
+                                  <p className="text-sm text-gray-600">{teacher.email}</p>
+                                  <div className="flex items-center space-x-2 mt-1">
+                                    <Badge variant="outline" className="text-xs">
+                                      {teacherClassrooms.length} classes
+                                    </Badge>
+                                    <Badge variant="outline" className="text-xs">
+                                      {teacherAssignments.length} assignments
+                                    </Badge>
+                                  </div>
+                                </div>
+                                <Eye className="h-4 w-4 text-gray-400" />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </ScrollArea>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="lg:col-span-2">
+                {selectedTeacher ? (
+                  <TeacherDetailView 
+                    teacher={allUsers.find((u: User) => u.id === selectedTeacher)!}
+                    assignments={getTeacherAssignments(selectedTeacher)}
+                    classrooms={getTeacherClassrooms(selectedTeacher)}
+                    allSessions={allSessions}
+                    allUsers={allUsers}
+                  />
+                ) : (
+                  <Card>
+                    <CardContent className="p-12 text-center">
+                      <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-600">Select a teacher to view detailed information</p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* Students Overview */}
+          <TabsContent value="students" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-1">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Students ({filteredStudents.length})</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ScrollArea className="h-96">
+                      <div className="space-y-2">
+                        {filteredStudents.map((student: User) => {
+                          const studentSessions = getStudentSessions(student.id);
+                          const completedSessions = studentSessions.filter(s => s.status === 'submitted' || s.status === 'graded');
+                          
+                          return (
+                            <div
+                              key={student.id}
+                              className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                                selectedStudent === student.id 
+                                  ? 'bg-green-50 border-green-200' 
+                                  : 'bg-white border-gray-200 hover:bg-gray-50'
+                              }`}
+                              onClick={() => setSelectedStudent(student.id)}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <p className="font-medium text-gray-900">
+                                    {student.firstName} {student.lastName}
+                                  </p>
+                                  <p className="text-sm text-gray-600">{student.email}</p>
+                                  <div className="flex items-center space-x-2 mt-1">
+                                    <Badge variant="outline" className="text-xs">
+                                      {studentSessions.length} assignments
+                                    </Badge>
+                                    <Badge variant="outline" className="text-xs">
+                                      {completedSessions.length} completed
+                                    </Badge>
+                                  </div>
+                                </div>
+                                <Eye className="h-4 w-4 text-gray-400" />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </ScrollArea>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="lg:col-span-2">
+                {selectedStudent ? (
+                  <StudentDetailView 
+                    student={allUsers.find((u: User) => u.id === selectedStudent)!}
+                    sessions={getStudentSessions(selectedStudent)}
+                    allAssignments={allAssignments}
+                    allUsers={allUsers}
+                  />
+                ) : (
+                  <Card>
+                    <CardContent className="p-12 text-center">
+                      <GraduationCap className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-600">Select a student to view detailed information</p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* Assignments Overview */}
+          <TabsContent value="assignments" className="space-y-6">
+            <AssignmentsOverview 
+              assignments={allAssignments}
+              sessions={allSessions}
+              users={allUsers}
+              classrooms={allClassrooms}
+            />
+          </TabsContent>
+
+          {/* Analytics */}
+          <TabsContent value="analytics" className="space-y-6">
+            <AnalyticsOverview 
+              users={allUsers}
+              assignments={allAssignments}
+              sessions={allSessions}
+              classrooms={allClassrooms}
+            />
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+}
+
+// Teacher Detail Component
+function TeacherDetailView({ teacher, assignments, classrooms, allSessions, allUsers }: any) {
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span>{teacher.firstName} {teacher.lastName}</span>
+            <Badge variant={teacher.isActive ? "default" : "secondary"}>
+              {teacher.isActive ? "Active" : "Inactive"}
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <div>
+              <Label className="text-sm font-medium text-gray-600">Email</Label>
+              <p className="text-sm text-gray-900">{teacher.email}</p>
+            </div>
+            <div>
+              <Label className="text-sm font-medium text-gray-600">Department</Label>
+              <p className="text-sm text-gray-900">{teacher.department || 'Not specified'}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4 mb-6">
+            <div className="text-center p-4 bg-blue-50 rounded-lg">
+              <p className="text-2xl font-bold text-blue-600">{classrooms.length}</p>
+              <p className="text-sm text-blue-800">Classes</p>
+            </div>
+            <div className="text-center p-4 bg-green-50 rounded-lg">
+              <p className="text-2xl font-bold text-green-600">{assignments.length}</p>
+              <p className="text-sm text-green-800">Assignments</p>
+            </div>
+            <div className="text-center p-4 bg-purple-50 rounded-lg">
+              <p className="text-2xl font-bold text-purple-600">
+                {allSessions.filter((s: any) => assignments.some((a: any) => a.id === s.assignmentId)).length}
+              </p>
+              <p className="text-sm text-purple-800">Submissions</p>
+            </div>
+          </div>
+
+          <Tabs defaultValue="classes">
+            <TabsList>
+              <TabsTrigger value="classes">Classes</TabsTrigger>
+              <TabsTrigger value="assignments">Assignments</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="classes" className="mt-4">
+              <div className="space-y-3">
+                {classrooms.map((classroom: any) => (
+                  <div key={classroom.id} className="p-4 border rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-medium">{classroom.name}</h4>
+                      <Badge variant="outline">{classroom.subject}</Badge>
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      <p>Grade Level: {classroom.gradeLevel}</p>
+                      <p>Class Size: {classroom.classSize} students</p>
+                      <p>Join Code: {classroom.joinCode}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="assignments" className="mt-4">
+              <div className="space-y-3">
+                {assignments.map((assignment: any) => {
+                  const submissions = allSessions.filter((s: any) => s.assignmentId === assignment.id);
+                  const graded = submissions.filter((s: any) => s.status === 'graded');
+                  
+                  return (
+                    <div key={assignment.id} className="p-4 border rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-medium">{assignment.title}</h4>
+                        <Badge variant={assignment.status === 'active' ? 'default' : 'secondary'}>
+                          {assignment.status}
+                        </Badge>
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        <p className="mb-2">{assignment.description.substring(0, 100)}...</p>
+                        <div className="flex items-center space-x-4">
+                          <span>{submissions.length} submissions</span>
+                          <span>{graded.length} graded</span>
+                          {assignment.dueDate && (
+                            <span>Due: {new Date(assignment.dueDate).toLocaleDateString()}</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// Student Detail Component
+function StudentDetailView({ student, sessions, allAssignments, allUsers }: any) {
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span>{student.firstName} {student.lastName}</span>
+            <Badge variant={student.isActive ? "default" : "secondary"}>
+              {student.isActive ? "Active" : "Inactive"}
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <div>
+              <Label className="text-sm font-medium text-gray-600">Email</Label>
+              <p className="text-sm text-gray-900">{student.email}</p>
+            </div>
+            <div>
+              <Label className="text-sm font-medium text-gray-600">Grade</Label>
+              <p className="text-sm text-gray-900">{student.grade || 'Not specified'}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4 mb-6">
+            <div className="text-center p-4 bg-blue-50 rounded-lg">
+              <p className="text-2xl font-bold text-blue-600">{sessions.length}</p>
+              <p className="text-sm text-blue-800">Assignments</p>
+            </div>
+            <div className="text-center p-4 bg-green-50 rounded-lg">
+              <p className="text-2xl font-bold text-green-600">
+                {sessions.filter((s: any) => s.status === 'submitted' || s.status === 'graded').length}
+              </p>
+              <p className="text-sm text-green-800">Completed</p>
+            </div>
+            <div className="text-center p-4 bg-purple-50 rounded-lg">
+              <p className="text-2xl font-bold text-purple-600">
+                {sessions.filter((s: any) => s.grade).length}
+              </p>
+              <p className="text-sm text-purple-800">Graded</p>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <h4 className="font-medium">Recent Assignments</h4>
+            {sessions.map((session: any) => {
+              const assignment = allAssignments.find((a: any) => a.id === session.assignmentId);
+              const teacher = allUsers.find((u: any) => u.id === assignment?.teacherId);
+              
+              return (
+                <div key={session.id} className="p-4 border rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <h5 className="font-medium">{assignment?.title || 'Unknown Assignment'}</h5>
+                    <div className="flex items-center space-x-2">
+                      <Badge variant={session.status === 'graded' ? 'default' : 'secondary'}>
+                        {session.status}
+                      </Badge>
+                      {session.grade && (
+                        <Badge variant="outline">{session.grade}</Badge>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    <p>Teacher: {teacher ? `${teacher.firstName} ${teacher.lastName}` : 'Unknown'}</p>
+                    <p>Word Count: {session.wordCount}</p>
+                    {session.submittedAt && (
+                      <p>Submitted: {new Date(session.submittedAt).toLocaleDateString()}</p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// Assignments Overview Component
+function AssignmentsOverview({ assignments, sessions, users, classrooms }: any) {
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>All Assignments ({assignments.length})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ScrollArea className="h-96">
+            <div className="space-y-3">
+              {assignments.map((assignment: any) => {
+                const teacher = users.find((u: any) => u.id === assignment.teacherId);
+                const classroom = classrooms.find((c: any) => c.id === assignment.classroomId);
+                const assignmentSessions = sessions.filter((s: any) => s.assignmentId === assignment.id);
+                
+                return (
+                  <div key={assignment.id} className="p-4 border rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-medium">{assignment.title}</h4>
+                      <Badge variant={assignment.status === 'active' ? 'default' : 'secondary'}>
+                        {assignment.status}
+                      </Badge>
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      <p>Teacher: {teacher ? `${teacher.firstName} ${teacher.lastName}` : 'Unknown'}</p>
+                      <p>Class: {classroom?.name || 'General Assignment'}</p>
+                      <p>{assignmentSessions.length} submissions</p>
+                      <p>Created: {new Date(assignment.createdAt).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </ScrollArea>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Assignment Performance</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {assignments.slice(0, 5).map((assignment: any) => {
+              const assignmentSessions = sessions.filter((s: any) => s.assignmentId === assignment.id);
+              const completed = assignmentSessions.filter((s: any) => s.status === 'submitted' || s.status === 'graded');
+              const completionRate = assignmentSessions.length > 0 ? (completed.length / assignmentSessions.length) * 100 : 0;
+              
+              return (
+                <div key={assignment.id} className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">{assignment.title}</span>
+                    <span className="text-sm text-gray-600">{Math.round(completionRate)}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-blue-600 h-2 rounded-full" 
+                      style={{ width: `${completionRate}%` }}
+                    ></div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// Analytics Overview Component
+function AnalyticsOverview({ users, assignments, sessions, classrooms }: any) {
+  const totalUsers = users.length;
+  const activeUsers = users.filter((u: any) => u.isActive).length;
+  const totalSessions = sessions.length;
+  const completedSessions = sessions.filter((s: any) => s.status === 'submitted' || s.status === 'graded').length;
+  const averageWordsPerSession = sessions.length > 0 ? 
+    sessions.reduce((sum: number, s: any) => sum + s.wordCount, 0) / sessions.length : 0;
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <TrendingUp className="h-5 w-5 mr-2" />
+            System Performance
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+              <div>
+                <p className="text-sm font-medium text-blue-800">User Engagement</p>
+                <p className="text-2xl font-bold text-blue-600">
+                  {Math.round((activeUsers / totalUsers) * 100)}%
+                </p>
+              </div>
+              <Users className="h-8 w-8 text-blue-600" />
+            </div>
+
+            <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
+              <div>
+                <p className="text-sm font-medium text-green-800">Assignment Completion</p>
+                <p className="text-2xl font-bold text-green-600">
+                  {Math.round((completedSessions / totalSessions) * 100)}%
+                </p>
+              </div>
+              <FileText className="h-8 w-8 text-green-600" />
+            </div>
+
+            <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
+              <div>
+                <p className="text-sm font-medium text-purple-800">Avg. Words per Assignment</p>
+                <p className="text-2xl font-bold text-purple-600">
+                  {Math.round(averageWordsPerSession)}
+                </p>
+              </div>
+              <BarChart3 className="h-8 w-8 text-purple-600" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <AlertCircle className="h-5 w-5 mr-2" />
+            System Insights
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="p-4 border-l-4 border-blue-500 bg-blue-50">
+              <h4 className="font-medium text-blue-800">Active Teachers</h4>
+              <p className="text-sm text-blue-700">
+                {users.filter((u: any) => u.role === 'teacher' && u.isActive).length} teachers are currently active
+              </p>
+            </div>
+
+            <div className="p-4 border-l-4 border-green-500 bg-green-50">
+              <h4 className="font-medium text-green-800">Student Participation</h4>
+              <p className="text-sm text-green-700">
+                {users.filter((u: any) => u.role === 'student' && u.isActive).length} students are actively participating
+              </p>
+            </div>
+
+            <div className="p-4 border-l-4 border-purple-500 bg-purple-50">
+              <h4 className="font-medium text-purple-800">Classroom Activity</h4>
+              <p className="text-sm text-purple-700">
+                {classrooms.length} classrooms with {assignments.length} total assignments
+              </p>
+            </div>
+
+            <div className="p-4 border-l-4 border-orange-500 bg-orange-50">
+              <h4 className="font-medium text-orange-800">Writing Progress</h4>
+              <p className="text-sm text-orange-700">
+                Students have written {sessions.reduce((sum: number, s: any) => sum + s.wordCount, 0).toLocaleString()} total words
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

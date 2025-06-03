@@ -202,6 +202,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else if (role === 'admin') {
         // Always use Dr. Patricia Williams (admin) as the demo admin
         demoUser = allUsers.find(user => user.username === 'admin');
+      } else if (role === 'school_admin') {
+        // Use Principal Anderson (school.admin) as the demo school admin
+        demoUser = allUsers.find(user => user.username === 'school.admin');
       }
       
       if (!demoUser) {
@@ -1042,6 +1045,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching inline comments:", error);
       res.status(500).json({ error: "Failed to fetch comments" });
+    }
+  });
+
+  // School Admin API endpoints - comprehensive oversight
+  app.get("/api/admin/users", async (req, res) => {
+    try {
+      const currentUser = await getCurrentUser();
+      if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'school_admin')) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      console.error("Error fetching all users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  app.get("/api/admin/assignments", async (req, res) => {
+    try {
+      const currentUser = await getCurrentUser();
+      if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'school_admin')) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const allUsers = await storage.getAllUsers();
+      const teachers = allUsers.filter(u => u.role === 'teacher');
+      let allAssignments = [];
+      
+      for (const teacher of teachers) {
+        const assignments = await storage.getTeacherAssignments(teacher.id);
+        allAssignments.push(...assignments);
+      }
+      
+      res.json(allAssignments);
+    } catch (error) {
+      console.error("Error fetching all assignments:", error);
+      res.status(500).json({ message: "Failed to fetch assignments" });
+    }
+  });
+
+  app.get("/api/admin/writing-sessions", async (req, res) => {
+    try {
+      const currentUser = await getCurrentUser();
+      if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'school_admin')) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const allUsers = await storage.getAllUsers();
+      const students = allUsers.filter(u => u.role === 'student');
+      let allSessions = [];
+      
+      for (const student of students) {
+        const sessions = await storage.getUserWritingSessions(student.id);
+        allSessions.push(...sessions);
+      }
+      
+      res.json(allSessions);
+    } catch (error) {
+      console.error("Error fetching all writing sessions:", error);
+      res.status(500).json({ message: "Failed to fetch writing sessions" });
+    }
+  });
+
+  app.get("/api/admin/classrooms", async (req, res) => {
+    try {
+      const currentUser = await getCurrentUser();
+      if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'school_admin')) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const classrooms = await storage.getAllClassrooms();
+      res.json(classrooms);
+    } catch (error) {
+      console.error("Error fetching all classrooms:", error);
+      res.status(500).json({ message: "Failed to fetch classrooms" });
     }
   });
 
