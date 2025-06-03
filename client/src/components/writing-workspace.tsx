@@ -334,7 +334,17 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       
       if (hasUnsavedChanges && (title.trim() || content.trim())) {
         console.log('Triggering emergency save before page unload');
-        handleManualSave();
+        
+        // Synchronous save attempt for page unload
+        const currentSessionId = session?.id || sessionId;
+        if (currentSessionId && currentSessionId !== 0) {
+          navigator.sendBeacon('/api/emergency-save', JSON.stringify({
+            sessionId: currentSessionId,
+            title,
+            content,
+            wordCount: content.split(/\s+/).filter(word => word.length > 0).length
+          }));
+        }
         
         // Show browser warning
         e.preventDefault();
@@ -345,7 +355,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
 
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [title, content, session, handleManualSave]);
+  }, [title, content, session, sessionId]);
 
   // Auto-save functionality with improved session handling
   useEffect(() => {

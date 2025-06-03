@@ -112,7 +112,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTeacherAssignments(teacherId: number): Promise<Assignment[]> {
-    return await db.select().from(assignments).where(eq(assignments.teacherId, teacherId));
+    console.log('DatabaseStorage: Getting assignments for teacher', teacherId);
+    
+    return await withRetry(async () => {
+      const assignments_result = await db.select().from(assignments).where(eq(assignments.teacherId, teacherId));
+      console.log('Found', assignments_result.length, 'assignments for teacher', teacherId);
+      return assignments_result;
+    }, 3, 1000);
   }
 
   async markAssignmentComplete(id: number): Promise<Assignment | undefined> {
@@ -205,27 +211,44 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateWritingSession(id: number, updates: Partial<InsertWritingSession>): Promise<WritingSession | undefined> {
-    const [session] = await db
-      .update(writingSessions)
-      .set({ 
-        ...updates, 
-        updatedAt: new Date(),
-        pastedContent: updates.pastedContent || []
-      })
-      .where(eq(writingSessions.id, id))
-      .returning();
-    return session ? {
-      ...session,
-      pastedContent: session.pastedContent || []
-    } : undefined;
+    console.log('DatabaseStorage: Updating writing session', id, 'with updates:', Object.keys(updates));
+    
+    return await withRetry(async () => {
+      const [session] = await db
+        .update(writingSessions)
+        .set({ 
+          ...updates, 
+          updatedAt: new Date(),
+          pastedContent: updates.pastedContent || []
+        })
+        .where(eq(writingSessions.id, id))
+        .returning();
+        
+      if (!session) {
+        console.error('No session returned after update for ID:', id);
+        return undefined;
+      }
+      
+      console.log('Session updated successfully:', session.id, 'Content length:', session.content?.length);
+      return {
+        ...session,
+        pastedContent: session.pastedContent || []
+      };
+    }, 3, 1000);
   }
 
   async getUserWritingSessions(userId: number): Promise<WritingSession[]> {
-    const sessions = await db.select().from(writingSessions).where(eq(writingSessions.userId, userId));
-    return sessions.map(session => ({
-      ...session,
-      pastedContent: session.pastedContent || []
-    }));
+    console.log('DatabaseStorage: Getting writing sessions for user', userId);
+    
+    return await withRetry(async () => {
+      const sessions = await db.select().from(writingSessions).where(eq(writingSessions.userId, userId));
+      console.log('Found', sessions.length, 'sessions for user', userId);
+      
+      return sessions.map(session => ({
+        ...session,
+        pastedContent: session.pastedContent || []
+      }));
+    }, 3, 1000);
   }
 
   async getAssignmentSubmissions(assignmentId: number): Promise<(WritingSession & { student: User })[]> {
@@ -418,7 +441,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTeacherClassrooms(teacherId: number): Promise<Classroom[]> {
-    return await db.select().from(classrooms).where(eq(classrooms.teacherId, teacherId));
+    console.log('DatabaseStorage: Getting classrooms for teacher', teacherId);
+    
+    return await withRetry(async () => {
+      const classrooms_result = await db.select().from(classrooms).where(eq(classrooms.teacherId, teacherId));
+      console.log('Found', classrooms_result.length, 'classrooms for teacher', teacherId);
+      return classrooms_result;
+    }, 3, 1000);
   }
 
   async getAllClassrooms(): Promise<Classroom[]> {
@@ -426,30 +455,35 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getStudentClassrooms(studentId: number): Promise<Classroom[]> {
-    const classroomData = await db
-      .select({
-        id: classrooms.id,
-        teacherId: classrooms.teacherId,
-        name: classrooms.name,
-        description: classrooms.description,
-        subject: classrooms.subject,
-        gradeLevel: classrooms.gradeLevel,
-        classSize: classrooms.classSize,
-        isActive: classrooms.isActive,
-        joinCode: classrooms.joinCode,
-        createdAt: classrooms.createdAt,
-        updatedAt: classrooms.updatedAt,
-      })
-      .from(classrooms)
-      .leftJoin(classroomEnrollments, eq(classrooms.id, classroomEnrollments.classroomId))
-      .where(
-        and(
-          eq(classroomEnrollments.studentId, studentId),
-          eq(classrooms.isActive, true)
-        )
-      );
+    console.log('DatabaseStorage: Getting classrooms for student', studentId);
+    
+    return await withRetry(async () => {
+      const classroomData = await db
+        .select({
+          id: classrooms.id,
+          teacherId: classrooms.teacherId,
+          name: classrooms.name,
+          description: classrooms.description,
+          subject: classrooms.subject,
+          gradeLevel: classrooms.gradeLevel,
+          classSize: classrooms.classSize,
+          isActive: classrooms.isActive,
+          joinCode: classrooms.joinCode,
+          createdAt: classrooms.createdAt,
+          updatedAt: classrooms.updatedAt,
+        })
+        .from(classrooms)
+        .leftJoin(classroomEnrollments, eq(classrooms.id, classroomEnrollments.classroomId))
+        .where(
+          and(
+            eq(classroomEnrollments.studentId, studentId),
+            eq(classrooms.isActive, true)
+          )
+        );
 
-    return classroomData;
+      console.log('Found', classroomData.length, 'classrooms for student', studentId);
+      return classroomData;
+    }, 3, 1000);
   }
 
   async getClassroomStudents(classroomId: number): Promise<User[]> {
