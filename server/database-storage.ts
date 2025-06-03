@@ -51,7 +51,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteUser(id: number): Promise<void> {
     console.log(`DatabaseStorage: Deleting user with ID ${id}`);
-    const result = await db.delete(users).where(eq(users.id, id.toString()));
+    const result = await db.delete(users).where(eq(users.id, id));
     console.log(`DatabaseStorage: Delete result:`, result);
   }
 
@@ -63,10 +63,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateUserStatus(id: number, isActive: boolean): Promise<void> {
-    await db
+    console.log(`DatabaseStorage: Updating user ${id} status to isActive=${isActive}`);
+    const result = await db
       .update(users)
       .set({ isActive, updatedAt: new Date() })
       .where(eq(users.id, id));
+    console.log(`DatabaseStorage: UpdateUserStatus result:`, result);
   }
 
   // Assignment operations

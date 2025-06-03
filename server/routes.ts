@@ -115,8 +115,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
+      console.log(`Login attempt for user ${username}: isActive=${user.isActive}`);
+      
       // Check if user account is active (not archived)
       if (!user.isActive) {
+        console.log(`Blocking login for archived user ${username}`);
         return res.status(403).json({ message: "Account has been suspended. Please contact your administrator." });
       }
 
