@@ -228,7 +228,16 @@ export default function AdminUserManagement() {
   const archiveUserMutation = useMutation({
     mutationFn: async (userId: number) => {
       const response = await apiRequest("PATCH", `/api/admin/users/${userId}/archive`);
-      return response.json();
+      if (!response.ok) {
+        throw new Error(`Failed to archive user: ${response.status}`);
+      }
+      // Handle response safely - it might be empty or invalid JSON
+      const text = await response.text();
+      try {
+        return text ? JSON.parse(text) : { success: true };
+      } catch {
+        return { success: true };
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
@@ -250,7 +259,16 @@ export default function AdminUserManagement() {
   const reactivateUserMutation = useMutation({
     mutationFn: async (userId: number) => {
       const response = await apiRequest("PATCH", `/api/admin/users/${userId}/reactivate`);
-      return response.json();
+      if (!response.ok) {
+        throw new Error(`Failed to reactivate user: ${response.status}`);
+      }
+      // Handle response safely - it might be empty or invalid JSON
+      const text = await response.text();
+      try {
+        return text ? JSON.parse(text) : { success: true };
+      } catch {
+        return { success: true };
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
