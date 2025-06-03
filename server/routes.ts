@@ -615,8 +615,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create classroom
   app.post("/api/classrooms", async (req, res) => {
     try {
+      console.log("Classroom creation request body:", req.body);
+      
       const currentUser = await getCurrentUser();
+      console.log("Current user for classroom creation:", currentUser);
+      
       if (!currentUser || currentUser.role !== 'teacher') {
+        console.log("Authentication failed - user role:", currentUser?.role);
         return res.status(401).json({ message: "Teacher authentication required" });
       }
       
@@ -625,11 +630,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         teacherId: currentUser.id // Ensure the classroom is assigned to the current teacher
       };
       
+      console.log("Final classroom data being sent to storage:", classroomData);
+      
       const classroom = await storage.createClassroom(classroomData);
+      console.log("Classroom created successfully:", classroom);
+      
       res.json(classroom);
     } catch (error) {
       console.error("Error creating classroom:", error);
-      res.status(500).json({ message: "Failed to create classroom" });
+      console.error("Error details:", error.message);
+      console.error("Error stack:", error.stack);
+      res.status(500).json({ message: "Failed to create classroom", error: error.message });
     }
   });
 

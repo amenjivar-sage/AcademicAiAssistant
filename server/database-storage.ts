@@ -355,13 +355,29 @@ export class DatabaseStorage implements IStorage {
 
   // Classroom operations
   async createClassroom(classroomData: InsertClassroom): Promise<Classroom> {
+    console.log("DatabaseStorage: Creating classroom with data:", classroomData);
+    
     const joinCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-    const [classroom] = await db.insert(classrooms).values({
+    console.log("Generated join code:", joinCode);
+    
+    const insertData = {
       ...classroomData,
       joinCode,
       classSize: classroomData.classSize || 30,
-    }).returning();
-    return classroom;
+    };
+    
+    console.log("Final insert data:", insertData);
+    
+    try {
+      const [classroom] = await db.insert(classrooms).values(insertData).returning();
+      console.log("Classroom created successfully in database:", classroom);
+      return classroom;
+    } catch (dbError) {
+      console.error("Database error during classroom creation:", dbError);
+      console.error("Database error message:", dbError.message);
+      console.error("Database error code:", dbError.code);
+      throw dbError;
+    }
   }
 
   async getTeacherClassrooms(teacherId: number): Promise<Classroom[]> {
