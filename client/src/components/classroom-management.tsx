@@ -99,12 +99,11 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
   });
 
   const getClassroomStats = (classroom: Classroom) => {
-    // In real implementation, these would come from the API
-    const classSize = classroom.classSize || 30;
+    // Use real data instead of fake random numbers
     return {
-      enrolledStudents: Math.floor(Math.random() * classSize),
-      activeAssignments: Math.floor(Math.random() * 5) + 1,
-      pendingSubmissions: Math.floor(Math.random() * 10),
+      enrolledStudents: 0, // Will be updated when we get real student enrollment data
+      activeAssignments: assignments?.filter(a => a.status === 'active' && (a.classroomId === classroom.id || a.classroomId === null)).length || 0,
+      pendingSubmissions: 0, // Will be updated when we get real submission data
     };
   };
 
