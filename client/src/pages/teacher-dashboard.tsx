@@ -23,11 +23,13 @@ export default function TeacherDashboard() {
     queryKey: ["/api/auth/user"],
   });
 
-  // Get teacher's assignments
+  // Get teacher's assignments with aggressive refresh for immediate updates
   const { data: assignments, isLoading: assignmentsLoading, error: assignmentsError } = useQuery<Assignment[]>({
     queryKey: ["/api/teacher/assignments"],
     refetchOnMount: true,
     refetchOnWindowFocus: true,
+    refetchInterval: 5000, // Refresh every 5 seconds to catch new assignments
+    staleTime: 0, // Always consider stale for immediate updates
   });
 
   // Debug: Log assignments data
@@ -36,9 +38,13 @@ export default function TeacherDashboard() {
   console.log('Assignments error:', assignmentsError);
   console.log('Number of assignments:', assignments?.length || 0);
 
-  // Get teacher's classrooms
+  // Get teacher's classrooms with aggressive refresh for immediate updates
   const { data: classrooms, isLoading: classroomsLoading } = useQuery<Classroom[]>({
     queryKey: ["/api/teacher/classrooms"],
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    refetchInterval: 5000, // Refresh every 5 seconds to catch new classrooms
+    staleTime: 0, // Always consider stale for immediate updates
   });
 
   // Get teacher's students

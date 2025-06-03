@@ -47,13 +47,14 @@ export default function StudentDashboard() {
     }
   };
 
-  // Get student's enrolled classes
+  // Get student's enrolled classes with aggressive refresh for immediate updates
   const { data: classes = [], isLoading: classesLoading, error: classesError } = useQuery<Classroom[]>({
     queryKey: ["/api/student/classes"],
     staleTime: 0, // Always refetch to ensure fresh data
     gcTime: 0, // Don't cache stale data
     refetchOnMount: true,
     refetchOnWindowFocus: true,
+    refetchInterval: 5000, // Refresh every 5 seconds to catch new enrollments
   });
 
   // Debug logging for classes
@@ -63,9 +64,13 @@ export default function StudentDashboard() {
   console.log("Current user:", user);
   console.log("=== END DASHBOARD DEBUG ===");
 
-  // Get student's assignments across all classes
+  // Get student's assignments across all classes with aggressive refresh
   const { data: assignments = [], isLoading: assignmentsLoading } = useQuery<Assignment[]>({
     queryKey: ["/api/student/assignments"],
+    staleTime: 0, // Always consider stale for immediate updates
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    refetchInterval: 5000, // Refresh every 5 seconds to catch new assignments
   });
 
   // Get student's writing sessions

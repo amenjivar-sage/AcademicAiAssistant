@@ -96,10 +96,18 @@ export default function AssignmentForm({ teacherId, children, assignment, mode =
       
       return response.json();
     },
-    onSuccess: (data) => {
-      // Force refresh the assignments list immediately
-      queryClient.invalidateQueries({ queryKey: ["/api/teacher/assignments"] });
-      queryClient.refetchQueries({ queryKey: ["/api/teacher/assignments"] });
+    onSuccess: async (data) => {
+      console.log('Assignment created successfully:', data);
+      
+      // Comprehensive cache invalidation for immediate UI updates
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["/api/teacher/assignments"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/assignments"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/student/assignments"] }),
+        queryClient.refetchQueries({ queryKey: ["/api/teacher/assignments"] }),
+        queryClient.refetchQueries({ queryKey: ["/api/assignments"] }),
+        queryClient.refetchQueries({ queryKey: ["/api/student/assignments"] })
+      ]);
       
       toast({
         title: "Assignment Created",

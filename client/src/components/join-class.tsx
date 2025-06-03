@@ -56,9 +56,19 @@ export default function JoinClass({ studentId, children }: JoinClassProps) {
       });
       return await response.json();
     },
-    onSuccess: (classroom) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/student/classes"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/student/assignments"] });
+    onSuccess: async (classroom) => {
+      console.log('Student joined class successfully:', classroom);
+      
+      // Comprehensive cache invalidation for immediate UI updates
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["/api/student/classes"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/student/assignments"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/classrooms"] }),
+        queryClient.refetchQueries({ queryKey: ["/api/student/classes"] }),
+        queryClient.refetchQueries({ queryKey: ["/api/student/assignments"] }),
+        queryClient.refetchQueries({ queryKey: ["/api/classrooms"] })
+      ]);
+      
       toast({
         title: "Successfully Joined Class!",
         description: `Welcome to ${classroom.name}. You can now see assignments from this class.`,

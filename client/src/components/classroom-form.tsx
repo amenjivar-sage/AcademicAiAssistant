@@ -97,7 +97,17 @@ export default function ClassroomForm({ teacherId, children, classroom, mode = "
     onSuccess: async (response) => {
       try {
         const newClassroom = await response.json();
-        queryClient.invalidateQueries({ queryKey: ["/api/teacher/classrooms"] });
+        
+        // Comprehensive cache invalidation for immediate UI updates
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ["/api/teacher/classrooms"] }),
+          queryClient.invalidateQueries({ queryKey: ["/api/classrooms"] }),
+          queryClient.refetchQueries({ queryKey: ["/api/teacher/classrooms"] }),
+          queryClient.refetchQueries({ queryKey: ["/api/classrooms"] })
+        ]);
+        
+        console.log('Classroom created and cache invalidated:', newClassroom);
+        
         toast({
           title: "Class Created Successfully!",
           description: `Join code: ${newClassroom.joinCode}. Share this code with your students.`,
@@ -105,13 +115,22 @@ export default function ClassroomForm({ teacherId, children, classroom, mode = "
         setOpen(false);
         form.reset();
       } catch (error) {
+        console.log('Classroom creation response parsing failed, but creation likely succeeded');
+        
+        // Force refresh all classroom-related queries
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ["/api/teacher/classrooms"] }),
+          queryClient.invalidateQueries({ queryKey: ["/api/classrooms"] }),
+          queryClient.refetchQueries({ queryKey: ["/api/teacher/classrooms"] }),
+          queryClient.refetchQueries({ queryKey: ["/api/classrooms"] })
+        ]);
+        
         toast({
           title: "Class Created!",
           description: "Your new class has been created successfully.",
         });
         setOpen(false);
         form.reset();
-        queryClient.invalidateQueries({ queryKey: ["/api/teacher/classrooms"] });
       }
     },
     onError: (error) => {
@@ -127,8 +146,15 @@ export default function ClassroomForm({ teacherId, children, classroom, mode = "
     mutationFn: async (data: ClassroomForm) => {
       return await apiRequest("PATCH", `/api/classrooms/${classroom.id}`, data);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/teacher/classrooms"] });
+    onSuccess: async () => {
+      // Comprehensive cache invalidation for classroom updates
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["/api/teacher/classrooms"] }),
+        queryClient.invalidateQueries({ queryKey: ["/api/classrooms"] }),
+        queryClient.refetchQueries({ queryKey: ["/api/teacher/classrooms"] }),
+        queryClient.refetchQueries({ queryKey: ["/api/classrooms"] })
+      ]);
+      
       toast({
         title: "Class Updated",
         description: "Class information has been updated successfully.",
