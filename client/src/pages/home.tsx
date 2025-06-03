@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import AiAssistant from "@/components/ai-assistant";
 import IntegrityGuidelines from "@/components/integrity-guidelines";
+import AiDisclosure from "@/components/ai-disclosure";
 import { Button } from "@/components/ui/button";
 import { PenTool, Shield } from "lucide-react";
 import SageLogo from "@/components/sage-logo";
@@ -189,8 +190,9 @@ export default function Home() {
           <div className="flex-1 overflow-y-auto">
             <AiAssistant sessionId={currentSession?.id} />
             
-            <div className="p-4 border-t border-gray-200">
+            <div className="p-4 border-t border-gray-200 space-y-4">
               <IntegrityGuidelines />
+              <AiDisclosure variant="compact" />
             </div>
           </div>
         </div>

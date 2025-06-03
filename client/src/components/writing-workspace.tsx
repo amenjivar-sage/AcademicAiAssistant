@@ -13,6 +13,7 @@ import { Save, Send, Clock, FileText, Shield, AlertTriangle, Trophy, ArrowLeft, 
 import AiAssistant from './ai-assistant';
 import CopyPasteDetector from './copy-paste-detector';
 import EnhancedToolbar from './enhanced-toolbar';
+import AiDisclosure from './ai-disclosure';
 import FeedbackViewer from './feedback-viewer';
 import InlineSpellCheck from './inline-spell-check';
 import PageBasedEditor from './page-based-editor';
@@ -613,6 +614,9 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
           assignmentType={assignment?.aiPermissions}
           currentContent={content}
         />
+        <div className="p-4 border-t">
+          <AiDisclosure variant="compact" />
+        </div>
       </div>
 
 
