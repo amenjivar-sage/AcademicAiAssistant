@@ -182,6 +182,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Logout redirect endpoint (for GET requests)
+  app.get("/api/logout", async (req, res) => {
+    try {
+      // Clear session data
+      currentSessionUserId = null;
+      // Redirect to home page
+      res.redirect("/");
+    } catch (error) {
+      console.error("Error during logout:", error);
+      res.redirect("/");
+    }
+  });
+
   // Demo login endpoint
   app.post("/api/auth/demo-login", async (req, res) => {
     try {
