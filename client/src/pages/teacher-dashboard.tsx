@@ -41,6 +41,12 @@ export default function TeacherDashboard() {
     queryKey: ["/api/teacher/classrooms"],
   });
 
+  // Get teacher's students
+  const { data: students } = useQuery({
+    queryKey: ["/api/teacher", currentUser?.id, "students"],
+    enabled: !!currentUser?.id,
+  });
+
   // Mark assignment complete mutation
   const markCompleteMutation = useMutation({
     mutationFn: async (assignmentId: number) => {
@@ -171,9 +177,9 @@ export default function TeacherDashboard() {
               <div className="flex items-center">
                 <Users className="h-8 w-8 text-edu-success" />
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500">Student Progress</p>
-                  <p className="text-2xl font-bold text-gray-900">18/24</p>
-                  <p className="text-xs text-gray-400 mt-1">actively writing</p>
+                  <p className="text-sm font-medium text-gray-500">Students</p>
+                  <p className="text-2xl font-bold text-gray-900">{students?.length || 0}</p>
+                  <p className="text-xs text-gray-400 mt-1">total enrolled</p>
                 </div>
               </div>
             </CardContent>
