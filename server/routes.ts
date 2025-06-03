@@ -416,6 +416,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Mark assignment as complete
+  app.post("/api/assignments/:id/complete", async (req, res) => {
+    try {
+      const assignmentId = parseInt(req.params.id);
+      const assignment = await storage.markAssignmentComplete(assignmentId);
+      if (!assignment) {
+        return res.status(404).json({ message: "Assignment not found" });
+      }
+      res.json(assignment);
+    } catch (error) {
+      console.error("Error marking assignment complete:", error);
+      res.status(500).json({ message: "Failed to mark assignment as complete" });
+    }
+  });
+
   // Get teacher classrooms (endpoint used by frontend)
   app.get("/api/teacher/classrooms", async (req, res) => {
     try {
