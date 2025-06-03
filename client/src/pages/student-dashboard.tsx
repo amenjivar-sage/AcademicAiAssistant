@@ -63,6 +63,8 @@ export default function StudentDashboard() {
   // Get student's writing sessions
   const { data: sessions = [], isLoading: sessionsLoading } = useQuery<WritingSession[]>({
     queryKey: ["/api/student/writing-sessions"],
+    staleTime: 0, // Always refetch to ensure fresh data
+    gcTime: 0, // Don't cache stale data
   });
 
   // Calculate stats for achievements
