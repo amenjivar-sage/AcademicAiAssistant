@@ -467,14 +467,14 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                     <div className="flex items-center gap-3">
                       <FileText className="h-5 w-5 text-gray-600" />
                       <span className="text-sm font-medium text-gray-700">
-                        Document: {Math.ceil(wordCount / 250) || 1} page{Math.ceil(wordCount / 250) !== 1 ? 's' : ''}
+                        Document: {Math.ceil(wordCount / 500) || 1} page{Math.ceil(wordCount / 500) !== 1 ? 's' : ''}
                       </span>
                       <span className="text-sm text-gray-500">
                         {wordCount} words
                       </span>
                       {wordCount > 0 && (
                         <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
-                          Currently on page {Math.ceil(wordCount / 250)}
+                          Currently on page {Math.ceil(wordCount / 500)}
                         </span>
                       )}
                     </div>
@@ -501,7 +501,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                   {/* Enhanced Page Break Indicators */}
                   {(() => {
                     const words = content.split(/\s+/).filter(word => word.length > 0);
-                    const wordsPerPage = 250;
+                    const wordsPerPage = 500;
                     const totalPages = Math.ceil(words.length / wordsPerPage) || 1;
                     const pageBreaks = [];
                     
@@ -516,7 +516,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                           style={{ top: `${Math.min(percentage, 85)}%` }}
                         >
                           <div className="bg-blue-500 text-white text-xs px-3 py-1 rounded-r-md inline-block shadow-sm">
-                            Page {i + 1} starts here
+                            Page {i + 1} starts here (500 words per page)
                           </div>
                         </div>
                       );

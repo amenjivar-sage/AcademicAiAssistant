@@ -40,7 +40,7 @@ export default function PageBasedEditor({
   onContentChange,
   disabled = false,
   placeholder = "Start writing...",
-  wordsPerPage = 250,
+  wordsPerPage = 500,
   onFormatRef,
   headerFooterSettings
 }: PageBasedEditorProps) {
@@ -173,10 +173,39 @@ export default function PageBasedEditor({
               <span className="text-sm font-medium text-gray-700">
                 Document: {totalPages} page{totalPages !== 1 ? 's' : ''}
               </span>
+              {totalPages > 1 && (
+                <span className="text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                  Editing page {currentPage}
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-4">
+              {/* Page Navigation */}
+              {totalPages > 1 && (
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </Button>
+                  <span className="text-sm text-gray-500">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </Button>
+                </div>
+              )}
               <div className="text-sm text-gray-500">
-                {wordCount} words total
+                {wordCount} words total (500 words per page)
               </div>
               
               {/* Page Settings Button */}
@@ -414,8 +443,8 @@ export default function PageBasedEditor({
 
                 {/* Page margins and content area */}
                 <div className={`px-16 ${(pageSettings.headerText || pageSettings.showStudentName) ? 'pt-8' : 'pt-16'} ${(pageSettings.footerText || pageSettings.showPageNumbers) ? 'pb-8' : 'pb-16'} min-h-[9in]`}>
-                  {isLastPage ? (
-                    // Editable rich text editor for the current/last page
+                  {pageNumber === currentPage ? (
+                    // Editable rich text editor for the selected page
                     <RichTextEditor
                       content={content}
                       onContentChange={onContentChange}
@@ -431,9 +460,10 @@ export default function PageBasedEditor({
                       }}
                     />
                   ) : (
-                    // Read-only content for previous pages
+                    // Clickable content for other pages - allows editing any page
                     <div 
-                      className="w-full h-full min-h-[9in] text-gray-800"
+                      className="w-full h-full min-h-[9in] text-gray-800 cursor-pointer hover:bg-gray-50 transition-colors rounded p-2"
+                      onClick={() => setCurrentPage(pageNumber)}
                       style={{
                         fontFamily: 'Times New Roman, serif',
                         fontSize: '12pt',
@@ -441,8 +471,13 @@ export default function PageBasedEditor({
                         letterSpacing: '0.2px',
                         whiteSpace: 'pre-wrap'
                       }}
+                      title="Click to edit this page"
                     >
                       {getContentUpToPage(pageNumber).split(' ').slice((pageNumber - 1) * wordsPerPage, pageNumber * wordsPerPage).join(' ')}
+                      {/* Edit indicator */}
+                      <div className="absolute top-4 right-4 opacity-0 hover:opacity-100 transition-opacity">
+                        <span className="text-xs bg-blue-500 text-white px-2 py-1 rounded">Click to edit</span>
+                      </div>
                     </div>
                   )}
                 </div>
