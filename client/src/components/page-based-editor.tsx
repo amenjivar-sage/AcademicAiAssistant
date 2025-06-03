@@ -115,6 +115,26 @@ export default function PageBasedEditor({
     return words.slice(0, endIndex).join(' ');
   };
 
+  // Handle page-specific content editing
+  const handlePageContentChange = (newPageContent: string) => {
+    const words = content.split(/\s+/).filter(word => word.length > 0);
+    const pageWords = newPageContent.split(/\s+/).filter(word => word.length > 0);
+    
+    const startIndex = (currentPage - 1) * wordsPerPage;
+    const endIndex = Math.min(startIndex + wordsPerPage, words.length);
+    
+    // Replace the content for the current page only
+    const beforePage = words.slice(0, startIndex);
+    const afterPage = words.slice(endIndex);
+    
+    // Combine: content before current page + new page content + content after current page
+    const newWords = [...beforePage, ...pageWords, ...afterPage];
+    const newContent = newWords.join(' ');
+    
+    console.log('Page', currentPage, 'content updated. Before:', beforePage.length, 'Page:', pageWords.length, 'After:', afterPage.length, 'Total:', newWords.length);
+    onContentChange(newContent);
+  };
+
   // Helper function to get alignment class
   const getAlignmentClass = (position: 'left' | 'center' | 'right') => {
     switch (position) {
@@ -462,10 +482,10 @@ export default function PageBasedEditor({
                 {/* Page margins and content area */}
                 <div className={`px-16 ${(pageSettings.headerText || pageSettings.showStudentName) ? 'pt-8' : 'pt-16'} ${(pageSettings.footerText || pageSettings.showPageNumbers) ? 'pb-8' : 'pb-16'} min-h-[9in]`}>
                   {pageNumber === currentPage ? (
-                    // Editable rich text editor for the selected page - shows full content but user is editing current page
+                    // Editable rich text editor for ONLY the current page's content
                     <RichTextEditor
-                      content={content}
-                      onContentChange={onContentChange}
+                      content={getPageContent(pageNumber)}
+                      onContentChange={handlePageContentChange}
                       placeholder={pageNumber === 1 ? placeholder : "Continue writing..."}
                       disabled={disabled}
                       onFormatRef={onFormatRef}
