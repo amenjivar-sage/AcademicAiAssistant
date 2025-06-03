@@ -527,60 +527,128 @@ function TeacherDetailView({ teacher, assignments, classrooms, allSessions, allU
             </div>
           </div>
 
-          <Tabs defaultValue="classes">
-            <TabsList>
-              <TabsTrigger value="classes">Classes</TabsTrigger>
-              <TabsTrigger value="assignments">Assignments</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="classes" className="mt-4">
-              <div className="space-y-3">
-                {classrooms.map((classroom: any) => (
-                  <div key={classroom.id} className="p-4 border rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-medium">{classroom.name}</h4>
-                      <Badge variant="outline">{classroom.subject}</Badge>
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      <p>Grade Level: {classroom.gradeLevel}</p>
-                      <p>Class Size: {classroom.classSize} students</p>
-                      <p>Join Code: {classroom.joinCode}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="assignments" className="mt-4">
-              <div className="space-y-3">
-                {assignments.map((assignment: any) => {
-                  const submissions = allSessions.filter((s: any) => s.assignmentId === assignment.id);
-                  const graded = submissions.filter((s: any) => s.status === 'graded');
-                  
-                  return (
-                    <div key={assignment.id} className="p-4 border rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-medium">{assignment.title}</h4>
-                        <Badge variant={assignment.status === 'active' ? 'default' : 'secondary'}>
-                          {assignment.status}
-                        </Badge>
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        <p className="mb-2">{assignment.description.substring(0, 100)}...</p>
-                        <div className="flex items-center space-x-4">
-                          <span>{submissions.length} submissions</span>
-                          <span>{graded.length} graded</span>
-                          {assignment.dueDate && (
-                            <span>Due: {new Date(assignment.dueDate).toLocaleDateString()}</span>
-                          )}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Classes & Assignments</h3>
+            <div className="space-y-6">
+              {classrooms.map((classroom: any) => {
+                const classroomAssignments = assignments.filter((a: any) => a.classroomId === classroom.id);
+                
+                return (
+                  <Card key={classroom.id} className="border-l-4 border-l-blue-500">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle className="text-lg">{classroom.name}</CardTitle>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant="outline">{classroom.subject}</Badge>
+                            <Badge variant="outline">{classroom.gradeLevel}</Badge>
+                            <Badge variant="secondary">Join Code: {classroom.joinCode}</Badge>
+                          </div>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-2xl font-bold text-blue-600">{classroom.classSize}</p>
+                          <p className="text-xs text-gray-500">Students</p>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </TabsContent>
-          </Tabs>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <h4 className="font-medium text-gray-900">
+                          Assignments ({classroomAssignments.length})
+                        </h4>
+                        
+                        {classroomAssignments.length === 0 ? (
+                          <p className="text-gray-500 text-sm italic">No assignments created yet</p>
+                        ) : (
+                          <div className="space-y-3">
+                            {classroomAssignments.map((assignment: any) => {
+                              const submissions = allSessions.filter((s: any) => s.assignmentId === assignment.id);
+                              const graded = submissions.filter((s: any) => s.status === 'graded');
+                              
+                              return (
+                                <div key={assignment.id} className="border rounded p-3 bg-gray-50">
+                                  <div className="flex items-center justify-between mb-2">
+                                    <h5 className="font-medium">{assignment.title}</h5>
+                                    <div className="flex items-center space-x-2">
+                                      <Badge variant={assignment.status === 'active' ? 'default' : 'secondary'} className="text-xs">
+                                        {assignment.status}
+                                      </Badge>
+                                      {assignment.dueDate && (
+                                        <Badge variant="outline" className="text-xs">
+                                          Due: {new Date(assignment.dueDate).toLocaleDateString()}
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <p className="text-sm text-gray-600 mb-2">
+                                    {assignment.description.substring(0, 150)}...
+                                  </p>
+                                  <div className="flex items-center space-x-4 text-xs text-gray-500">
+                                    <span>{submissions.length} submissions</span>
+                                    <span>{graded.length} graded</span>
+                                    <span>AI: {assignment.aiPermissions}</span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+              
+              {/* Show assignments not assigned to any specific classroom */}
+              {(() => {
+                const generalAssignments = assignments.filter((a: any) => !a.classroomId);
+                if (generalAssignments.length === 0) return null;
+                
+                return (
+                  <Card className="border-l-4 border-l-gray-400">
+                    <CardHeader>
+                      <CardTitle className="text-lg">General Assignments</CardTitle>
+                      <p className="text-sm text-gray-600">Assignments not tied to specific classes</p>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {generalAssignments.map((assignment: any) => {
+                          const submissions = allSessions.filter((s: any) => s.assignmentId === assignment.id);
+                          const graded = submissions.filter((s: any) => s.status === 'graded');
+                          
+                          return (
+                            <div key={assignment.id} className="border rounded p-3 bg-gray-50">
+                              <div className="flex items-center justify-between mb-2">
+                                <h5 className="font-medium">{assignment.title}</h5>
+                                <div className="flex items-center space-x-2">
+                                  <Badge variant={assignment.status === 'active' ? 'default' : 'secondary'} className="text-xs">
+                                    {assignment.status}
+                                  </Badge>
+                                  {assignment.dueDate && (
+                                    <Badge variant="outline" className="text-xs">
+                                      Due: {new Date(assignment.dueDate).toLocaleDateString()}
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                              <p className="text-sm text-gray-600 mb-2">
+                                {assignment.description.substring(0, 150)}...
+                              </p>
+                              <div className="flex items-center space-x-4 text-xs text-gray-500">
+                                <span>{submissions.length} submissions</span>
+                                <span>{graded.length} graded</span>
+                                <span>AI: {assignment.aiPermissions}</span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })()}
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
