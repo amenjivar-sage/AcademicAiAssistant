@@ -725,6 +725,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Archive user endpoint
+  app.patch("/api/admin/users/:id/archive", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
+      console.log(`Admin archiving user with ID: ${userId}`);
+      await storage.updateUserStatus(userId, false); // Set isActive to false
+      console.log(`User ${userId} archived successfully`);
+      
+      res.json({ message: "User archived successfully" });
+    } catch (error) {
+      console.error("Error archiving user:", error);
+      res.status(500).json({ message: "Failed to archive user" });
+    }
+  });
+
+  // Reactivate user endpoint
+  app.patch("/api/admin/users/:id/reactivate", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
+      console.log(`Admin reactivating user with ID: ${userId}`);
+      await storage.updateUserStatus(userId, true); // Set isActive to true
+      console.log(`User ${userId} reactivated successfully`);
+      
+      res.json({ message: "User reactivated successfully" });
+    } catch (error) {
+      console.error("Error reactivating user:", error);
+      res.status(500).json({ message: "Failed to reactivate user" });
+    }
+  });
+
   app.get("/api/admin/user-stats", async (req, res) => {
     try {
       const users = await storage.getAllUsers();
