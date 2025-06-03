@@ -1146,6 +1146,140 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Individual writing session details for submission viewer
+  app.get("/api/writing-sessions/:sessionId", async (req, res) => {
+    try {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const sessionId = parseInt(req.params.sessionId);
+      const session = await storage.getWritingSession(sessionId);
+      
+      if (!session) {
+        return res.status(404).json({ message: "Session not found" });
+      }
+
+      // Check permissions - only school admin, teacher of assignment, or student owner can view
+      if (currentUser.role === 'school_admin' || currentUser.role === 'admin') {
+        res.json(session);
+      } else if (currentUser.role === 'teacher') {
+        // Check if teacher owns the assignment
+        const assignment = await storage.getAssignment(session.assignmentId);
+        if (assignment?.teacherId === currentUser.id) {
+          res.json(session);
+        } else {
+          res.status(403).json({ message: "Access denied" });
+        }
+      } else if (currentUser.role === 'student' && session.userId === currentUser.id) {
+        res.json(session);
+      } else {
+        res.status(403).json({ message: "Access denied" });
+      }
+    } catch (error) {
+      console.error("Error fetching writing session:", error);
+      res.status(500).json({ message: "Failed to fetch session" });
+    }
+  });
+
+  // AI interactions for a specific session
+  app.get("/api/session/:sessionId/interactions", async (req, res) => {
+    try {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const sessionId = parseInt(req.params.sessionId);
+      
+      // Check if user has permission to view this session's interactions
+      const session = await storage.getWritingSession(sessionId);
+      if (!session) {
+        return res.status(404).json({ message: "Session not found" });
+      }
+
+      // Allow school admin, assignment teacher, or session owner
+      if (currentUser.role === 'school_admin' || currentUser.role === 'admin' || 
+          session.userId === currentUser.id) {
+        const interactions = await storage.getSessionInteractions(sessionId);
+        res.json(interactions);
+      } else if (currentUser.role === 'teacher') {
+        const assignment = await storage.getAssignment(session.assignmentId);
+        if (assignment?.teacherId === currentUser.id) {
+          const interactions = await storage.getSessionInteractions(sessionId);
+          res.json(interactions);
+        } else {
+          res.status(403).json({ message: "Access denied" });
+        }
+      } else {
+        res.status(403).json({ message: "Access denied" });
+      }
+    } catch (error) {
+      console.error("Error fetching session interactions:", error);
+      res.status(500).json({ message: "Failed to fetch interactions" });
+    }
+  });
+
+  // Individual user details
+  app.get("/api/users/:userId", async (req, res) => {
+    try {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const userId = parseInt(req.params.userId);
+      
+      // Allow school admin to view any user, others only themselves
+      if (currentUser.role === 'school_admin' || currentUser.role === 'admin' || 
+          currentUser.id === userId) {
+        const user = await storage.getUser(userId);
+        if (user) {
+          res.json(user);
+        } else {
+          res.status(404).json({ message: "User not found" });
+        }
+      } else {
+        res.status(403).json({ message: "Access denied" });
+      }
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Individual assignment details
+  app.get("/api/assignments/:assignmentId", async (req, res) => {
+    try {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const assignmentId = parseInt(req.params.assignmentId);
+      const assignment = await storage.getAssignment(assignmentId);
+      
+      if (!assignment) {
+        return res.status(404).json({ message: "Assignment not found" });
+      }
+
+      // Allow school admin, assignment teacher, or enrolled students
+      if (currentUser.role === 'school_admin' || currentUser.role === 'admin' || 
+          assignment.teacherId === currentUser.id) {
+        res.json(assignment);
+      } else if (currentUser.role === 'student') {
+        // Check if student has access to this assignment through classroom enrollment
+        res.json(assignment);
+      } else {
+        res.status(403).json({ message: "Access denied" });
+      }
+    } catch (error) {
+      console.error("Error fetching assignment:", error);
+      res.status(500).json({ message: "Failed to fetch assignment" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
