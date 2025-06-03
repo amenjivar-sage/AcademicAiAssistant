@@ -340,6 +340,7 @@ export default function SchoolAdminDashboard() {
                     sessions={getStudentSessions(selectedStudent)}
                     allAssignments={allAssignments}
                     allUsers={allUsers}
+                    allClassrooms={allClassrooms}
                   />
                 ) : (
                   <Card>
@@ -656,7 +657,17 @@ function TeacherDetailView({ teacher, assignments, classrooms, allSessions, allU
 }
 
 // Student Detail Component
-function StudentDetailView({ student, sessions, allAssignments, allUsers }: any) {
+function StudentDetailView({ student, sessions, allAssignments, allUsers, allClassrooms }: any) {
+  // Get unique classrooms from student's assignments
+  const studentClassrooms = [...new Set(
+    sessions.map((session: any) => {
+      const assignment = allAssignments.find((a: any) => a.id === session.assignmentId);
+      return assignment?.classroomId;
+    }).filter(Boolean)
+  )].map(classroomId => 
+    allClassrooms.find((c: any) => c.id === classroomId)
+  ).filter(Boolean);
+
   return (
     <div className="space-y-6">
       <Card>
@@ -682,8 +693,8 @@ function StudentDetailView({ student, sessions, allAssignments, allUsers }: any)
 
           <div className="grid grid-cols-3 gap-4 mb-6">
             <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <p className="text-2xl font-bold text-blue-600">{sessions.length}</p>
-              <p className="text-sm text-blue-800">Assignments</p>
+              <p className="text-2xl font-bold text-blue-600">{studentClassrooms.length}</p>
+              <p className="text-sm text-blue-800">Classes</p>
             </div>
             <div className="text-center p-4 bg-green-50 rounded-lg">
               <p className="text-2xl font-bold text-green-600">
@@ -699,35 +710,141 @@ function StudentDetailView({ student, sessions, allAssignments, allUsers }: any)
             </div>
           </div>
 
-          <div className="space-y-3">
-            <h4 className="font-medium">Recent Assignments</h4>
-            {sessions.map((session: any) => {
-              const assignment = allAssignments.find((a: any) => a.id === session.assignmentId);
-              const teacher = allUsers.find((u: any) => u.id === assignment?.teacherId);
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Classes & Assignments</h3>
+            <div className="space-y-6">
+              {studentClassrooms.map((classroom: any) => {
+                const classroomSessions = sessions.filter((session: any) => {
+                  const assignment = allAssignments.find((a: any) => a.id === session.assignmentId);
+                  return assignment?.classroomId === classroom.id;
+                });
+                
+                const teacher = allUsers.find((u: any) => u.id === classroom.teacherId);
+                
+                return (
+                  <Card key={classroom.id} className="border-l-4 border-l-green-500">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle className="text-lg">{classroom.name}</CardTitle>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant="outline">{classroom.subject}</Badge>
+                            <Badge variant="outline">{classroom.gradeLevel}</Badge>
+                            <Badge variant="secondary">
+                              Teacher: {teacher ? `${teacher.firstName} ${teacher.lastName}` : 'Unknown'}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-2xl font-bold text-green-600">{classroomSessions.length}</p>
+                          <p className="text-xs text-gray-500">Assignments</p>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <h4 className="font-medium text-gray-900">
+                          Student Work ({classroomSessions.length})
+                        </h4>
+                        
+                        {classroomSessions.length === 0 ? (
+                          <p className="text-gray-500 text-sm italic">No assignments worked on yet</p>
+                        ) : (
+                          <div className="space-y-3">
+                            {classroomSessions.map((session: any) => {
+                              const assignment = allAssignments.find((a: any) => a.id === session.assignmentId);
+                              
+                              return (
+                                <div key={session.id} className="border rounded p-3 bg-gray-50">
+                                  <div className="flex items-center justify-between mb-2">
+                                    <h5 className="font-medium">{assignment?.title || 'Unknown Assignment'}</h5>
+                                    <div className="flex items-center space-x-2">
+                                      <Badge variant={
+                                        session.status === 'graded' ? 'default' :
+                                        session.status === 'submitted' ? 'secondary' : 'outline'
+                                      } className="text-xs">
+                                        {session.status}
+                                      </Badge>
+                                      {session.grade && (
+                                        <Badge variant="outline" className="text-xs">
+                                          Grade: {session.grade}
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center space-x-4 text-xs text-gray-500">
+                                    <span>{session.wordCount} words</span>
+                                    {session.submittedAt && (
+                                      <span>Submitted: {new Date(session.submittedAt).toLocaleDateString()}</span>
+                                    )}
+                                    <span>AI: {assignment?.aiPermissions || 'Unknown'}</span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
               
-              return (
-                <div key={session.id} className="p-4 border rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <h5 className="font-medium">{assignment?.title || 'Unknown Assignment'}</h5>
-                    <div className="flex items-center space-x-2">
-                      <Badge variant={session.status === 'graded' ? 'default' : 'secondary'}>
-                        {session.status}
-                      </Badge>
-                      {session.grade && (
-                        <Badge variant="outline">{session.grade}</Badge>
-                      )}
-                    </div>
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    <p>Teacher: {teacher ? `${teacher.firstName} ${teacher.lastName}` : 'Unknown'}</p>
-                    <p>Word Count: {session.wordCount}</p>
-                    {session.submittedAt && (
-                      <p>Submitted: {new Date(session.submittedAt).toLocaleDateString()}</p>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+              {/* Show assignments not tied to any specific classroom */}
+              {(() => {
+                const generalSessions = sessions.filter((session: any) => {
+                  const assignment = allAssignments.find((a: any) => a.id === session.assignmentId);
+                  return !assignment?.classroomId;
+                });
+                
+                if (generalSessions.length === 0) return null;
+                
+                return (
+                  <Card className="border-l-4 border-l-gray-400">
+                    <CardHeader>
+                      <CardTitle className="text-lg">General Assignments</CardTitle>
+                      <p className="text-sm text-gray-600">Work not tied to specific classes</p>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {generalSessions.map((session: any) => {
+                          const assignment = allAssignments.find((a: any) => a.id === session.assignmentId);
+                          const teacher = allUsers.find((u: any) => u.id === assignment?.teacherId);
+                          
+                          return (
+                            <div key={session.id} className="border rounded p-3 bg-gray-50">
+                              <div className="flex items-center justify-between mb-2">
+                                <h5 className="font-medium">{assignment?.title || 'Unknown Assignment'}</h5>
+                                <div className="flex items-center space-x-2">
+                                  <Badge variant={
+                                    session.status === 'graded' ? 'default' :
+                                    session.status === 'submitted' ? 'secondary' : 'outline'
+                                  } className="text-xs">
+                                    {session.status}
+                                  </Badge>
+                                  {session.grade && (
+                                    <Badge variant="outline" className="text-xs">
+                                      Grade: {session.grade}
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex items-center space-x-4 text-xs text-gray-500">
+                                <span>Teacher: {teacher ? `${teacher.firstName} ${teacher.lastName}` : 'Unknown'}</span>
+                                <span>{session.wordCount} words</span>
+                                {session.submittedAt && (
+                                  <span>Submitted: {new Date(session.submittedAt).toLocaleDateString()}</span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })()}
+            </div>
           </div>
         </CardContent>
       </Card>
