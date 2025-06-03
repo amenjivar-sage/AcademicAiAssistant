@@ -18,8 +18,10 @@ import {
   Search,
   Eye,
   TrendingUp,
-  AlertCircle
+  AlertCircle,
+  Filter
 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface User {
   id: number;
@@ -72,6 +74,17 @@ export default function SchoolAdminDashboard() {
   const [selectedTeacher, setSelectedTeacher] = useState<number | null>(null);
   const [selectedStudent, setSelectedStudent] = useState<number | null>(null);
   const [selectedSubmission, setSelectedSubmission] = useState<number | null>(null);
+  
+  // Search and filter states
+  const [teacherSearch, setTeacherSearch] = useState('');
+  const [teacherDepartmentFilter, setTeacherDepartmentFilter] = useState('all');
+  const [studentSearch, setStudentSearch] = useState('');
+  const [studentGradeFilter, setStudentGradeFilter] = useState('all');
+  const [assignmentSearch, setAssignmentSearch] = useState('');
+  const [assignmentStatusFilter, setAssignmentStatusFilter] = useState('all');
+  const [assignmentDateFilter, setAssignmentDateFilter] = useState('all');
+  const [classroomSearch, setClassroomSearch] = useState('');
+  const [classroomSubjectFilter, setClassroomSubjectFilter] = useState('all');
 
   // Fetch all system data
   const { data: allUsers = [] } = useQuery({
@@ -93,22 +106,59 @@ export default function SchoolAdminDashboard() {
   const teachers = allUsers.filter((user: User) => user.role === 'teacher');
   const students = allUsers.filter((user: User) => user.role === 'student');
 
+  // Filter and search logic
+  const filteredTeachers = teachers.filter((teacher: User) => {
+    const matchesSearch = !teacherSearch || 
+      `${teacher.firstName} ${teacher.lastName}`.toLowerCase().includes(teacherSearch.toLowerCase()) ||
+      teacher.email.toLowerCase().includes(teacherSearch.toLowerCase());
+    const matchesDepartment = teacherDepartmentFilter === 'all' || teacher.department === teacherDepartmentFilter;
+    return matchesSearch && matchesDepartment;
+  });
+
+  const filteredStudents = students.filter((student: User) => {
+    const matchesSearch = !studentSearch ||
+      `${student.firstName} ${student.lastName}`.toLowerCase().includes(studentSearch.toLowerCase()) ||
+      student.email.toLowerCase().includes(studentSearch.toLowerCase());
+    const matchesGrade = studentGradeFilter === 'all' || student.grade === studentGradeFilter;
+    return matchesSearch && matchesGrade;
+  });
+
+  const filteredAssignments = (allAssignments as any[]).filter((assignment: any) => {
+    const matchesSearch = !assignmentSearch ||
+      assignment.title.toLowerCase().includes(assignmentSearch.toLowerCase()) ||
+      assignment.description.toLowerCase().includes(assignmentSearch.toLowerCase());
+    const matchesStatus = assignmentStatusFilter === 'all' || assignment.status === assignmentStatusFilter;
+    const matchesDate = assignmentDateFilter === 'all' || (() => {
+      const now = new Date();
+      const assignmentDate = new Date(assignment.createdAt);
+      switch (assignmentDateFilter) {
+        case 'today': return assignmentDate.toDateString() === now.toDateString();
+        case 'week': return (now.getTime() - assignmentDate.getTime()) <= 7 * 24 * 60 * 60 * 1000;
+        case 'month': return (now.getTime() - assignmentDate.getTime()) <= 30 * 24 * 60 * 60 * 1000;
+        default: return true;
+      }
+    })();
+    return matchesSearch && matchesStatus && matchesDate;
+  });
+
+  const filteredClassrooms = (allClassrooms as any[]).filter((classroom: any) => {
+    const matchesSearch = !classroomSearch ||
+      classroom.name.toLowerCase().includes(classroomSearch.toLowerCase()) ||
+      classroom.joinCode.toLowerCase().includes(classroomSearch.toLowerCase());
+    const matchesSubject = classroomSubjectFilter === 'all' || classroom.subject === classroomSubjectFilter;
+    return matchesSearch && matchesSubject;
+  });
+
+  // Get unique values for filter options
+  const uniqueDepartments = [...new Set(teachers.map((t: User) => t.department).filter(Boolean))];
+  const uniqueGrades = [...new Set(students.map((s: User) => s.grade).filter(Boolean))];
+  const uniqueSubjects = [...new Set((allClassrooms as any[]).map((c: any) => c.subject).filter(Boolean))];
+
   // Calculate system statistics
   const totalAssignments = allAssignments.length;
   const completedAssignments = allSessions.filter((s: WritingSession) => s.status === 'submitted' || s.status === 'graded').length;
   const activeClassrooms = allClassrooms.filter((c: Classroom) => c.classSize > 0).length;
   const averageGrades = allSessions.filter((s: WritingSession) => s.grade).length;
-
-  // Filter data based on search
-  const filteredTeachers = teachers.filter((teacher: User) => 
-    `${teacher.firstName} ${teacher.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    teacher.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const filteredStudents = students.filter((student: User) => 
-    `${student.firstName} ${student.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    student.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   const getTeacherAssignments = (teacherId: number) => {
     return allAssignments.filter((a: Assignment) => a.teacherId === teacherId);
