@@ -39,9 +39,16 @@ export default function RichTextEditor({
       const hasHTMLFormatting = content.includes('<') && content.includes('>');
       
       if (hasHTMLFormatting) {
-        // If content has HTML, set as innerHTML to preserve formatting
-        if (currentHTML !== content) {
-          editorRef.current.innerHTML = content;
+        // Only allow specific safe HTML tags for formatting
+        const sanitizedContent = content
+          .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+          .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+          .replace(/javascript:/gi, '')
+          .replace(/on\w+\s*=/gi, '');
+        
+        // If content has HTML, set as innerHTML with sanitized content
+        if (currentHTML !== sanitizedContent) {
+          editorRef.current.innerHTML = sanitizedContent;
         }
       } else {
         // If content is plain text, set as innerText
