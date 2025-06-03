@@ -43,7 +43,7 @@ export default function TeacherDashboard() {
 
   // Get teacher's students
   const { data: students } = useQuery({
-    queryKey: ["/api/teacher", currentUser?.id, "students"],
+    queryKey: [`/api/teacher/${currentUser?.id}/students`],
     enabled: !!currentUser?.id,
   });
 
