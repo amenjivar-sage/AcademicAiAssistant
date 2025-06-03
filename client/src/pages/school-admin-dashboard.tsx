@@ -584,7 +584,7 @@ export default function SchoolAdminDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
-                  {(allAssignments as any[]).map((assignment: any) => {
+                  {filteredAssignments.map((assignment: any) => {
                     const teacher = (allUsers as any[]).find((u: any) => u.id === assignment.teacherId);
                     const assignmentSessions = (allSessions as any[]).filter((s: any) => s.assignmentId === assignment.id);
                     const submittedSessions = assignmentSessions.filter((s: any) => s.status === 'submitted' || s.status === 'graded');
