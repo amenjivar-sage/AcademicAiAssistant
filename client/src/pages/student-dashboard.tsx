@@ -67,7 +67,7 @@ export default function StudentDashboard() {
 
   // Calculate stats for achievements
   const totalWordCount = sessions.reduce((total, session) => total + (session.wordCount || 0), 0);
-  const completedAssignments = sessions.filter(s => s.status === 'submitted').length;
+  const completedAssignments = sessions.filter(s => s.status === 'submitted' || s.status === 'graded').length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
