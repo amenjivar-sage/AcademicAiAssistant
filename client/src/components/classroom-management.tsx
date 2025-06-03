@@ -30,6 +30,17 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
     queryKey: ["/api/teacher/assignments"],
   });
 
+  // Get enrolled students for the teacher
+  const { data: enrolledStudents } = useQuery<Array<{
+    id: number;
+    name: string;
+    email: string;
+    classrooms: string[];
+  }>>({
+    queryKey: [`/api/teacher/${teacherId}/students`],
+    enabled: !!teacherId,
+  });
+
   // Filter assignments for the selected classroom (include both classroom-specific and general assignments)
   const classroomAssignments = selectedClassroom 
     ? assignments?.filter(assignment => 
@@ -99,9 +110,13 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
   });
 
   const getClassroomStats = (classroom: Classroom) => {
-    // Use real data instead of fake random numbers
+    // Count students enrolled in this specific classroom
+    const studentsInClass = enrolledStudents?.filter(student => 
+      student.classrooms && student.classrooms.includes(classroom.name.trim())
+    ).length || 0;
+    
     return {
-      enrolledStudents: 0, // Will be updated when we get real student enrollment data
+      enrolledStudents: studentsInClass,
       activeAssignments: assignments?.filter(a => a.status === 'active' && (a.classroomId === classroom.id || a.classroomId === null)).length || 0,
       pendingSubmissions: 0, // Will be updated when we get real submission data
     };
