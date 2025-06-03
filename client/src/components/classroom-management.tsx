@@ -41,6 +41,27 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
     enabled: !!teacherId,
   });
 
+  // Mark assignment complete mutation
+  const markCompleteMutation = useMutation({
+    mutationFn: async (assignmentId: number) => {
+      return apiRequest("POST", `/api/assignments/${assignmentId}/complete`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/teacher/assignments"] });
+      toast({
+        title: "Assignment Completed",
+        description: "Assignment has been marked as completed successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to mark assignment as complete. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Filter assignments for the selected classroom (include both classroom-specific and general assignments)
   const classroomAssignments = selectedClassroom 
     ? assignments?.filter(assignment => 
@@ -430,6 +451,8 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
                               <Button 
                                 variant="outline" 
                                 size="sm"
+                                onClick={() => markCompleteMutation.mutate(assignment.id)}
+                                disabled={markCompleteMutation.isPending}
                                 className="text-green-600 hover:text-green-700"
                               >
                                 Mark Complete
