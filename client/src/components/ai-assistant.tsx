@@ -10,6 +10,7 @@ import { Bot, Send, CheckCircle, XCircle, AlertTriangle, Loader2, BookOpen, PenT
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import CitationAssistant from "@/components/citation-assistant";
+import AiDisclosure from "./ai-disclosure";
 
 interface AiAssistantProps {
   sessionId?: number;
@@ -405,6 +406,11 @@ export default function AiAssistant({ sessionId, currentContent }: AiAssistantPr
 
 
       </Tabs>
+      
+      {/* AI Disclosure */}
+      <div className="mt-4">
+        <AiDisclosure variant="compact" />
+      </div>
     </div>
   );
 }

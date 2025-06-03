@@ -3,6 +3,7 @@ import { Bot, User, MessageCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import AiDisclosure from "./ai-disclosure";
 
 interface AiChatViewerProps {
   sessionId: number;
@@ -139,6 +140,9 @@ export default function AiChatViewer({ sessionId, studentName }: AiChatViewerPro
           </div>
         </ScrollArea>
       </CardContent>
+      <div className="px-4 pb-3">
+        <AiDisclosure variant="compact" />
+      </div>
     </Card>
   );
 }
