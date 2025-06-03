@@ -56,7 +56,7 @@ export default function Login() {
     loginMutation.mutate(formData);
   };
 
-  const handleDemoLogin = (role: "teacher" | "student" | "admin") => {
+  const handleDemoLogin = (role: "teacher" | "student" | "admin" | "school_admin") => {
     setSelectedRole(role);
     setDemoPassword("");
     setDialogOpen(true);
@@ -74,6 +74,8 @@ export default function Login() {
         setLocation("/teacher");
       } else if (data.user.role === "admin") {
         setLocation("/admin");
+      } else if (data.user.role === "school_admin") {
+        setLocation("/school-admin");
       } else {
         setLocation("/student");
       }
@@ -226,6 +228,50 @@ export default function Login() {
                   <div className="space-y-4">
                     <p className="text-sm text-gray-600">
                       Enter the demo password to access the administrator interface.
+                    </p>
+                    <div className="space-y-2">
+                      <Label htmlFor="demo-password">Demo Password</Label>
+                      <Input
+                        id="demo-password"
+                        type="password"
+                        value={demoPassword}
+                        onChange={(e) => setDemoPassword(e.target.value)}
+                        placeholder="Enter demo password"
+                        onKeyDown={(e) => e.key === "Enter" && confirmDemoLogin()}
+                      />
+                    </div>
+                    <div className="flex justify-end space-x-2">
+                      <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={confirmDemoLogin}>
+                        Access Demo
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+              
+              <Dialog open={dialogOpen && selectedRole === "school_admin"} onOpenChange={setDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    onClick={() => handleDemoLogin("school_admin")}
+                    disabled={loginMutation.isPending}
+                    className="flex flex-col items-center py-4 h-auto"
+                  >
+                    <GraduationCap className="h-5 w-5 mb-1 text-purple-600" />
+                    <span className="text-xs font-medium">School Admin</span>
+                    <span className="text-xs text-gray-500">Demo</span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>School Admin Demo Access</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <p className="text-sm text-gray-600">
+                      Enter the demo password to access the school administration interface with full oversight capabilities.
                     </p>
                     <div className="space-y-2">
                       <Label htmlFor="demo-password">Demo Password</Label>
