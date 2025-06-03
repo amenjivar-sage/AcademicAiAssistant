@@ -80,9 +80,8 @@ export default function HighlightedTextEditor({
 
   // Update highlight overlay when content or errors change
   useEffect(() => {
-    if (highlightRef.current) {
-      highlightRef.current.innerHTML = createHighlightedText();
-    }
+    // The highlight overlay is now handled by dangerouslySetInnerHTML in the JSX
+    // This useEffect is no longer needed for innerHTML manipulation
   }, [value, spellErrors, showSpellCheck, currentErrorIndex, placeholder]);
 
   // Sync dimensions when content changes
