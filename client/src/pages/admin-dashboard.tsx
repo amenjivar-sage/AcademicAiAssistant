@@ -1,7 +1,8 @@
 import AdminUserManagement from "@/components/admin-user-management";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Users, TrendingUp, Clock, BookOpen, Brain, Target, Award, Settings } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Shield, Users, TrendingUp, Clock, BookOpen, Brain, Target, Award, Settings, LogOut } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import SageLogo from "@/components/sage-logo";
@@ -39,10 +40,20 @@ export default function AdminDashboard() {
                 <p className="text-sm text-gray-500">Educational Impact Analytics</p>
               </div>
             </div>
-            <Badge variant="destructive" className="bg-red-600">
-              <Shield className="h-3 w-3 mr-1" />
-              Administrator
-            </Badge>
+            <div className="flex items-center space-x-4">
+              <Badge variant="destructive" className="bg-red-600">
+                <Shield className="h-3 w-3 mr-1" />
+                Administrator
+              </Badge>
+              <Button 
+                variant="outline" 
+                onClick={() => window.location.href = '/api/logout'}
+                className="flex items-center gap-2"
+              >
+                <LogOut className="h-4 w-4" />
+                Log Out
+              </Button>
+            </div>
           </div>
         </div>
       </header>
