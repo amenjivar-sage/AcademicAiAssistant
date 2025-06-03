@@ -82,11 +82,11 @@ export default function PageBasedEditor({
     }
   }, [disabled]);
 
-  // Auto-switch to last page when writing continues
+  // Auto-switch to last page when writing continues - unlimited page support
   useEffect(() => {
     const currentPageForWordCount = Math.ceil(wordCount / wordsPerPage) || 1;
     if (currentPageForWordCount > currentPage && wordCount > 0) {
-      console.log('Auto-switching to page', currentPageForWordCount, 'due to word count', wordCount);
+      console.log(`Auto-switching from page ${currentPage} to page ${currentPageForWordCount} (${wordCount} words, ${wordsPerPage} per page)`);
       setCurrentPage(currentPageForWordCount);
     }
   }, [wordCount, wordsPerPage, currentPage]);
@@ -100,12 +100,18 @@ export default function PageBasedEditor({
     }
   }, [currentPage, totalPages]);
 
-  // Calculate approximate page breaks based on word count
+  // Calculate page content - guaranteed to work for unlimited pages
   const getPageContent = (pageNumber: number) => {
     const words = content.split(/\s+/).filter(word => word.length > 0);
     const startIndex = (pageNumber - 1) * wordsPerPage;
-    const endIndex = Math.min(startIndex + wordsPerPage, words.length);
-    return words.slice(startIndex, endIndex).join(' ');
+    const endIndex = startIndex + wordsPerPage;
+    
+    // Extract only the words for this specific page
+    const pageWords = words.slice(startIndex, endIndex);
+    
+    console.log(`Getting content for page ${pageNumber}: words ${startIndex}-${endIndex-1}, found ${pageWords.length} words`);
+    
+    return pageWords.join(' ');
   };
 
   // Get all content up to a specific page
@@ -115,23 +121,43 @@ export default function PageBasedEditor({
     return words.slice(0, endIndex).join(' ');
   };
 
-  // Handle page-specific content editing
+  // Handle page-specific content editing - unlimited pages with strict boundaries
   const handlePageContentChange = (newPageContent: string) => {
-    const words = content.split(/\s+/).filter(word => word.length > 0);
-    const pageWords = newPageContent.split(/\s+/).filter(word => word.length > 0);
+    const allWords = content.split(/\s+/).filter(word => word.length > 0);
+    const newPageWords = newPageContent.split(/\s+/).filter(word => word.length > 0);
     
     const startIndex = (currentPage - 1) * wordsPerPage;
-    const endIndex = Math.min(startIndex + wordsPerPage, words.length);
+    const endIndex = currentPage * wordsPerPage;
     
-    // Replace the content for the current page only
-    const beforePage = words.slice(0, startIndex);
-    const afterPage = words.slice(endIndex);
+    // Get content before current page (all words from pages 1 to currentPage-1)
+    const beforePageWords = allWords.slice(0, startIndex);
     
-    // Combine: content before current page + new page content + content after current page
-    const newWords = [...beforePage, ...pageWords, ...afterPage];
-    const newContent = newWords.join(' ');
+    // Get content after current page (all words from pages currentPage+1 onwards)  
+    const afterPageWords = allWords.slice(endIndex);
     
-    console.log('Page', currentPage, 'content updated. Before:', beforePage.length, 'Page:', pageWords.length, 'After:', afterPage.length, 'Total:', newWords.length);
+    // Enforce word limit per page - truncate if exceeding 500 words
+    const limitedPageWords = newPageWords.slice(0, wordsPerPage);
+    
+    // Construct new content: before + limited current page + after
+    const reconstructedWords = [
+      ...beforePageWords,
+      ...limitedPageWords,
+      ...afterPageWords
+    ];
+    
+    const newContent = reconstructedWords.join(' ');
+    
+    // Comprehensive logging for unlimited page support
+    console.log(`Page ${currentPage} content update:`, {
+      pageNumber: currentPage,
+      wordsBeforeThisPage: beforePageWords.length,
+      wordsOnThisPage: limitedPageWords.length,
+      wordsAfterThisPage: afterPageWords.length,
+      totalWordsInDocument: reconstructedWords.length,
+      calculatedTotalPages: Math.ceil(reconstructedWords.length / wordsPerPage),
+      wordsTruncated: newPageWords.length - limitedPageWords.length
+    });
+    
     onContentChange(newContent);
   };
 
@@ -441,15 +467,25 @@ export default function PageBasedEditor({
           </div>
         </div>
 
-        {/* Generate pages */}
+        {/* Generate pages - unlimited page support with strict content isolation */}
         {Array.from({ length: totalPages }, (_, index) => {
           const pageNumber = index + 1;
           const isLastPage = pageNumber === totalPages;
           const pageContent = getPageContent(pageNumber);
           const wordsOnPage = pageContent.split(/\s+/).filter(word => word.length > 0).length;
           
+          // Debug logging for page content isolation
+          if (pageNumber <= 10) { // Only log first 10 pages to avoid spam
+            console.log(`Rendering page ${pageNumber}:`, {
+              totalPages,
+              wordsOnThisPage: wordsOnPage,
+              isCurrentPage: pageNumber === currentPage,
+              contentPreview: pageContent.substring(0, 50) + '...'
+            });
+          }
+          
           return (
-            <div key={pageNumber} className="page-container">
+            <div key={`page-${pageNumber}`} className="page-container">
               {/* Page Header */}
               <div className="flex justify-between items-center mb-4 px-2">
                 <div className="text-sm text-gray-500 font-medium">
