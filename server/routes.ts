@@ -1167,7 +1167,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else if (currentUser.role === 'teacher') {
         // Check if teacher owns the assignment
         const assignment = await storage.getAssignment(session.assignmentId);
-        if (assignment?.teacherId === currentUser.id) {
+        if (assignment && assignment.teacherId === currentUser.id) {
           res.json(session);
         } else {
           res.status(403).json({ message: "Access denied" });
@@ -1206,7 +1206,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json(interactions);
       } else if (currentUser.role === 'teacher') {
         const assignment = await storage.getAssignment(session.assignmentId);
-        if (assignment?.teacherId === currentUser.id) {
+        if (assignment && assignment.teacherId === currentUser.id) {
           const interactions = await storage.getSessionInteractions(sessionId);
           res.json(interactions);
         } else {

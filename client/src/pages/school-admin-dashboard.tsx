@@ -358,13 +358,13 @@ export default function SchoolAdminDashboard() {
           <TabsContent value="submissions" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Student Submissions</CardTitle>
-                <p className="text-gray-600">Review submitted and graded assignments with full details</p>
+                <CardTitle>Student Work & Submissions</CardTitle>
+                <p className="text-gray-600">Review all student work including drafts, submissions, and graded assignments</p>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {(allSessions as any[])
-                    .filter((session: any) => session.status === 'submitted' || session.status === 'graded')
+                    .filter((session: any) => session.content && session.content.trim().length > 0)
                     .map((session: any) => {
                       const student = (allUsers as any[]).find((u: any) => u.id === session.userId);
                       const assignment = (allAssignments as any[]).find((a: any) => a.id === session.assignmentId);
@@ -385,14 +385,20 @@ export default function SchoolAdminDashboard() {
                                     {student?.firstName} {student?.lastName}
                                   </p>
                                 </div>
-                                <Badge variant={session.status === 'graded' ? 'default' : 'secondary'}>
-                                  {session.status === 'graded' ? `Graded: ${session.grade}` : 'Submitted'}
+                                <Badge variant={
+                                  session.status === 'graded' ? 'default' :
+                                  session.status === 'submitted' ? 'secondary' : 'outline'
+                                }>
+                                  {session.status === 'graded' ? `Graded: ${session.grade}` :
+                                   session.status === 'submitted' ? 'Submitted' : 'Draft'}
                                 </Badge>
                               </div>
                               <div className="mt-2 flex items-center space-x-6 text-sm text-gray-500">
                                 <span className="flex items-center">
                                   <Calendar className="h-4 w-4 mr-1" />
-                                  {session.submittedAt ? new Date(session.submittedAt).toLocaleDateString() : 'Draft'}
+                                  {session.submittedAt ? 
+                                    `Submitted: ${new Date(session.submittedAt).toLocaleDateString()}` : 
+                                    `Last saved: ${new Date(session.updatedAt).toLocaleDateString()}`}
                                 </span>
                                 <span className="flex items-center">
                                   <FileText className="h-4 w-4 mr-1" />
