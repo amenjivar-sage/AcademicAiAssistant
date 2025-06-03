@@ -143,7 +143,7 @@ export default function StudentDashboard() {
                       const dueDate = new Date(a.dueDate);
                       const today = new Date();
                       const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
-                      return dueDate >= today && dueDate <= nextWeek && !sessions.some(s => s.assignmentId === a.id && s.status === 'submitted');
+                      return dueDate >= today && dueDate <= nextWeek && !sessions.some(s => s.assignmentId === a.id && (s.status === 'submitted' || s.status === 'graded'));
                     }).length}
                   </p>
                 </div>
@@ -207,7 +207,7 @@ export default function StudentDashboard() {
                       ) || [];
                       const pendingCount = classAssignments.filter(a => {
                         const session = sessions?.find(s => s.assignmentId === a.id);
-                        return !session || session.status !== 'submitted';
+                        return !session || (session.status !== 'submitted' && session.status !== 'graded');
                       }).length;
 
                       return (
