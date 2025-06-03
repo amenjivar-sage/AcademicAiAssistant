@@ -147,13 +147,22 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       });
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (savedSession) => {
       setLastSaved(new Date());
       setIsSaving(false);
-      queryClient.invalidateQueries({ queryKey: ['/api/writing-sessions', sessionId] });
+      console.log('✓ Save successful - Session ID:', savedSession?.id, 'Content length:', savedSession?.content?.length);
+      console.log('✓ Saved content preview:', savedSession?.content?.substring(0, 100) + '...');
+      
+      // Force refresh all related queries to prevent stale data
+      queryClient.invalidateQueries({ queryKey: ['/api/writing-sessions'] });
       queryClient.invalidateQueries({ queryKey: ['/api/student/writing-sessions'] });
       queryClient.invalidateQueries({ queryKey: ['/api/student/assignments'] });
-      console.log('Save completed successfully');
+      queryClient.invalidateQueries({ queryKey: ['/api/student/classes'] });
+      
+      // Update local session reference if we got updated data
+      if (savedSession && savedSession.id === sessionId) {
+        console.log('✓ Syncing session data after save');
+      }
     },
     onError: (error) => {
       setIsSaving(false);
