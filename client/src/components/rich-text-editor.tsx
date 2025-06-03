@@ -42,35 +42,16 @@ export default function RichTextEditor({
     }
   }, [content, isUpdating]);
 
-  // Handle input changes
+  // Handle input changes with proper line break preservation
   const handleInput = () => {
     if (editorRef.current) {
       setIsUpdating(true);
-      // Get HTML content and clean it up
-      let htmlContent = editorRef.current.innerHTML || '';
       
-      // Replace div line breaks with simple line breaks
-      htmlContent = htmlContent
-        .replace(/<div><br><\/div>/g, '\n')
-        .replace(/<div>/g, '\n')
-        .replace(/<\/div>/g, '')
-        .replace(/^<br>/, '') // Remove leading br
-        .replace(/<br>/g, '\n');
+      // Get the plain text with proper line breaks preserved
+      const plainText = editorRef.current.innerText || '';
       
-      // Fix HTML encoding issues and preserve formatting
-      htmlContent = htmlContent
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>')
-        .replace(/&amp;/g, '&');
-      
-      // Check if there's still HTML formatting (like bold, italic, underline, strong, em, lists, spans)
-      const hasFormatting = htmlContent.includes('<b>') || htmlContent.includes('<i>') || 
-                           htmlContent.includes('<u>') || htmlContent.includes('<strong>') || 
-                           htmlContent.includes('<em>') || htmlContent.includes('<span') ||
-                           htmlContent.includes('<ul>') || htmlContent.includes('<ol>') ||
-                           htmlContent.includes('<li>');
-      
-      const contentToSave = hasFormatting ? htmlContent : editorRef.current.innerText || '';
+      // Convert plain text line breaks to proper format for saving
+      const contentToSave = plainText;
       
       onContentChange(contentToSave);
       setTimeout(() => setIsUpdating(false), 0);
@@ -187,6 +168,33 @@ export default function RichTextEditor({
     }
   }, [onFormatRef, executeCommand]);
 
+  // Handle key events for proper Enter key behavior
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      
+      // Insert a line break at the current cursor position
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        range.deleteContents();
+        
+        // Create a text node with a line break
+        const lineBreak = document.createTextNode('\n');
+        range.insertNode(lineBreak);
+        
+        // Move cursor after the line break
+        range.setStartAfter(lineBreak);
+        range.setEndAfter(lineBreak);
+        selection.removeAllRanges();
+        selection.addRange(range);
+        
+        // Trigger content update
+        handleInput();
+      }
+    }
+  };
+
   // Handle paste events to clean up formatting
   const handlePaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
@@ -207,6 +215,7 @@ export default function RichTextEditor({
       ref={editorRef}
       contentEditable={!disabled}
       onInput={handleInput}
+      onKeyDown={handleKeyDown}
       onPaste={handlePaste}
       className={`outline-none ${className}`}
       style={{
@@ -217,6 +226,7 @@ export default function RichTextEditor({
         direction: 'ltr',
         textAlign: 'left',
         unicodeBidi: 'normal',
+        whiteSpace: 'pre-wrap', // Preserve line breaks and spaces
         ...style
       }}
       data-placeholder={placeholder}
