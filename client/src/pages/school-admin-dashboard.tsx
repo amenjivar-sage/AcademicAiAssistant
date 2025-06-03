@@ -203,10 +203,9 @@ export default function SchoolAdminDashboard() {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="teachers" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="teachers">Teachers</TabsTrigger>
             <TabsTrigger value="students">Students</TabsTrigger>
-            <TabsTrigger value="submissions">Submissions</TabsTrigger>
             <TabsTrigger value="assignments">Assignments</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
@@ -354,89 +353,113 @@ export default function SchoolAdminDashboard() {
             </div>
           </TabsContent>
 
-          {/* Submissions Overview */}
-          <TabsContent value="submissions" className="space-y-6">
+          {/* Assignments Overview */}
+          <TabsContent value="assignments" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Student Work & Submissions</CardTitle>
-                <p className="text-gray-600">Review all student work including drafts, submissions, and graded assignments</p>
+                <CardTitle>Assignments & Student Work</CardTitle>
+                <p className="text-gray-600">View all assignments with student submissions, drafts, and grades</p>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {(allSessions as any[])
-                    .filter((session: any) => session.content && session.content.trim().length > 0)
-                    .map((session: any) => {
-                      const student = (allUsers as any[]).find((u: any) => u.id === session.userId);
-                      const assignment = (allAssignments as any[]).find((a: any) => a.id === session.assignmentId);
-                      
-                      return (
-                        <div
-                          key={session.id}
-                          className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
-                        >
+                <div className="space-y-6">
+                  {(allAssignments as any[]).map((assignment: any) => {
+                    const teacher = (allUsers as any[]).find((u: any) => u.id === assignment.teacherId);
+                    const assignmentSessions = (allSessions as any[]).filter((s: any) => s.assignmentId === assignment.id);
+                    const submittedSessions = assignmentSessions.filter((s: any) => s.status === 'submitted' || s.status === 'graded');
+                    const draftSessions = assignmentSessions.filter((s: any) => s.status === 'draft' && s.content && s.content.trim().length > 0);
+                    
+                    return (
+                      <Card key={assignment.id} className="border-l-4 border-l-blue-500">
+                        <CardHeader>
                           <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center space-x-4">
-                                <div>
-                                  <h3 className="font-semibold text-gray-900">
-                                    {assignment?.title}
-                                  </h3>
-                                  <p className="text-sm text-gray-600">
-                                    {student?.firstName} {student?.lastName}
-                                  </p>
-                                </div>
-                                <Badge variant={
-                                  session.status === 'graded' ? 'default' :
-                                  session.status === 'submitted' ? 'secondary' : 'outline'
-                                }>
-                                  {session.status === 'graded' ? `Graded: ${session.grade}` :
-                                   session.status === 'submitted' ? 'Submitted' : 'Draft'}
-                                </Badge>
-                              </div>
-                              <div className="mt-2 flex items-center space-x-6 text-sm text-gray-500">
-                                <span className="flex items-center">
-                                  <Calendar className="h-4 w-4 mr-1" />
-                                  {session.submittedAt ? 
-                                    `Submitted: ${new Date(session.submittedAt).toLocaleDateString()}` : 
-                                    `Last saved: ${new Date(session.updatedAt).toLocaleDateString()}`}
-                                </span>
-                                <span className="flex items-center">
-                                  <FileText className="h-4 w-4 mr-1" />
-                                  {session.wordCount || 0} words
-                                </span>
-                                {session.pastedContent && session.pastedContent.length > 0 && (
-                                  <span className="flex items-center text-red-600">
-                                    <AlertCircle className="h-4 w-4 mr-1" />
-                                    Copy-paste detected
-                                  </span>
-                                )}
-                              </div>
+                            <div>
+                              <CardTitle className="text-lg">{assignment.title}</CardTitle>
+                              <p className="text-sm text-gray-600">
+                                Teacher: {teacher?.firstName} {teacher?.lastName} | 
+                                Status: {assignment.status} | 
+                                Due: {assignment.dueDate ? new Date(assignment.dueDate).toLocaleDateString() : 'No due date'}
+                              </p>
                             </div>
-                            <Button
-                              variant="outline"
-                              onClick={() => setSelectedSubmission(session.id)}
-                              className="ml-4"
-                            >
-                              <Eye className="h-4 w-4 mr-2" />
-                              View Details
-                            </Button>
+                            <div className="flex space-x-2">
+                              <Badge variant="secondary">
+                                {submittedSessions.length} submitted
+                              </Badge>
+                              <Badge variant="outline">
+                                {draftSessions.length} drafts
+                              </Badge>
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-3">
+                            {/* Show all student work for this assignment */}
+                            {assignmentSessions
+                              .filter((session: any) => session.content && session.content.trim().length > 0)
+                              .map((session: any) => {
+                                const student = (allUsers as any[]).find((u: any) => u.id === session.userId);
+                                
+                                return (
+                                  <div
+                                    key={session.id}
+                                    className="border rounded p-3 hover:bg-gray-50 transition-colors"
+                                  >
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex-1">
+                                        <div className="flex items-center space-x-3">
+                                          <span className="font-medium text-gray-900">
+                                            {student?.firstName} {student?.lastName}
+                                          </span>
+                                          <Badge variant={
+                                            session.status === 'graded' ? 'default' :
+                                            session.status === 'submitted' ? 'secondary' : 'outline'
+                                          }>
+                                            {session.status === 'graded' ? `Graded: ${session.grade}` :
+                                             session.status === 'submitted' ? 'Submitted' : 'Draft'}
+                                          </Badge>
+                                        </div>
+                                        <div className="mt-1 flex items-center space-x-4 text-sm text-gray-500">
+                                          <span className="flex items-center">
+                                            <Calendar className="h-3 w-3 mr-1" />
+                                            {session.submittedAt ? 
+                                              `Submitted: ${new Date(session.submittedAt).toLocaleDateString()}` : 
+                                              `Last saved: ${new Date(session.updatedAt).toLocaleDateString()}`}
+                                          </span>
+                                          <span className="flex items-center">
+                                            <FileText className="h-3 w-3 mr-1" />
+                                            {session.wordCount || 0} words
+                                          </span>
+                                          {session.pastedContent && session.pastedContent.length > 0 && (
+                                            <span className="flex items-center text-red-600">
+                                              <AlertCircle className="h-3 w-3 mr-1" />
+                                              Copy-paste detected
+                                            </span>
+                                          )}
+                                        </div>
+                                      </div>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setSelectedSubmission(session.id)}
+                                      >
+                                        <Eye className="h-3 w-3 mr-1" />
+                                        View
+                                      </Button>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            
+                            {assignmentSessions.filter((s: any) => s.content && s.content.trim().length > 0).length === 0 && (
+                              <p className="text-gray-500 text-sm italic">No student work yet</p>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
-
-          {/* Assignments Overview */}
-          <TabsContent value="assignments" className="space-y-6">
-            <AssignmentsOverview 
-              assignments={allAssignments}
-              sessions={allSessions}
-              users={allUsers}
-              classrooms={allClassrooms}
-            />
           </TabsContent>
 
           {/* Analytics */}
