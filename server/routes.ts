@@ -647,24 +647,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create assignment
   app.post("/api/assignments", async (req, res) => {
     try {
+      console.log("Assignment creation request body:", req.body);
+      
       const currentUser = await getCurrentUser();
+      console.log("Current user for assignment creation:", currentUser);
+      
       if (!currentUser || currentUser.role !== 'teacher') {
+        console.log("Authentication failed - user role:", currentUser?.role);
         return res.status(401).json({ message: "Teacher authentication required" });
       }
       
+      // Validate and clean assignment data
       const assignmentData = {
-        ...req.body,
-        teacherId: currentUser.id, // Ensure assignment is assigned to current teacher
-        dueDate: req.body.dueDate ? new Date(req.body.dueDate) : null // Convert date string to Date object
+        teacherId: currentUser.id,
+        classroomId: req.body.classroomId ? parseInt(req.body.classroomId) : null,
+        title: String(req.body.title || '').trim(),
+        description: String(req.body.description || '').trim(),
+        dueDate: req.body.dueDate ? new Date(req.body.dueDate) : null,
+        status: req.body.status || "active",
+        aiPermissions: req.body.aiPermissions || "full",
+        allowBrainstorming: Boolean(req.body.allowBrainstorming),
+        allowOutlining: Boolean(req.body.allowOutlining),
+        allowGrammarCheck: Boolean(req.body.allowGrammarCheck),
+        allowResearchHelp: Boolean(req.body.allowResearchHelp),
+        allowCopyPaste: Boolean(req.body.allowCopyPaste)
       };
       
-      console.log('Creating assignment with data:', assignmentData);
+      // Validate required fields
+      if (!assignmentData.title) {
+        console.log("Assignment creation failed: missing title");
+        return res.status(400).json({ message: "Assignment title is required" });
+      }
+      
+      if (!assignmentData.description) {
+        console.log("Assignment creation failed: missing description");
+        return res.status(400).json({ message: "Assignment description is required" });
+      }
+      
+      console.log('Final assignment data being sent to storage:', assignmentData);
+      
       const assignment = await storage.createAssignment(assignmentData);
-      console.log('Assignment created successfully:', assignment.id);
+      console.log('Assignment created successfully:', assignment);
+      
       res.json(assignment);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating assignment:', error);
-      res.status(500).json({ message: "Failed to create assignment" });
+      console.error('Error details:', error.message);
+      console.error('Error stack:', error.stack);
+      res.status(500).json({ message: "Failed to create assignment", error: error.message });
     }
   });
 

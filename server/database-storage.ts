@@ -79,8 +79,27 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createAssignment(assignmentData: InsertAssignment): Promise<Assignment> {
-    const [assignment] = await db.insert(assignments).values(assignmentData).returning();
-    return assignment;
+    console.log("DatabaseStorage: Creating assignment with data:", assignmentData);
+    
+    return await withRetry(async () => {
+      try {
+        const [assignment] = await db.insert(assignments).values(assignmentData).returning();
+        console.log("Assignment created successfully in database:", assignment);
+        return assignment;
+      } catch (dbError: any) {
+        // Log detailed error information for deployment debugging
+        console.error("Database error during assignment creation:", {
+          message: dbError?.message,
+          code: dbError?.code,
+          detail: dbError?.detail,
+          constraint: dbError?.constraint,
+          severity: dbError?.severity,
+          data: assignmentData
+        });
+        
+        throw dbError;
+      }
+    }, 3, 2000);
   }
 
   async updateAssignment(id: number, updates: Partial<InsertAssignment>): Promise<Assignment | undefined> {

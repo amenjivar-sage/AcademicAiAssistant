@@ -76,7 +76,24 @@ export default function AssignmentForm({ teacherId, children, assignment, mode =
 
   const createAssignmentMutation = useMutation({
     mutationFn: async (data: InsertAssignment) => {
+      // Frontend validation before sending to server
+      console.log("Submitting assignment data:", data);
+      
+      if (!data.title?.trim()) {
+        throw new Error("Assignment title is required");
+      }
+      
+      if (!data.description?.trim()) {
+        throw new Error("Assignment description is required");
+      }
+      
       const response = await apiRequest("POST", "/api/assignments", data);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to create assignment");
+      }
+      
       return response.json();
     },
     onSuccess: (data) => {
@@ -101,10 +118,21 @@ export default function AssignmentForm({ teacherId, children, assignment, mode =
         allowResearchHelp: true,
       });
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error("Assignment creation error:", error);
+      
+      let errorMessage = "Failed to create assignment. Please try again.";
+      
+      // Check if the error response contains a specific message
+      if (error?.message) {
+        errorMessage = error.message;
+      } else if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      
       toast({
         title: "Error",
-        description: "Failed to create assignment. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     },
