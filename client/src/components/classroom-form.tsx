@@ -39,7 +39,6 @@ const classroomSchema = z.object({
   name: z.string().min(1, "Class name is required"),
   subject: z.string().min(1, "Subject is required"),
   gradeLevel: z.string().optional(),
-  classSize: z.number().min(1, "Class size must be at least 1").max(200, "Class size cannot exceed 200"),
   description: z.string().optional(),
 });
 
@@ -82,7 +81,6 @@ export default function ClassroomForm({ teacherId, children, classroom, mode = "
       name: classroom?.name || "",
       subject: classroom?.subject || "",
       gradeLevel: classroom?.gradeLevel || "",
-      classSize: classroom?.classSize || 30,
       description: classroom?.description || "",
     },
   });
@@ -92,6 +90,7 @@ export default function ClassroomForm({ teacherId, children, classroom, mode = "
       const classroomData: InsertClassroom = {
         ...data,
         teacherId,
+        classSize: 0, // Start with 0 students, will be updated as students enroll
       };
       return await apiRequest("POST", "/api/classrooms", classroomData);
     },
@@ -230,26 +229,7 @@ export default function ClassroomForm({ teacherId, children, classroom, mode = "
               />
             </div>
 
-            <FormField
-              control={form.control}
-              name="classSize"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Expected Class Size</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      min="1"
-                      max="200"
-                      placeholder="30"
-                      {...field}
-                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+
 
             <FormField
               control={form.control}
