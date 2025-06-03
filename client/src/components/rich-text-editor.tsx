@@ -113,10 +113,6 @@ export default function RichTextEditor({
           if (!range.collapsed && range.toString().trim()) {
             const selectedText = range.toString();
             
-            // Clean approach: remove existing font spans and apply new one
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = selectedText;
-            
             // Create a clean span with just the font family
             const span = document.createElement('span');
             span.style.fontFamily = value;
