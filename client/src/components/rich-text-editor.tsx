@@ -32,29 +32,12 @@ export default function RichTextEditor({
   // Handle content updates from parent
   useEffect(() => {
     if (editorRef.current && !isUpdating) {
-      const currentHTML = editorRef.current.innerHTML || '';
       const currentText = editorRef.current.innerText || '';
       
-      // Check if content has HTML formatting
-      const hasHTMLFormatting = content.includes('<') && content.includes('>');
-      
-      if (hasHTMLFormatting) {
-        // Only allow specific safe HTML tags for formatting
-        const sanitizedContent = content
-          .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-          .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
-          .replace(/javascript:/gi, '')
-          .replace(/on\w+\s*=/gi, '');
-        
-        // If content has HTML, set as innerHTML with sanitized content
-        if (currentHTML !== sanitizedContent) {
-          editorRef.current.innerHTML = sanitizedContent;
-        }
-      } else {
-        // If content is plain text, set as innerText
-        if (currentText !== content) {
-          editorRef.current.innerText = content;
-        }
+      // Always treat content as plain text to prevent XSS
+      // The rich text editor will handle formatting through user interactions
+      if (currentText !== content) {
+        editorRef.current.innerText = content;
       }
     }
   }, [content, isUpdating]);
