@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import SubmissionViewer from "@/components/submission-viewer";
 import { 
   Users, 
   GraduationCap, 
@@ -70,6 +71,7 @@ export default function SchoolAdminDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTeacher, setSelectedTeacher] = useState<number | null>(null);
   const [selectedStudent, setSelectedStudent] = useState<number | null>(null);
+  const [selectedSubmission, setSelectedSubmission] = useState<number | null>(null);
 
   // Fetch all system data
   const { data: allUsers = [] } = useQuery({
@@ -201,9 +203,10 @@ export default function SchoolAdminDashboard() {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="teachers" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="teachers">Teachers Overview</TabsTrigger>
-            <TabsTrigger value="students">Students Overview</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="teachers">Teachers</TabsTrigger>
+            <TabsTrigger value="students">Students</TabsTrigger>
+            <TabsTrigger value="submissions">Submissions</TabsTrigger>
             <TabsTrigger value="assignments">Assignments</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
@@ -351,6 +354,75 @@ export default function SchoolAdminDashboard() {
             </div>
           </TabsContent>
 
+          {/* Submissions Overview */}
+          <TabsContent value="submissions" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Student Submissions</CardTitle>
+                <p className="text-gray-600">Review submitted and graded assignments with full details</p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {(allSessions as any[])
+                    .filter((session: any) => session.status === 'submitted' || session.status === 'graded')
+                    .map((session: any) => {
+                      const student = (allUsers as any[]).find((u: any) => u.id === session.userId);
+                      const assignment = (allAssignments as any[]).find((a: any) => a.id === session.assignmentId);
+                      
+                      return (
+                        <div
+                          key={session.id}
+                          className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-4">
+                                <div>
+                                  <h3 className="font-semibold text-gray-900">
+                                    {assignment?.title}
+                                  </h3>
+                                  <p className="text-sm text-gray-600">
+                                    {student?.firstName} {student?.lastName}
+                                  </p>
+                                </div>
+                                <Badge variant={session.status === 'graded' ? 'default' : 'secondary'}>
+                                  {session.status === 'graded' ? `Graded: ${session.grade}` : 'Submitted'}
+                                </Badge>
+                              </div>
+                              <div className="mt-2 flex items-center space-x-6 text-sm text-gray-500">
+                                <span className="flex items-center">
+                                  <Calendar className="h-4 w-4 mr-1" />
+                                  {session.submittedAt ? new Date(session.submittedAt).toLocaleDateString() : 'Draft'}
+                                </span>
+                                <span className="flex items-center">
+                                  <FileText className="h-4 w-4 mr-1" />
+                                  {session.wordCount || 0} words
+                                </span>
+                                {session.pastedContent && session.pastedContent.length > 0 && (
+                                  <span className="flex items-center text-red-600">
+                                    <AlertCircle className="h-4 w-4 mr-1" />
+                                    Copy-paste detected
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <Button
+                              variant="outline"
+                              onClick={() => setSelectedSubmission(session.id)}
+                              className="ml-4"
+                            >
+                              <Eye className="h-4 w-4 mr-2" />
+                              View Details
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           {/* Assignments Overview */}
           <TabsContent value="assignments" className="space-y-6">
             <AssignmentsOverview 
@@ -372,6 +444,14 @@ export default function SchoolAdminDashboard() {
           </TabsContent>
         </Tabs>
       </div>
+      
+      {/* Submission Viewer Modal */}
+      {selectedSubmission && (
+        <SubmissionViewer
+          sessionId={selectedSubmission}
+          onClose={() => setSelectedSubmission(null)}
+        />
+      )}
     </div>
   );
 }
