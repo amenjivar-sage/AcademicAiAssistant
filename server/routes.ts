@@ -146,18 +146,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   const getCurrentUser = async (): Promise<any> => {
     try {
+      console.log("Getting current user, currentSessionUserId:", currentSessionUserId);
+      
       if (!currentSessionUserId) {
+        console.log("No session user ID found, defaulting to teacher for demo");
         // Default to teacher for demo - user can switch via login
         currentSessionUserId = 12; // Jason Menjivar (teacher)
       }
       
       const user = await storage.getUser(currentSessionUserId);
+      console.log("Retrieved user from storage:", user ? `${user.firstName} ${user.lastName} (${user.role})` : "null");
+      
+      if (!user) {
+        console.log("User not found in storage, attempting to find any teacher");
+        // If specific user not found, try to find any teacher for demo purposes
+        const allUsers = await storage.getAllUsers();
+        const teacher = allUsers.find(u => u.role === 'teacher');
+        if (teacher) {
+          console.log("Found teacher:", teacher.firstName, teacher.lastName);
+          currentSessionUserId = teacher.id;
+          return teacher;
+        }
+      }
+      
       return user;
     } catch (error) {
       console.error("Error getting current user:", error);
       return null;
     }
   };
+
+  // Initialize session for deployment environments
+  app.post("/api/auth/init-session", async (req, res) => {
+    try {
+      console.log("Initializing session for deployment environment");
+      
+      // Check if we already have a valid session
+      if (currentSessionUserId) {
+        const user = await storage.getUser(currentSessionUserId);
+        if (user && user.role === 'teacher') {
+          console.log("Session already initialized with teacher:", user.firstName, user.lastName);
+          const { password: _, ...userWithoutPassword } = user;
+          return res.json({ user: userWithoutPassword, message: "Session already active" });
+        }
+      }
+      
+      // Find any available teacher for demo purposes
+      const allUsers = await storage.getAllUsers();
+      const teacher = allUsers.find(u => u.role === 'teacher' && u.isActive);
+      
+      if (teacher) {
+        currentSessionUserId = teacher.id;
+        console.log("Session initialized with teacher:", teacher.firstName, teacher.lastName);
+        const { password: _, ...userWithoutPassword } = teacher;
+        res.json({ user: userWithoutPassword, message: "Session initialized" });
+      } else {
+        res.status(404).json({ message: "No active teacher found" });
+      }
+    } catch (error) {
+      console.error("Error initializing session:", error);
+      res.status(500).json({ message: "Failed to initialize session" });
+    }
+  });
 
   // Get current authenticated user endpoint  
   app.get("/api/auth/user", async (req, res) => {
