@@ -82,6 +82,15 @@ export default function PageBasedEditor({
     }
   }, [disabled]);
 
+  // Auto-switch to last page when writing continues
+  useEffect(() => {
+    const currentPageForWordCount = Math.ceil(wordCount / wordsPerPage) || 1;
+    if (currentPageForWordCount > currentPage && wordCount > 0) {
+      console.log('Auto-switching to page', currentPageForWordCount, 'due to word count', wordCount);
+      setCurrentPage(currentPageForWordCount);
+    }
+  }, [wordCount, wordsPerPage, currentPage]);
+
   // Calculate approximate page breaks based on word count
   const getPageContent = (pageNumber: number) => {
     const words = content.split(/\s+/).filter(word => word.length > 0);
@@ -444,7 +453,7 @@ export default function PageBasedEditor({
                 {/* Page margins and content area */}
                 <div className={`px-16 ${(pageSettings.headerText || pageSettings.showStudentName) ? 'pt-8' : 'pt-16'} ${(pageSettings.footerText || pageSettings.showPageNumbers) ? 'pb-8' : 'pb-16'} min-h-[9in]`}>
                   {pageNumber === currentPage ? (
-                    // Editable rich text editor for the selected page
+                    // Editable rich text editor for the selected page - shows full content but user is editing current page
                     <RichTextEditor
                       content={content}
                       onContentChange={onContentChange}
@@ -460,9 +469,9 @@ export default function PageBasedEditor({
                       }}
                     />
                   ) : (
-                    // Clickable content for other pages - allows editing any page
+                    // Static display of page-specific content only
                     <div 
-                      className="w-full h-full min-h-[9in] text-gray-800 cursor-pointer hover:bg-gray-50 transition-colors rounded p-2"
+                      className="w-full h-full min-h-[9in] text-gray-800 cursor-pointer hover:bg-gray-50 transition-colors rounded p-2 relative"
                       onClick={() => setCurrentPage(pageNumber)}
                       style={{
                         fontFamily: 'Times New Roman, serif',
@@ -473,7 +482,7 @@ export default function PageBasedEditor({
                       }}
                       title="Click to edit this page"
                     >
-                      {getContentUpToPage(pageNumber).split(' ').slice((pageNumber - 1) * wordsPerPage, pageNumber * wordsPerPage).join(' ')}
+                      {getPageContent(pageNumber)}
                       {/* Edit indicator */}
                       <div className="absolute top-4 right-4 opacity-0 hover:opacity-100 transition-opacity">
                         <span className="text-xs bg-blue-500 text-white px-2 py-1 rounded">Click to edit</span>
