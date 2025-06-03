@@ -19,7 +19,8 @@ import {
   Eye,
   TrendingUp,
   AlertCircle,
-  Filter
+  Filter,
+  LogOut
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -189,15 +190,17 @@ export default function SchoolAdminDashboard() {
             <p className="text-gray-600">Complete oversight of educational activities and performance</p>
           </div>
           <div className="flex items-center space-x-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                placeholder="Search teachers, students..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 w-64"
-              />
-            </div>
+            <Badge variant="secondary" className="bg-green-100 text-green-800">
+              System Active
+            </Badge>
+            <Button 
+              variant="outline" 
+              onClick={() => window.location.href = '/api/logout'}
+              className="flex items-center gap-2"
+            >
+              <LogOut className="h-4 w-4" />
+              Log Out
+            </Button>
           </div>
         </div>
       </div>
