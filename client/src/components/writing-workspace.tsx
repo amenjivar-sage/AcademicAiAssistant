@@ -495,6 +495,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                     disabled={isSubmitted || isGraded}
                     onFormatRef={formatRef}
                     placeholder="Start writing your assignment here..."
+                    wordsPerPage={500}
                     headerFooterSettings={headerFooterSettings}
                   />
                   
