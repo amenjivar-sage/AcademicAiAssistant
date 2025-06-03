@@ -110,19 +110,12 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
   });
 
   const getClassroomStats = (classroom: Classroom) => {
-    // Debug logging
-    console.log("Enrolled students data:", enrolledStudents);
-    console.log("Looking for classroom:", classroom.name, "trimmed:", classroom.name.trim());
-    
     // Count students enrolled in this specific classroom
-    const studentsInClass = enrolledStudents?.filter(student => {
-      console.log("Student classrooms:", student.classrooms);
-      const hasClassroom = student.classrooms && student.classrooms.includes(classroom.name.trim());
-      console.log("Student has classroom?", hasClassroom);
-      return hasClassroom;
-    }).length || 0;
-    
-    console.log("Students in class count:", studentsInClass);
+    // Need to trim both classroom name and student classroom names for proper matching
+    const classroomName = classroom.name.trim();
+    const studentsInClass = enrolledStudents?.filter(student => 
+      student.classrooms && student.classrooms.some(cls => cls.trim() === classroomName)
+    ).length || 0;
     
     return {
       enrolledStudents: studentsInClass,
