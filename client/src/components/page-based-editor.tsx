@@ -91,6 +91,15 @@ export default function PageBasedEditor({
     }
   }, [wordCount, wordsPerPage, currentPage]);
 
+  // Ensure currentPage stays within valid range
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages);
+    } else if (currentPage < 1) {
+      setCurrentPage(1);
+    }
+  }, [currentPage, totalPages]);
+
   // Calculate approximate page breaks based on word count
   const getPageContent = (pageNumber: number) => {
     const words = content.split(/\s+/).filter(word => word.length > 0);
