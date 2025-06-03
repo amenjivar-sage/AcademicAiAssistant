@@ -81,6 +81,7 @@ export default function SchoolAdminDashboard() {
   const [studentSearch, setStudentSearch] = useState('');
   const [studentGradeFilter, setStudentGradeFilter] = useState('all');
   const [assignmentSearch, setAssignmentSearch] = useState('');
+  const [assignmentSubjectFilter, setAssignmentSubjectFilter] = useState('all');
   const [assignmentStatusFilter, setAssignmentStatusFilter] = useState('all');
   const [assignmentDateFilter, setAssignmentDateFilter] = useState('all');
   const [classroomSearch, setClassroomSearch] = useState('');
@@ -153,6 +154,8 @@ export default function SchoolAdminDashboard() {
   const uniqueDepartments = [...new Set(teachers.map((t: User) => t.department).filter(Boolean))];
   const uniqueGrades = [...new Set(students.map((s: User) => s.grade).filter(Boolean))];
   const uniqueSubjects = [...new Set((allClassrooms as any[]).map((c: any) => c.subject).filter(Boolean))];
+
+
 
   // Calculate system statistics
   const totalAssignments = allAssignments.length;
@@ -262,11 +265,62 @@ export default function SchoolAdminDashboard() {
 
           {/* Teachers Overview */}
           <TabsContent value="teachers" className="space-y-6">
+            {/* Search and Filter Bar */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Search className="h-5 w-5" />
+                  Search & Filter Teachers
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="teacher-search">Search Teachers</Label>
+                    <Input
+                      id="teacher-search"
+                      placeholder="Search by name or email..."
+                      value={teacherSearch}
+                      onChange={(e) => setTeacherSearch(e.target.value)}
+                      className="w-full"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="teacher-department">Department</Label>
+                    <Select value={teacherDepartmentFilter} onValueChange={setTeacherDepartmentFilter}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Departments" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Departments</SelectItem>
+                        {uniqueDepartments.map((dept: string) => (
+                          <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-end">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setTeacherSearch('');
+                        setTeacherDepartmentFilter('all');
+                      }}
+                      className="w-full"
+                    >
+                      <Filter className="h-4 w-4 mr-2" />
+                      Clear Filters
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-1">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Teachers ({filteredTeachers.length})</CardTitle>
+                    <CardTitle>Teachers ({filteredTeachers.length} of {teachers.length})</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <ScrollArea className="h-96">
@@ -334,11 +388,62 @@ export default function SchoolAdminDashboard() {
 
           {/* Students Overview */}
           <TabsContent value="students" className="space-y-6">
+            {/* Search and Filter Bar */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Search className="h-5 w-5" />
+                  Search & Filter Students
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="student-search">Search Students</Label>
+                    <Input
+                      id="student-search"
+                      placeholder="Search by name or email..."
+                      value={studentSearch}
+                      onChange={(e) => setStudentSearch(e.target.value)}
+                      className="w-full"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="student-grade">Grade Level</Label>
+                    <Select value={studentGradeFilter} onValueChange={setStudentGradeFilter}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Grades" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Grades</SelectItem>
+                        {uniqueGrades.map((grade: string) => (
+                          <SelectItem key={grade} value={grade}>{grade}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-end">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setStudentSearch('');
+                        setStudentGradeFilter('all');
+                      }}
+                      className="w-full"
+                    >
+                      <Filter className="h-4 w-4 mr-2" />
+                      Clear Filters
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-1">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Students ({filteredStudents.length})</CardTitle>
+                    <CardTitle>Students ({filteredStudents.length} of {students.length})</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <ScrollArea className="h-96">
@@ -406,6 +511,72 @@ export default function SchoolAdminDashboard() {
 
           {/* Assignments Overview */}
           <TabsContent value="assignments" className="space-y-6">
+            {/* Search and Filter Bar */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Search className="h-5 w-5" />
+                  Search & Filter Assignments
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="assignment-search">Search Assignments</Label>
+                    <Input
+                      id="assignment-search"
+                      placeholder="Search by title or description..."
+                      value={assignmentSearch}
+                      onChange={(e) => setAssignmentSearch(e.target.value)}
+                      className="w-full"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="assignment-subject">Subject</Label>
+                    <Select value={assignmentSubjectFilter} onValueChange={setAssignmentSubjectFilter}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Subjects" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Subjects</SelectItem>
+                        {uniqueSubjects.map((subject: string) => (
+                          <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="assignment-status">Status</Label>
+                    <Select value={assignmentStatusFilter} onValueChange={setAssignmentStatusFilter}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Statuses" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Statuses</SelectItem>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="overdue">Overdue</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-end">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setAssignmentSearch('');
+                        setAssignmentSubjectFilter('all');
+                        setAssignmentStatusFilter('all');
+                      }}
+                      className="w-full"
+                    >
+                      <Filter className="h-4 w-4 mr-2" />
+                      Clear Filters
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             <Card>
               <CardHeader>
                 <CardTitle>Assignments & Student Work</CardTitle>
