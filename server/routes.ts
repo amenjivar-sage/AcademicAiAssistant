@@ -115,6 +115,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
+      // Check if user account is active (not archived)
+      if (!user.isActive) {
+        return res.status(403).json({ message: "Account has been suspended. Please contact your administrator." });
+      }
+
       // Update session to current user
       currentSessionUserId = user.id;
       
@@ -225,6 +230,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (!demoUser) {
         return res.status(404).json({ message: "Demo user not found for this role" });
+      }
+
+      // Check if demo user account is active (not archived)
+      if (!demoUser.isActive) {
+        return res.status(403).json({ message: "Demo account has been suspended. Please contact your administrator." });
       }
 
       // Update user's timestamp to mark as current session
