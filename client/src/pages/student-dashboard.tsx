@@ -48,12 +48,20 @@ export default function StudentDashboard() {
   };
 
   // Get student's enrolled classes
-  const { data: classes = [], isLoading: classesLoading } = useQuery<Classroom[]>({
+  const { data: classes = [], isLoading: classesLoading, error: classesError } = useQuery<Classroom[]>({
     queryKey: ["/api/student/classes"],
+    staleTime: 0, // Always refetch to ensure fresh data
+    gcTime: 0, // Don't cache stale data
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   // Debug logging for classes
-  console.log("Classes data:", classes, "Loading:", classesLoading);
+  console.log("=== STUDENT DASHBOARD DEBUG ===");
+  console.log("Classes data:", classes, "Loading:", classesLoading, "Error:", classesError);
+  console.log("Number of classes:", classes?.length || 0);
+  console.log("Current user:", user);
+  console.log("=== END DASHBOARD DEBUG ===");
 
   // Get student's assignments across all classes
   const { data: assignments = [], isLoading: assignmentsLoading } = useQuery<Assignment[]>({

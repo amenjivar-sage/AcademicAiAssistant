@@ -239,15 +239,23 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     
     if (!isSaving && hasChanges && hasSubstantialContent) {
       setIsSaving(true);
-      console.log('Auto-save triggered - session:', session?.id, 'sessionId:', sessionId, 'assignmentId:', assignmentId);
-      console.log('Content being saved:', content.substring(0, 50), '... (length:', content.length, ')');
+      console.log('=== AUTO-SAVE TRIGGERED ===');
+      console.log('Session ID:', session?.id, 'URL SessionId:', sessionId, 'Assignment ID:', assignmentId);
+      console.log('Content stats:', {
+        titleLength: title.length,
+        contentLength: content.length,
+        wordCount: content.split(/\s+/).filter(word => word.length > 0).length,
+        pastedContentCount: pastedContents.length
+      });
+      console.log('Content preview (first 100 chars):', content.substring(0, 100) + '...');
+      console.log('Session content preview:', session?.content?.substring(0, 100) + '...');
       
       const currentSessionId = session?.id || sessionId;
       if (currentSessionId && currentSessionId !== 0) {
-        console.log('Updating existing session:', currentSessionId);
+        console.log('✓ Updating existing session:', currentSessionId, 'with', content.length, 'characters');
         updateSessionMutation.mutate({ title, content, pastedContent: pastedContents });
       } else if (assignmentId && hasSubstantialContent && !createSessionMutation.isPending) {
-        console.log('Creating new session for assignment:', assignmentId);
+        console.log('✓ Creating new session for assignment:', assignmentId, 'with', content.length, 'characters');
         createSessionMutation.mutate({ 
           assignmentId, 
           title, 
@@ -256,36 +264,79 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
         });
       } else {
         setIsSaving(false);
-        console.log('No valid session or assignment to save, or content too minimal');
+        console.log('✗ Save cancelled - currentSessionId:', currentSessionId, 'assignmentId:', assignmentId, 'createPending:', createSessionMutation.isPending);
       }
+      console.log('=== END AUTO-SAVE DEBUG ===');
+    } else {
+      console.log('Auto-save skipped:', { isSaving, hasChanges, hasSubstantialContent });
     }
   }, [title, content, pastedContents, session, sessionId, assignmentId, isSaving, updateSessionMutation, createSessionMutation]);
 
   // Load session data and update sessionId if a new session was created
   useEffect(() => {
     if (session) {
-      console.log('Writing workspace - Loading session data:', session.id, 'Title:', session.title, 'Content:', session.content);
+      console.log('=== SESSION LOADING DEBUG ===');
+      console.log('Session data received:', {
+        id: session.id,
+        title: session.title,
+        contentLength: session.content?.length || 0,
+        wordCount: session.wordCount,
+        status: session.status,
+        contentPreview: session.content?.substring(0, 100) + '...'
+      });
+      console.log('Current editor state:', {
+        titleLength: title.length,
+        contentLength: content.length,
+        currentSessionId: sessionId
+      });
       
       // Only load session content if this is the initial load (when we don't have any current content)
       const hasCurrentContent = title.trim() || content.trim();
+      console.log('Has current content:', hasCurrentContent);
       
       // Load session data only if we don't currently have content (initial load scenario)
       if (!hasCurrentContent) {
+        console.log('✓ Loading session content into editor');
         setTitle(session.title || "");
         setContent(session.content || "");
         setPastedContents(session.pastedContent as PastedContent[] || []);
         setWordCount(session.wordCount || 0);
+      } else {
+        console.log('✗ Skipping session load - editor already has content');
       }
       
       // If we got a new session with a different ID, update our session ID state
       if (sessionId === 0 && session.id && session.id !== 0) {
+        console.log('✓ Updating session ID from 0 to', session.id);
         setSessionId(session.id);
         window.history.replaceState({}, '', `/assignment/${assignmentId}/session/${session.id}`);
         // Invalidate queries to use new session ID
         queryClient.invalidateQueries({ queryKey: ['/api/writing-sessions'] });
       }
+      console.log('=== END SESSION LOADING DEBUG ===');
     }
   }, [session, sessionId, assignmentId, queryClient]);
+
+  // Save before page unload to prevent data loss
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      console.log('=== PAGE UNLOAD - EMERGENCY SAVE ===');
+      const hasUnsavedChanges = title !== session?.title || content !== session?.content;
+      
+      if (hasUnsavedChanges && (title.trim() || content.trim())) {
+        console.log('Triggering emergency save before page unload');
+        handleManualSave();
+        
+        // Show browser warning
+        e.preventDefault();
+        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+        return 'You have unsaved changes. Are you sure you want to leave?';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [title, content, session, handleManualSave]);
 
   // Auto-save functionality with improved session handling
   useEffect(() => {
@@ -299,7 +350,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       if (title || content) {
         handleAutoSave();
       }
-    }, 4000);
+    }, 2000); // Reduced to 2 seconds for better data protection
 
     return () => clearTimeout(timer);
   }, [title, content, session, sessionId, assignmentId, isSaving, pastedContents, updateSessionMutation, createSessionMutation]);
