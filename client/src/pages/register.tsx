@@ -205,6 +205,7 @@ export default function Register() {
                   <SelectContent>
                     <SelectItem value="student">Student</SelectItem>
                     <SelectItem value="teacher">Teacher</SelectItem>
+                    <SelectItem value="admin">Administrator</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -243,6 +244,19 @@ export default function Register() {
                       <SelectItem value="Other">Other</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+              )}
+
+              {formData.role === "admin" && (
+                <div className="space-y-2">
+                  <Label htmlFor="department">School/District</Label>
+                  <Input
+                    id="department"
+                    value={formData.department}
+                    onChange={(e) => updateFormData("department", e.target.value)}
+                    placeholder="Enter your school or district name"
+                    required
+                  />
                 </div>
               )}
 

@@ -74,6 +74,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { generateUsernameFromEmail } = await import('./username-generator');
       const username = await generateUsernameFromEmail(email, storage);
 
+      // Automatically assign school_admin role for administrators
+      const finalRole = role === "admin" ? "school_admin" : role;
+      
       // Create new user
       const newUser = await storage.createUser({
         username,
@@ -81,7 +84,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email,
         firstName,
         lastName,
-        role,
+        role: finalRole,
         grade: grade || null,
         department: department || null
       });
@@ -213,6 +216,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Update user's timestamp to mark as current session
       await storage.updateUserStatus(demoUser.id, true);
+      
+      // Set the current session user ID
+      currentSessionUserId = demoUser.id;
       
       // Remove password from response
       const { password: _, ...userWithoutPassword } = demoUser;
