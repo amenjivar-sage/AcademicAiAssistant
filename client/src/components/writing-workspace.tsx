@@ -614,9 +614,6 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
           assignmentType={assignment?.aiPermissions}
           currentContent={content}
         />
-        <div className="p-4 border-t">
-          <AiDisclosure variant="compact" />
-        </div>
       </div>
 
 
