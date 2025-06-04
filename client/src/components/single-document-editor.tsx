@@ -26,7 +26,7 @@ export default function SingleDocumentEditor({
   showHeader = true
 }: SingleDocumentEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const [pages, setPages] = useState<string[]>([]);
+  const [pages, setPages] = useState<number[]>([]);
   const [isSpellCheckActive, setIsSpellCheckActive] = useState(false);
   const [spellErrors, setSpellErrors] = useState<any[]>([]);
 
@@ -43,9 +43,9 @@ export default function SingleDocumentEditor({
   // Update page count when content changes
   useEffect(() => {
     const pageCount = calculatePageCount(content);
-    // Create array of page numbers for rendering
-    const pageArray = Array.from({ length: pageCount }, (_, i) => i + 1);
-    setPages(pageArray.map(() => content)); // Each page shows full content, but only visible portion will show
+    // Create array representing pages - just for layout purposes
+    const pageArray = Array.from({ length: pageCount }, (_, i) => i);
+    setPages(pageArray);
     console.log('Page count debug:', {
       contentLength: content.length,
       estimatedPages: pageCount
@@ -108,48 +108,79 @@ export default function SingleDocumentEditor({
       </div>
 
       <div className="flex flex-col items-center py-6 relative">
-        {pages.map((_, pageIndex) => {
-          // Calculate the content offset for this page based on estimated character capacity
-          const charsPerPage = 1200;
-          const startChar = pageIndex * charsPerPage;
-          const endChar = startChar + charsPerPage;
-          const pageContent = content.slice(startChar, endChar);
-          
-          console.log(`Page ${pageIndex + 1} display:`, {
-            startChar,
-            endChar,
-            length: pageContent.length,
-            preview: pageContent.slice(0, 50) + '...',
-            actualContent: pageContent
-          });
-          
-          return (
-            <div key={pageIndex} className="relative">
-            {/* Page Break Indicator */}
-            {pageIndex > 0 && (
-              <div className="flex items-center justify-center py-2 mb-2">
-                <div className="flex-1 border-t-2 border-dashed border-red-400"></div>
-                <div className="px-4 py-1 bg-red-500 text-white text-sm font-bold rounded shadow">
-                  PAGE {pageIndex + 1}
-                </div>
-                <div className="flex-1 border-t-2 border-dashed border-red-400"></div>
-              </div>
+        {/* Single continuous textarea spanning multiple page layouts */}
+        <div className="relative">
+          {/* Continuous editing area */}
+          <div className="relative">
+            {/* Spell check highlighting overlay */}
+            {isSpellCheckActive && spellErrors.length > 0 && (
+              <div 
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  fontFamily: "'Times New Roman', serif",
+                  fontSize: "12pt",
+                  lineHeight: "2.0",
+                  padding: `${PAGE_PADDING}px`,
+                  whiteSpace: 'pre-wrap',
+                  wordWrap: 'break-word',
+                  color: 'transparent',
+                  zIndex: 1
+                }}
+                dangerouslySetInnerHTML={{
+                  __html: highlightMisspelledWords(content, spellErrors)
+                }}
+              />
             )}
-            
-            <div
-              className="bg-white shadow-lg mx-auto relative mb-3"
-              style={{ 
-                width: `${PAGE_WIDTH_INCHES}in`, 
+            <textarea
+              ref={textareaRef}
+              className="w-full resize-none border-none outline-none bg-transparent text-gray-900 font-serif relative"
+              style={{
+                fontFamily: "'Times New Roman', serif",
+                fontSize: "12pt",
+                lineHeight: "2.0",
+                padding: `${PAGE_PADDING}px`,
+                zIndex: 2,
+                minHeight: `${pages.length * PAGE_HEIGHT_INCHES}in`,
+                width: `${PAGE_WIDTH_INCHES}in`,
+                margin: '0 auto'
+              }}
+              value={content}
+              onChange={(e) => {
+                handleContentChange(e.target.value);
+              }}
+              placeholder="Start writing your document..."
+              spellCheck={false}
+            />
+          </div>
+          
+          {/* Page break overlays */}
+          {pages.map((_, pageIndex) => (
+            <div 
+              key={pageIndex}
+              className="absolute pointer-events-none"
+              style={{
+                top: `${pageIndex * PAGE_HEIGHT_INCHES}in`,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: `${PAGE_WIDTH_INCHES}in`,
                 height: `${PAGE_HEIGHT_INCHES}in`,
+                border: '1px solid #ccc',
                 boxShadow: '0 0 5px rgba(0, 0, 0, 0.2)',
-                overflow: 'hidden',
-                position: 'relative'
+                backgroundColor: 'transparent',
+                zIndex: 0
               }}
             >
+              {/* Page break indicator */}
+              {pageIndex > 0 && (
+                <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-2 py-1 text-xs font-bold rounded">
+                  PAGE {pageIndex + 1}
+                </div>
+              )}
+              
               {/* Header */}
               {showHeader && (
                 <div 
-                  className="absolute top-0 left-0 right-0 bg-gray-50 border-b border-gray-200 px-8 py-3 text-sm text-gray-600"
+                  className="absolute top-0 left-0 right-0 bg-gray-50 border-b border-gray-200 px-8 py-3 text-sm text-gray-600 pointer-events-none"
                   style={{ height: `${PAGE_PADDING}px` }}
                 >
                   <div className="flex justify-between items-center">
@@ -158,88 +189,24 @@ export default function SingleDocumentEditor({
                   </div>
                 </div>
               )}
-
-              {/* Main Content Area */}
-              <div
-                className="absolute"
-                style={{
-                  top: `${PAGE_PADDING}px`,
-                  left: `${PAGE_PADDING}px`,
-                  right: `${PAGE_PADDING}px`,
-                  bottom: `${FOOTER_HEIGHT}px`,
-                  height: `calc(100% - ${PAGE_PADDING * 2 + FOOTER_HEIGHT}px)`
-                }}
-              >
-                {pageIndex === 0 ? (
-                  // First page: Full editable textarea with continuous content
-                  <div className="relative w-full h-full">
-                    {/* Spell check highlighting overlay */}
-                    {isSpellCheckActive && spellErrors.length > 0 && (
-                      <div 
-                        className="absolute inset-0 pointer-events-none"
-                        style={{
-                          fontFamily: "'Times New Roman', serif",
-                          fontSize: "12pt",
-                          lineHeight: "2.0",
-                          padding: 0,
-                          whiteSpace: 'pre-wrap',
-                          wordWrap: 'break-word',
-                          color: 'transparent',
-                          zIndex: 1
-                        }}
-                        dangerouslySetInnerHTML={{
-                          __html: highlightMisspelledWords(content, spellErrors)
-                        }}
-                      />
-                    )}
-                    <textarea
-                      ref={textareaRef}
-                      className="w-full h-full resize-none border-none outline-none bg-transparent text-gray-900 font-serif relative"
-                      style={{
-                        fontFamily: "'Times New Roman', serif",
-                        fontSize: "12pt",
-                        lineHeight: "2.0",
-                        padding: 0,
-                        zIndex: 2
-                      }}
-                      value={content}
-                      onChange={(e) => {
-                        handleContentChange(e.target.value);
-                      }}
-                      placeholder="Start writing your document..."
-                      spellCheck={false}
-                    />
-                  </div>
-                ) : (
-                  // Subsequent pages: Display page-specific content only
-                  <div 
-                    className="w-full h-full text-gray-900 font-serif whitespace-pre-wrap overflow-hidden"
-                    style={{
-                      fontFamily: "'Times New Roman', serif",
-                      fontSize: "12pt",
-                      lineHeight: "2.0"
-                    }}
-                  >
-                    {pageContent}
-                  </div>
-                )}
-              </div>
-
+              
               {/* Footer */}
-              <div 
-                className="absolute bottom-0 left-0 right-0 bg-gray-50 border-t border-gray-200 px-8 py-2 text-center text-sm text-gray-500"
-                style={{ height: `${FOOTER_HEIGHT}px` }}
-              >
-                {showPageNumbers && (
+              {showPageNumbers && (
+                <div 
+                  className="absolute bottom-0 left-0 right-0 bg-gray-50 border-t border-gray-200 px-8 py-2 text-center text-sm text-gray-500 pointer-events-none"
+                  style={{ height: `${FOOTER_HEIGHT}px` }}
+                >
                   <div className="flex justify-between items-center">
-                    <div>Page {pageIndex + 1} of {totalPages}</div>
-                    <div>Word Count: {pageContent.split(" ").filter(word => word.length > 0).length}</div>
+                    <div>Page {pageIndex + 1} of {pages.length}</div>
+                    <div>Word Count: {content.split(" ").filter(word => word.length > 0).length}</div>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
-          </div>
-        )})}
+          ))}
+        </div>
+
+
 
         {/* Spell Check Panel positioned within document area */}
         {isSpellCheckActive && (
