@@ -45,21 +45,20 @@ export default function PageBasedEditor({
   headerFooterSettings
 }: PageBasedEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const [currentPage, setCurrentPage] = useState(1);
   const [pageSettings, setPageSettings] = useState<PageSettings>({
     headerText: '',
     footerText: '',
     showPageNumbers: true,
     showPageNumbersInHeader: false,
-    showStudentName: false,
-    studentName: '',
+    showStudentName: true,
+    studentName: 'Student Name',
     namePosition: 'left',
-    pageNumberPosition: 'right',
+    pageNumberPosition: 'center',
     headerPosition: 'center',
     footerPosition: 'center'
   });
 
-  // Update page settings when headerFooterSettings prop changes
+  // Update page settings based on headerFooterSettings prop
   useEffect(() => {
     if (headerFooterSettings) {
       setPageSettings(prev => ({
@@ -71,24 +70,21 @@ export default function PageBasedEditor({
     }
   }, [headerFooterSettings]);
   
-  // Calculate word count and total pages - Google Docs style
+  // Calculate word count - Google Docs style (no artificial limits)
   const words = content.trim().split(/\s+/).filter(word => word.length > 0);
   const wordCount = words.length;
   
-  // Create pages based on estimated content flow (like Google Docs)
-  // Approximate 500 words per page for page breaks, but allow content to flow
-  const totalPages = Math.max(1, Math.ceil(wordCount / wordsPerPage));
+  // Estimate pages for display purposes only (content is not limited)
+  const estimatedPages = Math.max(1, Math.ceil(wordCount / wordsPerPage));
   
-  // Debug logging for page calculation
-  console.log('Page calculation (Google Docs style):', {
+  // Debug logging for word count tracking
+  console.log('Google Docs-style editor:', {
     contentLength: content.length,
     actualWordCount: wordCount,
-    wordsPerPage,
-    calculatedPages: totalPages,
-    shouldShowMultiplePages: totalPages > 1,
+    estimatedPages,
     contentPreview: content.substring(0, 100) + '...'
   });
-  
+
   // Auto-focus the textarea
   useEffect(() => {
     if (textareaRef.current && !disabled) {
@@ -96,133 +92,54 @@ export default function PageBasedEditor({
     }
   }, [disabled]);
 
-  // Auto-switch to last page when writing continues - unlimited page support
-  useEffect(() => {
-    const currentPageForWordCount = Math.ceil(wordCount / wordsPerPage) || 1;
-    if (currentPageForWordCount > currentPage && wordCount > 0) {
-      console.log(`Auto-switching from page ${currentPage} to page ${currentPageForWordCount} (${wordCount} words, ${wordsPerPage} per page)`);
-      setCurrentPage(currentPageForWordCount);
-    }
-  }, [wordCount, wordsPerPage, currentPage]);
-
-  // Ensure currentPage stays within valid range
-  useEffect(() => {
-    if (currentPage > totalPages && totalPages > 0) {
-      setCurrentPage(totalPages);
-    } else if (currentPage < 1) {
-      setCurrentPage(1);
-    }
-  }, [currentPage, totalPages]);
-
-  // Calculate page content - deployment-ready unlimited page support
-  const getPageContent = (pageNumber: number) => {
-    try {
-      const words = content.split(/\s+/).filter(word => word.length > 0);
-      const startIndex = (pageNumber - 1) * wordsPerPage;
-      const endIndex = startIndex + wordsPerPage;
-      
-      // Extract only the words for this specific page with boundary protection
-      const pageWords = words.slice(startIndex, endIndex);
-      
-      // Deployment logging (reduced verbosity for production)
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`Getting content for page ${pageNumber}: words ${startIndex}-${endIndex-1}, found ${pageWords.length} words`);
-      }
-      
-      return pageWords.join(' ');
-    } catch (error) {
-      console.error('Error getting page content:', error);
-      return '';
-    }
+  // Handle content changes
+  const handleContentChange = (newContent: string) => {
+    onContentChange(newContent);
   };
 
-  // Get all content up to a specific page
-  const getContentUpToPage = (pageNumber: number) => {
-    const words = content.split(/\s+/).filter(word => word.length > 0);
-    const endIndex = pageNumber * wordsPerPage;
-    return words.slice(0, endIndex).join(' ');
-  };
-
-  // Handle content editing without word limits per page (like Google Docs)
-  const handlePageContentChange = (newContent: string) => {
-    try {
-      // No word limits - just pass through the content directly
-      onContentChange(newContent);
-      
-      if (process.env.NODE_ENV === 'development') {
-        const newWordCount = newContent.split(/\s+/).filter(word => word.length > 0).length;
-        const newPageCount = Math.ceil(newWordCount / wordsPerPage) || 1;
-        console.log('Content updated:', {
-          totalWords: newWordCount,
-          estimatedPages: newPageCount,
-          contentLength: newContent.length
-        });
-      }
-    } catch (error) {
-      console.error('Error updating content:', error);
-      onContentChange(content);
-    }
-  };
-
-  // Helper function to get alignment class
-  const getAlignmentClass = (position: 'left' | 'center' | 'right') => {
-    switch (position) {
-      case 'left': return 'text-left';
-      case 'center': return 'text-center';
-      case 'right': return 'text-right';
-      default: return 'text-left';
-    }
-  };
-
-  // Helper function to render header/footer content with proper positioning
+  // Render header/footer content with proper alignment
   const renderHeaderFooterContent = (
-    studentName: string, 
-    customText: string, 
-    pageNumber: number, 
-    namePosition: 'left' | 'center' | 'right',
-    textPosition: 'left' | 'center' | 'right',
-    numberPosition: 'left' | 'center' | 'right',
+    studentName: string,
+    customText: string,
+    pageNumber: number,
+    namePosition: string,
+    textPosition: string,
+    numberPosition: string,
     showName: boolean,
     showText: boolean,
     showNumber: boolean
   ) => {
-    const items = [];
+    const elements = [];
     
-    if (showName && studentName) {
-      items.push({ content: studentName, position: namePosition, type: 'name' });
+    if (showName) {
+      elements.push({ type: 'name', content: studentName, position: namePosition });
     }
     if (showText && customText) {
-      items.push({ content: customText, position: textPosition, type: 'text' });
+      elements.push({ type: 'text', content: customText, position: textPosition });
     }
     if (showNumber) {
-      items.push({ content: pageNumber.toString(), position: numberPosition, type: 'number' });
+      elements.push({ type: 'number', content: `${pageNumber}`, position: numberPosition });
     }
 
-    const leftItems = items.filter(item => item.position === 'left');
-    const centerItems = items.filter(item => item.position === 'center');
-    const rightItems = items.filter(item => item.position === 'right');
+    const leftItems = elements.filter(e => e.position === 'left');
+    const centerItems = elements.filter(e => e.position === 'center');
+    const rightItems = elements.filter(e => e.position === 'right');
 
     return (
-      <div className="flex justify-between items-center text-sm text-gray-600">
+      <div className="flex justify-between items-center w-full text-sm text-gray-600">
         <div className="flex-1 text-left">
-          {leftItems.map((item, index) => (
-            <span key={index} className="block">
-              {item.content}
-            </span>
+          {leftItems.map((item, idx) => (
+            <span key={idx} className="mr-2">{item.content}</span>
           ))}
         </div>
         <div className="flex-1 text-center">
-          {centerItems.map((item, index) => (
-            <span key={index} className="block">
-              {item.content}
-            </span>
+          {centerItems.map((item, idx) => (
+            <span key={idx} className="mx-1">{item.content}</span>
           ))}
         </div>
         <div className="flex-1 text-right">
-          {rightItems.map((item, index) => (
-            <span key={index} className="block">
-              {item.content}
-            </span>
+          {rightItems.map((item, idx) => (
+            <span key={idx} className="ml-2">{item.content}</span>
           ))}
         </div>
       </div>
@@ -230,329 +147,264 @@ export default function PageBasedEditor({
   };
 
   return (
-    <div className="w-full h-full bg-gray-100 overflow-auto">
-      <div className="max-w-4xl mx-auto py-8 space-y-8">
-        {/* Page Status Bar */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <FileText className="h-5 w-5 text-gray-600" />
-              <span className="text-sm font-medium text-gray-700">
-                Document: {totalPages} page{totalPages !== 1 ? 's' : ''}
-              </span>
-              {totalPages > 1 && (
-                <span className="text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded">
-                  Editing page {currentPage}
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-4">
-              {/* Page Navigation */}
-              {totalPages > 1 && (
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                    disabled={currentPage === 1}
-                  >
-                    Previous
-                  </Button>
-                  <span className="text-sm text-gray-500">
-                    Page {currentPage} of {totalPages}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                    disabled={currentPage === totalPages}
-                  >
-                    Next
-                  </Button>
+    <div className="max-w-4xl mx-auto space-y-8">
+      {/* Page Settings Panel */}
+      <div className="bg-gray-50 rounded-lg p-4">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <FileText className="h-5 w-5 text-gray-600" />
+            <span className="font-medium text-gray-900">Document Format</span>
+          </div>
+          
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Settings className="h-4 w-4 mr-2" />
+                Page Settings
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80">
+              <div className="space-y-4">
+                <div className="font-medium text-sm">Header & Footer Options</div>
+                
+                {/* Student Name Settings */}
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="show-name"
+                      checked={pageSettings.showStudentName}
+                      onCheckedChange={(checked) => 
+                        setPageSettings(prev => ({ ...prev, showStudentName: checked }))
+                      }
+                    />
+                    <Label htmlFor="show-name" className="text-sm">Show student name</Label>
+                  </div>
+                  {pageSettings.showStudentName && (
+                    <div className="ml-6 space-y-2">
+                      <Input
+                        placeholder="Student Name"
+                        value={pageSettings.studentName}
+                        onChange={(e) => 
+                          setPageSettings(prev => ({ ...prev, studentName: e.target.value }))
+                        }
+                      />
+                      <Select 
+                        value={pageSettings.namePosition} 
+                        onValueChange={(value: 'left' | 'center' | 'right') => 
+                          setPageSettings(prev => ({ ...prev, namePosition: value }))
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="left">Left</SelectItem>
+                          <SelectItem value="center">Center</SelectItem>
+                          <SelectItem value="right">Right</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                 </div>
-              )}
-              <div className="text-sm text-gray-500">
-                {wordCount} words total (500 words per page)
-              </div>
-              
-              {/* Page Settings Button */}
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <Settings className="h-4 w-4" />
-                    Page Settings
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-80" align="end">
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <h4 className="font-medium text-sm">Page Formatting</h4>
-                      <p className="text-xs text-gray-500">
-                        Customize headers, footers, and page numbering
-                      </p>
-                    </div>
-                    
-                    {/* Student Name */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="show-name" className="text-sm flex items-center gap-2">
-                          <User className="h-4 w-4" />
-                          Show Student Name
-                        </Label>
+
+                {/* Header Text */}
+                <div className="space-y-2">
+                  <Label className="text-sm">Header text</Label>
+                  <Input
+                    placeholder="Header text (optional)"
+                    value={pageSettings.headerText}
+                    onChange={(e) => 
+                      setPageSettings(prev => ({ ...prev, headerText: e.target.value }))
+                    }
+                  />
+                  {pageSettings.headerText && (
+                    <Select 
+                      value={pageSettings.headerPosition} 
+                      onValueChange={(value: 'left' | 'center' | 'right') => 
+                        setPageSettings(prev => ({ ...prev, headerPosition: value }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="left">Left</SelectItem>
+                        <SelectItem value="center">Center</SelectItem>
+                        <SelectItem value="right">Right</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+
+                {/* Footer Text */}
+                <div className="space-y-2">
+                  <Label className="text-sm">Footer text</Label>
+                  <Input
+                    placeholder="Footer text (optional)"
+                    value={pageSettings.footerText}
+                    onChange={(e) => 
+                      setPageSettings(prev => ({ ...prev, footerText: e.target.value }))
+                    }
+                  />
+                  {pageSettings.footerText && (
+                    <Select 
+                      value={pageSettings.footerPosition} 
+                      onValueChange={(value: 'left' | 'center' | 'right') => 
+                        setPageSettings(prev => ({ ...prev, footerPosition: value }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="left">Left</SelectItem>
+                        <SelectItem value="center">Center</SelectItem>
+                        <SelectItem value="right">Right</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+
+                {/* Page Numbers */}
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="show-page-numbers"
+                      checked={pageSettings.showPageNumbers}
+                      onCheckedChange={(checked) => 
+                        setPageSettings(prev => ({ ...prev, showPageNumbers: checked }))
+                      }
+                    />
+                    <Label htmlFor="show-page-numbers" className="text-sm">Page numbers</Label>
+                  </div>
+                  {pageSettings.showPageNumbers && (
+                    <div className="ml-6 space-y-2">
+                      <div className="flex items-center space-x-2">
                         <Switch
-                          id="show-name"
-                          checked={pageSettings.showStudentName}
-                          onCheckedChange={(checked) => 
-                            setPageSettings(prev => ({ ...prev, showStudentName: checked }))
-                          }
-                        />
-                      </div>
-                      {pageSettings.showStudentName && (
-                        <div className="space-y-2">
-                          <Input
-                            placeholder="Enter your name"
-                            value={pageSettings.studentName}
-                            onChange={(e) => 
-                              setPageSettings(prev => ({ ...prev, studentName: e.target.value }))
-                            }
-                            className="text-sm"
-                          />
-                          <div className="flex items-center gap-2">
-                            <Label className="text-xs text-gray-500">Position:</Label>
-                            <Select 
-                              value={pageSettings.namePosition} 
-                              onValueChange={(value: 'left' | 'center' | 'right') => 
-                                setPageSettings(prev => ({ ...prev, namePosition: value }))
-                              }
-                            >
-                              <SelectTrigger className="h-8 text-xs">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="left">Left</SelectItem>
-                                <SelectItem value="center">Center</SelectItem>
-                                <SelectItem value="right">Right</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* Page Numbers */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="show-numbers" className="text-sm flex items-center gap-2">
-                          <Hash className="h-4 w-4" />
-                          Show Page Numbers (Footer)
-                        </Label>
-                        <Switch
-                          id="show-numbers"
-                          checked={pageSettings.showPageNumbers}
-                          onCheckedChange={(checked) => 
-                            setPageSettings(prev => ({ ...prev, showPageNumbers: checked }))
-                          }
-                        />
-                      </div>
-                      
-                      {/* Page Numbers in Header */}
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="show-numbers-header" className="text-sm flex items-center gap-2 ml-6">
-                          <Hash className="h-4 w-4" />
-                          Show Page Numbers (Header)
-                        </Label>
-                        <Switch
-                          id="show-numbers-header"
+                          id="page-numbers-header"
                           checked={pageSettings.showPageNumbersInHeader}
                           onCheckedChange={(checked) => 
                             setPageSettings(prev => ({ ...prev, showPageNumbersInHeader: checked }))
                           }
                         />
+                        <Label htmlFor="page-numbers-header" className="text-sm">In header</Label>
                       </div>
-                      
-                      {(pageSettings.showPageNumbers || pageSettings.showPageNumbersInHeader) && (
-                        <div className="flex items-center gap-2">
-                          <Label className="text-xs text-gray-500">Position:</Label>
-                          <Select 
-                            value={pageSettings.pageNumberPosition} 
-                            onValueChange={(value: 'left' | 'center' | 'right') => 
-                              setPageSettings(prev => ({ ...prev, pageNumberPosition: value }))
-                            }
-                          >
-                            <SelectTrigger className="h-8 text-xs">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="left">Left</SelectItem>
-                              <SelectItem value="center">Center</SelectItem>
-                              <SelectItem value="right">Right</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* Custom Header */}
-                    <div className="space-y-2">
-                      <Label htmlFor="header-text" className="text-sm">
-                        Header Text (optional)
-                      </Label>
-                      <Input
-                        id="header-text"
-                        placeholder="e.g., Course Name, Assignment Title"
-                        value={pageSettings.headerText}
-                        onChange={(e) => 
-                          setPageSettings(prev => ({ ...prev, headerText: e.target.value }))
+                      <Select 
+                        value={pageSettings.pageNumberPosition} 
+                        onValueChange={(value: 'left' | 'center' | 'right') => 
+                          setPageSettings(prev => ({ ...prev, pageNumberPosition: value }))
                         }
-                        className="text-sm"
-                      />
-                      {pageSettings.headerText && (
-                        <div className="flex items-center gap-2">
-                          <Label className="text-xs text-gray-500">Position:</Label>
-                          <Select 
-                            value={pageSettings.headerPosition} 
-                            onValueChange={(value: 'left' | 'center' | 'right') => 
-                              setPageSettings(prev => ({ ...prev, headerPosition: value }))
-                            }
-                          >
-                            <SelectTrigger className="h-8 text-xs">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="left">Left</SelectItem>
-                              <SelectItem value="center">Center</SelectItem>
-                              <SelectItem value="right">Right</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      )}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="left">Left</SelectItem>
+                          <SelectItem value="center">Center</SelectItem>
+                          <SelectItem value="right">Right</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
-                    
-                    {/* Custom Footer */}
-                    <div className="space-y-2">
-                      <Label htmlFor="footer-text" className="text-sm">
-                        Footer Text (optional)
-                      </Label>
-                      <Input
-                        id="footer-text"
-                        placeholder="e.g., Date, Class Period"
-                        value={pageSettings.footerText}
-                        onChange={(e) => 
-                          setPageSettings(prev => ({ ...prev, footerText: e.target.value }))
-                        }
-                        className="text-sm"
-                      />
-                      {pageSettings.footerText && (
-                        <div className="flex items-center gap-2">
-                          <Label className="text-xs text-gray-500">Position:</Label>
-                          <Select 
-                            value={pageSettings.footerPosition} 
-                            onValueChange={(value: 'left' | 'center' | 'right') => 
-                              setPageSettings(prev => ({ ...prev, footerPosition: value }))
-                            }
-                          >
-                            <SelectTrigger className="h-8 text-xs">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="left">Left</SelectItem>
-                              <SelectItem value="center">Center</SelectItem>
-                              <SelectItem value="right">Right</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
-        </div>
-
-        {/* Google Docs style continuous editor */}
-        <div className="page-container">
-          <div className="bg-white rounded-lg shadow-lg border border-gray-200 min-h-[11in] relative">
-            {/* Header */}
-            {(pageSettings.headerText || (pageSettings.showStudentName && pageSettings.studentName) || pageSettings.showPageNumbersInHeader) && (
-              <div className="px-16 pt-8 pb-4 border-b border-gray-200">
-                {renderHeaderFooterContent(
-                  pageSettings.studentName,
-                  pageSettings.headerText,
-                  1,
-                  pageSettings.namePosition,
-                  pageSettings.headerPosition,
-                  pageSettings.pageNumberPosition,
-                  pageSettings.showStudentName,
-                  !!pageSettings.headerText,
-                  pageSettings.showPageNumbersInHeader
-                )}
-              </div>
-            )}
-
-            {/* Content Area - Full Content Editor */}
-            <div className={`px-16 ${(pageSettings.headerText || pageSettings.showStudentName) ? 'pt-8' : 'pt-16'} ${(pageSettings.footerText || pageSettings.showPageNumbers) ? 'pb-8' : 'pb-16'} min-h-[9in]`}>
-              <RichTextEditor
-                content={content}
-                onContentChange={handlePageContentChange}
-                placeholder={placeholder}
-                disabled={disabled}
-                onFormatRef={onFormatRef}
-                className="w-full h-full min-h-[9in] resize-none border-none outline-none bg-transparent text-gray-900"
-                style={{
-                  fontFamily: 'Times New Roman, serif',
-                  fontSize: '12pt',
-                  lineHeight: '2.0',
-                  letterSpacing: '0.2px'
-                }}
-              />
-            </div>
-
-            {/* Footer */}
-            {(pageSettings.footerText || pageSettings.showPageNumbers) && (
-              <div className="absolute bottom-8 left-16 right-16">
-                <div className="border-t border-gray-200 pt-4">
-                  {renderHeaderFooterContent(
-                    pageSettings.studentName,
-                    pageSettings.footerText,
-                    Math.ceil(wordCount / wordsPerPage) || 1,
-                    pageSettings.namePosition,
-                    pageSettings.footerPosition,
-                    pageSettings.pageNumberPosition,
-                    false,
-                    !!pageSettings.footerText,
-                    pageSettings.showPageNumbers
                   )}
                 </div>
               </div>
-            )}
-          </div>
+            </PopoverContent>
+          </Popover>
         </div>
 
-        {/* Visual Page Break Indicators */}
-        {wordCount > wordsPerPage && (
-          <div className="space-y-8">
-            {Array.from({ length: Math.floor(wordCount / wordsPerPage) }, (_, index) => (
-              <div key={index} className="flex items-center justify-center py-4">
-                <div className="border-t border-dashed border-gray-400 flex-1"></div>
-                <span className="px-4 text-xs text-gray-500 bg-gray-100 rounded-full">
-                  Page {index + 2} begins (estimated)
-                </span>
-                <div className="border-t border-dashed border-gray-400 flex-1"></div>
-              </div>
-            ))}
+        {/* Word Count Display */}
+        <div className="flex items-center gap-4 text-sm text-gray-600">
+          <div className="flex items-center gap-1">
+            <Hash className="h-4 w-4" />
+            <span>{wordCount} words</span>
           </div>
-        )}
+          <div className="flex items-center gap-1">
+            <FileText className="h-4 w-4" />
+            <span>{estimatedPages} estimated {estimatedPages === 1 ? 'page' : 'pages'}</span>
+          </div>
+        </div>
+      </div>
 
-        {/* Content continues indicator */}
-        {wordCount > wordsPerPage * 0.8 && (
-          <div className="text-center py-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
-              <FileText className="h-4 w-4" />
-              Document: {wordCount} words ({Math.ceil(wordCount / wordsPerPage)} estimated pages)
+      {/* Google Docs Style Continuous Editor */}
+      <div className="page-container">
+        <div className="bg-white rounded-lg shadow-lg border border-gray-200 min-h-[11in] relative">
+          {/* Header */}
+          {(pageSettings.headerText || (pageSettings.showStudentName && pageSettings.studentName) || pageSettings.showPageNumbersInHeader) && (
+            <div className="px-16 pt-8 pb-4 border-b border-gray-200">
+              {renderHeaderFooterContent(
+                pageSettings.studentName,
+                pageSettings.headerText,
+                1,
+                pageSettings.namePosition,
+                pageSettings.headerPosition,
+                pageSettings.pageNumberPosition,
+                pageSettings.showStudentName,
+                !!pageSettings.headerText,
+                pageSettings.showPageNumbersInHeader
+              )}
             </div>
+          )}
+
+          {/* Content Area - Full Content Editor (No Word Limits) */}
+          <div className={`px-16 ${(pageSettings.headerText || pageSettings.showStudentName) ? 'pt-8' : 'pt-16'} ${(pageSettings.footerText || pageSettings.showPageNumbers) ? 'pb-8' : 'pb-16'} min-h-[9in]`}>
+            <RichTextEditor
+              content={content}
+              onContentChange={handleContentChange}
+              placeholder={placeholder}
+              disabled={disabled}
+              onFormatRef={onFormatRef}
+              className="w-full h-full min-h-[9in] resize-none border-none outline-none bg-transparent text-gray-900"
+              style={{
+                fontFamily: 'Times New Roman, serif',
+                fontSize: '12pt',
+                lineHeight: '2.0',
+                letterSpacing: '0.2px'
+              }}
+            />
           </div>
-        )}
+
+          {/* Footer */}
+          {(pageSettings.footerText || pageSettings.showPageNumbers) && (
+            <div className="absolute bottom-8 left-16 right-16">
+              <div className="border-t border-gray-200 pt-4">
+                {renderHeaderFooterContent(
+                  pageSettings.studentName,
+                  pageSettings.footerText,
+                  estimatedPages,
+                  pageSettings.namePosition,
+                  pageSettings.footerPosition,
+                  pageSettings.pageNumberPosition,
+                  false,
+                  !!pageSettings.footerText,
+                  pageSettings.showPageNumbers
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Visual Page Break Indicators (Estimated) */}
+      {wordCount > wordsPerPage && (
+        <div className="space-y-8">
+          {Array.from({ length: Math.floor(wordCount / wordsPerPage) }, (_, index) => (
+            <div key={index} className="flex items-center justify-center py-4">
+              <div className="border-t border-dashed border-gray-400 flex-1"></div>
+              <span className="px-4 text-xs text-gray-500 bg-gray-100 rounded-full">
+                Page {index + 2} begins (estimated)
+              </span>
+              <div className="border-t border-dashed border-gray-400 flex-1"></div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Document Summary */}
+      <div className="text-center py-4">
+        <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
+          <FileText className="h-4 w-4" />
+          Document: {wordCount} words ({estimatedPages} estimated pages) - No word limits per page
+        </div>
       </div>
     </div>
   );
