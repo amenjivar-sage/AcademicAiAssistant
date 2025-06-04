@@ -81,18 +81,30 @@ export default function SingleDocumentEditor({
       
       const isAlreadyBold = beforeSelection === '**' && afterSelection === '**';
       
+      // Also check if the selected text itself contains bold markers
+      const containsBoldMarkers = selectedText.startsWith('**') && selectedText.endsWith('**');
+      
       let newContent;
       let newSelectionStart;
       let newSelectionEnd;
       
       if (isAlreadyBold) {
-        // Remove bold formatting
+        // Remove bold formatting from surrounding markers
         newContent = 
           textarea.value.substring(0, start - 2) + 
           selectedText + 
           textarea.value.substring(end + 2);
         newSelectionStart = start - 2;
         newSelectionEnd = end - 2;
+      } else if (containsBoldMarkers) {
+        // Remove bold formatting from within selection
+        const unboldedText = selectedText.slice(2, -2);
+        newContent = 
+          textarea.value.substring(0, start) + 
+          unboldedText + 
+          textarea.value.substring(end);
+        newSelectionStart = start;
+        newSelectionEnd = start + unboldedText.length;
       } else {
         // Add bold formatting
         newContent = 
