@@ -246,7 +246,7 @@ export default function AiAssistant({ sessionId, currentContent }: AiAssistantPr
 
         <TabsContent value="assistant" className="flex-1 flex flex-col min-h-0">
           {/* Chat History Area */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-[600px] max-h-[80vh]">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-[400px] max-h-[60vh]">
             {displayChatHistory && displayChatHistory.length > 0 ? (
               <>
                 <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
