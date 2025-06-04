@@ -13,7 +13,7 @@ export default function FormattingToolbox({ selectedText, onBoldClick, isVisible
   const [isMinimized, setIsMinimized] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
-  if (!isVisible && !isOpen) return null;
+  // Always show the floating icon, regardless of isVisible
 
   const toggleMinimized = () => {
     setIsMinimized(!isMinimized);
