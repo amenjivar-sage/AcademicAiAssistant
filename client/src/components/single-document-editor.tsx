@@ -99,7 +99,26 @@ export default function SingleDocumentEditor({
     
     let highlightedText = text;
 
-    // First apply copy-paste highlighting if enabled
+    // First apply inline comment highlighting (before copy-paste)
+    if (comments && comments.length > 0) {
+      console.log('Applying inline comments first:', comments);
+      
+      comments.forEach((comment: any) => {
+        const searchText = comment.highlightedText;
+        console.log('Looking for comment text in original:', searchText);
+        
+        if (searchText && highlightedText.includes(searchText)) {
+          console.log('Found exact match for comment:', searchText.substring(0, 50));
+          const escapedSearchText = searchText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const regex = new RegExp(escapedSearchText, 'g');
+          highlightedText = highlightedText.replace(regex, (match) => {
+            return `<span style="background-color: #dbeafe; border: 2px solid #3b82f6; color: #1e40af; font-weight: 600; padding: 2px 4px; border-radius: 4px; cursor: help;" title="Teacher Comment: ${comment.comment.trim()}" data-comment-id="${comment.id}">${match}</span>`;
+          });
+        }
+      });
+    }
+
+    // Then apply copy-paste highlighting if enabled
     if (showCopyPasteHighlights && pastedData && pastedData.length > 0) {
       console.log('Applying copy-paste highlights for student view:', pastedData.length, 'items');
       
@@ -148,43 +167,7 @@ export default function SingleDocumentEditor({
       });
     }
 
-    // Then apply inline comment highlighting if we have comments
-    if (comments && comments.length > 0) {
-      console.log('Applying inline comments:', comments);
-      console.log('Text to search in:', highlightedText.substring(0, 200));
-      
-      comments.forEach((comment: any) => {
-        const searchText = comment.highlightedText;
-        console.log('Looking for comment text:', searchText);
-        console.log('Comment message:', comment.comment);
-        
-        if (searchText) {
-          // Try exact match first
-          if (highlightedText.includes(searchText)) {
-            console.log('Found exact match for:', searchText);
-            const escapedSearchText = searchText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            const regex = new RegExp(escapedSearchText, 'g');
-            highlightedText = highlightedText.replace(regex, (match) => {
-              return `<span style="background-color: #dbeafe; border: 2px solid #3b82f6; color: #1e40af; font-weight: 600; padding: 2px 4px; border-radius: 4px; cursor: help; position: relative;" title="Teacher Comment: ${comment.comment.trim()}" data-comment-id="${comment.id}">${match}</span>`;
-            });
-          } else {
-            // Try to find partial matches or similar text
-            console.log('No exact match, trying partial match for:', searchText);
-            const words = searchText.split(' ').filter(w => w.length > 3);
-            const firstFewWords = words.slice(0, 5).join(' ');
-            console.log('Trying to match first few words:', firstFewWords);
-            
-            if (firstFewWords && highlightedText.includes(firstFewWords)) {
-              const escapedSearchText = firstFewWords.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-              const regex = new RegExp(escapedSearchText, 'g');
-              highlightedText = highlightedText.replace(regex, (match) => {
-                return `<span style="background-color: #dbeafe; border: 2px solid #3b82f6; color: #1e40af; font-weight: 600; padding: 2px 4px; border-radius: 4px; cursor: help; position: relative;" title="Teacher Comment: ${comment.comment.trim()}" data-comment-id="${comment.id}">${match}</span>`;
-              });
-            }
-          }
-        }
-      });
-    }
+
 
     return highlightedText;
   };
