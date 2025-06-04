@@ -29,15 +29,28 @@ export default function ConstrainedPagesEditor({
   const textareaRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
 
-  // Split content into pages based on character limits
+  // Clean and split content into pages with line-based limits
   const splitContentIntoPages = (text: string): string[] => {
-    const pageArray: string[] = [];
-    let currentPos = 0;
+    if (!text || text.length === 0) return [""];
     
-    while (currentPos < text.length) {
-      const pageText = text.slice(currentPos, currentPos + CHARS_PER_PAGE);
-      pageArray.push(pageText);
-      currentPos += CHARS_PER_PAGE;
+    // Clean the text by removing excessive consecutive newlines
+    const cleanedText = text
+      .replace(/\n{4,}/g, '\n\n\n') // Replace 4+ consecutive newlines with max 3
+      .replace(/^\n+/, '') // Remove leading newlines
+      .replace(/\n+$/, ''); // Remove trailing newlines
+    
+    if (cleanedText.length === 0) return [""];
+    
+    const lines = cleanedText.split('\n');
+    const pageArray: string[] = [];
+    const maxLinesPerPage = 22;
+    
+    for (let i = 0; i < lines.length; i += maxLinesPerPage) {
+      const pageLines = lines.slice(i, i + maxLinesPerPage);
+      const pageText = pageLines.join('\n');
+      if (pageText.trim().length > 0) {
+        pageArray.push(pageText);
+      }
     }
     
     return pageArray.length > 0 ? pageArray : [""];
@@ -57,23 +70,27 @@ export default function ConstrainedPagesEditor({
     const updatedPages = [...pages];
     updatedPages[pageIndex] = newPageContent;
     
-    // Check if any page exceeds character limit and redistribute content
+    // Check if any page exceeds line limit and redistribute content
+    const maxLinesPerPage = 22;
     for (let i = 0; i < updatedPages.length; i++) {
-      if (updatedPages[i].length > CHARS_PER_PAGE) {
-        // Keep only allowed characters on current page
-        const allowedContent = updatedPages[i].slice(0, CHARS_PER_PAGE);
-        const overflowContent = updatedPages[i].slice(CHARS_PER_PAGE);
+      const pageLines = updatedPages[i].split('\n');
+      
+      if (pageLines.length > maxLinesPerPage) {
+        // Keep only allowed lines on current page
+        const allowedLines = pageLines.slice(0, maxLinesPerPage);
+        const overflowLines = pageLines.slice(maxLinesPerPage);
         
-        updatedPages[i] = allowedContent;
+        updatedPages[i] = allowedLines.join('\n');
         
         // Move overflow to next page
         if (i + 1 < updatedPages.length) {
           // Prepend overflow to existing next page content
           const nextPageContent = updatedPages[i + 1];
-          updatedPages[i + 1] = overflowContent + nextPageContent;
+          const nextPageLines = nextPageContent.split('\n');
+          updatedPages[i + 1] = [...overflowLines, ...nextPageLines].join('\n');
         } else {
           // Create new page for overflow
-          updatedPages.push(overflowContent);
+          updatedPages.push(overflowLines.join('\n'));
         }
         
         // If we modified content, focus next page
@@ -90,7 +107,7 @@ export default function ConstrainedPagesEditor({
     }
     
     setPages(updatedPages);
-    onContentChange(updatedPages.join(''));
+    onContentChange(updatedPages.join('\n'));
   };
 
   const focusPage = (pageIndex: number) => {
