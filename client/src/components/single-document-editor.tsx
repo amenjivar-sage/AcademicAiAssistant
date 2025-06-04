@@ -217,6 +217,12 @@ export default function SingleDocumentEditor({
     return highlightedText;
   };
 
+  // Render bold text visually
+  const renderFormattedText = (text: string): string => {
+    // Convert **text** to bold HTML
+    return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  };
+
   // Handle text selection for formatting
   const handleTextSelection = () => {
     if (textareaRef.current) {
@@ -394,9 +400,29 @@ export default function SingleDocumentEditor({
               />
             )}
             
+            {/* Visual formatting overlay - renders bold text */}
+            {!readOnly && (
+              <div 
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  fontFamily: "'Times New Roman', serif",
+                  fontSize: "12pt",
+                  lineHeight: "2.0",
+                  padding: `${PAGE_PADDING}px`,
+                  whiteSpace: 'pre-wrap',
+                  wordWrap: 'break-word',
+                  color: '#1f2937',
+                  zIndex: 1
+                }}
+                dangerouslySetInnerHTML={{
+                  __html: renderFormattedText(content)
+                }}
+              />
+            )}
+
             <textarea
               ref={textareaRef}
-              className={`w-full resize-none border-none outline-none bg-transparent text-gray-900 font-serif relative ${readOnly ? 'cursor-default' : ''}`}
+              className={`w-full resize-none border-none outline-none bg-transparent ${readOnly ? 'cursor-default text-gray-900' : 'text-transparent'} font-serif relative`}
               style={{
                 fontFamily: "'Times New Roman', serif",
                 fontSize: "12pt",
