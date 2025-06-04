@@ -64,7 +64,7 @@ export default function SubmissionViewer({ sessionId, onClose }: SubmissionViewe
     );
   }
 
-  // Function to highlight copy-pasted content
+  // Function to highlight copy-pasted content with fuzzy matching
   const renderContentWithHighlights = (content: string, pastedContent: any[]) => {
     console.log('renderContentWithHighlights called with:', {
       contentLength: content.length,
@@ -79,35 +79,72 @@ export default function SubmissionViewer({ sessionId, onClose }: SubmissionViewe
 
     const highlights: { start: number; end: number; type: string; text: string }[] = [];
 
-    // Add copy-paste highlights with better validation
+    // Add copy-paste highlights with fuzzy text matching
     pastedContent.forEach((paste, index) => {
       console.log(`Processing paste ${index}:`, paste);
       
-      if (paste.startIndex !== undefined && paste.endIndex !== undefined && paste.text) {
-        // Find the actual position of the pasted text in current content
-        const pastedText = paste.text;
-        const contentIndex = content.indexOf(pastedText);
+      if (paste.text && typeof paste.text === 'string') {
+        const pastedText = paste.text.trim();
         
-        if (contentIndex !== -1) {
+        // Try exact match first
+        let contentIndex = content.indexOf(pastedText);
+        
+        if (contentIndex === -1) {
+          // Try fuzzy matching for spell-corrected content
+          // Split pasted text into words and find sequences
+          const pastedWords = pastedText.split(/\s+/).filter(word => word.length > 3);
+          
+          if (pastedWords.length >= 2) {
+            // Look for sequences of at least 2 words from the paste
+            for (let i = 0; i < pastedWords.length - 1; i++) {
+              const wordSequence = pastedWords.slice(i, i + Math.min(4, pastedWords.length - i)).join('\\s+');
+              const regex = new RegExp(wordSequence.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+              const match = content.match(regex);
+              
+              if (match && match.index !== undefined) {
+                // Found a word sequence, highlight the broader context
+                const sequenceStart = match.index;
+                const sequenceEnd = match.index + match[0].length;
+                
+                // Expand to include more context around the match
+                const expandedStart = Math.max(0, sequenceStart - 50);
+                const expandedEnd = Math.min(content.length, sequenceEnd + 50);
+                
+                highlights.push({
+                  start: expandedStart,
+                  end: expandedEnd,
+                  type: 'paste',
+                  text: content.slice(expandedStart, expandedEnd)
+                });
+                
+                console.log(`Added fuzzy highlight for paste ${index}:`, {
+                  originalText: pastedText.substring(0, 50) + '...',
+                  matchedSequence: match[0],
+                  start: expandedStart,
+                  end: expandedEnd
+                });
+                break;
+              }
+            }
+          }
+        } else {
+          // Exact match found
           highlights.push({
             start: contentIndex,
             end: contentIndex + pastedText.length,
             type: 'paste',
             text: pastedText
           });
-          console.log(`Added highlight for paste ${index}:`, {
+          console.log(`Added exact highlight for paste ${index}:`, {
             start: contentIndex,
             end: contentIndex + pastedText.length,
             text: pastedText.substring(0, 50) + '...'
           });
-        } else {
-          console.log(`Could not find pasted text in content for paste ${index}`);
         }
       } else {
         console.log(`Invalid paste data for paste ${index}:`, {
-          hasStartIndex: paste.startIndex !== undefined,
-          hasEndIndex: paste.endIndex !== undefined,
-          hasText: !!paste.text
+          hasText: !!paste.text,
+          textType: typeof paste.text
         });
       }
     });
