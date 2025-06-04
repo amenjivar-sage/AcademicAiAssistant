@@ -94,22 +94,51 @@ export default function SingleDocumentEditor({
             {/* Page Break Indicators */}
             {renderPageBreaks()}
             
-            {/* Text Area */}
-            <textarea
-              ref={textareaRef}
-              className="w-full h-full resize-none border-none outline-none bg-transparent text-gray-900 font-serif p-4"
+            {/* Writing Area with Boundaries */}
+            <div 
+              className="absolute inset-0 border border-gray-200"
               style={{
-                fontFamily: "'Times New Roman', serif",
-                fontSize: "12pt",
-                lineHeight: "2.0",
-                minHeight: `${totalPages * PAGE_HEIGHT_INCHES}in`
+                top: `${HEADER_HEIGHT}px`,
+                bottom: `${FOOTER_HEIGHT}px`,
+                left: '1in',
+                right: '1in'
               }}
-              value={content}
-              onChange={(e) => handleContentChange(e.target.value)}
-              onScroll={handleScroll}
-              placeholder="Start writing your document..."
-              spellCheck={true}
-            />
+            >
+              <textarea
+                ref={textareaRef}
+                className="w-full h-full resize-none border-none outline-none bg-transparent text-gray-900 font-serif p-4"
+                style={{
+                  fontFamily: "'Times New Roman', serif",
+                  fontSize: "12pt",
+                  lineHeight: "2.0"
+                }}
+                value={content}
+                onChange={(e) => handleContentChange(e.target.value)}
+                onScroll={handleScroll}
+                placeholder="Start writing your document..."
+                spellCheck={true}
+              />
+            </div>
+            
+            {/* Header Boundary Indicator */}
+            <div 
+              className="absolute left-0 right-0 border-b border-dashed border-gray-300 pointer-events-none"
+              style={{ top: `${HEADER_HEIGHT}px` }}
+            >
+              <div className="absolute right-2 -bottom-3 bg-white px-2 text-xs text-gray-500">
+                Writing Area
+              </div>
+            </div>
+            
+            {/* Footer Boundary Indicator */}
+            <div 
+              className="absolute left-0 right-0 border-t border-dashed border-gray-300 pointer-events-none"
+              style={{ bottom: `${FOOTER_HEIGHT}px` }}
+            >
+              <div className="absolute right-2 -top-3 bg-white px-2 text-xs text-gray-500">
+                Footer Area
+              </div>
+            </div>
           </div>
 
           {/* Footer */}
