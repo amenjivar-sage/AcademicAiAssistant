@@ -332,9 +332,12 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                     return;
                   }
                   
-                  // Skip already highlighted content
-                  if (result.includes(`<span style="background-color: #fecaca`) && 
-                      result.includes(docSentTrimmed.substring(0, Math.min(20, docSentTrimmed.length)))) {
+                  // Skip already highlighted content - be more precise
+                  const sentenceStart = docSentTrimmed.substring(0, Math.min(15, docSentTrimmed.length));
+                  const isAlreadyHighlighted = result.includes(`<span style="background-color: #fecaca`) && 
+                                             result.includes(`>${sentenceStart}`) && 
+                                             result.includes(`${sentenceStart}</span>`);
+                  if (isAlreadyHighlighted) {
                     console.log('Skipping already highlighted content:', docSentTrimmed.substring(0, 30));
                     return;
                   }
