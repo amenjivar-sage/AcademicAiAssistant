@@ -14,19 +14,49 @@ interface WordStylePagesEditorProps {
 const PAGE_HEIGHT = 1056; // 11in at 96dpi minus margins
 const PAGE_WIDTH = 816; // 8.5in at 96dpi
 const PAGE_PADDING = 64; // Padding inside each page
-const WORDS_PER_PAGE = 500; // Approximate words per page
+const CHARS_PER_PAGE = 2500; // Approximate characters per page (including line breaks)
+const LINES_PER_PAGE = 40; // Lines per page with standard formatting
 const CHARS_PER_LINE = 85; // Characters per line for text wrapping estimation
 
-function splitTextToPages(text: string, wordsPerPage: number = WORDS_PER_PAGE): string[] {
-  if (!text.trim()) return [""];
+function splitTextToPages(text: string): string[] {
+  if (!text) return [""];
   
-  const words = text.split(/\s+/).filter(word => word.length > 0);
+  // Split by explicit page breaks first (multiple line breaks)
+  const explicitPages = text.split(/\n\s*\n\s*\n\s*\n/); // 4+ line breaks = new page
   const pages: string[] = [];
   
-  for (let i = 0; i < words.length; i += wordsPerPage) {
-    const pageWords = words.slice(i, i + wordsPerPage);
-    pages.push(pageWords.join(" "));
-  }
+  explicitPages.forEach(pageText => {
+    if (!pageText.trim()) {
+      pages.push("");
+      return;
+    }
+    
+    // For each section, check if it fits on one page
+    const lines = pageText.split('\n');
+    let currentPage = "";
+    let currentLineCount = 0;
+    
+    for (const line of lines) {
+      // Estimate how many visual lines this text line will take
+      const visualLines = Math.ceil(line.length / CHARS_PER_LINE) || 1;
+      
+      // Check if adding this line would exceed page limits
+      if (currentLineCount + visualLines > LINES_PER_PAGE && currentPage.trim()) {
+        // Start new page
+        pages.push(currentPage.trimEnd());
+        currentPage = line + '\n';
+        currentLineCount = visualLines;
+      } else {
+        currentPage += line + '\n';
+        currentLineCount += visualLines;
+      }
+    }
+    
+    // Add the last page
+    if (currentPage.trim()) {
+      pages.push(currentPage.trimEnd());
+    }
+  });
   
   // Always have at least one page
   if (pages.length === 0) pages.push("");
@@ -91,6 +121,15 @@ export default function WordStylePagesEditor({
 
   const getPageWordCount = (pageContent: string) => {
     return pageContent.split(/\s+/).filter(word => word.length > 0).length;
+  };
+
+  const getPageLineCount = (pageContent: string) => {
+    const lines = pageContent.split('\n');
+    let totalLines = 0;
+    lines.forEach(line => {
+      totalLines += Math.ceil(line.length / CHARS_PER_LINE) || 1;
+    });
+    return totalLines;
   };
 
   return (
@@ -170,7 +209,7 @@ export default function WordStylePagesEditor({
               {showPageNumbers && (
                 <div className="border-t border-gray-200 p-3 text-center">
                   <div className="text-xs text-gray-500">
-                    Page {pageIndex + 1} • {getPageWordCount(pageContent)} words
+                    Page {pageIndex + 1} • {getPageWordCount(pageContent)} words • {getPageLineCount(pageContent)}/{LINES_PER_PAGE} lines
                   </div>
                 </div>
               )}
@@ -207,7 +246,7 @@ export default function WordStylePagesEditor({
             </div>
             <div>
               <div className="text-2xl font-bold text-purple-600">
-                {Math.ceil(getTotalWordCount() / WORDS_PER_PAGE)}
+                {Math.ceil(content.length / CHARS_PER_PAGE)}
               </div>
               <div className="text-sm text-gray-600">Expected Pages</div>
             </div>
