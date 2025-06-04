@@ -21,26 +21,11 @@ const CHARS_PER_LINE = 85; // Characters per line for text wrapping estimation
 function splitTextToPages(text: string): string[] {
   if (!text) return [""];
   
-  // Debug logging
-  console.log("Splitting text to pages:", {
-    textLength: text.length,
-    lineBreakPattern: text.match(/\n{5,}/g),
-    totalLines: text.split('\n').length
-  });
-  
   // Use a more direct approach - split by multiple consecutive line breaks
   const sections = text.split(/\n{5,}/); // 5+ consecutive line breaks = new page
   const pages: string[] = [];
   
-  console.log("Found sections:", sections.length);
-  
   sections.forEach((section, index) => {
-    console.log(`Processing section ${index}:`, {
-      length: section.length,
-      lines: section.split('\n').length,
-      hasContent: section.trim().length > 0
-    });
-    
     if (!section && index === 0) {
       pages.push("");
       return;
@@ -69,8 +54,6 @@ function splitTextToPages(text: string): string[] {
   
   // Always have at least one page
   if (pages.length === 0) pages.push("");
-  
-  console.log("Final pages count:", pages.length);
   
   return pages;
 }
