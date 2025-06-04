@@ -313,50 +313,64 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
           font-weight: bold !important;
         }
 
-        /* Hide Quill editor when content overflows to multiple pages */
-        .multi-page-mode .ql-editor {
-          max-height: 856px !important;
-          overflow: hidden !important;
+        /* Ensure Quill editor works properly within page container */
+        .document-page .ql-container {
+          height: 100% !important;
+          font-family: 'Times New Roman', serif !important;
+          font-size: 12pt !important;
+        }
+
+        .document-page .ql-editor {
+          height: 100% !important;
+          overflow-y: auto !important;
+          padding: 72px !important;
+          line-height: 2.0 !important;
+          font-family: 'Times New Roman', serif !important;
+          font-size: 12pt !important;
+          box-sizing: border-box !important;
+        }
+
+        .document-page .ql-editor:focus {
+          outline: none !important;
+        }
+
+        .document-page .ql-editor .ql-cursor {
+          display: block !important;
         }
       `}</style>
       
       <div className="document-pages" ref={containerRef}>
-        {/* Hidden React Quill editor for editing functionality */}
-        <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
-          <ReactQuill
-            ref={quillRef}
-            value={content}
-            onChange={handleChange}
-            modules={modules}
-            formats={formats}
-            readOnly={readOnly}
-            placeholder={placeholder}
-            theme="snow"
-          />
-        </div>
-
-        {/* Visible document pages with split content */}
+        {/* Show React Quill editor on first page, read-only content on overflow pages */}
         {pages.map((pageContent, index) => (
-          <div key={index} className="document-page" onClick={() => {
-            // Focus the hidden editor when clicking on any page
-            if (quillRef.current && !readOnly) {
-              quillRef.current.focus();
-            }
-          }}>
-            <div 
-              className="page-content"
-              dangerouslySetInnerHTML={{ __html: pageContent || (index === 0 ? `<p>${placeholder}</p>` : '') }}
-              style={{
-                fontFamily: 'Times New Roman, serif',
-                fontSize: '12pt',
-                lineHeight: '2.0',
-                height: '100%',
-                overflow: 'hidden',
-                wordWrap: 'break-word',
-                cursor: readOnly ? 'default' : 'text',
-                minHeight: '856px'
-              }}
-            />
+          <div key={index} className="document-page">
+            {index === 0 ? (
+              <ReactQuill
+                ref={quillRef}
+                value={content}
+                onChange={handleChange}
+                modules={modules}
+                formats={formats}
+                readOnly={readOnly}
+                placeholder={placeholder}
+                theme="snow"
+                style={{ height: '856px' }}
+              />
+            ) : (
+              <div 
+                className="page-content"
+                dangerouslySetInnerHTML={{ __html: pageContent }}
+                style={{
+                  fontFamily: 'Times New Roman, serif',
+                  fontSize: '12pt',
+                  lineHeight: '2.0',
+                  height: '856px',
+                  overflow: 'hidden',
+                  wordWrap: 'break-word',
+                  padding: '72px',
+                  boxSizing: 'border-box'
+                }}
+              />
+            )}
             <div className="page-number">
               {index + 1}
             </div>
