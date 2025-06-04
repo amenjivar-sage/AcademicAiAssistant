@@ -510,6 +510,7 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
                   ))}
                 </div>
               )}
+              </div>
             )}
 
             {/* Students Section */}
@@ -529,7 +530,7 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
                   <div className="space-y-4">
                     {classroomStudents.map((student) => {
                       const studentAssignments = classroomAssignments.map(assignment => {
-                        const submission = student.sessions?.find(session => session.assignmentId === assignment.id);
+                        const submission = student.sessions?.find((session: any) => session.assignmentId === assignment.id);
                         return {
                           ...assignment,
                           submission,
