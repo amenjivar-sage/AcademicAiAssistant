@@ -215,34 +215,32 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     const combinedContent = newPages.join('');
     onContentChange(combinedContent);
     
-    // Immediate overflow check for user input - simplified approach
-    if (source === 'user') {
-      console.log(`User input detected on page ${pageIndex + 1}`);
-      
-      // Clear existing timeout
-      if (overflowCheckTimeout.current) {
-        clearTimeout(overflowCheckTimeout.current);
-      }
-      
-      // Check overflow immediately with a short delay to allow DOM update
-      overflowCheckTimeout.current = setTimeout(() => {
-        const currentRef = pageRefs.current[pageIndex];
-        if (currentRef) {
-          const editorElement = currentRef.getEditor().root;
-          const scrollHeight = editorElement.scrollHeight;
-          const maxHeight = 950;
-          
-          console.log(`Immediate overflow check for page ${pageIndex + 1}: ${scrollHeight}px vs ${maxHeight}px`);
-          
-          if (scrollHeight > maxHeight) {
-            console.log(`IMMEDIATE OVERFLOW DETECTED! Creating new page...`);
-            checkAndHandleOverflow(pageIndex, newPages);
-          }
-          
-          setContentOverflow(scrollHeight > maxHeight);
-        }
-      }, 100);
+    // Overflow check for all content changes - not just user input
+    console.log(`Content change detected on page ${pageIndex + 1}, source: ${source}`);
+    
+    // Clear existing timeout
+    if (overflowCheckTimeout.current) {
+      clearTimeout(overflowCheckTimeout.current);
     }
+    
+    // Check overflow immediately with a short delay to allow DOM update
+    overflowCheckTimeout.current = setTimeout(() => {
+      const currentRef = pageRefs.current[pageIndex];
+      if (currentRef) {
+        const editorElement = currentRef.getEditor().root;
+        const scrollHeight = editorElement.scrollHeight;
+        const maxHeight = 950;
+        
+        console.log(`Overflow check for page ${pageIndex + 1}: ${scrollHeight}px vs ${maxHeight}px`);
+        
+        if (scrollHeight > maxHeight) {
+          console.log(`OVERFLOW DETECTED! Creating new page...`);
+          checkAndHandleOverflow(pageIndex, newPages);
+        }
+        
+        setContentOverflow(scrollHeight > maxHeight);
+      }
+    }, 150);
   };
 
   // Handle text selection for AI assistance
