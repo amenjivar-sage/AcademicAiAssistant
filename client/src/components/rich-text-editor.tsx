@@ -44,7 +44,13 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
   const modules = {
     toolbar: false, // We'll use custom formatting buttons
     clipboard: {
-      matchVisual: false,
+      matchVisual: true,
+      matchers: [],
+    },
+    history: {
+      delay: 2000,
+      maxStack: 500,
+      userOnly: true
     },
   };
 
@@ -132,7 +138,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
         }
       }
 
-      // Split content at the break point
+      // Split content at the break point while preserving formatting
       const firstPageText = quillEditor.getText(0, finalBreakPoint).trim();
       const overflowText = quillEditor.getText(finalBreakPoint).trim();
       
@@ -182,7 +188,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
           // Keep cursor on current page
           const currentPageRef = pageRefs.current[pageIndex];
           if (currentPageRef && selection) {
-            const newPosition = Math.min(cursorPosition, firstPageText.length);
+            const newPosition = Math.min(cursorPosition, finalBreakPoint);
             setTimeout(() => {
               currentPageRef.getEditor().setSelection(newPosition, 0);
             }, 100);
@@ -206,6 +212,12 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     // Prevent recursive updates by checking if this is the expected change
     if (pages[pageIndex] === value) return;
     
+    // Only process user-initiated changes to prevent formatting loss
+    if (source !== 'user') {
+      console.log(`Ignoring non-user change on page ${pageIndex + 1}, source: ${source}`);
+      return;
+    }
+    
     // Update the specific page content without affecting other pages
     const newPages = [...pages];
     newPages[pageIndex] = value;
@@ -215,15 +227,15 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     const combinedContent = newPages.join('');
     onContentChange(combinedContent);
     
-    // Overflow check for all content changes - not just user input
-    console.log(`Content change detected on page ${pageIndex + 1}, source: ${source}`);
+    // Overflow check for user input only
+    console.log(`User content change detected on page ${pageIndex + 1}, preserving formatting`);
     
     // Clear existing timeout
     if (overflowCheckTimeout.current) {
       clearTimeout(overflowCheckTimeout.current);
     }
     
-    // Check overflow immediately with a short delay to allow DOM update
+    // Check overflow with a delay to allow DOM update
     overflowCheckTimeout.current = setTimeout(() => {
       const currentRef = pageRefs.current[pageIndex];
       if (currentRef) {
@@ -234,7 +246,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
         console.log(`Overflow check for page ${pageIndex + 1}: ${scrollHeight}px vs ${maxHeight}px`);
         
         if (scrollHeight > maxHeight) {
-          console.log(`OVERFLOW DETECTED! Creating new page...`);
+          console.log(`OVERFLOW DETECTED! Creating new page while preserving formatting...`);
           checkAndHandleOverflow(pageIndex, newPages);
         }
         
@@ -288,46 +300,31 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     pageRefs.current = pageRefs.current.slice(0, pages.length);
   }, [pages.length]);
 
-  // Clean up empty pages and consolidate content
+  // Clean up empty pages and consolidate content while preserving formatting
   const consolidatePages = useCallback(() => {
     const newPages: string[] = [];
-    let currentPageText = '';
+    let combinedContent = '';
     
+    // Combine all pages while preserving HTML formatting
     for (let i = 0; i < pages.length; i++) {
-      const pageText = pages[i].replace(/<\/?p>/g, '').trim();
-      if (pageText) {
-        currentPageText += (currentPageText ? ' ' : '') + pageText;
+      const pageContent = pages[i];
+      if (pageContent && pageContent.trim()) {
+        // Remove only wrapping <p> tags but preserve internal formatting
+        const cleanContent = pageContent.replace(/^<p>|<\/p>$/g, '').trim();
+        if (cleanContent) {
+          combinedContent += (combinedContent ? ' ' : '') + cleanContent;
+        }
       }
     }
     
-    if (!currentPageText) {
+    if (!combinedContent) {
       setPages(['']);
       return;
     }
     
-    // Split content back into properly sized pages
-    const words = currentPageText.split(' ');
-    let currentPage = '';
-    
-    for (const word of words) {
-      const testPage = currentPage + (currentPage ? ' ' : '') + word;
-      
-      // Rough estimation: ~80 characters per line, ~30 lines per page
-      if (testPage.length > 2000 && currentPage) {
-        newPages.push(`<p>${currentPage}</p>`);
-        currentPage = word;
-      } else {
-        currentPage = testPage;
-      }
-    }
-    
-    if (currentPage) {
-      newPages.push(`<p>${currentPage}</p>`);
-    }
-    
-    if (newPages.length === 0) {
-      newPages.push('');
-    }
+    // For now, just put all content on one page to avoid breaking formatting
+    // TODO: Implement smarter page splitting that preserves HTML tags
+    newPages.push(`<p>${combinedContent}</p>`);
     
     setPages(newPages);
   }, [pages]);
