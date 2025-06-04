@@ -83,34 +83,30 @@ export default function PageBasedEditor({
     estimatedLinePosition: number;
   }> = [];
   
-  // Standard page formatting constants
-  const WORDS_PER_LINE = 11; // Average words per line in Times New Roman 12pt double-spaced
-  const LINE_HEIGHT = 32; // Line height in pixels for proper double spacing
-  const LINES_PER_PAGE = 22; // Lines per page with standard 1-inch margins
-  const HEADER_HEIGHT = 64; // Space reserved for header
-  const FOOTER_HEIGHT = 64; // Space reserved for footer
-  const PAGE_CONTENT_HEIGHT = LINES_PER_PAGE * LINE_HEIGHT; // Usable content height per page
-  
-  // Calculate page break positions based on standard formatting
-  for (let page = 1; page < estimatedPages; page++) {
-    const wordsInPage = page * wordsPerPage;
-    const wordsBeforeBreak = words.slice(0, wordsInPage);
-    const textBeforeBreak = wordsBeforeBreak.join(' ');
-    
-    // Calculate line position for this page break
-    const linesBeforeBreak = Math.floor(wordsInPage / WORDS_PER_LINE);
-    const pageNumber = Math.floor(linesBeforeBreak / LINES_PER_PAGE);
-    const lineInCurrentPage = linesBeforeBreak % LINES_PER_PAGE;
-    
-    // Position within the document considering multiple pages
-    const estimatedPixelPosition = HEADER_HEIGHT + (linesBeforeBreak * LINE_HEIGHT);
-    
-    pageBreaks.push({
-      pageNumber: page + 1,
-      wordPosition: wordsInPage,
-      charPosition: textBeforeBreak.length,
-      estimatedLinePosition: estimatedPixelPosition
-    });
+  // Only create page breaks when content actually exceeds page capacity
+  if (wordCount > wordsPerPage) {
+    for (let page = 1; page < estimatedPages; page++) {
+      const wordsAtPageBreak = page * wordsPerPage; // 500, 1000, 1500, etc.
+      
+      // Only add page break if we actually have content that goes to next page
+      if (wordsAtPageBreak < wordCount) {
+        const wordsBeforeBreak = words.slice(0, wordsAtPageBreak);
+        const textBeforeBreak = wordsBeforeBreak.join(' ');
+        
+        // Calculate realistic positioning based on actual text flow
+        const estimatedLines = Math.ceil(wordsAtPageBreak / 11); // ~11 words per line
+        const lineHeight = 28; // Standard double-spaced line height
+        const topMargin = 70; // Account for header space
+        const estimatedPixelPosition = topMargin + (estimatedLines * lineHeight);
+        
+        pageBreaks.push({
+          pageNumber: page + 1,
+          wordPosition: wordsAtPageBreak,
+          charPosition: textBeforeBreak.length,
+          estimatedLinePosition: estimatedPixelPosition
+        });
+      }
+    }
   }
   
   // Debug logging for word count tracking
@@ -406,28 +402,34 @@ export default function PageBasedEditor({
 
           {/* Content Area with Visual Page Breaks */}
           <div className={`px-16 ${(pageSettings.headerText || pageSettings.showStudentName) ? 'pt-8' : 'pt-16'} ${(pageSettings.footerText || pageSettings.showPageNumbers) ? 'pb-8' : 'pb-16'} min-h-[9in] relative`}>
-            {/* Page Break Visual Separators - Properly positioned */}
+            {/* Page Break Visual Separators */}
             {pageBreaks.map((pageBreak, index) => {
-              // Calculate safe positioning that doesn't interfere with headers/footers
-              const CONTENT_AREA_HEIGHT = 704; // 22 lines * 32px line height
-              const SAFE_MAX_POSITION = CONTENT_AREA_HEIGHT - 100; // Leave space for footer
-              const adjustedPosition = Math.min(pageBreak.estimatedLinePosition, SAFE_MAX_POSITION);
+              // Calculate position based on the exact 500-word mark
+              const wordsPerLine = 11;
+              const lineHeight = 28;
+              const topMargin = 80;
+              
+              // Position page break at exactly where 500 words would end
+              const linesForPageBreak = Math.ceil(pageBreak.wordPosition / wordsPerLine);
+              const calculatedPosition = topMargin + (linesForPageBreak * lineHeight);
+              
+              // Constrain to visible content area
+              const maxContentPosition = 650;
+              const finalPosition = Math.min(calculatedPosition, maxContentPosition);
               
               return (
                 <div
                   key={index}
                   className="absolute left-0 right-0 z-1 pointer-events-none"
                   style={{
-                    top: `${adjustedPosition}px`,
+                    top: `${finalPosition}px`,
                     height: '20px',
-                    margin: '0 32px'
+                    margin: '0 64px'
                   }}
                 >
-                  {/* Simple page separator bar */}
-                  <div className="h-full bg-gray-100 border-y border-gray-300 shadow-sm">
-                    <div className="h-full flex items-center justify-center">
-                      <div className="w-16 border-t border-gray-400 opacity-50"></div>
-                    </div>
+                  {/* Clean page separator */}
+                  <div className="h-full bg-gray-100 border-t border-b border-gray-250 shadow-sm flex items-center justify-center">
+                    <div className="w-20 h-px bg-gray-400 opacity-60"></div>
                   </div>
                 </div>
               );
