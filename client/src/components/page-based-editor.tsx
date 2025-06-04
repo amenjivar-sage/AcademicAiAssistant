@@ -384,20 +384,7 @@ export default function PageBasedEditor({
         </div>
       </div>
 
-      {/* Visual Page Break Indicators (Estimated) */}
-      {wordCount > wordsPerPage && (
-        <div className="space-y-8">
-          {Array.from({ length: Math.floor(wordCount / wordsPerPage) }, (_, index) => (
-            <div key={index} className="flex items-center justify-center py-4">
-              <div className="border-t border-dashed border-gray-400 flex-1"></div>
-              <span className="px-4 text-xs text-gray-500 bg-gray-100 rounded-full">
-                Page {index + 2} begins (estimated)
-              </span>
-              <div className="border-t border-dashed border-gray-400 flex-1"></div>
-            </div>
-          ))}
-        </div>
-      )}
+
 
       {/* Document Summary */}
       <div className="text-center py-4">
