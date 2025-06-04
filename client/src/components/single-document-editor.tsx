@@ -93,6 +93,31 @@ export default function SingleDocumentEditor({
     return highlightedText;
   };
 
+  // Inline comment highlighting function
+  const highlightInlineComments = (text: string, comments: any[]): string => {
+    if (!comments || comments.length === 0) {
+      return text;
+    }
+
+    let highlightedText = text;
+    
+    // Sort comments by startIndex in descending order to avoid index shifting
+    const sortedComments = [...comments].sort((a, b) => b.startIndex - a.startIndex);
+    
+    sortedComments.forEach((comment: any) => {
+      const beforeText = highlightedText.substring(0, comment.startIndex);
+      const commentedText = highlightedText.substring(comment.startIndex, comment.endIndex);
+      const afterText = highlightedText.substring(comment.endIndex);
+      
+      // Create highlighted span with blue background and a tooltip showing the comment
+      const highlightedSpan = `<span style="background-color: #dbeafe; border-bottom: 2px solid #3b82f6; color: #1e40af; font-weight: 500; padding: 1px 2px; border-radius: 2px; position: relative; cursor: help;" title="Teacher Comment: ${comment.comment.replace(/"/g, '&quot;')}" data-comment-id="${comment.id}">${commentedText}</span>`;
+      
+      highlightedText = beforeText + highlightedSpan + afterText;
+    });
+
+    return highlightedText;
+  };
+
   // Calculate how many pages are needed based on content length
   function calculatePageCount(text: string) {
     if (!text || text.trim() === '') {
@@ -225,6 +250,27 @@ export default function SingleDocumentEditor({
                 />
               );
             })()}
+            
+            {/* Inline comment highlighting overlay for graded assignments */}
+            {readOnly && inlineComments.length > 0 && (
+              <div 
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  fontFamily: "'Times New Roman', serif",
+                  fontSize: "12pt",
+                  lineHeight: "2.0",
+                  padding: `${PAGE_PADDING}px`,
+                  whiteSpace: 'pre-wrap',
+                  wordWrap: 'break-word',
+                  color: 'transparent',
+                  zIndex: 3
+                }}
+                dangerouslySetInnerHTML={{
+                  __html: highlightInlineComments(content, inlineComments)
+                }}
+              />
+            )}
+            
             <textarea
               ref={textareaRef}
               className={`w-full resize-none border-none outline-none bg-transparent text-gray-900 font-serif relative ${readOnly ? 'cursor-default' : ''}`}

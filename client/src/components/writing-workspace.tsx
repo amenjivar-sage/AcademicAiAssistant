@@ -475,6 +475,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
               readOnly={session?.status === 'graded'}
               pastedContent={pastedContents}
               showCopyPasteHighlights={session?.status === 'graded'}
+              inlineComments={inlineComments}
             />
           </CopyPasteDetector>
         </div>
