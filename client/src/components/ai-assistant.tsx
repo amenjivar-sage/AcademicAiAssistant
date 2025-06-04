@@ -244,9 +244,9 @@ export default function AiAssistant({ sessionId, currentContent }: AiAssistantPr
           <TabsTrigger value="citations" className="text-xs px-2">Cite</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="assistant" className="flex-1 flex flex-col min-h-0 pb-40">
+        <TabsContent value="assistant" className="flex-1 flex flex-col min-h-0">
           {/* Chat History Area */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-[300px] max-h-[45vh]">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-[200px] max-h-[40vh]">
             {displayChatHistory && displayChatHistory.length > 0 ? (
               <>
                 <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
@@ -300,9 +300,9 @@ export default function AiAssistant({ sessionId, currentContent }: AiAssistantPr
           </div>
 
           {/* Input Area */}
-          <div className="border-t bg-white p-6 space-y-4 flex-shrink-0 relative z-50 mb-20 mt-2">
-            <div className="space-y-6">
-              <label className="block text-base font-medium text-gray-700 mb-6">
+          <div className="border-t bg-white p-4 space-y-3 flex-shrink-0 mt-auto">
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-gray-700">
                 Ask ZoË for help with your writing:
               </label>
               <Textarea
@@ -310,8 +310,8 @@ export default function AiAssistant({ sessionId, currentContent }: AiAssistantPr
                 onChange={(e) => setPrompt(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Example: 'Help me brainstorm ideas' or 'How can I improve this paragraph?'"
-                className="resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent min-h-[140px]"
-                rows={5}
+                className="resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent min-h-[100px]"
+                rows={4}
               />
             </div>
             
