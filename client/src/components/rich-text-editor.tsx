@@ -64,53 +64,36 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     const combinedContent = newPages.join('');
     onContentChange(combinedContent);
     
-    // Check for Enter key and content overflow
-    if (source === 'user' && delta && delta.ops) {
-      const hasEnterKey = delta.ops.some((op: any) => op.insert === '\n');
-      
-      if (hasEnterKey) {
-        setTimeout(() => {
-          const currentRef = pageRefs.current[pageIndex];
-          if (currentRef && pageIndex === pages.length - 1) {
-            const editorElement = currentRef.getEditor().root;
-            const scrollHeight = editorElement.scrollHeight;
-            const maxHeight = 856; // 1000px - 144px padding
+    // Check for content overflow on any user input
+    if (source === 'user' && pageIndex === pages.length - 1) {
+      setTimeout(() => {
+        const currentRef = pageRefs.current[pageIndex];
+        if (currentRef) {
+          const editorElement = currentRef.getEditor().root;
+          const scrollHeight = editorElement.scrollHeight;
+          const maxHeight = 950; // Fixed height from CSS
+          
+          // If content exceeds page height, create new page
+          if (scrollHeight > maxHeight) {
+            console.log(`Content overflow detected - creating new page: ${scrollHeight}px > ${maxHeight}px`);
             
-            // Check if content exceeds page height after Enter
-            if (scrollHeight > maxHeight) {
-              console.log(`Enter triggered overflow: ${scrollHeight}px > ${maxHeight}px`);
-              
-              const quillEditor = currentRef.getEditor();
-              const selection = quillEditor.getSelection();
-              
-              if (selection) {
-                // Get cursor position and check if near bottom
-                const bounds = quillEditor.getBounds(selection.index);
-                const editorRect = editorElement.getBoundingClientRect();
-                const relativeY = bounds.top;
-                
-                // If cursor is near bottom of page, create new page
-                if (relativeY > maxHeight * 0.9) {
-                  // Create new page
-                  const newPagesList = [...pages, ''];
-                  setPages(newPagesList);
-                  setActivePage(pageIndex + 1);
-                  
-                  // Move to new page after creation
-                  setTimeout(() => {
-                    const newPageRef = pageRefs.current[pageIndex + 1];
-                    if (newPageRef) {
-                      newPageRef.focus();
-                      newPageRef.getEditor().setSelection(0, 0);
-                      console.log(`Moved to new page ${pageIndex + 2}`);
-                    }
-                  }, 100);
-                }
+            // Create new page
+            const newPagesList = [...pages, ''];
+            setPages(newPagesList);
+            setActivePage(pageIndex + 1);
+            
+            // Move cursor to new page
+            setTimeout(() => {
+              const newPageRef = pageRefs.current[pageIndex + 1];
+              if (newPageRef) {
+                newPageRef.focus();
+                newPageRef.getEditor().setSelection(0, 0);
+                console.log(`Moved to new page ${pageIndex + 2}`);
               }
-            }
+            }, 100);
           }
-        }, 50);
-      }
+        }
+      }, 50);
     }
     
     // Update overflow status
@@ -167,17 +150,15 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
       const currentRef = pageRefs.current[pageIndex];
       if (!currentRef) return;
 
-      // Get the container element for height calculation
-      const pageContainer = currentRef.getEditor().root.closest('.single-document-page') as HTMLElement;
-      if (!pageContainer) return;
-
-      const scrollHeight = pageContainer.scrollHeight;
-      const clientHeight = pageContainer.clientHeight;
-      const isNearBottom = scrollHeight >= clientHeight - 50; // 50px threshold
-
-      if (isNearBottom) {
+      // Check editor scroll height directly
+      const editorElement = currentRef.getEditor().root;
+      const scrollHeight = editorElement.scrollHeight;
+      const maxHeight = 950; // Fixed height from CSS
+      
+      // If content is approaching the height limit, create new page
+      if (scrollHeight >= maxHeight - 100) {
         e.preventDefault();
-        console.log(`Creating new page at Enter - page ${pageIndex + 1} -> ${pageIndex + 2}`);
+        console.log(`Creating new page - scrollHeight: ${scrollHeight}px, maxHeight: ${maxHeight}px`);
         
         // Create new page
         const newPagesList = [...pages, ''];
@@ -188,26 +169,13 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
         setTimeout(() => {
           const newPageRef = pageRefs.current[pageIndex + 1];
           if (newPageRef) {
-            const newEditor = newPageRef.getEditor();
-            newEditor.focus();
+            newPageRef.focus();
             
-            // Set cursor at beginning of new page using DOM range
-            const nextQuillEditor = newPageRef.getEditor().root;
-            if (nextQuillEditor) {
-              const range = document.createRange();
-              const sel = window.getSelection();
-              if (nextQuillEditor.firstChild) {
-                range.setStart(nextQuillEditor.firstChild, 0);
-                range.collapse(true);
-              } else {
-                range.selectNodeContents(nextQuillEditor);
-                range.collapse(true);
-              }
-              sel?.removeAllRanges();
-              sel?.addRange(range);
-              
-              console.log(`Focused on new page ${pageIndex + 2}`);
-            }
+            // Set cursor at beginning of new page
+            const nextEditor = newPageRef.getEditor();
+            nextEditor.setSelection(0, 0);
+            
+            console.log(`Moved to page ${pageIndex + 2}`);
           }
         }, 100);
       }
@@ -289,17 +257,17 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
         }
 
         .ql-editor {
+          height: 950px !important;
+          overflow: hidden !important;
           font-family: 'Times New Roman', serif !important;
-          font-size: 12pt !important;
+          font-size: 14pt !important;
           line-height: 2.0 !important;
           padding: 72px !important;
           background: transparent !important;
           border: none !important;
           margin: 0 !important;
           width: 100% !important;
-          height: calc(1000px - 144px) !important;
-          max-height: calc(1000px - 144px) !important;
-          overflow: hidden !important;
+          max-height: 950px !important;
           box-sizing: border-box !important;
         }
         
