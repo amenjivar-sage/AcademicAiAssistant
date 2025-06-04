@@ -398,19 +398,34 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
               <div className="flex items-center justify-between">
                 {!isAiSidebarMinimized && <h3 className="font-semibold">ZoË</h3>}
                 <div className="flex gap-1">
-                  <Button
-                    onClick={() => setIsAiSidebarMinimized(!isAiSidebarMinimized)}
-                    variant="ghost"
-                    size="sm"
-                    title={isAiSidebarMinimized ? "Expand" : "Minimize"}
-                  >
-                    {isAiSidebarMinimized ? '→' : '←'}
-                  </Button>
+                  {!isAiSidebarMinimized && (
+                    <Button
+                      onClick={() => setIsAiSidebarMinimized(true)}
+                      variant="ghost"
+                      size="sm"
+                      title="Minimize ZoË"
+                      className="hover:bg-gray-100"
+                    >
+                      ←
+                    </Button>
+                  )}
+                  {isAiSidebarMinimized && (
+                    <Button
+                      onClick={() => setIsAiSidebarMinimized(false)}
+                      variant="ghost"
+                      size="sm"
+                      title="Expand ZoË"
+                      className="hover:bg-gray-100"
+                    >
+                      →
+                    </Button>
+                  )}
                   <Button
                     onClick={() => setShowAiSidebar(false)}
                     variant="ghost"
                     size="sm"
-                    title="Close"
+                    title="Close ZoË"
+                    className="hover:bg-gray-100"
                   >
                     ×
                   </Button>
