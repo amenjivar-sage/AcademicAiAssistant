@@ -152,31 +152,49 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
         updatedPages.push(`<p>${overflowText}</p>`);
       }
       
+      // Store current cursor position before page split
+      const selection = quillEditor.getSelection();
+      const cursorPosition = selection ? selection.index : 0;
+      const cursorInOverflow = cursorPosition >= finalBreakPoint;
+      
+      console.log(`Cursor position: ${cursorPosition}, break point: ${finalBreakPoint}, cursor in overflow: ${cursorInOverflow}`);
+      
       setPages(updatedPages);
       
-      // Store current cursor position
-      const selection = quillEditor.getSelection();
-      const cursorInOverflow = selection && selection.index >= finalBreakPoint;
-      
-      // Recursively check next page after content update
+      // Handle cursor positioning after page split
       setTimeout(() => {
-        if (pageIndex + 1 < updatedPages.length) {
-          checkAndHandleOverflow(pageIndex + 1, updatedPages);
-        }
-        
-        // Restore cursor position if it was in the overflow
-        if (cursorInOverflow && selection) {
-          const newPosition = selection.index - finalBreakPoint;
+        if (cursorInOverflow && pageIndex + 1 < updatedPages.length) {
+          // Cursor should move to the next page
+          const newPosition = Math.max(0, cursorPosition - finalBreakPoint);
           const nextPageRef = pageRefs.current[pageIndex + 1];
-          if (nextPageRef && newPosition >= 0) {
+          
+          console.log(`Moving cursor to page ${pageIndex + 2} at position ${newPosition}`);
+          
+          if (nextPageRef) {
+            nextPageRef.focus();
             setTimeout(() => {
-              nextPageRef.focus();
               nextPageRef.getEditor().setSelection(newPosition, 0);
               setActivePage(pageIndex + 1);
-            }, 50);
+            }, 100);
+          }
+        } else {
+          // Keep cursor on current page
+          const currentPageRef = pageRefs.current[pageIndex];
+          if (currentPageRef && selection) {
+            const newPosition = Math.min(cursorPosition, firstPageText.length);
+            setTimeout(() => {
+              currentPageRef.getEditor().setSelection(newPosition, 0);
+            }, 100);
           }
         }
-      }, 100);
+        
+        // Recursively check next page after content update
+        if (pageIndex + 1 < updatedPages.length) {
+          setTimeout(() => {
+            checkAndHandleOverflow(pageIndex + 1, updatedPages);
+          }, 200);
+        }
+      }, 150);
     }
   }, []);
 
@@ -312,11 +330,22 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
 
   // Handle keyboard events for automatic page creation
   const handleKeyDown = (e: React.KeyboardEvent, pageIndex: number) => {
+    const currentRef = pageRefs.current[pageIndex];
+    if (!currentRef) return;
+
     if (e.key === 'Enter') {
-      // Check for overflow after Enter key
+      console.log(`Enter key pressed on page ${pageIndex + 1}`);
+      
+      // Get current cursor position before Enter
+      const currentSelection = currentRef.getEditor().getSelection();
+      const cursorPos = currentSelection ? currentSelection.index : 0;
+      
+      // Check for overflow after Enter key with cursor position context
       setTimeout(() => {
+        console.log(`Checking overflow after Enter at position ${cursorPos}`);
         checkAndHandleOverflow(pageIndex, pages);
-      }, 50);
+      }, 100);
+      
     } else if (e.key === 'Backspace' || e.key === 'Delete') {
       // Check if we need to consolidate pages after deletion
       setTimeout(() => {
@@ -324,6 +353,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
           index > 0 && page.replace(/<\/?p>/g, '').trim() === ''
         );
         if (hasEmptyPages) {
+          console.log('Consolidating pages after deletion');
           consolidatePages();
         }
       }, 100);
