@@ -157,9 +157,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.getUser(currentSessionUserId);
       console.log("Retrieved user from storage:", user ? `${user.firstName} ${user.lastName} (${user.role})` : "null");
       
-      if (!user) {
-        console.log("User not found in storage, attempting to find any teacher");
-        // If specific user not found, try to find any teacher for demo purposes
+      if (!user && currentSessionUserId === 12) {
+        console.log("Default teacher not found, attempting to find any teacher");
+        // Only use fallback if the default teacher (12) doesn't exist
         const allUsers = await storage.getAllUsers();
         const teacher = allUsers.find(u => u.role === 'teacher');
         if (teacher) {
