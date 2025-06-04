@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Bold } from 'lucide-react';
 import BubbleSpellCheckPanel from './bubble-spell-check-panel';
+import FormattingToolbox from './formatting-toolbox';
 
 interface SingleDocumentEditorProps {
   content: string;
@@ -282,22 +281,6 @@ export default function SingleDocumentEditor({
 
   return (
     <div className="bg-gray-100 min-h-screen relative overflow-y-auto">
-      {/* Formatting Toolbar */}
-      {showFormatting && !readOnly && (
-        <div className="fixed top-16 left-1/2 transform -translate-x-1/2 z-50 bg-white border border-gray-300 rounded-lg shadow-lg p-2">
-          <div className="flex items-center space-x-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={applyBoldFormatting}
-              className="h-8 w-8 p-0"
-              title="Bold (Ctrl+B)"
-            >
-              <Bold className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      )}
 
       {/* Control Panel */}
       <div className="fixed top-4 right-4 z-50 space-y-2">
@@ -516,6 +499,13 @@ export default function SingleDocumentEditor({
             />
           </div>
         )}
+
+        {/* Formatting Toolbox */}
+        <FormattingToolbox
+          selectedText={selectedText}
+          onBoldClick={applyBoldFormatting}
+          isVisible={showFormatting}
+        />
       </div>
     </div>
   );
