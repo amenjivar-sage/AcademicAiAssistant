@@ -31,33 +31,14 @@ export default function SingleDocumentEditor({
   const contentLines = content.split('\n');
   const totalPages = Math.max(1, Math.ceil(contentLines.length / LINES_PER_PAGE));
 
-  // Handle content changes with line count enforcement
+  // Handle content changes with multi-page support
   const handleContentChange = (newContent: string) => {
-    const lines = newContent.split('\n');
-    const maxLines = 22; // Enforce exactly 22 lines per page
-    
-    if (lines.length <= maxLines) {
-      onContentChange(newContent);
-    } else {
-      // Trim to max lines and prevent further input
-      const trimmedContent = lines.slice(0, maxLines).join('\n');
-      onContentChange(trimmedContent);
-      
-      // Reset textarea to trimmed content
-      if (textareaRef.current) {
-        textareaRef.current.value = trimmedContent;
-      }
-    }
+    onContentChange(newContent);
   };
 
-  // Handle keydown to prevent exceeding line limits
+  // No keydown restrictions - allow natural typing and page flow
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    const lines = content.split('\n');
-    const maxLines = 22;
-    
-    if (e.key === 'Enter' && lines.length >= maxLines) {
-      e.preventDefault(); // Prevent adding new lines when at limit
-    }
+    // Allow all key presses for natural typing experience
   };
 
   // Handle scroll to sync with page breaks
@@ -108,25 +89,22 @@ export default function SingleDocumentEditor({
             </div>
           )}
 
-          {/* Main Content Area */}
-          <div className="relative overflow-hidden" style={{ 
-            minHeight: `${PAGE_HEIGHT_INCHES}in`,
-            paddingTop: `${HEADER_HEIGHT}px`,
-            paddingBottom: `${FOOTER_HEIGHT}px`
+          {/* Multi-Page Content Area */}
+          <div className="relative" style={{ 
+            minHeight: `${totalPages * PAGE_HEIGHT_INCHES}in`
           }}>
             
             {/* Page Break Indicators */}
             {renderPageBreaks()}
             
-            {/* Writing Area with Enforced Height Limit */}
+            {/* Full Document Writing Area */}
             <div 
-              className="absolute border border-gray-200"
+              className="absolute inset-0"
               style={{
                 top: `${HEADER_HEIGHT}px`,
                 left: '1in',
                 right: '1in',
-                height: `${22 * LINE_HEIGHT_PX}px`, // Exactly 22 lines
-                overflow: 'hidden'
+                paddingBottom: `${FOOTER_HEIGHT}px`
               }}
             >
               <textarea
@@ -136,8 +114,7 @@ export default function SingleDocumentEditor({
                   fontFamily: "'Times New Roman', serif",
                   fontSize: "12pt",
                   lineHeight: "2.0",
-                  height: `${22 * LINE_HEIGHT_PX}px`, // Fixed height for exactly 22 lines
-                  overflow: 'hidden'
+                  minHeight: `${totalPages * (PAGE_HEIGHT_INCHES * 96 - HEADER_HEIGHT - FOOTER_HEIGHT)}px`
                 }}
                 value={content}
                 onChange={(e) => handleContentChange(e.target.value)}
@@ -145,7 +122,6 @@ export default function SingleDocumentEditor({
                 onScroll={handleScroll}
                 placeholder="Start writing your document..."
                 spellCheck={true}
-                rows={22}
               />
             </div>
             
