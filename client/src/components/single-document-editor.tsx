@@ -67,83 +67,95 @@ export default function SingleDocumentEditor({
 
   return (
     <div className="bg-gray-100 min-h-screen">
-      <div className="flex flex-col items-center space-y-6 py-6">
+      <div className="flex flex-col items-center py-6">
         {pages.map((pageContent, pageIndex) => (
-          <div
-            key={pageIndex}
-            className="bg-white shadow-lg mx-auto relative"
-            style={{ 
-              width: `${PAGE_WIDTH_INCHES}in`, 
-              height: `${PAGE_HEIGHT_INCHES}in`,
-              boxShadow: '0 0 5px rgba(0, 0, 0, 0.2)',
-              overflow: 'hidden',
-              position: 'relative'
-            }}
-          >
-            {/* Header */}
-            {showHeader && (
-              <div 
-                className="absolute top-0 left-0 right-0 bg-gray-50 border-b border-gray-200 px-8 py-3 text-sm text-gray-600"
-                style={{ height: `${PAGE_PADDING}px` }}
-              >
-                <div className="flex justify-between items-center">
-                  <div className="font-medium">{assignmentTitle}</div>
-                  <div>{studentName}</div>
+          <div key={pageIndex} className="relative">
+            {/* Page Break Indicator */}
+            {pageIndex > 0 && (
+              <div className="flex items-center justify-center py-2">
+                <div className="flex-1 border-t border-dashed border-blue-300"></div>
+                <div className="px-3 bg-blue-100 text-blue-700 text-xs font-medium rounded">
+                  Page {pageIndex + 1}
                 </div>
+                <div className="flex-1 border-t border-dashed border-blue-300"></div>
               </div>
             )}
-
-            {/* Main Content Area */}
+            
             <div
-              className="absolute"
-              style={{
-                top: `${PAGE_PADDING}px`,
-                left: `${PAGE_PADDING}px`,
-                right: `${PAGE_PADDING}px`,
-                bottom: `${FOOTER_HEIGHT}px`,
-                height: `calc(100% - ${PAGE_PADDING * 2 + FOOTER_HEIGHT}px)`
+              className="bg-white shadow-lg mx-auto relative mb-6"
+              style={{ 
+                width: `${PAGE_WIDTH_INCHES}in`, 
+                height: `${PAGE_HEIGHT_INCHES}in`,
+                boxShadow: '0 0 5px rgba(0, 0, 0, 0.2)',
+                overflow: 'hidden',
+                position: 'relative'
               }}
             >
-              {pageIndex === 0 ? (
-                <textarea
-                  ref={textareaRef}
-                  className="w-full h-full resize-none border-none outline-none bg-transparent text-gray-900 font-serif"
-                  style={{
-                    fontFamily: "'Times New Roman', serif",
-                    fontSize: "12pt",
-                    lineHeight: "2.0",
-                    padding: 0
-                  }}
-                  value={content}
-                  onChange={(e) => handleContentChange(e.target.value)}
-                  placeholder="Start writing your document..."
-                  spellCheck={true}
-                />
-              ) : (
+              {/* Header */}
+              {showHeader && (
                 <div 
-                  className="w-full h-full text-gray-900 font-serif whitespace-pre-wrap"
-                  style={{
-                    fontFamily: "'Times New Roman', serif",
-                    fontSize: "12pt",
-                    lineHeight: "2.0"
-                  }}
+                  className="absolute top-0 left-0 right-0 bg-gray-50 border-b border-gray-200 px-8 py-3 text-sm text-gray-600"
+                  style={{ height: `${PAGE_PADDING}px` }}
                 >
-                  {pageContent}
+                  <div className="flex justify-between items-center">
+                    <div className="font-medium">{assignmentTitle}</div>
+                    <div>{studentName}</div>
+                  </div>
                 </div>
               )}
-            </div>
 
-            {/* Footer */}
-            <div 
-              className="absolute bottom-0 left-0 right-0 bg-gray-50 border-t border-gray-200 px-8 py-2 text-center text-sm text-gray-500"
-              style={{ height: `${FOOTER_HEIGHT}px` }}
-            >
-              {showPageNumbers && (
-                <div className="flex justify-between items-center">
-                  <div>Page {pageIndex + 1} of {totalPages}</div>
-                  <div>Word Count: {pageContent.split(" ").filter(word => word.length > 0).length}</div>
-                </div>
-              )}
+              {/* Main Content Area */}
+              <div
+                className="absolute"
+                style={{
+                  top: `${PAGE_PADDING}px`,
+                  left: `${PAGE_PADDING}px`,
+                  right: `${PAGE_PADDING}px`,
+                  bottom: `${FOOTER_HEIGHT}px`,
+                  height: `calc(100% - ${PAGE_PADDING * 2 + FOOTER_HEIGHT}px)`
+                }}
+              >
+                {pageIndex === 0 ? (
+                  <textarea
+                    ref={textareaRef}
+                    className="w-full h-full resize-none border-none outline-none bg-transparent text-gray-900 font-serif"
+                    style={{
+                      fontFamily: "'Times New Roman', serif",
+                      fontSize: "12pt",
+                      lineHeight: "2.0",
+                      padding: 0
+                    }}
+                    value={content}
+                    onChange={(e) => handleContentChange(e.target.value)}
+                    placeholder="Start writing your document..."
+                    spellCheck={true}
+                  />
+                ) : (
+                  <div 
+                    className="w-full h-full text-gray-900 font-serif whitespace-pre-wrap"
+                    style={{
+                      fontFamily: "'Times New Roman', serif",
+                      fontSize: "12pt",
+                      lineHeight: "2.0"
+                    }}
+                  >
+                    {pageContent}
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div 
+                className="absolute bottom-0 left-0 right-0 bg-gray-50 border-t border-gray-200 px-8 py-2 text-center text-sm text-gray-500"
+                style={{ height: `${FOOTER_HEIGHT}px` }}
+              >
+                {showPageNumbers && (
+                  <div className="flex justify-between items-center">
+                    <div>Page {pageIndex + 1} of {totalPages}</div>
+                    <div>Word Count: {pageContent.split(" ").filter(word => word.length > 0).length}</div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         ))}
