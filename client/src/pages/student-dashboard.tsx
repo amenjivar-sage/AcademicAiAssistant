@@ -19,6 +19,7 @@ import type { Assignment, WritingSession, Classroom } from "@shared/schema";
 
 export default function StudentDashboard() {
   const [activeTab, setActiveTab] = useState("classes");
+  const [classTab, setClassTab] = useState<"active" | "archived">("active");
   const [selectedClassroom, setSelectedClassroom] = useState<Classroom | null>(null);
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
   const { toast } = useToast();
@@ -199,7 +200,7 @@ export default function StudentDashboard() {
                     </Button>
                   </JoinClass>
                 </div>
-                
+
                 {classes?.length === 0 ? (
                   <Card>
                     <CardContent className="p-12 text-center">
@@ -215,41 +216,106 @@ export default function StudentDashboard() {
                     </CardContent>
                   </Card>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {classes?.map((classroom) => {
-                      const classAssignments = assignments?.filter(a => 
-                        a.classroomId === classroom.id || (a.classroomId === null && a.teacherId === classroom.teacherId)
-                      ) || [];
-                      const pendingCount = classAssignments.filter(a => {
-                        const session = sessions?.find(s => s.assignmentId === a.id);
-                        return !session || (session.status !== 'submitted' && session.status !== 'graded');
-                      }).length;
+                  <Tabs value={classTab} onValueChange={(value) => setClassTab(value as "active" | "archived")}>
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="active">
+                        Active Classes ({classes?.filter(c => c.isActive).length || 0})
+                      </TabsTrigger>
+                      <TabsTrigger value="archived">
+                        Archived Classes ({classes?.filter(c => !c.isActive).length || 0})
+                      </TabsTrigger>
+                    </TabsList>
 
-                      return (
-                        <Card key={classroom.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedClassroom(classroom)}>
-                          <CardHeader>
-                            <CardTitle className="text-lg">{classroom.name}</CardTitle>
-                            <div className="flex gap-2">
-                              <Badge variant="outline">{classroom.subject}</Badge>
-                              {classroom.gradeLevel && <Badge variant="secondary">{classroom.gradeLevel}</Badge>}
-                            </div>
-                          </CardHeader>
-                          <CardContent>
-                            <p className="text-gray-600 text-sm mb-3">{classroom.description}</p>
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center text-sm text-gray-500">
-                                <BookOpen className="h-4 w-4 mr-1" />
-                                {classAssignments.length} assignments
-                              </div>
-                              {pendingCount > 0 && (
-                                <Badge variant="destructive">{pendingCount} pending</Badge>
-                              )}
-                            </div>
+                    <TabsContent value="active" className="space-y-4 mt-6">
+                      {classes?.filter(c => c.isActive).length === 0 ? (
+                        <Card>
+                          <CardContent className="p-8 text-center">
+                            <Users className="h-8 w-8 text-gray-300 mx-auto mb-3" />
+                            <h3 className="text-lg font-medium text-gray-900 mb-2">No active classes</h3>
+                            <p className="text-gray-500">Join a class to get started</p>
                           </CardContent>
                         </Card>
-                      );
-                    })}
-                  </div>
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {classes?.filter(c => c.isActive).map((classroom) => {
+                            const classAssignments = assignments?.filter(a => 
+                              a.classroomId === classroom.id || (a.classroomId === null && a.teacherId === classroom.teacherId)
+                            ) || [];
+                            const pendingCount = classAssignments.filter(a => {
+                              const session = sessions?.find(s => s.assignmentId === a.id);
+                              return !session || (session.status !== 'submitted' && session.status !== 'graded');
+                            }).length;
+
+                            return (
+                              <Card key={classroom.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedClassroom(classroom)}>
+                                <CardHeader>
+                                  <CardTitle className="text-lg">{classroom.name}</CardTitle>
+                                  <div className="flex gap-2">
+                                    <Badge variant="outline">{classroom.subject}</Badge>
+                                    {classroom.gradeLevel && <Badge variant="secondary">{classroom.gradeLevel}</Badge>}
+                                  </div>
+                                </CardHeader>
+                                <CardContent>
+                                  <p className="text-gray-600 text-sm mb-3">{classroom.description}</p>
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center text-sm text-gray-500">
+                                      <BookOpen className="h-4 w-4 mr-1" />
+                                      {classAssignments.length} assignments
+                                    </div>
+                                    {pendingCount > 0 && (
+                                      <Badge variant="destructive">{pendingCount} pending</Badge>
+                                    )}
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </TabsContent>
+
+                    <TabsContent value="archived" className="space-y-4 mt-6">
+                      {classes?.filter(c => !c.isActive).length === 0 ? (
+                        <Card>
+                          <CardContent className="p-8 text-center">
+                            <BookOpen className="h-8 w-8 text-gray-300 mx-auto mb-3" />
+                            <h3 className="text-lg font-medium text-gray-900 mb-2">No archived classes</h3>
+                            <p className="text-gray-500">Archived classes will appear here</p>
+                          </CardContent>
+                        </Card>
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {classes?.filter(c => !c.isActive).map((classroom) => {
+                            const classAssignments = assignments?.filter(a => 
+                              a.classroomId === classroom.id || (a.classroomId === null && a.teacherId === classroom.teacherId)
+                            ) || [];
+
+                            return (
+                              <Card key={classroom.id} className="cursor-pointer hover:shadow-md transition-shadow opacity-75" onClick={() => setSelectedClassroom(classroom)}>
+                                <CardHeader>
+                                  <CardTitle className="text-lg">{classroom.name}</CardTitle>
+                                  <div className="flex gap-2">
+                                    <Badge variant="outline">{classroom.subject}</Badge>
+                                    {classroom.gradeLevel && <Badge variant="secondary">{classroom.gradeLevel}</Badge>}
+                                    <Badge variant="secondary" className="bg-gray-100 text-gray-600">
+                                      Archived
+                                    </Badge>
+                                  </div>
+                                </CardHeader>
+                                <CardContent>
+                                  <p className="text-gray-600 text-sm mb-3">{classroom.description}</p>
+                                  <div className="flex items-center text-sm text-gray-500">
+                                    <BookOpen className="h-4 w-4 mr-1" />
+                                    {classAssignments.length} assignments
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </TabsContent>
+                  </Tabs>
                 )}
               </>
             ) : (
