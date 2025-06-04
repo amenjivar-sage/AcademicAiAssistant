@@ -50,8 +50,12 @@ export default function SingleDocumentEditor({
 
   // Update pages when content changes
   useEffect(() => {
-    const newPages = splitTextToPages(content, PAGE_HEIGHT - PAGE_PADDING * 2 - FOOTER_HEIGHT);
-    setPages(newPages);
+    if (content.trim() === '') {
+      setPages(['']); // Always show at least one empty page
+    } else {
+      const newPages = splitTextToPages(content, PAGE_HEIGHT - PAGE_PADDING * 2 - FOOTER_HEIGHT);
+      setPages(newPages);
+    }
   }, [content]);
 
   const totalPages = Math.max(1, pages.length);
