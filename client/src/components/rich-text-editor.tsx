@@ -298,6 +298,23 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
         .single-document-page .ql-editor .ql-cursor {
           display: block !important;
         }
+
+        /* Content overflow warning */
+        .overflow-warning {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          background: #fef2f2;
+          border: 1px solid #fecaca;
+          color: #dc2626;
+          padding: 8px 12px;
+          border-radius: 4px;
+          font-size: 12px;
+          font-family: 'Times New Roman', serif;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          z-index: 1000;
+          max-width: 200px;
+        }
       `}</style>
       
       <div className="document-container" ref={containerRef}>
@@ -312,6 +329,13 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
             placeholder={placeholder}
             theme="snow"
           />
+          
+          {/* Content overflow warning */}
+          {contentOverflow && (
+            <div className="overflow-warning">
+              🚫 This page is full. Please start a new page.
+            </div>
+          )}
           
           {/* Page break indicators */}
           {Array.from({ length: pageCount - 1 }, (_, index) => (
