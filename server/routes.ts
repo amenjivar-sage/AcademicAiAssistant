@@ -936,11 +936,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         messages: [
           {
             role: "system",
-            content: "You are a spell checker. Find up to 20 spelling errors and return valid JSON in this exact format: {\"errors\": [{\"word\": \"misspelled_word\", \"suggestions\": [\"correction1\", \"correction2\"]}]}. If no errors found, return: {\"errors\": []}"
+            content: "You are a spell checker. Find up to 15 spelling errors and return valid JSON. Use this exact format: {\"errors\": [{\"word\": \"misspelled_word\", \"suggestions\": [\"correction1\"]}]}. Limit each word to one suggestion. If no errors found, return: {\"errors\": []}"
           },
           {
             role: "user", 
-            content: `Check spelling in: ${text}`
+            content: `Find spelling errors in the first 500 characters: ${text.substring(0, 500)}`
           }
         ],
         max_tokens: 2000,
