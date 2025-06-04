@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Settings, Send, AlertTriangle, Shield, FileText, MessageSquare, Download } from 'lucide-react';
+import { ArrowLeft, Settings, Send, AlertTriangle, Shield, FileText, MessageSquare, Download, Save } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import CopyPasteDetector from './copy-paste-detector';
 import SingleDocumentEditor from './single-document-editor';
@@ -527,6 +527,16 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
             >
               <ArrowLeft className="h-4 w-4" />
               Exit
+            </Button>
+
+            <Button
+              onClick={saveSession}
+              disabled={isSaving || (!content.trim() && !title.trim())}
+              variant="outline"
+              className="gap-2"
+            >
+              <Save className="h-4 w-4" />
+              {isSaving ? 'Saving...' : 'Save'}
             </Button>
 
             <DocumentDownload 

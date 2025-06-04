@@ -244,9 +244,9 @@ export default function AiAssistant({ sessionId, currentContent }: AiAssistantPr
           <TabsTrigger value="citations" className="text-xs px-2">Cite</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="assistant" className="flex-1 flex flex-col min-h-0">
+        <TabsContent value="assistant" className="flex-1 flex flex-col min-h-0 pb-40">
           {/* Chat History Area */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-[400px] max-h-[60vh]">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-[300px] max-h-[45vh]">
             {displayChatHistory && displayChatHistory.length > 0 ? (
               <>
                 <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
@@ -300,7 +300,7 @@ export default function AiAssistant({ sessionId, currentContent }: AiAssistantPr
           </div>
 
           {/* Input Area */}
-          <div className="border-t bg-white p-8 space-y-8 flex-shrink-0 relative z-50 mb-20">
+          <div className="border-t bg-white p-6 space-y-4 flex-shrink-0 relative z-50 mb-20 mt-2">
             <div className="space-y-6">
               <label className="block text-base font-medium text-gray-700 mb-6">
                 Ask ZoË for help with your writing:
