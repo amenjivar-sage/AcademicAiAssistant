@@ -245,60 +245,58 @@ export default function AiAssistant({ sessionId, currentContent }: AiAssistantPr
         </TabsList>
 
         <TabsContent value="assistant" className="flex-1 flex flex-col min-h-0">
-          {/* Scrollable Content Area */}
-          <ScrollArea className="flex-1 min-h-0">
-            <div className="p-1">
-              {/* Chat History */}
-            {displayChatHistory && displayChatHistory.length > 0 && (
-              <div className="p-4">
+          {/* Chat History Area */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {displayChatHistory && displayChatHistory.length > 0 ? (
+              <>
                 <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
                   <Bot className="h-4 w-4 mr-2" />
                   Conversation History
                 </h4>
-                <div className="space-y-3">
-                  {displayChatHistory.map((interaction: any, index: number) => (
-                    <div key={index} className="space-y-2">
-                      <div className="bg-blue-50 p-3 rounded-lg">
-                        <p className="text-sm font-medium text-blue-900 mb-1">You asked:</p>
-                        <p className="text-sm text-blue-800">{interaction.prompt}</p>
-                      </div>
-                      <div className="bg-purple-50 p-3 rounded-lg">
-                        <p className="text-sm font-medium text-purple-900 mb-1">ZoË replied:</p>
-                        <p className="text-sm text-purple-800 whitespace-pre-line">{interaction.response}</p>
-                      </div>
+                {displayChatHistory.map((interaction: any, index: number) => (
+                  <div key={index} className="space-y-2">
+                    <div className="bg-blue-50 p-3 rounded-lg">
+                      <p className="text-sm font-medium text-blue-900 mb-1">You asked:</p>
+                      <p className="text-sm text-blue-800">{interaction.prompt}</p>
                     </div>
-                  ))}
-                </div>
+                    <div className="bg-purple-50 p-3 rounded-lg">
+                      <p className="text-sm font-medium text-purple-900 mb-1">ZoË replied:</p>
+                      <p className="text-sm text-purple-800 whitespace-pre-line">{interaction.response}</p>
+                    </div>
+                  </div>
+                ))}
+              </>
+            ) : (
+              <div className="text-center text-gray-500 text-sm">
+                <Bot className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p>Start a conversation with ZoË!</p>
+                <p className="text-xs mt-1">Ask questions about your writing</p>
               </div>
             )}
 
-            {/* AI Response (inline after sending) */}
+            {/* Loading indicator */}
             {aiHelpMutation.isPending && (
-              <div className="p-4 border-t border-gray-200">
-                <Alert>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <AlertDescription>
-                    ZoË is thinking...
-                  </AlertDescription>
-                </Alert>
-              </div>
+              <Alert>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <AlertDescription>
+                  ZoË is thinking...
+                </AlertDescription>
+              </Alert>
             )}
             
+            {/* Latest response */}
             {lastResponse && (
-              <div className="p-4 border-t border-gray-200">
-                <Alert variant={getResponseVariant(lastResponse.isRestricted)}>
-                  {getResponseIcon(lastResponse.isRestricted)}
-                  <AlertDescription className="whitespace-pre-line text-sm">
-                    {lastResponse.response}
-                  </AlertDescription>
-                </Alert>
-              </div>
+              <Alert variant={getResponseVariant(lastResponse.isRestricted)}>
+                {getResponseIcon(lastResponse.isRestricted)}
+                <AlertDescription className="whitespace-pre-line text-sm">
+                  {lastResponse.response}
+                </AlertDescription>
+              </Alert>
             )}
-            </div>
-          </ScrollArea>
+          </div>
 
-          {/* Fixed Input Area */}
-          <div className="border-t bg-white p-4 space-y-4 flex-shrink-0">
+          {/* Input Area */}
+          <div className="border-t bg-white p-4 space-y-3 flex-shrink-0">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Ask ZoË for help with your writing:
@@ -307,9 +305,9 @@ export default function AiAssistant({ sessionId, currentContent }: AiAssistantPr
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Example: 'I want to write a story about baseball, how can I do that?' or 'Help me brainstorm creative ideas'"
+                placeholder="Example: 'Help me brainstorm ideas' or 'How can I improve this paragraph?'"
                 className="resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                rows={3}
+                rows={2}
               />
             </div>
             
@@ -331,8 +329,8 @@ export default function AiAssistant({ sessionId, currentContent }: AiAssistantPr
               )}
             </Button>
             
-            <p className="text-xs text-gray-500">
-              💡 Tip: Press Ctrl+Enter (or Cmd+Enter) to send
+            <p className="text-xs text-gray-500 text-center">
+              Press Ctrl+Enter (or Cmd+Enter) to send
             </p>
           </div>
         </TabsContent>
