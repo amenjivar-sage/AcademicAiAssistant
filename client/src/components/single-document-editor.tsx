@@ -27,24 +27,27 @@ export default function SingleDocumentEditor({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [pages, setPages] = useState<string[]>([]);
 
-  // Function to split text into pages based on estimated height
-  function splitTextToPages(text: string, maxHeight: number, lineHeight = 20) {
-    const words = text.split(" ");
+  // Function to split text into pages based on character count per page
+  function splitTextToPages(text: string, maxCharsPerPage = 1800) {
     const pages: string[] = [];
-    let pageText = "";
-
-    words.forEach((word) => {
-      const estimatedLines = Math.ceil((pageText + word).length / 80);
-      const estimatedHeight = estimatedLines * lineHeight;
-
-      if (estimatedHeight >= maxHeight) {
-        pages.push(pageText.trim());
-        pageText = word + " ";
+    const words = text.split(" ");
+    let currentPage = "";
+    
+    for (const word of words) {
+      // Check if adding this word would exceed the page limit
+      if ((currentPage + " " + word).length > maxCharsPerPage && currentPage.length > 0) {
+        pages.push(currentPage.trim());
+        currentPage = word;
       } else {
-        pageText += word + " ";
+        currentPage = currentPage ? currentPage + " " + word : word;
       }
-    });
-    if (pageText.trim()) pages.push(pageText.trim());
+    }
+    
+    // Add the last page if there's content
+    if (currentPage.trim()) {
+      pages.push(currentPage.trim());
+    }
+    
     return pages;
   }
 
@@ -53,7 +56,7 @@ export default function SingleDocumentEditor({
     if (content.trim() === '') {
       setPages(['']); // Always show at least one empty page
     } else {
-      const newPages = splitTextToPages(content, PAGE_HEIGHT - PAGE_PADDING * 2 - FOOTER_HEIGHT);
+      const newPages = splitTextToPages(content, 1800); // ~1800 chars per page
       setPages(newPages);
     }
   }, [content]);
