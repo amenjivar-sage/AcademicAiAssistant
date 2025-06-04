@@ -565,6 +565,10 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
               pastedContent={pastedContents}
               showCopyPasteHighlights={session?.status === 'graded'}
               inlineComments={inlineComments}
+              onTextSelection={setSelectedText}
+              onFormatRef={(formatFn) => {
+                formatRef.current = formatFn;
+              }}
             />
           </CopyPasteDetector>
         </div>
