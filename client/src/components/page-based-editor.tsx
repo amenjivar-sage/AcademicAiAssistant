@@ -401,7 +401,7 @@ export default function PageBasedEditor({
             {pageBreaks.map((pageBreak, index) => (
               <div
                 key={index}
-                className="absolute left-0 right-0 z-10 pointer-events-none"
+                className="absolute left-0 right-0 z-5 pointer-events-none"
                 style={{
                   top: `${pageBreak.estimatedLinePosition}px`,
                   height: '30px',
@@ -410,7 +410,7 @@ export default function PageBasedEditor({
               >
                 {/* Empty space between pages with subtle shadow */}
                 <div className="h-full bg-gray-50 shadow-inner border-t border-b border-gray-200">
-                  {/* Optional: subtle page break line */}
+                  {/* Subtle page break line */}
                   <div className="absolute top-1/2 left-1/4 right-1/4 border-t border-gray-300 opacity-30"></div>
                 </div>
               </div>
@@ -434,8 +434,8 @@ export default function PageBasedEditor({
 
           {/* Footer */}
           {(pageSettings.footerText || pageSettings.showPageNumbers) && (
-            <div className="absolute bottom-8 left-16 right-16">
-              <div className="border-t border-gray-200 pt-4">
+            <div className="absolute bottom-8 left-16 right-16 z-20">
+              <div className="border-t border-gray-200 pt-4 bg-white">
                 {renderHeaderFooterContent(
                   pageSettings.studentName,
                   pageSettings.footerText,
