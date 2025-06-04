@@ -299,8 +299,8 @@ export default function AiAssistant({ sessionId, currentContent }: AiAssistantPr
             )}
           </div>
 
-          {/* Input Area - Fixed at bottom */}
-          <div className="absolute bottom-0 left-0 right-0 border-t bg-white p-3 space-y-3 shadow-lg" style={{ height: '180px' }}>
+          {/* Input Area - Always visible at bottom */}
+          <div className="border-t bg-white p-3 space-y-3 flex-shrink-0" style={{ height: '180px' }}>
             <div className="space-y-3">
               <label className="block text-sm font-medium text-gray-700">
                 Ask ZoË for help with your writing:
