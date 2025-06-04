@@ -30,50 +30,26 @@ export default function SingleDocumentEditor({
   const [isSpellCheckActive, setIsSpellCheckActive] = useState(false);
   const [spellErrors, setSpellErrors] = useState<any[]>([]);
 
-  // Function to split text into pages based on character count per page
-  function splitTextToPages(text: string, maxCharsPerPage = 1200) {
+  // Calculate how many pages are needed based on content length
+  function calculatePageCount(text: string) {
     if (!text || text.trim() === '') {
-      return [''];
+      return 1;
     }
-    
-    const pages: string[] = [];
-    const words = text.split(' ');
-    let currentPage = '';
-    
-    for (const word of words) {
-      const testPage = currentPage ? `${currentPage} ${word}` : word;
-      
-      if (testPage.length <= maxCharsPerPage) {
-        currentPage = testPage;
-      } else {
-        // Current page is full, start a new page
-        if (currentPage) {
-          pages.push(currentPage);
-        }
-        currentPage = word;
-      }
-    }
-    
-    // Add the last page if there's content
-    if (currentPage) {
-      pages.push(currentPage);
-    }
-    
-    return pages.length > 0 ? pages : [''];
+    // Estimate approximately 1200 characters per page for display purposes
+    const estimatedPages = Math.ceil(text.length / 1200);
+    return Math.max(1, estimatedPages);
   }
 
-  // Update pages when content changes
+  // Update page count when content changes
   useEffect(() => {
-    const newPages = splitTextToPages(content, 1200); // 1200 chars per page with word boundaries
-    console.log('Page splitting debug:', {
+    const pageCount = calculatePageCount(content);
+    // Create array of page numbers for rendering
+    const pageArray = Array.from({ length: pageCount }, (_, i) => i + 1);
+    setPages(pageArray.map(() => content)); // Each page shows full content, but only visible portion will show
+    console.log('Page count debug:', {
       contentLength: content.length,
-      pageCount: newPages.length,
-      firstPageLength: newPages[0]?.length || 0,
-      secondPageLength: newPages[1]?.length || 0,
-      firstPageEnd: newPages[0]?.slice(-50) || '',
-      secondPageStart: newPages[1]?.slice(0, 50) || ''
+      estimatedPages: pageCount
     });
-    setPages(newPages);
   }, [content]);
 
   const totalPages = Math.max(1, pages.length);
@@ -132,12 +108,21 @@ export default function SingleDocumentEditor({
       </div>
 
       <div className="flex flex-col items-center py-6 relative">
-        {pages.map((pageContent, pageIndex) => {
-          console.log(`Page ${pageIndex + 1} content:`, {
+        {pages.map((_, pageIndex) => {
+          // Calculate the content offset for this page based on estimated character capacity
+          const charsPerPage = 1200;
+          const startChar = pageIndex * charsPerPage;
+          const endChar = startChar + charsPerPage;
+          const pageContent = content.slice(startChar, endChar);
+          
+          console.log(`Page ${pageIndex + 1} display:`, {
+            startChar,
+            endChar,
             length: pageContent.length,
-            start: pageContent.slice(0, 50),
-            end: pageContent.slice(-50)
+            preview: pageContent.slice(0, 50) + '...',
+            actualContent: pageContent
           });
+          
           return (
             <div key={pageIndex} className="relative">
             {/* Page Break Indicator */}
