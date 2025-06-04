@@ -65,64 +65,47 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     onContentChange(combinedContent);
     
     // Check for content overflow and create new page if needed
+    if (source === 'user') {
+      setTimeout(() => {
+        const currentRef = pageRefs.current[pageIndex];
+        if (currentRef && pageIndex === pages.length - 1) {
+          const editorElement = currentRef.getEditor().root;
+          const scrollHeight = editorElement.scrollHeight;
+          const availableHeight = 856; // 1000px - 144px (72px padding top/bottom)
+          
+          // If content exceeds available height, create new page
+          if (scrollHeight > availableHeight) {
+            console.log(`Page ${pageIndex + 1} overflow detected: ${scrollHeight}px > ${availableHeight}px`);
+            
+            // Create new page
+            const newPagesList = [...pages, ''];
+            setPages(newPagesList);
+            setActivePage(pageIndex + 1);
+            
+            // Focus new page after state update
+            setTimeout(() => {
+              const newPageRef = pageRefs.current[pageIndex + 1];
+              if (newPageRef) {
+                newPageRef.focus();
+                const quillEditor = newPageRef.getEditor();
+                quillEditor.setSelection(0, 0);
+                console.log(`Focused on new page ${pageIndex + 2}`);
+              }
+            }, 100);
+          }
+        }
+      }, 100);
+    }
+    
+    // Update overflow status
     setTimeout(() => {
       const currentRef = pageRefs.current[pageIndex];
-      if (currentRef && source === 'user') {
+      if (currentRef) {
         const editorElement = currentRef.getEditor().root;
         const scrollHeight = editorElement.scrollHeight;
-        
-        // If content overflows (exceeds 1000px) and this is the last page, create a new page
-        if (scrollHeight > 1000 && pageIndex === pages.length - 1) {
-          const quillEditor = currentRef.getEditor();
-          const fullContent = quillEditor.getContents();
-          const fullText = quillEditor.getText();
-          
-          // Find a good break point around 80% of the content
-          let breakPoint = Math.floor(fullText.length * 0.8);
-          
-          // Look for paragraph or sentence breaks near the break point
-          for (let i = breakPoint; i < fullText.length - 1; i++) {
-            if (fullText[i] === '\n' || fullText[i] === '.' || fullText[i] === '!' || fullText[i] === '?') {
-              breakPoint = i + 1;
-              break;
-            }
-          }
-          
-          // Split content at the break point
-          const currentPageContent = quillEditor.getContents(0, breakPoint);
-          const overflowContent = quillEditor.getContents(breakPoint);
-          
-          // Update current page with trimmed content
-          const updatedPages = [...newPages];
-          updatedPages[pageIndex] = currentPageContent.ops ? quillEditor.root.innerHTML.substring(0, Math.floor(quillEditor.root.innerHTML.length * 0.8)) : value;
-          
-          // Create new page with overflow content
-          setPages([...updatedPages, '']);
-          setActivePage(pageIndex + 1);
-          
-          // Set the content after state updates
-          setTimeout(() => {
-            // Update current page with trimmed content
-            if (pageRefs.current[pageIndex] && currentPageContent.ops) {
-              pageRefs.current[pageIndex].getEditor().setContents(currentPageContent);
-            }
-            
-            // Set overflow content in new page and focus it
-            const newPageRef = pageRefs.current[pageIndex + 1];
-            if (newPageRef) {
-              if (overflowContent.ops && overflowContent.ops.length > 0) {
-                newPageRef.getEditor().setContents(overflowContent);
-              }
-              newPageRef.focus();
-              // Position cursor at the beginning of new page
-              newPageRef.getEditor().setSelection({ index: 0, length: 0 });
-            }
-          }, 100);
-        }
-        
-        setContentOverflow(scrollHeight > 1000);
+        setContentOverflow(scrollHeight > 856);
       }
-    }, 100);
+    }, 50);
     
     // Handle text selection for formatting feedback
     if (onTextSelection) {
@@ -160,6 +143,68 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
   // Initialize page refs array
   useEffect(() => {
     pageRefs.current = pageRefs.current.slice(0, pages.length);
+  }, [pages.length]);
+
+  // Add keyboard event listeners for Enter key detection
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent, pageIndex: number) => {
+      if (e.key === 'Enter' && pageIndex === pages.length - 1) {
+        setTimeout(() => {
+          const currentRef = pageRefs.current[pageIndex];
+          if (currentRef) {
+            const editorElement = currentRef.getEditor().root;
+            const scrollHeight = editorElement.scrollHeight;
+            const availableHeight = 856; // 1000px - 144px padding
+            
+            // Check if content exceeds page height
+            if (scrollHeight > availableHeight) {
+              console.log(`Enter key triggered page overflow: ${scrollHeight}px > ${availableHeight}px`);
+              
+              // Create new page
+              const newPagesList = [...pages, ''];
+              setPages(newPagesList);
+              setActivePage(pageIndex + 1);
+              
+              // Focus new page
+              setTimeout(() => {
+                const newPageRef = pageRefs.current[pageIndex + 1];
+                if (newPageRef) {
+                  newPageRef.focus();
+                  newPageRef.getEditor().setSelection(0, 0);
+                  console.log(`Enter key: Focused on new page ${pageIndex + 2}`);
+                }
+              }, 100);
+            }
+          }
+        }, 50);
+      }
+    };
+
+    // Attach keyboard listeners to each page
+    pageRefs.current.forEach((ref, index) => {
+      if (ref) {
+        const editorElement = ref.getEditor().root;
+        const boundHandler = (e: KeyboardEvent) => handleKeyDown(e, index);
+        editorElement.addEventListener('keydown', boundHandler);
+        
+        // Store the handler for cleanup
+        (editorElement as any)._keydownHandler = boundHandler;
+      }
+    });
+
+    // Cleanup function
+    return () => {
+      pageRefs.current.forEach((ref) => {
+        if (ref) {
+          const editorElement = ref.getEditor().root;
+          const handler = (editorElement as any)._keydownHandler;
+          if (handler) {
+            editorElement.removeEventListener('keydown', handler);
+            delete (editorElement as any)._keydownHandler;
+          }
+        }
+      });
+    };
   }, [pages.length]);
 
   // Expose formatting functions to parent
@@ -230,7 +275,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
           flex: 1;
           display: flex;
           flex-direction: column;
-          height: calc(1000px - 40px);
+          height: 1000px;
           overflow: hidden;
         }
 
@@ -243,9 +288,9 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
           border: none !important;
           margin: 0 !important;
           width: 100% !important;
-          height: 100% !important;
-          flex: 1;
-          overflow: auto !important;
+          height: calc(1000px - 144px) !important;
+          max-height: calc(1000px - 144px) !important;
+          overflow: hidden !important;
           box-sizing: border-box !important;
         }
         
