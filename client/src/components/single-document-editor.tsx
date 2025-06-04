@@ -31,9 +31,33 @@ export default function SingleDocumentEditor({
   const contentLines = content.split('\n');
   const totalPages = Math.max(1, Math.ceil(contentLines.length / LINES_PER_PAGE));
 
-  // Handle content changes - simple pass-through, let CSS handle constraints
+  // Handle content changes with line count enforcement
   const handleContentChange = (newContent: string) => {
-    onContentChange(newContent);
+    const lines = newContent.split('\n');
+    const maxLines = 22; // Enforce exactly 22 lines per page
+    
+    if (lines.length <= maxLines) {
+      onContentChange(newContent);
+    } else {
+      // Trim to max lines and prevent further input
+      const trimmedContent = lines.slice(0, maxLines).join('\n');
+      onContentChange(trimmedContent);
+      
+      // Reset textarea to trimmed content
+      if (textareaRef.current) {
+        textareaRef.current.value = trimmedContent;
+      }
+    }
+  };
+
+  // Handle keydown to prevent exceeding line limits
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    const lines = content.split('\n');
+    const maxLines = 22;
+    
+    if (e.key === 'Enter' && lines.length >= maxLines) {
+      e.preventDefault(); // Prevent adding new lines when at limit
+    }
   };
 
   // Handle scroll to sync with page breaks
@@ -117,6 +141,7 @@ export default function SingleDocumentEditor({
                 }}
                 value={content}
                 onChange={(e) => handleContentChange(e.target.value)}
+                onKeyDown={handleKeyDown}
                 onScroll={handleScroll}
                 placeholder="Start writing your document..."
                 spellCheck={true}
