@@ -380,6 +380,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Submit writing session
+  app.post("/api/writing-sessions/:sessionId/submit", async (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.sessionId);
+      const currentUser = await getCurrentUser();
+      
+      if (!currentUser) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Get current session to verify ownership
+      const session = await storage.getWritingSession(sessionId);
+      if (!session) {
+        return res.status(404).json({ message: "Session not found" });
+      }
+      
+      // Verify user owns this session or is a teacher
+      if (session.userId !== currentUser.id && currentUser.role !== 'teacher') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Update session to submitted status
+      const updatedSession = await storage.updateWritingSession(sessionId, {
+        status: 'submitted',
+        submittedAt: new Date()
+      });
+      
+      console.log(`Session ${sessionId} submitted successfully`);
+      res.json({ success: true, session: updatedSession });
+    } catch (error) {
+      console.error("Error submitting session:", error);
+      res.status(500).json({ message: "Failed to submit session" });
+    }
+  });
+
   // Create new writing session
   app.post("/api/writing-sessions", async (req, res) => {
     try {
