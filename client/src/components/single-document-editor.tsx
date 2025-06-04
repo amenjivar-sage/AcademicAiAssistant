@@ -28,6 +28,7 @@ export default function SingleDocumentEditor({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [pages, setPages] = useState<string[]>([]);
   const [isSpellCheckActive, setIsSpellCheckActive] = useState(false);
+  const [spellErrors, setSpellErrors] = useState<any[]>([]);
 
   // Function to split text into pages based on character count per page
   function splitTextToPages(text: string, maxCharsPerPage = 1800) {
@@ -61,6 +62,28 @@ export default function SingleDocumentEditor({
   // Handle content changes
   const handleContentChange = (newContent: string) => {
     onContentChange(newContent);
+  };
+
+  // Function to highlight misspelled words in text
+  const highlightMisspelledWords = (text: string, errors: any[]): string => {
+    if (!isSpellCheckActive || errors.length === 0) {
+      return text;
+    }
+
+    let highlightedText = text;
+    const sortedErrors = [...errors].sort((a, b) => b.startIndex - a.startIndex);
+
+    sortedErrors.forEach(error => {
+      const beforeText = highlightedText.substring(0, error.startIndex);
+      const misspelledWord = highlightedText.substring(error.startIndex, error.endIndex);
+      const afterText = highlightedText.substring(error.endIndex);
+      
+      highlightedText = beforeText + 
+        `<span class="spell-error" style="text-decoration: underline; text-decoration-color: red; text-decoration-style: wavy; background-color: rgba(255, 0, 0, 0.1);">${misspelledWord}</span>` + 
+        afterText;
+    });
+
+    return highlightedText;
   };
 
   return (
@@ -180,6 +203,7 @@ export default function SingleDocumentEditor({
               onContentChange={onContentChange}
               isOpen={isSpellCheckActive}
               onClose={() => setIsSpellCheckActive(false)}
+              onSpellErrorsChange={setSpellErrors}
             />
           </div>
         )}

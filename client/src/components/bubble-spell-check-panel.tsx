@@ -30,12 +30,14 @@ export default function BubbleSpellCheckPanel({
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [recentChanges, setRecentChanges] = useState<Array<{original: string, corrected: string, timestamp: number}>>([]);
   const [showSuccessMessage, setShowSuccessMessage] = useState<string | null>(null);
+  const [lastCheckedContent, setLastCheckedContent] = useState<string>('');
 
-  // Debounced spell checking with performance optimization
+  // Debounced spell checking with content change detection
   const debouncedSpellCheck = useCallback(() => {
-    if (!isOpen || isLoading) return;
+    if (!isOpen || isLoading || content === lastCheckedContent) return;
     
     setIsLoading(true);
+    setLastCheckedContent(content);
     
     // Apply auto-corrections for common typos first
     const autoCorrectResult = applyAutoCorrections(content);
@@ -46,7 +48,7 @@ export default function BubbleSpellCheckPanel({
       return;
     }
 
-    // Use AI-powered spell checking with longer debounce
+    // Use AI-powered spell checking
     checkSpellingWithAI(content).then(errors => {
       setSpellErrors(errors);
       onSpellErrorsChange?.(errors);
@@ -63,14 +65,22 @@ export default function BubbleSpellCheckPanel({
       onCurrentErrorChange?.(0);
       setIsLoading(false);
     });
-  }, [content, isOpen, isLoading, onContentChange, onSpellErrorsChange, onCurrentErrorChange]);
+  }, [content, isOpen, isLoading, lastCheckedContent, onContentChange, onSpellErrorsChange, onCurrentErrorChange]);
 
+  // Only run spell check when panel is first opened or content significantly changes
   useEffect(() => {
-    if (isOpen && !isLoading) {
-      const timer = setTimeout(debouncedSpellCheck, 1500); // Increased debounce time
+    if (isOpen && !isLoading && content !== lastCheckedContent && content.length > 10) {
+      const timer = setTimeout(debouncedSpellCheck, 3000); // Much longer debounce
       return () => clearTimeout(timer);
     }
-  }, [debouncedSpellCheck]);
+  }, [isOpen]); // Only trigger on panel open, not content changes
+
+  // Manual spell check trigger
+  const runSpellCheck = () => {
+    if (!isLoading) {
+      debouncedSpellCheck();
+    }
+  };
 
   // Navigation functions
   const goToNextError = () => {
@@ -255,14 +265,19 @@ export default function BubbleSpellCheckPanel({
               </Button>
             )}
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
-              onClick={debouncedSpellCheck}
+              onClick={runSpellCheck}
               disabled={isLoading}
-              className="h-8 w-8 p-0"
-              title="Refresh spell check"
+              className="h-8 px-3 text-xs"
+              title="Check spelling"
             >
-              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+              {isLoading ? (
+                <RefreshCw className="h-3 w-3 animate-spin mr-1" />
+              ) : (
+                <RefreshCw className="h-3 w-3 mr-1" />
+              )}
+              Check
             </Button>
             <Button
               variant="ghost"
