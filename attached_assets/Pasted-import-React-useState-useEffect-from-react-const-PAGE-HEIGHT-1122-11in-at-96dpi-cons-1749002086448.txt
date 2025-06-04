@@ -1,0 +1,70 @@
+import React, { useState, useEffect } from "react";
+
+const PAGE_HEIGHT = 1122; // 11in at 96dpi
+const PAGE_PADDING = 96;  // 1in padding top and bottom
+const FOOTER_HEIGHT = 40; // reserve space for footer
+
+function splitTextToPages(text, maxHeight, lineHeight = 20) {
+  const words = text.split(" ");
+  const pages = [];
+  let pageText = "";
+  let lineCount = 0;
+
+  words.forEach((word) => {
+    const estimatedLines = Math.ceil((pageText + word).length / 80);
+    const estimatedHeight = estimatedLines * lineHeight;
+
+    if (estimatedHeight >= maxHeight) {
+      pages.push(pageText.trim());
+      pageText = word + " ";
+    } else {
+      pageText += word + " ";
+    }
+  });
+  if (pageText.trim()) pages.push(pageText.trim());
+  return pages;
+}
+
+export default function PaginatedEditor() {
+  const [text, setText] = useState("");
+  const [pages, setPages] = useState([]);
+
+  useEffect(() => {
+    const newPages = splitTextToPages(text, PAGE_HEIGHT - PAGE_PADDING * 2 - FOOTER_HEIGHT);
+    setPages(newPages);
+  }, [text]);
+
+  return (
+    <div className="bg-gray-100 py-6 px-4 min-h-screen">
+      <h1 className="text-xl font-semibold mb-4">Sage Document Editor (Word-Style Pages)</h1>
+      {pages.map((content, i) => (
+        <div
+          key={i}
+          className="page bg-white shadow mx-auto mb-6 p-8 relative"
+          style={{ width: "8.5in", height: "11in", position: "relative" }}
+        >
+          <textarea
+            className="w-full resize-none outline-none"
+            style={{ height: `calc(100% - ${FOOTER_HEIGHT}px)` }}
+            value={content}
+            onChange={(e) => setText(e.target.value)}
+          />
+          <div
+            className="footer absolute bottom-4 w-full text-center text-xs text-gray-500"
+            style={{ height: `${FOOTER_HEIGHT}px` }}
+          >
+            Page {i + 1} — Word Count: {content.split(" ").length}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Tailwind CSS styles (add to global CSS or index.css):
+// .page {
+//   box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+//   overflow: hidden;
+//   page-break-after: always;
+//   position: relative;
+// }
