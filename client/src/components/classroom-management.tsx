@@ -398,7 +398,7 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
             <div className="mb-8">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold">Assignments</h2>
-                <AssignmentForm teacherId={teacherId} initialClassrooms={[selectedClassroom]}>
+                <AssignmentForm teacherId={teacherId} classroomId={selectedClassroom.id}>
                   <Button>
                     <PlusCircle className="h-4 w-4 mr-2" />
                     New Assignment
@@ -412,7 +412,7 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
                     <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">No assignments yet</h3>
                     <p className="text-gray-500 mb-4">Create your first assignment for this class</p>
-                    <AssignmentForm teacherId={teacherId} initialClassrooms={[selectedClassroom]}>
+                    <AssignmentForm teacherId={teacherId} classroomId={selectedClassroom.id}>
                       <Button>
                         <PlusCircle className="h-4 w-4 mr-2" />
                         Create Assignment
@@ -440,17 +440,15 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
                             </div>
                           </div>
                           <div className="flex items-center space-x-2">
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => {
-                                // Navigate to submissions page for this assignment
-                                window.location.href = `/teacher/submissions/${assignment.id}`;
-                              }}
-                            >
-                              <Eye className="h-4 w-4 mr-1" />
-                              View Submissions
-                            </Button>
+                            <GradingInterface assignmentId={assignment.id}>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                              >
+                                <Eye className="h-4 w-4 mr-1" />
+                                View Submissions
+                              </Button>
+                            </GradingInterface>
                             {assignment.status === 'active' && selectedClassroom?.isActive && (
                               <Button 
                                 variant="outline" 
@@ -477,8 +475,7 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
               )}
             </div>
 
-            {/* Grading Interface */}
-            <GradingInterface teacherId={teacherId} />
+
           </div>
         </div>
       )}
