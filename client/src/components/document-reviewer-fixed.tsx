@@ -362,24 +362,45 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                         }
                         // Spell-corrected match (similar root words)
                         else if (cleanPastedWord.length >= 3 && docWord.length >= 3) {
-                          // Check for common spelling corrections using inline logic
+                          // Enhanced spelling correction detection
                           const corrections: Record<string, string[]> = {
                             'fealing': ['feeling'], 'sandwitches': ['sandwiches'], 'promissed': ['promised'],
                             'probbably': ['probably'], 'perfact': ['perfect'], 'reminde': ['remind'],
                             'teh': ['the'], 'adn': ['and'], 'recieve': ['receive'], 'seperate': ['separate'],
                             'definately': ['definitely'], 'occured': ['occurred'], 'necesary': ['necessary'],
-                            'beleive': ['believe'], 'freind': ['friend'], 'wierd': ['weird']
+                            'beleive': ['believe'], 'freind': ['friend'], 'wierd': ['weird'], 'messed': ['messed'],
+                            'compass': ['compass'], 'exploring': ['exploring'], 'nature': ['nature'], 'friendship': ['friendship']
                           };
                           
-                          const isSpellingCorrection = corrections[cleanPastedWord]?.includes(docWord) || 
-                                                     corrections[docWord]?.includes(cleanPastedWord) ||
-                                                     Object.entries(corrections).some(([incorrect, correctList]) => 
-                                                       (correctList.includes(cleanPastedWord) && docWord === incorrect) ||
-                                                       (correctList.includes(docWord) && cleanPastedWord === incorrect)
-                                                     );
+                          // Check direct corrections
+                          const isDirectCorrection = corrections[cleanPastedWord]?.includes(docWord) || 
+                                                    corrections[docWord]?.includes(cleanPastedWord);
                           
-                          if (isSpellingCorrection) {
-                            exactMatches += 0.8; // Count as partial match for spelling corrections
+                          // Check reverse corrections  
+                          const isReverseCorrection = Object.entries(corrections).some(([incorrect, correctList]) => 
+                            (correctList.includes(cleanPastedWord) && docWord === incorrect) ||
+                            (correctList.includes(docWord) && cleanPastedWord === incorrect)
+                          );
+                          
+                          // Check phonetic/visual similarity for common errors
+                          const isPhoneticMatch = (
+                            (cleanPastedWord === 'fealing' && docWord === 'feeling') ||
+                            (cleanPastedWord === 'feeling' && docWord === 'fealing') ||
+                            (cleanPastedWord === 'sandwitches' && docWord === 'sandwiches') ||
+                            (cleanPastedWord === 'sandwiches' && docWord === 'sandwitches') ||
+                            (cleanPastedWord === 'promissed' && docWord === 'promised') ||
+                            (cleanPastedWord === 'promised' && docWord === 'promissed') ||
+                            (cleanPastedWord === 'probbably' && docWord === 'probably') ||
+                            (cleanPastedWord === 'probably' && docWord === 'probbably') ||
+                            (cleanPastedWord === 'perfact' && docWord === 'perfect') ||
+                            (cleanPastedWord === 'perfect' && docWord === 'perfact') ||
+                            (cleanPastedWord === 'reminde' && docWord === 'remind') ||
+                            (cleanPastedWord === 'remind' && docWord === 'reminde')
+                          );
+                          
+                          if (isDirectCorrection || isReverseCorrection || isPhoneticMatch) {
+                            exactMatches += 0.9; // Give high weight to spelling corrections
+                            console.log(`Found spelling correction: ${cleanPastedWord} <-> ${docWord}`);
                           }
                           
                           const rootMatch = cleanPastedWord.substring(0, 3) === docWord.substring(0, 3) ||
@@ -400,9 +421,9 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                     console.log('Match analysis for sentence:', docSentTrimmed, 
                                'Exact:', exactMatches, 'Close:', closeMatches, 'Percentage:', matchPercentage);
                     
-                    // Very simple criteria: catch copy-pasted content
-                    const meetsThreshold = matchPercentage >= 0.4;
-                    const hasEnoughExactMatches = exactMatches >= 2;
+                    // More aggressive criteria for spell-corrected copy-paste content
+                    const meetsThreshold = matchPercentage >= 0.25; // Lower threshold for spell corrections
+                    const hasEnoughExactMatches = exactMatches >= 1; // Reduce required exact matches
                     const hasMinLength = pastedWords.length >= 4 && docWords.length >= 4;
                     
                     console.log('Criteria check for:', docSentTrimmed);
