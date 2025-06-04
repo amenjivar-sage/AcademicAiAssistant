@@ -109,17 +109,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Username and password are required" });
       }
 
-      const user = await storage.getUserByUsername(username);
+      // Trim whitespace from username to prevent lookup failures
+      const trimmedUsername = username.trim();
+      const user = await storage.getUserByUsername(trimmedUsername);
       
       if (!user || user.password !== password) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
-      console.log(`Login attempt for user ${username}: isActive=${user.isActive}`);
+      console.log(`Login attempt for user ${trimmedUsername}: isActive=${user.isActive}`);
       
       // Check if user account is active (not archived)
       if (!user.isActive) {
-        console.log(`Blocking login for archived user ${username}`);
+        console.log(`Blocking login for archived user ${trimmedUsername}`);
         return res.status(403).json({ message: "Account has been suspended. Please contact your administrator." });
       }
 
