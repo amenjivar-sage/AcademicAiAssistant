@@ -70,18 +70,45 @@ export default function PageBasedEditor({
     }
   }, [headerFooterSettings]);
   
-  // Calculate word count - Google Docs style (no artificial limits)
+  // Calculate word count and page breaks
   const words = content.trim().split(/\s+/).filter(word => word.length > 0);
   const wordCount = words.length;
   
-  // Estimate pages for display purposes only (content is not limited)
+  // Calculate pages and page break positions
   const estimatedPages = Math.max(1, Math.ceil(wordCount / wordsPerPage));
+  const pageBreaks: Array<{
+    pageNumber: number;
+    wordPosition: number;
+    charPosition: number;
+    estimatedLinePosition: number;
+  }> = [];
+  
+  // Calculate approximate page break positions in the content
+  for (let page = 1; page < estimatedPages; page++) {
+    const wordsInPage = page * wordsPerPage;
+    const wordsBeforeBreak = words.slice(0, wordsInPage);
+    const textBeforeBreak = wordsBeforeBreak.join(' ');
+    
+    // Estimate line position based on character count and line length
+    const avgCharsPerLine = 80; // Approximate characters per line in Times New Roman 12pt
+    const linesBeforeBreak = Math.floor(textBeforeBreak.length / avgCharsPerLine);
+    const lineHeight = 28; // Approximate line height in pixels for double spacing
+    const estimatedPixelPosition = linesBeforeBreak * lineHeight;
+    
+    pageBreaks.push({
+      pageNumber: page + 1,
+      wordPosition: wordsInPage,
+      charPosition: textBeforeBreak.length,
+      estimatedLinePosition: estimatedPixelPosition
+    });
+  }
   
   // Debug logging for word count tracking
-  console.log('Google Docs-style editor:', {
+  console.log('Page editor with visual breaks:', {
     contentLength: content.length,
     actualWordCount: wordCount,
     estimatedPages,
+    pageBreaks: pageBreaks.length,
     contentPreview: content.substring(0, 100) + '...'
   });
 
@@ -95,6 +122,28 @@ export default function PageBasedEditor({
   // Handle content changes
   const handleContentChange = (newContent: string) => {
     onContentChange(newContent);
+  };
+
+  // Function to insert visual page breaks into content for display
+  const insertVisualPageBreaks = (text: string) => {
+    if (pageBreaks.length === 0) return text;
+    
+    let result = text;
+    let offset = 0;
+    
+    // Insert page break markers from end to beginning to maintain positions
+    for (let i = pageBreaks.length - 1; i >= 0; i--) {
+      const pageBreak = pageBreaks[i];
+      const insertPos = pageBreak.charPosition + offset;
+      
+      if (insertPos <= result.length) {
+        const pageBreakMarker = `\n\n--- PAGE ${pageBreak.pageNumber} BEGINS ---\n\n`;
+        result = result.slice(0, insertPos) + pageBreakMarker + result.slice(insertPos);
+        offset += pageBreakMarker.length;
+      }
+    }
+    
+    return result;
   };
 
   // Render header/footer content with proper alignment
@@ -345,15 +394,35 @@ export default function PageBasedEditor({
             </div>
           )}
 
-          {/* Content Area - Full Content Editor (No Word Limits) */}
-          <div className={`px-16 ${(pageSettings.headerText || pageSettings.showStudentName) ? 'pt-8' : 'pt-16'} ${(pageSettings.footerText || pageSettings.showPageNumbers) ? 'pb-8' : 'pb-16'} min-h-[9in]`}>
+          {/* Content Area with Visual Page Breaks */}
+          <div className={`px-16 ${(pageSettings.headerText || pageSettings.showStudentName) ? 'pt-8' : 'pt-16'} ${(pageSettings.footerText || pageSettings.showPageNumbers) ? 'pb-8' : 'pb-16'} min-h-[9in] relative`}>
+            {/* Page Break Indicators - Word-style visual breaks */}
+            {pageBreaks.map((pageBreak, index) => (
+              <div
+                key={index}
+                className="absolute left-0 right-0 z-10 pointer-events-none"
+                style={{
+                  top: `${pageBreak.estimatedLinePosition}px`,
+                  transform: 'translateY(-50%)'
+                }}
+              >
+                <div className="flex items-center my-2">
+                  <div className="flex-1 border-t-2 border-dashed border-blue-400 opacity-75"></div>
+                  <div className="px-3 py-1 bg-blue-500 text-white text-xs font-medium rounded-full mx-2 shadow-sm">
+                    Page {pageBreak.pageNumber}
+                  </div>
+                  <div className="flex-1 border-t-2 border-dashed border-blue-400 opacity-75"></div>
+                </div>
+              </div>
+            ))}
+            
             <RichTextEditor
               content={content}
               onContentChange={handleContentChange}
               placeholder={placeholder}
               disabled={disabled}
               onFormatRef={onFormatRef}
-              className="w-full h-full min-h-[9in] resize-none border-none outline-none bg-transparent text-gray-900"
+              className="w-full h-full min-h-[9in] resize-none border-none outline-none bg-transparent text-gray-900 relative z-0"
               style={{
                 fontFamily: 'Times New Roman, serif',
                 fontSize: '12pt',
