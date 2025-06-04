@@ -13,7 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, Settings, Send, AlertTriangle, Shield, FileText, MessageSquare, Download } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import CopyPasteDetector from './copy-paste-detector';
-import SingleTextareaPagesEditor from './single-textarea-pages-editor';
+import ConstrainedPagesEditor from './constrained-pages-editor';
 import DocumentDownload from './document-download';
 import AiAssistant from './ai-assistant';
 
@@ -377,7 +377,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
             onPasteDetected={handlePasteDetected}
             className="min-h-full"
           >
-            <SingleTextareaPagesEditor
+            <ConstrainedPagesEditor
               content={content}
               onContentChange={(newContent) => {
                 console.log('Content changed from pages view:', newContent);
