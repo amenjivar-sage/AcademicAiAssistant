@@ -246,7 +246,7 @@ export default function AiAssistant({ sessionId, currentContent }: AiAssistantPr
 
         <TabsContent value="assistant" className="flex-1 flex flex-col min-h-0">
           {/* Chat History Area */}
-          <div className="flex-1 overflow-y-auto p-3 space-y-3 min-h-0">
+          <div className="flex-1 overflow-y-auto p-3 space-y-3" style={{ height: 'calc(100vh - 320px)' }}>
             {displayChatHistory && displayChatHistory.length > 0 ? (
               <>
                 <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
@@ -299,43 +299,28 @@ export default function AiAssistant({ sessionId, currentContent }: AiAssistantPr
             )}
           </div>
 
-          {/* Input Area - Always visible at bottom */}
-          <div className="border-t bg-white p-2 space-y-2 flex-shrink-0">
-            <div className="space-y-2">
-              <label className="block text-xs font-medium text-gray-700">
-                Ask ZoË for help:
-              </label>
-              <Textarea
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Ask ZoË a question..."
-                className="resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
-                rows={2}
-              />
-            </div>
-            
+          {/* Input Area - Compact horizontal layout */}
+          <div className="border-t bg-white p-2 flex gap-2 flex-shrink-0">
+            <Textarea
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Ask ZoË a question..."
+              className="flex-1 resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+              rows={1}
+            />
             <Button 
               onClick={handleSubmit}
               disabled={aiHelpMutation.isPending || !prompt.trim()}
-              className="w-full bg-purple-600 hover:bg-purple-700"
+              className="bg-purple-600 hover:bg-purple-700 px-3"
+              size="sm"
             >
               {aiHelpMutation.isPending ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ZoË is thinking...
-                </>
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <>
-                  <Send className="h-4 w-4 mr-2" />
-                  Ask ZoË
-                </>
+                <Send className="h-4 w-4" />
               )}
             </Button>
-            
-            <p className="text-xs text-gray-500 text-center">
-              Press Ctrl+Enter (or Cmd+Enter) to send
-            </p>
           </div>
         </TabsContent>
 
