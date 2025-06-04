@@ -139,6 +139,42 @@ export default function BubbleSpellCheckPanel({
     }
   };
 
+  const handleFixAll = () => {
+    if (spellErrors.length === 0) return;
+    
+    setIsLoading(true);
+    let updatedContent = content;
+    const allChanges: Array<{original: string, corrected: string, timestamp: number}> = [];
+    
+    // Process errors in reverse order to maintain correct indices
+    const errorsToFix = [...spellErrors].reverse();
+    
+    errorsToFix.forEach(error => {
+      const replacement = (error.suggestions && error.suggestions[0]) || error.suggestion;
+      if (replacement) {
+        updatedContent = applySpellCheckSuggestion(updatedContent, error, replacement);
+        allChanges.push({
+          original: error.word,
+          corrected: replacement,
+          timestamp: Date.now()
+        });
+      }
+    });
+    
+    setRecentChanges(prev => [...prev, ...allChanges]);
+    onContentChange(updatedContent);
+    
+    // Show success message
+    setShowSuccessMessage(`Fixed ${allChanges.length} spelling errors`);
+    setTimeout(() => setShowSuccessMessage(null), 3000);
+    
+    // Clear all errors and close panel
+    setSpellErrors([]);
+    onSpellErrorsChange?.([]);
+    setIsLoading(false);
+    onClose();
+  };
+
   const handleIgnoreError = () => {
     // Remove the ignored error and move to next
     const newErrors = [...spellErrors];
@@ -262,6 +298,19 @@ export default function BubbleSpellCheckPanel({
               >
                 <Undo className="h-3 w-3 mr-1" />
                 Undo
+              </Button>
+            )}
+            {hasErrors && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleFixAll}
+                disabled={isLoading}
+                className="h-8 px-3 text-xs bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+                title="Fix all spelling errors automatically"
+              >
+                <CheckCircle className="h-3 w-3 mr-1" />
+                Fix All
               </Button>
             )}
             <Button
