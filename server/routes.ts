@@ -594,9 +594,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const assignments = await storage.getTeacherAssignments(classroom.teacherId || 1);
         console.log(`Teacher ${classroom.teacherId} has ${assignments.length} total assignments`);
         
-        // Include both classroom-specific assignments AND general assignments from this teacher
+        // Include only classroom-specific assignments
         const relevantAssignments = assignments.filter(a => 
-          a.classroomId === classroom.id || a.classroomId === null
+          a.classroomId === classroom.id
         );
         console.log(`Filtered to ${relevantAssignments.length} relevant assignments for student`);
         
