@@ -259,9 +259,11 @@ export default function AiAssistant({ sessionId, currentContent }: AiAssistantPr
                       <p className="text-sm font-medium text-blue-900 mb-1">You asked:</p>
                       <p className="text-sm text-blue-800">{interaction.prompt}</p>
                     </div>
-                    <div className="bg-purple-50 p-3 rounded-lg">
-                      <p className="text-sm font-medium text-purple-900 mb-1">ZoË replied:</p>
-                      <p className="text-sm text-purple-800 whitespace-pre-line">{interaction.response}</p>
+                    <div className="bg-purple-50 p-4 rounded-lg">
+                      <p className="text-sm font-medium text-purple-900 mb-2">ZoË replied:</p>
+                      <div className="text-sm text-purple-800 whitespace-pre-line leading-relaxed max-h-64 overflow-y-auto bg-white p-3 rounded border">
+                        {interaction.response}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -288,8 +290,10 @@ export default function AiAssistant({ sessionId, currentContent }: AiAssistantPr
             {lastResponse && (
               <Alert variant={getResponseVariant(lastResponse.isRestricted)}>
                 {getResponseIcon(lastResponse.isRestricted)}
-                <AlertDescription className="whitespace-pre-line text-sm">
-                  {lastResponse.response}
+                <AlertDescription>
+                  <div className="whitespace-pre-line text-sm leading-relaxed max-h-80 overflow-y-auto bg-gray-50 p-4 rounded border mt-2">
+                    {lastResponse.response}
+                  </div>
                 </AlertDescription>
               </Alert>
             )}

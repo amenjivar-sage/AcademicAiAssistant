@@ -936,15 +936,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         messages: [
           {
             role: "system",
-            content: "You are a spell checker. Return ONLY a valid JSON array with no additional text. Format: [{\"word\": \"misspelled_word\", \"suggestions\": [\"correction1\", \"correction2\"]}]. If no errors found, return: []"
+            content: "You are a spell checker. Return valid JSON in this exact format: {\"errors\": [{\"word\": \"misspelled_word\", \"suggestions\": [\"correction1\", \"correction2\"]}]}. If no errors found, return: {\"errors\": []}"
           },
           {
             role: "user", 
-            content: `Identify spelling errors in this text: "${text}"`
+            content: `Check spelling in: ${text}`
           }
         ],
-        max_tokens: 500,
-        temperature: 0
+        max_tokens: 1000,
+        temperature: 0,
+        response_format: { type: "json_object" }
       });
 
       const response = completion.choices[0].message.content;
@@ -957,9 +958,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Try to parse the AI response as JSON
       let errors = [];
       try {
-        errors = JSON.parse(response);
-        if (!Array.isArray(errors)) {
-          errors = [];
+        const parsed = JSON.parse(response);
+        if (parsed && parsed.errors && Array.isArray(parsed.errors)) {
+          errors = parsed.errors;
         }
       } catch (parseError) {
         console.error("Failed to parse AI spell check response:", parseError);
