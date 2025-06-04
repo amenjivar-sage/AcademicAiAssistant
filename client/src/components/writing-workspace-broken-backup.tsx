@@ -14,6 +14,7 @@ import { ArrowLeft, Settings, Send, AlertTriangle, Shield, FileText, MessageSqua
 import { apiRequest } from '@/lib/queryClient';
 import CopyPasteDetector from './copy-paste-detector';
 import WordStylePagesEditor from './word-style-pages-editor';
+import AiChatViewer from './ai-chat-viewer';
 import DocumentDownload from './document-download';
 import AiAssistant from './ai-assistant';
 
@@ -82,7 +83,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     const hasContent = content.trim().length > 0 || title.trim().length > 0;
     if (!hasContent) return;
 
-    const words = content.split(/\s+/).filter((word: string) => word.length > 0);
+    const words = content.split(/\s+/).filter(word => word.length > 0);
     const currentWordCount = words.length;
 
     const hasChanges = currentWordCount !== wordCount || content !== (session?.content || '');
@@ -317,41 +318,6 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                   Settings
                 </Button>
               </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Document Settings</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="header">Header Text</Label>
-                    <Input
-                      id="header"
-                      value={headerFooterSettings.header}
-                      onChange={(e) => setHeaderFooterSettings(prev => ({ ...prev, header: e.target.value }))}
-                      placeholder="Enter header text..."
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="footer">Footer Text</Label>
-                    <Input
-                      id="footer"
-                      value={headerFooterSettings.footer}
-                      onChange={(e) => setHeaderFooterSettings(prev => ({ ...prev, footer: e.target.value }))}
-                      placeholder="Enter footer text..."
-                    />
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="pageNumbers"
-                      checked={headerFooterSettings.pageNumbers}
-                      onCheckedChange={(checked) => setHeaderFooterSettings(prev => ({ ...prev, pageNumbers: checked }))}
-                    />
-                    <Label htmlFor="pageNumbers">Show page numbers</Label>
-                  </div>
-                </div>
-              </DialogContent>
             </Dialog>
 
             <Button
@@ -392,7 +358,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
 
         {/* AI Assistant Sidebar */}
         {showAiSidebar && (
-          <div className="w-96 border-l bg-white flex flex-col fixed right-0 top-0 h-full z-10">
+          <div className="w-96 border-l bg-white flex flex-col">
             <div className="p-4 border-b">
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold">AI Assistant</h3>
@@ -447,6 +413,122 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
               content={content}
               studentName="Student"
               assignmentTitle={assignment?.title}
+            />
+
+            {!isSubmitted && !isGraded && (
+              <Button
+                onClick={() => submitMutation.mutate()}
+                disabled={submitMutation.isPending || !content.trim()}
+                className="gap-2"
+              >
+                <Send className="h-4 w-4" />
+                {submitMutation.isPending ? 'Submitting...' : 'Submit Assignment'}
+              </Button>
+            )}
+
+            {(isSubmitted || isGraded) && (
+              <Badge variant="secondary" className="px-4 py-2">
+                {isGraded ? 'Graded' : 'Submitted'}
+              </Badge>
+            )}
+          </div>
+        </div>
+      </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="header">Header Text</Label>
+                    <Input
+                      id="header"
+                      value={headerFooterSettings.header}
+                      onChange={(e) => setHeaderFooterSettings(prev => ({ ...prev, header: e.target.value }))}
+                      placeholder="Enter header text..."
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="footer">Footer Text</Label>
+                    <Input
+                      id="footer"
+                      value={headerFooterSettings.footer}
+                      onChange={(e) => setHeaderFooterSettings(prev => ({ ...prev, footer: e.target.value }))}
+                      placeholder="Enter footer text..."
+                    />
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="pageNumbers"
+                      checked={headerFooterSettings.pageNumbers}
+                      onCheckedChange={(checked) => setHeaderFooterSettings(prev => ({ ...prev, pageNumbers: checked }))}
+                    />
+                    <Label htmlFor="pageNumbers">Show page numbers</Label>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </div>
+      </div>
+
+      {/* Writing Content - Pages View */}
+      <div className="flex-1 overflow-auto">
+        <CopyPasteDetector
+          allowCopyPaste={allowCopyPaste}
+          onPasteDetected={handlePasteDetected}
+          className="min-h-full"
+        >
+          <WordStylePagesEditor
+            content={content}
+            onContentChange={(newContent) => {
+              console.log('Content changed from pages view:', newContent);
+              setContent(newContent);
+            }}
+            studentName={session?.title || "Student Document"}
+            assignmentTitle={assignment?.title}
+            showPageNumbers={headerFooterSettings.pageNumbers}
+            showHeader={!!headerFooterSettings.header}
+          />
+        </CopyPasteDetector>
+      </div>
+
+      {/* Footer Actions */}
+      <div className="border-t bg-white p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            {!allowCopyPaste && (
+              <Badge variant="outline" className="border-red-200 text-red-700">
+                <AlertTriangle className="h-3 w-3 mr-1" />
+                Copy & Paste Disabled
+              </Badge>
+            )}
+            {allowCopyPaste && (
+              <Badge variant="outline" className="border-yellow-200 text-yellow-700">
+                <Shield className="h-3 w-3 mr-1" />
+                Copy & Paste Tracked
+              </Badge>
+            )}
+          </div>
+          
+          <div className="flex gap-3">
+            <Button
+              onClick={() => setLocation('/student')}
+              variant="outline"
+              className="gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Exit
+            </Button>
+
+            <DocumentDownload 
+              content={content}
+              studentName="Student"
+              assignmentTitle={assignment?.title}
+            />
+
+            <AiChatViewer 
+              sessionId={sessionId}
+              studentName="Student"
             />
 
             {!isSubmitted && !isGraded && (
