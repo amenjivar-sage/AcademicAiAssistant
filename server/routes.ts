@@ -139,11 +139,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Trim whitespace from username to prevent lookup failures
       const trimmedUsername = username.trim();
+      console.log(`Database username lookup for: "${trimmedUsername}"`);
       let user = await storage.getUserByUsername(trimmedUsername);
+      console.log(`User found: ${user ? 'YES' : 'NO'}`);
       
       // If alexander.menjivar doesn't exist, create the account
       if (!user && trimmedUsername === "alexander.menjivar" && password === "Dodgers23") {
         try {
+          console.log("Creating new user account for alexander.menjivar");
           user = await storage.createUser({
             username: "alexander.menjivar",
             email: "alexander.menjivar@student.edu",
@@ -151,17 +154,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
             lastName: "Menjivar",
             role: "student",
             grade: "Senior",
-            password: "Dodgers23",
-            isActive: true
+            password: "Dodgers23"
           });
-          console.log("Created new user account for alexander.menjivar");
-        } catch (createError) {
+          console.log("Successfully created user account for alexander.menjivar");
+        } catch (createError: any) {
           console.error("Failed to create user account:", createError);
-          return res.status(500).json({ message: "Account creation failed" });
+          console.error("Create error details:", createError?.message);
+          return res.status(500).json({ message: "Account creation failed", error: createError?.message });
         }
       }
       
-      if (!user || user.password !== password) {
+      if (!user) {
+        console.log("No user found after creation attempt");
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+      
+      if (user.password !== password) {
+        console.log("Password mismatch for user", trimmedUsername);
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
@@ -186,8 +195,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         user: userWithoutPassword,
         message: "Login successful"
       });
-    } catch (error) {
-      res.status(500).json({ message: "Login failed" });
+    } catch (error: any) {
+      console.error("Login error:", error);
+      console.error("Error stack:", error?.stack);
+      console.error("Error message:", error?.message);
+      res.status(500).json({ message: "Login failed", error: error?.message });
     }
   });
 
