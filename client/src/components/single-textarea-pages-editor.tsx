@@ -11,8 +11,10 @@ interface SingleTextareaPagesEditorProps {
 }
 
 // Calculate approximate lines that fit on a page (8.5" x 11" with margins)
-const LINES_PER_PAGE = 25; // Adjusted for double spacing
+const LINES_PER_PAGE = 22; // Adjusted for double spacing with header/footer space
 const CHARS_PER_LINE = 65; // Approximate characters per line
+const HEADER_HEIGHT = 96; // Height reserved for header (6 lines * 16pt line height)
+const FOOTER_HEIGHT = 48; // Height reserved for footer (3 lines * 16pt line height)
 
 export default function SingleTextareaPagesEditor({
   content,
@@ -63,7 +65,7 @@ export default function SingleTextareaPagesEditor({
     setCursorPosition(textarea.selectionStart);
   };
 
-  // Generate page backgrounds and markers
+  // Generate page backgrounds and text boundaries
   const generatePageBackgrounds = () => {
     const totalPages = getTotalPages();
     const pages = [];
@@ -82,20 +84,42 @@ export default function SingleTextareaPagesEditor({
             zIndex: 0
           }}
         >
-          {/* Header */}
-          {showHeader && i === 1 && (
-            <div className="absolute top-4 left-8 right-8 text-center">
-              <div className="font-serif text-sm text-gray-600">{studentName}</div>
-              <div className="font-serif text-sm text-gray-600 mt-1">{assignmentTitle}</div>
-            </div>
-          )}
+          {/* Header area - reserved space */}
+          <div 
+            className="absolute top-0 left-0 right-0 bg-gray-50 border-b border-gray-200"
+            style={{ height: `${HEADER_HEIGHT}px` }}
+          >
+            {showHeader && i === 1 && (
+              <div className="absolute top-4 left-8 right-8 text-center">
+                <div className="font-serif text-sm text-gray-600">{studentName}</div>
+                <div className="font-serif text-sm text-gray-600 mt-1">{assignmentTitle}</div>
+              </div>
+            )}
+          </div>
           
-          {/* Page number */}
-          {showPageNumbers && (
-            <div className="absolute bottom-4 right-8 text-sm text-gray-500 font-serif">
-              {i}
-            </div>
-          )}
+          {/* Text area boundaries */}
+          <div 
+            className="absolute border border-dashed border-gray-300"
+            style={{
+              top: `${HEADER_HEIGHT}px`,
+              left: '1.25in',
+              width: 'calc(8.5in - 2.25in)',
+              height: `calc(11in - ${HEADER_HEIGHT + FOOTER_HEIGHT}px)`,
+              zIndex: 1
+            }}
+          />
+          
+          {/* Footer area - reserved space */}
+          <div 
+            className="absolute bottom-0 left-0 right-0 bg-gray-50 border-t border-gray-200"
+            style={{ height: `${FOOTER_HEIGHT}px` }}
+          >
+            {showPageNumbers && (
+              <div className="absolute bottom-2 right-8 text-sm text-gray-500 font-serif">
+                {i}
+              </div>
+            )}
+          </div>
         </div>
       );
     }
@@ -138,13 +162,19 @@ export default function SingleTextareaPagesEditor({
           {/* Main textarea overlay */}
           <textarea
             ref={textareaRef}
-            className="absolute inset-0 w-full resize-none border-none outline-none bg-transparent text-gray-900 font-serif"
+            className="absolute w-full resize-none border-none outline-none bg-transparent text-gray-900 font-serif"
             style={{
               fontFamily: "'Times New Roman', serif",
               fontSize: "12pt",
               lineHeight: "2.0",
-              padding: '1in 1in 1in 1.25in', // Standard document margins
-              height: `${totalPages * 11.5}in`,
+              top: `${HEADER_HEIGHT}px`,
+              left: '1.25in',
+              right: '1in',
+              bottom: `${FOOTER_HEIGHT}px`,
+              width: 'calc(8.5in - 2.25in)', // Total width minus left and right margins
+              height: `calc(${totalPages * 11.5}in - ${HEADER_HEIGHT + FOOTER_HEIGHT}px)`,
+              paddingTop: '0.5in', // Additional top padding after header
+              paddingBottom: '0.5in', // Additional bottom padding before footer
               zIndex: 10
             }}
             value={content}
