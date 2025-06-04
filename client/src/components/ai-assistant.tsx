@@ -246,7 +246,7 @@ export default function AiAssistant({ sessionId, currentContent }: AiAssistantPr
 
         <TabsContent value="assistant" className="flex-1 flex flex-col min-h-0">
           {/* Chat History Area */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-[600px] max-h-[80vh]">
             {displayChatHistory && displayChatHistory.length > 0 ? (
               <>
                 <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
@@ -261,7 +261,7 @@ export default function AiAssistant({ sessionId, currentContent }: AiAssistantPr
                     </div>
                     <div className="bg-purple-50 p-4 rounded-lg">
                       <p className="text-sm font-medium text-purple-900 mb-2">ZoË replied:</p>
-                      <div className="text-xl text-purple-800 whitespace-pre-line leading-relaxed min-h-[300px] max-h-[500px] overflow-y-auto bg-white p-10 rounded-lg border w-full font-normal">
+                      <div className="text-xl text-purple-800 whitespace-pre-line leading-relaxed min-h-[400px] max-h-[800px] overflow-y-auto bg-white p-10 rounded-lg border w-full font-normal">
                         {interaction.response}
                       </div>
                     </div>
