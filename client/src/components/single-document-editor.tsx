@@ -69,7 +69,9 @@ export default function SingleDocumentEditor({
       contentLength: content.length,
       pageCount: newPages.length,
       firstPageLength: newPages[0]?.length || 0,
-      secondPageLength: newPages[1]?.length || 0
+      secondPageLength: newPages[1]?.length || 0,
+      firstPageEnd: newPages[0]?.slice(-50) || '',
+      secondPageStart: newPages[1]?.slice(0, 50) || ''
     });
     setPages(newPages);
   }, [content]);
