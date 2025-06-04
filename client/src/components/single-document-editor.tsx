@@ -97,33 +97,57 @@ export default function SingleDocumentEditor({
             {/* Page Break Indicators */}
             {renderPageBreaks()}
             
-            {/* Full Document Writing Area */}
-            <div 
-              className="absolute inset-0"
-              style={{
-                top: `${HEADER_HEIGHT}px`,
-                left: '1in',
-                right: '1in',
-                paddingBottom: `${FOOTER_HEIGHT}px`
-              }}
-            >
-              <textarea
-                ref={textareaRef}
-                className="w-full resize-none border-none outline-none bg-transparent text-gray-900 font-serif p-4"
-                style={{
-                  fontFamily: "'Times New Roman', serif",
-                  fontSize: "12pt",
-                  lineHeight: "2.0",
-                  minHeight: `${totalPages * (PAGE_HEIGHT_INCHES * 96 - HEADER_HEIGHT - FOOTER_HEIGHT)}px`
-                }}
-                value={content}
-                onChange={(e) => handleContentChange(e.target.value)}
-                onKeyDown={handleKeyDown}
-                onScroll={handleScroll}
-                placeholder="Start writing your document..."
-                spellCheck={true}
-              />
-            </div>
+            {/* Page-by-Page Writing Areas */}
+            {Array.from({ length: totalPages }, (_, pageIndex) => {
+              const pageStartLine = pageIndex * LINES_PER_PAGE;
+              const pageEndLine = (pageIndex + 1) * LINES_PER_PAGE;
+              const pageContent = contentLines.slice(pageStartLine, pageEndLine).join('\n');
+              
+              return (
+                <div
+                  key={pageIndex}
+                  className="absolute border border-gray-200"
+                  style={{
+                    top: `${pageIndex * PAGE_HEIGHT_INCHES * 96 + HEADER_HEIGHT}px`,
+                    left: '1in',
+                    right: '1in',
+                    height: `${(PAGE_HEIGHT_INCHES * 96) - HEADER_HEIGHT - FOOTER_HEIGHT}px`,
+                    overflow: 'hidden'
+                  }}
+                >
+                  {pageIndex === 0 && (
+                    <textarea
+                      ref={textareaRef}
+                      className="w-full h-full resize-none border-none outline-none bg-transparent text-gray-900 font-serif p-4"
+                      style={{
+                        fontFamily: "'Times New Roman', serif",
+                        fontSize: "12pt",
+                        lineHeight: "2.0"
+                      }}
+                      value={content}
+                      onChange={(e) => handleContentChange(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      onScroll={handleScroll}
+                      placeholder="Start writing your document..."
+                      spellCheck={true}
+                    />
+                  )}
+                  
+                  {pageIndex > 0 && (
+                    <div 
+                      className="w-full h-full p-4 text-gray-900 font-serif whitespace-pre-wrap"
+                      style={{
+                        fontFamily: "'Times New Roman', serif",
+                        fontSize: "12pt",
+                        lineHeight: "2.0"
+                      }}
+                    >
+                      {pageContent}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
             
             {/* Header Boundary Indicator */}
             <div 
