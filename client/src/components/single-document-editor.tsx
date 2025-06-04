@@ -132,8 +132,14 @@ export default function SingleDocumentEditor({
       </div>
 
       <div className="flex flex-col items-center py-6 relative">
-        {pages.map((pageContent, pageIndex) => (
-          <div key={pageIndex} className="relative">
+        {pages.map((pageContent, pageIndex) => {
+          console.log(`Page ${pageIndex + 1} content:`, {
+            length: pageContent.length,
+            start: pageContent.slice(0, 50),
+            end: pageContent.slice(-50)
+          });
+          return (
+            <div key={pageIndex} className="relative">
             {/* Page Break Indicator */}
             {pageIndex > 0 && (
               <div className="flex items-center justify-center py-2 mb-2">
@@ -249,7 +255,7 @@ export default function SingleDocumentEditor({
               </div>
             </div>
           </div>
-        ))}
+        )})}
 
         {/* Spell Check Panel positioned within document area */}
         {isSpellCheckActive && (
