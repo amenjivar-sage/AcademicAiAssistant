@@ -142,6 +142,71 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
   });
 
   // Text selection handler
+  // Check if two words are spelling corrections of each other
+  const checkSpellingCorrection = (word1: string, word2: string): boolean => {
+    const corrections: Record<string, string[]> = {
+      'fealing': ['feeling'],
+      'sandwitches': ['sandwiches'],
+      'promissed': ['promised'],
+      'probbably': ['probably'],
+      'perfact': ['perfect'],
+      'reminde': ['remind'],
+      'teh': ['the'],
+      'adn': ['and'],
+      'recieve': ['receive'],
+      'seperate': ['separate'],
+      'definately': ['definitely'],
+      'occured': ['occurred'],
+      'necesary': ['necessary'],
+      'beleive': ['believe'],
+      'freind': ['friend'],
+      'wierd': ['weird'],
+      'calender': ['calendar'],
+      'tommorrow': ['tomorrow'],
+      'alot': ['a lot'],
+      'becuase': ['because'],
+      'thier': ['their'],
+      'youre': ['you\'re'],
+      'its': ['it\'s'],
+      'cant': ['can\'t'],
+      'dont': ['don\'t'],
+      'wont': ['won\'t'],
+      'isnt': ['isn\'t'],
+      'wasnt': ['wasn\'t'],
+      'arent': ['aren\'t'],
+      'hasnt': ['hasn\'t'],
+      'havent': ['haven\'t'],
+      'hadnt': ['hadn\'t']
+    };
+
+    // Check direct mapping
+    if (corrections[word1]?.includes(word2) || corrections[word2]?.includes(word1)) {
+      return true;
+    }
+
+    // Check reverse mapping
+    for (const [incorrect, correctList] of Object.entries(corrections)) {
+      if (correctList.includes(word1) && word2 === incorrect) return true;
+      if (correctList.includes(word2) && word1 === incorrect) return true;
+    }
+
+    // Check for similar word structure (Levenshtein distance approach)
+    if (Math.abs(word1.length - word2.length) <= 2) {
+      let distance = 0;
+      const maxLen = Math.max(word1.length, word2.length);
+      
+      for (let i = 0; i < maxLen; i++) {
+        if (word1[i] !== word2[i]) distance++;
+      }
+      
+      // Allow up to 2 character differences for words longer than 4 characters
+      if (word1.length > 4 && distance <= 2) return true;
+      if (word1.length <= 4 && distance <= 1) return true;
+    }
+
+    return false;
+  };
+
   const handleTextSelection = () => {
     const selection = window.getSelection();
     if (selection && selection.toString().trim()) {
@@ -297,7 +362,26 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                         }
                         // Spell-corrected match (similar root words)
                         else if (cleanPastedWord.length >= 3 && docWord.length >= 3) {
-                          // Match common spelling corrections like tryed->tried, ignor->ignore
+                          // Check for common spelling corrections using inline logic
+                          const corrections: Record<string, string[]> = {
+                            'fealing': ['feeling'], 'sandwitches': ['sandwiches'], 'promissed': ['promised'],
+                            'probbably': ['probably'], 'perfact': ['perfect'], 'reminde': ['remind'],
+                            'teh': ['the'], 'adn': ['and'], 'recieve': ['receive'], 'seperate': ['separate'],
+                            'definately': ['definitely'], 'occured': ['occurred'], 'necesary': ['necessary'],
+                            'beleive': ['believe'], 'freind': ['friend'], 'wierd': ['weird']
+                          };
+                          
+                          const isSpellingCorrection = corrections[cleanPastedWord]?.includes(docWord) || 
+                                                     corrections[docWord]?.includes(cleanPastedWord) ||
+                                                     Object.entries(corrections).some(([incorrect, correctList]) => 
+                                                       (correctList.includes(cleanPastedWord) && docWord === incorrect) ||
+                                                       (correctList.includes(docWord) && cleanPastedWord === incorrect)
+                                                     );
+                          
+                          if (isSpellingCorrection) {
+                            exactMatches += 0.8; // Count as partial match for spelling corrections
+                          }
+                          
                           const rootMatch = cleanPastedWord.substring(0, 3) === docWord.substring(0, 3) ||
                                           (cleanPastedWord.includes('tr') && docWord.includes('tr')) ||
                                           (cleanPastedWord.includes('ig') && docWord.includes('ig')) ||
