@@ -88,8 +88,8 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     const words = content.split(/\s+/).filter((word: string) => word.length > 0);
     const currentWordCount = words.length;
 
-    const hasChanges = currentWordCount !== wordCount || content !== (session?.content || '');
-    if (!hasChanges) return;
+    // Skip checking session changes for now - just save if content changed
+    if (!hasContent) return;
 
     try {
       setIsSaving(true);
@@ -132,7 +132,29 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       console.error('Save failed:', error);
       setIsSaving(false);
     }
-  }, [content, title, pastedContents, wordCount, sessionId, isSaving, assignmentId, createSessionMutation, queryClient, session]);
+  }, [content, title, pastedContents, wordCount, sessionId, isSaving, assignmentId, createSessionMutation, queryClient]);
+
+  // Fetch session data
+  const { data: session, isLoading: sessionLoading } = useQuery({
+    queryKey: ['writing-session', sessionId],
+    queryFn: async () => {
+      const response = await fetch(`/api/writing-sessions/${sessionId}`);
+      if (!response.ok) throw new Error('Failed to fetch session');
+      return response.json();
+    },
+    enabled: !!sessionId
+  });
+
+  // Fetch assignment data
+  const { data: assignment, isLoading: assignmentLoading } = useQuery({
+    queryKey: ['assignment', assignmentId],
+    queryFn: async () => {
+      const response = await fetch(`/api/assignments/${assignmentId}`);
+      if (!response.ok) throw new Error('Failed to fetch assignment');
+      return response.json();
+    },
+    enabled: !!assignmentId
+  });
 
   // Auto-save effect
   useEffect(() => {
@@ -158,29 +180,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, [content, title, saveSession, isSaving]);
-
-  // Fetch session data
-  const { data: session, isLoading: sessionLoading } = useQuery({
-    queryKey: ['writing-session', sessionId],
-    queryFn: async () => {
-      const response = await fetch(`/api/writing-sessions/${sessionId}`);
-      if (!response.ok) throw new Error('Failed to fetch session');
-      return response.json();
-    },
-    enabled: !!sessionId
-  });
-
-  // Fetch assignment data
-  const { data: assignment, isLoading: assignmentLoading } = useQuery({
-    queryKey: ['assignment', assignmentId],
-    queryFn: async () => {
-      const response = await fetch(`/api/assignments/${assignmentId}`);
-      if (!response.ok) throw new Error('Failed to fetch assignment');
-      return response.json();
-    },
-    enabled: !!assignmentId
-  });
+  }, [content, title, saveSession, isSaving, session]);
 
   // Sync with session data when it loads
   useEffect(() => {
