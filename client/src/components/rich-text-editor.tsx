@@ -24,8 +24,6 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
 }, ref) => {
   const quillRef = useRef<ReactQuill>(null);
   const [pageCount, setPageCount] = useState(1);
-  const [pages, setPages] = useState<string[]>(['']);
-  const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useImperativeHandle(ref, () => ({
@@ -51,59 +49,14 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     'link', 'color', 'background'
   ];
 
-  // Split content across pages based on height
-  const splitContentIntoPages = useCallback((htmlContent: string) => {
-    // Create a temporary div to measure content height
-    const tempDiv = document.createElement('div');
-    tempDiv.style.position = 'absolute';
-    tempDiv.style.visibility = 'hidden';
-    tempDiv.style.width = '612px'; // 8.5in - 72px padding on each side
-    tempDiv.style.fontFamily = 'Times New Roman, serif';
-    tempDiv.style.fontSize = '12pt';
-    tempDiv.style.lineHeight = '2.0';
-    tempDiv.innerHTML = htmlContent;
-    document.body.appendChild(tempDiv);
-
-    const maxPageHeight = 856; // 1000px - 144px padding (72px top + 72px bottom)
-    const newPages: string[] = [];
-    let currentPageContent = '';
-    let currentHeight = 0;
-
-    // Split content by paragraphs to avoid breaking mid-sentence
-    const paragraphs = htmlContent.split('</p>').filter(p => p.trim());
-    
-    for (let i = 0; i < paragraphs.length; i++) {
-      const paragraph = paragraphs[i] + (i < paragraphs.length - 1 ? '</p>' : '');
-      
-      // Test height with this paragraph added
-      tempDiv.innerHTML = currentPageContent + paragraph;
-      const newHeight = tempDiv.offsetHeight;
-      
-      if (newHeight > maxPageHeight && currentPageContent) {
-        // This paragraph would overflow, start a new page
-        newPages.push(currentPageContent);
-        currentPageContent = paragraph;
-      } else {
-        currentPageContent += paragraph;
-      }
-    }
-    
-    // Add the last page
-    if (currentPageContent) {
-      newPages.push(currentPageContent);
-    }
-    
-    document.body.removeChild(tempDiv);
-    return newPages.length > 0 ? newPages : [''];
-  }, []);
-
   const handleChange = (value: string, delta: any, source: any, editor: any) => {
     onContentChange(value);
     
-    // Split content into pages
-    const newPages = splitContentIntoPages(value);
-    setPages(newPages);
-    setPageCount(newPages.length);
+    // Calculate approximate page count based on content length
+    const textLength = value.replace(/<[^>]*>/g, '').length;
+    const charsPerPage = 2500; // Approximate characters per page
+    const neededPages = Math.max(1, Math.ceil(textLength / charsPerPage));
+    setPageCount(neededPages);
     
     // Handle text selection for formatting feedback
     if (onTextSelection) {
@@ -131,14 +84,15 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     }
   };
 
-  // Initialize pages when content is loaded
+  // Initialize page count when content is loaded
   useEffect(() => {
     if (content) {
-      const newPages = splitContentIntoPages(content);
-      setPages(newPages);
-      setPageCount(newPages.length);
+      const textLength = content.replace(/<[^>]*>/g, '').length;
+      const charsPerPage = 2500;
+      const neededPages = Math.max(1, Math.ceil(textLength / charsPerPage));
+      setPageCount(neededPages);
     }
-  }, [content, splitContentIntoPages]);
+  }, [content]);
 
   // Expose formatting functions to parent
   useEffect(() => {
@@ -159,24 +113,17 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
           align-items: center;
         }
 
-        .document-pages {
-          display: flex;
-          flex-direction: column;
-          gap: 20px;
+        .document-container {
           width: 8.5in;
         }
 
-        .document-page {
+        .single-document-page {
           background: white;
           width: 8.5in;
-          height: 1000px;
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
           border: 1px solid #e5e7eb;
           position: relative;
-          display: flex;
-          flex-direction: column;
-          padding: 72px;
-          box-sizing: border-box;
+          min-height: 1000px;
         }
 
         .document-page:not(:last-child):after {
@@ -313,69 +260,81 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
           font-weight: bold !important;
         }
 
-        /* Ensure Quill editor works properly within page container */
-        .document-page .ql-container {
-          height: 100% !important;
+        /* Ensure Quill editor works properly within single page container */
+        .single-document-page .ql-container {
+          border: none !important;
           font-family: 'Times New Roman', serif !important;
           font-size: 12pt !important;
         }
 
-        .document-page .ql-editor {
-          height: 100% !important;
-          overflow-y: auto !important;
+        .single-document-page .ql-editor {
           padding: 72px !important;
           line-height: 2.0 !important;
           font-family: 'Times New Roman', serif !important;
           font-size: 12pt !important;
           box-sizing: border-box !important;
+          min-height: 856px !important;
         }
 
-        .document-page .ql-editor:focus {
+        .single-document-page .ql-editor:focus {
           outline: none !important;
         }
 
-        .document-page .ql-editor .ql-cursor {
+        .single-document-page .ql-editor .ql-cursor {
           display: block !important;
         }
       `}</style>
       
-      <div className="document-pages" ref={containerRef}>
-        {/* Show React Quill editor on first page, read-only content on overflow pages */}
-        {pages.map((pageContent, index) => (
-          <div key={index} className="document-page">
-            {index === 0 ? (
-              <ReactQuill
-                ref={quillRef}
-                value={content}
-                onChange={handleChange}
-                modules={modules}
-                formats={formats}
-                readOnly={readOnly}
-                placeholder={placeholder}
-                theme="snow"
-                style={{ height: '856px' }}
-              />
-            ) : (
-              <div 
-                className="page-content"
-                dangerouslySetInnerHTML={{ __html: pageContent }}
-                style={{
-                  fontFamily: 'Times New Roman, serif',
-                  fontSize: '12pt',
-                  lineHeight: '2.0',
-                  height: '856px',
-                  overflow: 'hidden',
-                  wordWrap: 'break-word',
-                  padding: '72px',
-                  boxSizing: 'border-box'
-                }}
-              />
-            )}
-            <div className="page-number">
+      <div className="document-container" ref={containerRef}>
+        <div className="single-document-page">
+          <ReactQuill
+            ref={quillRef}
+            value={content}
+            onChange={handleChange}
+            modules={modules}
+            formats={formats}
+            readOnly={readOnly}
+            placeholder={placeholder}
+            theme="snow"
+          />
+          
+          {/* Page break indicators */}
+          {Array.from({ length: pageCount - 1 }, (_, index) => (
+            <div 
+              key={index}
+              className="page-break-indicator"
+              style={{
+                position: 'absolute',
+                top: `${(index + 1) * 1000}px`,
+                left: '0',
+                right: '0',
+                height: '2px',
+                background: 'repeating-linear-gradient(to right, #ccc 0, #ccc 10px, transparent 10px, transparent 20px)',
+                zIndex: 10,
+                pointerEvents: 'none'
+              }}
+            />
+          ))}
+          
+          {/* Page numbers */}
+          {Array.from({ length: pageCount }, (_, index) => (
+            <div 
+              key={index}
+              className="page-number-indicator"
+              style={{
+                position: 'absolute',
+                top: `${(index + 1) * 1000 - 30}px`,
+                right: '72px',
+                fontSize: '12px',
+                color: '#666',
+                zIndex: 10,
+                pointerEvents: 'none'
+              }}
+            >
               {index + 1}
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );
