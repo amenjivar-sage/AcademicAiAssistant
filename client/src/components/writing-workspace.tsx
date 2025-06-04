@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Settings, Send, AlertTriangle, Shield, FileText, MessageSquare, Download, Save } from 'lucide-react';
+import { ArrowLeft, Settings, Send, AlertTriangle, Shield, FileText, MessageSquare, Download, Save, GraduationCap, Trophy } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import CopyPasteDetector from './copy-paste-detector';
 import SingleDocumentEditor from './single-document-editor';
@@ -415,6 +415,38 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       <div className="flex-1 flex overflow-hidden">
         {/* Writing Content */}
         <div className="flex-1 overflow-auto">
+          {/* Grading Feedback Banner for Graded Assignments */}
+          {session?.status === 'graded' && (
+            <div className="bg-green-50 border-b border-green-200 p-4 mx-6 mt-4 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Trophy className="h-5 w-5 text-green-600" />
+                  <div>
+                    <h3 className="font-semibold text-green-800">Assignment Graded</h3>
+                    <p className="text-sm text-green-700">Your teacher has reviewed and graded your work</p>
+                  </div>
+                </div>
+                <Badge variant="default" className="bg-green-600 text-white px-3 py-1">
+                  Grade: {session.grade}
+                </Badge>
+              </div>
+              
+              {session.teacherFeedback && (
+                <div className="mt-3 p-3 bg-white rounded border border-green-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <GraduationCap className="h-4 w-4 text-green-600" />
+                    <span className="font-medium text-green-800">Teacher Feedback:</span>
+                  </div>
+                  <p className="text-gray-700 text-sm leading-relaxed">{session.teacherFeedback}</p>
+                </div>
+              )}
+              
+              <div className="mt-2 text-xs text-green-600">
+                Graded on {session.updatedAt ? new Date(session.updatedAt).toLocaleDateString() : 'Unknown date'}
+              </div>
+            </div>
+          )}
+          
           <CopyPasteDetector
             allowCopyPaste={allowCopyPaste}
             onPasteDetected={handlePasteDetected}
@@ -430,6 +462,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
               assignmentTitle={assignment?.title}
               showPageNumbers={headerFooterSettings.pageNumbers}
               showHeader={!!headerFooterSettings.header}
+              readOnly={session?.status === 'graded'}
             />
           </CopyPasteDetector>
         </div>

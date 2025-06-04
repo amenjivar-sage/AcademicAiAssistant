@@ -8,6 +8,7 @@ interface SingleDocumentEditorProps {
   assignmentTitle?: string;
   showPageNumbers?: boolean;
   showHeader?: boolean;
+  readOnly?: boolean;
 }
 
 const PAGE_HEIGHT = 1122; // 11in at 96dpi
@@ -23,7 +24,8 @@ export default function SingleDocumentEditor({
   studentName = "",
   assignmentTitle = "",
   showPageNumbers = true,
-  showHeader = true
+  showHeader = true,
+  readOnly = false
 }: SingleDocumentEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [pages, setPages] = useState<number[]>([]);
@@ -133,7 +135,7 @@ export default function SingleDocumentEditor({
             )}
             <textarea
               ref={textareaRef}
-              className="w-full resize-none border-none outline-none bg-transparent text-gray-900 font-serif relative"
+              className={`w-full resize-none border-none outline-none bg-transparent text-gray-900 font-serif relative ${readOnly ? 'cursor-default' : ''}`}
               style={{
                 fontFamily: "'Times New Roman', serif",
                 fontSize: "12pt",
@@ -146,10 +148,13 @@ export default function SingleDocumentEditor({
               }}
               value={content}
               onChange={(e) => {
-                handleContentChange(e.target.value);
+                if (!readOnly) {
+                  handleContentChange(e.target.value);
+                }
               }}
-              placeholder="Start writing your document..."
+              placeholder={readOnly ? "" : "Start writing your document..."}
               spellCheck={false}
+              readOnly={readOnly}
             />
           </div>
           
