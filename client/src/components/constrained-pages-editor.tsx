@@ -68,63 +68,52 @@ export default function ConstrainedPagesEditor({
   }, [content]); // Remove pages from dependency to prevent loop
 
   const handlePageContentChange = (pageIndex: number, newPageContent: string) => {
+    // Simply update the specific page content without complex redistribution
     const updatedPages = [...pages];
     updatedPages[pageIndex] = newPageContent;
     
-    // Check if any page exceeds line limit and redistribute content
-    const maxLinesPerPage = 22;
-    let redistributed = false;
-    
-    // Process all pages for overflow
-    for (let i = 0; i < updatedPages.length; i++) {
-      const pageLines = updatedPages[i].split('\n');
-      
-      if (pageLines.length > maxLinesPerPage) {
-        redistributed = true;
-        
-        // Keep only allowed lines on current page
-        const allowedLines = pageLines.slice(0, maxLinesPerPage);
-        const overflowLines = pageLines.slice(maxLinesPerPage);
-        
-        updatedPages[i] = allowedLines.join('\n');
-        
-        // Handle overflow
-        if (overflowLines.length > 0) {
-          if (i + 1 < updatedPages.length) {
-            // Add overflow to beginning of next page
-            const nextPageLines = updatedPages[i + 1].split('\n');
-            updatedPages[i + 1] = [...overflowLines, ...nextPageLines].join('\n');
-          } else {
-            // Create new page for overflow
-            updatedPages.push(overflowLines.join('\n'));
-            // Ensure we have a textarea ref for the new page
-            textareaRefs.current.push(null);
-          }
-        }
-      }
-    }
-    
-    // Update state
+    // Update state immediately
     setPages(updatedPages);
     
-    // If content was redistributed and we're on the page that overflowed, focus next page
-    if (redistributed && pageIndex < updatedPages.length - 1) {
+    // Notify parent with simple concatenation
+    const combinedContent = updatedPages.join('\n');
+    onContentChange(combinedContent);
+    
+    // Check if this page has too many lines and needs to create a new page
+    const pageLines = newPageContent.split('\n');
+    const maxLinesPerPage = 22;
+    
+    if (pageLines.length > maxLinesPerPage) {
+      // Keep only first 22 lines on current page
+      const allowedLines = pageLines.slice(0, maxLinesPerPage);
+      const overflowLines = pageLines.slice(maxLinesPerPage);
+      
+      // Update current page with trimmed content
+      updatedPages[pageIndex] = allowedLines.join('\n');
+      
+      // Create or update next page with overflow
+      if (pageIndex + 1 < updatedPages.length) {
+        // Prepend overflow to existing next page
+        const existingNextPage = updatedPages[pageIndex + 1];
+        updatedPages[pageIndex + 1] = overflowLines.join('\n') + '\n' + existingNextPage;
+      } else {
+        // Create new page for overflow
+        updatedPages.push(overflowLines.join('\n'));
+      }
+      
+      // Update state with redistributed content
+      setPages(updatedPages);
+      onContentChange(updatedPages.join('\n'));
+      
+      // Focus on next page
       setTimeout(() => {
         const nextTextarea = textareaRefs.current[pageIndex + 1];
         if (nextTextarea) {
           nextTextarea.focus();
-          // Position cursor at start of overflow content
-          const currentPageLines = updatedPages[pageIndex].split('\n').length;
-          if (currentPageLines >= maxLinesPerPage) {
-            nextTextarea.setSelectionRange(0, 0);
-          }
+          nextTextarea.setSelectionRange(0, 0);
         }
-      }, 50);
+      }, 100);
     }
-    
-    // Notify parent component
-    const combinedContent = updatedPages.join('\n');
-    onContentChange(combinedContent);
   };
 
   const focusPage = (pageIndex: number) => {
