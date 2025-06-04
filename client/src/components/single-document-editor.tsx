@@ -31,17 +31,34 @@ export default function SingleDocumentEditor({
   const [spellErrors, setSpellErrors] = useState<any[]>([]);
 
   // Function to split text into pages based on character count per page
-  function splitTextToPages(text: string, maxCharsPerPage = 600) {
+  function splitTextToPages(text: string, maxCharsPerPage = 1200) {
     if (!text || text.trim() === '') {
       return [''];
     }
     
     const pages: string[] = [];
+    let currentIndex = 0;
     
-    // Split text into pages
-    for (let i = 0; i < text.length; i += maxCharsPerPage) {
-      const pageContent = text.slice(i, i + maxCharsPerPage);
+    while (currentIndex < text.length) {
+      let endIndex = currentIndex + maxCharsPerPage;
+      
+      // If we're not at the end of the text, try to break at a word boundary
+      if (endIndex < text.length) {
+        // Look for the last space within the page limit
+        const lastSpaceIndex = text.lastIndexOf(' ', endIndex);
+        if (lastSpaceIndex > currentIndex) {
+          endIndex = lastSpaceIndex;
+        }
+      }
+      
+      const pageContent = text.slice(currentIndex, endIndex);
       pages.push(pageContent);
+      currentIndex = endIndex;
+      
+      // Skip the space to avoid starting next page with a space
+      if (currentIndex < text.length && text[currentIndex] === ' ') {
+        currentIndex++;
+      }
     }
     
     return pages.length > 0 ? pages : [''];
@@ -49,7 +66,7 @@ export default function SingleDocumentEditor({
 
   // Update pages when content changes
   useEffect(() => {
-    const newPages = splitTextToPages(content, 600); // 600 chars per page for visible breaks
+    const newPages = splitTextToPages(content, 1200); // 1200 chars per page with word boundaries
     console.log('Page splitting debug:', {
       contentLength: content.length,
       pageCount: newPages.length,
