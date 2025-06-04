@@ -12,6 +12,8 @@ interface SingleDocumentEditorProps {
   pastedContent?: any[];
   showCopyPasteHighlights?: boolean;
   inlineComments?: any[];
+  onTextSelection?: (selectedText: string) => void;
+  onFormatRef?: (formatFn: (command: string) => void) => void;
 }
 
 const PAGE_HEIGHT = 1122; // 11in at 96dpi
@@ -31,7 +33,9 @@ export default function SingleDocumentEditor({
   readOnly = false,
   pastedContent = [],
   showCopyPasteHighlights = false,
-  inlineComments = []
+  inlineComments = [],
+  onTextSelection,
+  onFormatRef
 }: SingleDocumentEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [pages, setPages] = useState<number[]>([]);
@@ -41,6 +45,61 @@ export default function SingleDocumentEditor({
   const [selectionStart, setSelectionStart] = useState<number>(0);
   const [selectionEnd, setSelectionEnd] = useState<number>(0);
   const [showFormatting, setShowFormatting] = useState<boolean>(false);
+
+  // Handle text selection
+  const handleSelectionChange = () => {
+    if (!textareaRef.current || !onTextSelection) return;
+    
+    const textarea = textareaRef.current;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = textarea.value.substring(start, end);
+    
+    console.log('Text selection:', { start, end, selected: selectedText, length: selectedText.length });
+    setSelectedText(selectedText);
+    setSelectionStart(start);
+    setSelectionEnd(end);
+    setShowFormatting(selectedText.length > 0);
+    onTextSelection(selectedText);
+  };
+
+  // Apply formatting
+  const applyFormatting = (command: string) => {
+    if (!textareaRef.current || readOnly) return;
+    
+    const textarea = textareaRef.current;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = textarea.value.substring(start, end);
+    
+    if (!selectedText) return;
+    
+    let formattedText = selectedText;
+    
+    if (command === 'bold') {
+      formattedText = `**${selectedText}**`;
+    }
+    
+    const newContent = 
+      textarea.value.substring(0, start) + 
+      formattedText + 
+      textarea.value.substring(end);
+    
+    onContentChange(newContent);
+    
+    // Restore selection after formatting
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start, start + formattedText.length);
+    }, 0);
+  };
+
+  // Expose formatting function to parent
+  useEffect(() => {
+    if (onFormatRef) {
+      onFormatRef(applyFormatting);
+    }
+  }, [onFormatRef]);
 
   // Copy-paste highlighting function
   const highlightCopyPasteContent = (text: string, pastedData: any[]): string => {
@@ -234,6 +293,11 @@ export default function SingleDocumentEditor({
       setSelectionEnd(end);
       setSelectedText(selected);
       setShowFormatting(selected.length > 0);
+      
+      // Call the callback to update parent component
+      if (onTextSelection) {
+        onTextSelection(selected);
+      }
       
       console.log('ShowFormatting set to:', selected.length > 0);
     }
