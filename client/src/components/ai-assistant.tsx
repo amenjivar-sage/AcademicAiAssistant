@@ -225,28 +225,28 @@ export default function AiAssistant({ sessionId, currentContent }: AiAssistantPr
   const quickPrompts = generateSmartPrompts(typedChatHistory);
 
   return (
-    <div className="h-full flex flex-col bg-white overflow-hidden">
+    <div className="h-full flex flex-col bg-white">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-purple-500 to-purple-600 text-white flex-shrink-0">
+      <div className="p-3 border-b border-gray-200 bg-gradient-to-r from-purple-500 to-purple-600 text-white flex-shrink-0">
         <div className="flex items-center gap-2">
-          <Bot className="h-5 w-5" />
-          <h3 className="font-semibold">ZoË AI Assistant</h3>
+          <Bot className="h-4 w-4" />
+          <h3 className="font-medium text-sm">ZoË AI Assistant</h3>
         </div>
-        <p className="text-sm text-purple-100 mt-1">
+        <p className="text-xs text-purple-100 mt-1">
           Get ethical writing help and guidance
         </p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
         <TabsList className="grid w-full grid-cols-3 h-auto m-2 flex-shrink-0">
           <TabsTrigger value="assistant" className="text-xs px-2">Chat</TabsTrigger>
           <TabsTrigger value="prompts" className="text-xs px-2">Help</TabsTrigger>
           <TabsTrigger value="citations" className="text-xs px-2">Cite</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="assistant" className="flex-1 flex flex-col min-h-0">
+        <TabsContent value="assistant" className="flex-1 flex flex-col h-full relative">
           {/* Chat History Area */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-[200px] max-h-[40vh]">
+          <div className="flex-1 overflow-y-auto p-3 space-y-3 pb-48">
             {displayChatHistory && displayChatHistory.length > 0 ? (
               <>
                 <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
@@ -299,8 +299,8 @@ export default function AiAssistant({ sessionId, currentContent }: AiAssistantPr
             )}
           </div>
 
-          {/* Input Area */}
-          <div className="border-t bg-white p-4 space-y-3 flex-shrink-0 mt-auto">
+          {/* Input Area - Fixed at bottom */}
+          <div className="absolute bottom-0 left-0 right-0 border-t bg-white p-3 space-y-3 shadow-lg" style={{ height: '180px' }}>
             <div className="space-y-3">
               <label className="block text-sm font-medium text-gray-700">
                 Ask ZoË for help with your writing:
@@ -339,7 +339,7 @@ export default function AiAssistant({ sessionId, currentContent }: AiAssistantPr
           </div>
         </TabsContent>
 
-        <TabsContent value="prompts" className="p-3">
+        <TabsContent value="prompts" className="p-3 pb-48 overflow-y-auto">
           <h4 className="font-medium text-gray-700 mb-3 text-sm">Quick Writing Help</h4>
           <div className="space-y-2">
             {quickPrompts.map((quickPrompt, index) => {
