@@ -85,7 +85,9 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     const hasContent = content.trim().length > 0 || title.trim().length > 0;
     if (!hasContent) return;
 
-    const words = content.split(/\s+/).filter((word: string) => word.length > 0);
+    // Remove formatting markup before counting words
+    const cleanContent = content.replace(/\*\*(.*?)\*\*/g, '$1');
+    const words = cleanContent.split(/\s+/).filter((word: string) => word.length > 0);
     const currentWordCount = words.length;
 
     // Skip checking session changes for now - just save if content changed
