@@ -32,25 +32,18 @@ export default function SingleDocumentEditor({
   // Function to split text into pages based on character count per page
   function splitTextToPages(text: string, maxCharsPerPage = 1800) {
     const pages: string[] = [];
-    const words = text.split(" ");
-    let currentPage = "";
     
-    for (const word of words) {
-      // Check if adding this word would exceed the page limit
-      if ((currentPage + " " + word).length > maxCharsPerPage && currentPage.length > 0) {
-        pages.push(currentPage.trim());
-        currentPage = word;
-      } else {
-        currentPage = currentPage ? currentPage + " " + word : word;
-      }
+    if (!text) {
+      return [''];
     }
     
-    // Add the last page if there's content
-    if (currentPage.trim()) {
-      pages.push(currentPage.trim());
+    // Simple character-based splitting
+    for (let i = 0; i < text.length; i += maxCharsPerPage) {
+      const pageContent = text.slice(i, i + maxCharsPerPage);
+      pages.push(pageContent);
     }
     
-    return pages;
+    return pages.length > 0 ? pages : [''];
   }
 
   // Update pages when content changes
@@ -91,7 +84,7 @@ export default function SingleDocumentEditor({
         <BubbleSpellCheckPanel
           content={content}
           onContentChange={onContentChange}
-          isActive={isSpellCheckActive}
+          isOpen={isSpellCheckActive}
           onClose={() => setIsSpellCheckActive(false)}
         />
       )}
