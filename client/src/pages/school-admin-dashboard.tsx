@@ -835,27 +835,16 @@ function StudentDetailView({ student, sessions, allAssignments, allUsers, allCla
                                       <Button
                                         size="sm"
                                         variant="outline"
-                                        onClick={() => {
-                                          const assignment = allAssignments.find((a: any) => a.id === session.assignmentId);
-                                          if (assignment) {
-                                            window.open(`/assignment/${assignment.id}/session/${session.id}`, '_blank');
-                                          }
-                                        }}
+                                        onClick={() => setSelectedSubmission && setSelectedSubmission(session.id)}
                                         className="text-xs h-7"
                                       >
                                         <Eye className="h-3 w-3 mr-1" />
-                                        View Draft
+                                        {session.status === 'draft' ? 'View Draft' : 'View Work'}
                                       </Button>
                                       {(session.status === 'submitted' || session.status === 'graded') && (
-                                        <Button
-                                          size="sm"
-                                          variant="default"
-                                          onClick={() => setSelectedSubmission && setSelectedSubmission(session.id)}
-                                          className="text-xs h-7"
-                                        >
-                                          <FileText className="h-3 w-3 mr-1" />
-                                          View Submission
-                                        </Button>
+                                        <Badge variant="outline" className="text-xs">
+                                          Submitted
+                                        </Badge>
                                       )}
                                     </div>
                                   </div>
