@@ -527,6 +527,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all writing sessions for teacher (for pending grading and submission calculation)
+  app.get("/api/teacher/all-writing-sessions", async (req, res) => {
+    try {
+      const currentUser = await getCurrentUser();
+      if (!currentUser || currentUser.role !== 'teacher') {
+        return res.status(401).json({ message: "Teacher authentication required" });
+      }
+
+      // Get all assignments for this teacher
+      const teacherAssignments = await storage.getTeacherAssignments(currentUser.id);
+      const assignmentIds = teacherAssignments.map(a => a.id);
+
+      // Get all writing sessions for these assignments
+      const allSessions = [];
+      for (const assignmentId of assignmentIds) {
+        const sessions = await storage.getAssignmentSubmissions(assignmentId);
+        allSessions.push(...sessions);
+      }
+
+      res.json(allSessions);
+    } catch (error) {
+      console.error("Error fetching teacher writing sessions:", error);
+      res.status(500).json({ message: "Failed to fetch writing sessions" });
+    }
+  });
+
   // Mark assignment as complete
   app.post("/api/assignments/:id/complete", async (req, res) => {
     try {

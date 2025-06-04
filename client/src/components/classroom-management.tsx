@@ -155,11 +155,24 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
       // Count sessions that are submitted but not graded
       return belongsToClassroom && session.status === 'submitted' && !session.grade;
     }).length || 0;
+
+    // Count assignments without any submissions (pending submissions)
+    const pendingSubmissions = assignments?.filter(a => {
+      const belongsToClassroom = a.classroomId === classroom.id || 
+        (a.classroomIds && Array.isArray(a.classroomIds) && a.classroomIds.includes(classroom.id));
+      
+      if (!belongsToClassroom) return false;
+      
+      // Check if this assignment has any writing sessions
+      const hasSubmissions = allWritingSessions?.some((session: any) => session.assignmentId === a.id);
+      return !hasSubmissions;
+    }).length || 0;
     
     return {
       enrolledStudents: studentsInClass,
       activeAssignments: classroomAssignmentCount,
       pendingGrading: pendingGrading,
+      pendingSubmissions: pendingSubmissions,
     };
   };
 
@@ -221,7 +234,7 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-3 gap-4 text-center">
+          <div className="grid grid-cols-2 gap-4 text-center mb-4">
             <div>
               <div className="text-2xl font-bold text-blue-600">{stats.enrolledStudents}</div>
               <p className="text-sm text-gray-600">Students</p>
@@ -230,9 +243,15 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
               <div className="text-2xl font-bold text-green-600">{stats.activeAssignments}</div>
               <p className="text-sm text-gray-600">Assignments</p>
             </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4 text-center">
+            <div>
+              <div className="text-2xl font-bold text-red-600">{stats.pendingGrading}</div>
+              <p className="text-sm text-gray-600">Pending Grading</p>
+            </div>
             <div>
               <div className="text-2xl font-bold text-orange-600">{stats.pendingSubmissions}</div>
-              <p className="text-sm text-gray-600">Pending</p>
+              <p className="text-sm text-gray-600">Pending Submissions</p>
             </div>
           </div>
           <div className="mt-4 flex items-center justify-between">
