@@ -340,7 +340,9 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                         result = result.replace(sentenceRegex, (match) => {
                           if (!match.includes('style="background-color: #fecaca')) {
                             console.log('Applied red highlighting to:', match);
-                            return `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected (${Math.round(matchPercentage * 100)}% match)">${match}</span>`;
+                            const highlightedHTML = `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600; padding: 2px 4px; border-radius: 3px;" title="Copy-pasted content detected (${Math.round(matchPercentage * 100)}% match)">${match}</span>`;
+                            console.log('Generated HTML:', highlightedHTML);
+                            return highlightedHTML;
                           }
                           return match;
                         });
