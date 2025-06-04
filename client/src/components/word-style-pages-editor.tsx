@@ -77,7 +77,7 @@ export default function WordStylePagesEditor({
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const textareaRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
 
-  // Split content into pages whenever content changes
+  // Split content into pages whenever content changes (but preserve cursor position)
   useEffect(() => {
     const newPages = splitTextToPages(content);
     setPages(newPages);
@@ -93,6 +93,36 @@ export default function WordStylePagesEditor({
     // Reconstruct full content maintaining original line breaks
     const fullContent = updatedPages.join("\n\n\n\n"); // Use 4 line breaks as page separator
     onContentChange(fullContent);
+  };
+
+  const handleKeyDown = (pageIndex: number, e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    const textarea = e.currentTarget;
+    
+    // Handle Enter key for page breaks
+    if (e.key === 'Enter') {
+      const cursorPosition = textarea.selectionStart;
+      const textBeforeCursor = textarea.value.substring(0, cursorPosition);
+      const textAfterCursor = textarea.value.substring(cursorPosition);
+      
+      // Check if user pressed Enter multiple times for page break
+      const endsWithNewlines = textBeforeCursor.match(/\n{2,}$/);
+      
+      if (endsWithNewlines && endsWithNewlines[0].length >= 2) {
+        // Create page break by adding more newlines
+        e.preventDefault();
+        const newContent = textBeforeCursor + '\n\n' + textAfterCursor;
+        handlePageContentChange(pageIndex, newContent);
+        
+        // Focus will be handled by the effect
+        setTimeout(() => {
+          const updatedTextarea = textareaRefs.current[pageIndex];
+          if (updatedTextarea) {
+            updatedTextarea.focus();
+            updatedTextarea.setSelectionRange(cursorPosition + 2, cursorPosition + 2);
+          }
+        }, 50);
+      }
+    }
   };
 
   const focusPage = (pageIndex: number) => {
@@ -197,6 +227,7 @@ export default function WordStylePagesEditor({
                   }}
                   value={pageContent}
                   onChange={(e) => handlePageContentChange(pageIndex, e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(pageIndex, e)}
                   placeholder={pageIndex === 0 ? "Start writing your document..." : ""}
                   spellCheck={true}
                 />
