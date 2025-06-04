@@ -466,6 +466,8 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
               showPageNumbers={headerFooterSettings.pageNumbers}
               showHeader={!!headerFooterSettings.header}
               readOnly={session?.status === 'graded'}
+              pastedContent={pastedContents}
+              showCopyPasteHighlights={session?.status === 'graded'}
             />
           </CopyPasteDetector>
         </div>

@@ -9,6 +9,8 @@ interface SingleDocumentEditorProps {
   showPageNumbers?: boolean;
   showHeader?: boolean;
   readOnly?: boolean;
+  pastedContent?: any[];
+  showCopyPasteHighlights?: boolean;
 }
 
 const PAGE_HEIGHT = 1122; // 11in at 96dpi
@@ -25,12 +27,49 @@ export default function SingleDocumentEditor({
   assignmentTitle = "",
   showPageNumbers = true,
   showHeader = true,
-  readOnly = false
+  readOnly = false,
+  pastedContent = [],
+  showCopyPasteHighlights = false
 }: SingleDocumentEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [pages, setPages] = useState<number[]>([]);
   const [isSpellCheckActive, setIsSpellCheckActive] = useState(false);
   const [spellErrors, setSpellErrors] = useState<any[]>([]);
+
+  // Copy-paste highlighting function
+  const highlightCopyPasteContent = (text: string, pastedData: any[]): string => {
+    if (!showCopyPasteHighlights || !pastedData || pastedData.length === 0) {
+      return text;
+    }
+
+    let highlightedText = text;
+    
+    pastedData.forEach((paste: any) => {
+      if (paste.text && typeof paste.text === 'string') {
+        const pastedText = paste.text;
+        const sentences = pastedText.split(/[.!?]+/).filter(s => s.trim().length > 0);
+        
+        sentences.forEach(sentence => {
+          const trimmedSentence = sentence.trim();
+          if (trimmedSentence.length < 10) return;
+          
+          // Find this sentence in the document with spell corrections
+          const words = trimmedSentence.toLowerCase().split(/\s+/);
+          const regex = new RegExp(
+            words.map(word => `\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`).join('\\s+'),
+            'gi'
+          );
+          
+          // Highlight with red background for copy-paste detection
+          highlightedText = highlightedText.replace(regex, (match) => {
+            return `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600; padding: 2px 4px; border-radius: 3px;" title="Copy-pasted content detected">${match}</span>`;
+          });
+        });
+      }
+    });
+
+    return highlightedText;
+  };
 
   // Calculate how many pages are needed based on content length
   function calculatePageCount(text: string) {
@@ -130,6 +169,26 @@ export default function SingleDocumentEditor({
                 }}
                 dangerouslySetInnerHTML={{
                   __html: highlightMisspelledWords(content, spellErrors)
+                }}
+              />
+            )}
+            
+            {/* Copy-paste highlighting overlay for graded assignments */}
+            {showCopyPasteHighlights && pastedContent.length > 0 && (
+              <div 
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  fontFamily: "'Times New Roman', serif",
+                  fontSize: "12pt",
+                  lineHeight: "2.0",
+                  padding: `${PAGE_PADDING}px`,
+                  whiteSpace: 'pre-wrap',
+                  wordWrap: 'break-word',
+                  color: 'transparent',
+                  zIndex: 2
+                }}
+                dangerouslySetInnerHTML={{
+                  __html: highlightCopyPasteContent(content, pastedContent)
                 }}
               />
             )}
