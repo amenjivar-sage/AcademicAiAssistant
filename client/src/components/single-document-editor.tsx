@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Bold } from 'lucide-react';
 import BubbleSpellCheckPanel from './bubble-spell-check-panel';
 
 interface SingleDocumentEditorProps {
@@ -37,6 +39,10 @@ export default function SingleDocumentEditor({
   const [pages, setPages] = useState<number[]>([]);
   const [isSpellCheckActive, setIsSpellCheckActive] = useState(false);
   const [spellErrors, setSpellErrors] = useState<any[]>([]);
+  const [selectedText, setSelectedText] = useState<string>('');
+  const [selectionStart, setSelectionStart] = useState<number>(0);
+  const [selectionEnd, setSelectionEnd] = useState<number>(0);
+  const [showFormatting, setShowFormatting] = useState<boolean>(false);
 
   // Copy-paste highlighting function
   const highlightCopyPasteContent = (text: string, pastedData: any[]): string => {
@@ -211,8 +217,78 @@ export default function SingleDocumentEditor({
     return highlightedText;
   };
 
+  // Handle text selection for formatting
+  const handleTextSelection = () => {
+    if (textareaRef.current) {
+      const start = textareaRef.current.selectionStart;
+      const end = textareaRef.current.selectionEnd;
+      const selected = content.substring(start, end);
+      
+      setSelectionStart(start);
+      setSelectionEnd(end);
+      setSelectedText(selected);
+      setShowFormatting(selected.length > 0);
+    }
+  };
+
+  // Apply bold formatting to selected text
+  const applyBoldFormatting = () => {
+    if (selectedText.length > 0 && textareaRef.current) {
+      const beforeText = content.substring(0, selectionStart);
+      const afterText = content.substring(selectionEnd);
+      
+      // Check if text is already bold (surrounded by **)
+      const isBold = selectedText.startsWith('**') && selectedText.endsWith('**');
+      
+      let newText;
+      if (isBold) {
+        // Remove bold formatting
+        newText = beforeText + selectedText.slice(2, -2) + afterText;
+      } else {
+        // Add bold formatting
+        newText = beforeText + '**' + selectedText + '**' + afterText;
+      }
+      
+      onContentChange(newText);
+      
+      // Maintain focus and cursor position
+      setTimeout(() => {
+        if (textareaRef.current) {
+          const newCursorPos = isBold ? selectionEnd - 4 : selectionEnd + 4;
+          textareaRef.current.focus();
+          textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
+        }
+      }, 0);
+    }
+  };
+
+  // Handle keyboard shortcuts
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!readOnly && e.ctrlKey && e.key === 'b') {
+      e.preventDefault();
+      applyBoldFormatting();
+    }
+  };
+
   return (
     <div className="bg-gray-100 min-h-screen relative overflow-y-auto">
+      {/* Formatting Toolbar */}
+      {showFormatting && !readOnly && (
+        <div className="fixed top-16 left-1/2 transform -translate-x-1/2 z-50 bg-white border border-gray-300 rounded-lg shadow-lg p-2">
+          <div className="flex items-center space-x-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={applyBoldFormatting}
+              className="h-8 w-8 p-0"
+              title="Bold (Ctrl+B)"
+            >
+              <Bold className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Control Panel */}
       <div className="fixed top-4 right-4 z-50 space-y-2">
         <button
@@ -333,6 +409,10 @@ export default function SingleDocumentEditor({
                   handleContentChange(e.target.value);
                 }
               }}
+              onSelect={handleTextSelection}
+              onMouseUp={handleTextSelection}
+              onKeyUp={handleTextSelection}
+              onKeyDown={handleKeyDown}
               placeholder={readOnly ? "" : "Start writing your document..."}
               spellCheck={false}
               readOnly={readOnly}
