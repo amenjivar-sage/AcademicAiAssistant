@@ -105,14 +105,32 @@ export default function SingleDocumentEditor({
     const sortedComments = [...comments].sort((a, b) => b.startIndex - a.startIndex);
     
     sortedComments.forEach((comment: any) => {
-      const beforeText = highlightedText.substring(0, comment.startIndex);
-      const commentedText = highlightedText.substring(comment.startIndex, comment.endIndex);
-      const afterText = highlightedText.substring(comment.endIndex);
-      
-      // Create highlighted span with blue background and a tooltip showing the comment
-      const highlightedSpan = `<span style="background-color: #dbeafe; border-bottom: 2px solid #3b82f6; color: #1e40af; font-weight: 500; padding: 1px 2px; border-radius: 2px; position: relative; cursor: help;" title="Teacher Comment: ${comment.comment.replace(/"/g, '&quot;')}" data-comment-id="${comment.id}">${commentedText}</span>`;
-      
-      highlightedText = beforeText + highlightedSpan + afterText;
+      // Check if the comment indices are valid for current text
+      if (comment.startIndex >= 0 && comment.endIndex <= text.length && comment.startIndex < comment.endIndex) {
+        const beforeText = highlightedText.substring(0, comment.startIndex);
+        const commentedText = highlightedText.substring(comment.startIndex, comment.endIndex);
+        const afterText = highlightedText.substring(comment.endIndex);
+        
+        // Create highlighted span with blue background and a tooltip showing the comment
+        const highlightedSpan = `<span style="background-color: #dbeafe; border-bottom: 2px solid #3b82f6; color: #1e40af; font-weight: 500; padding: 1px 2px; border-radius: 2px; cursor: help;" title="Teacher Comment: ${comment.comment.replace(/"/g, '&quot;')}" data-comment-id="${comment.id}">${commentedText}</span>`;
+        
+        highlightedText = beforeText + highlightedSpan + afterText;
+      } else {
+        // Try to find the commented text anywhere in the document
+        const searchText = comment.highlightedText;
+        if (searchText && text.includes(searchText)) {
+          const startIndex = text.indexOf(searchText);
+          const endIndex = startIndex + searchText.length;
+          
+          const beforeText = highlightedText.substring(0, startIndex);
+          const commentedText = highlightedText.substring(startIndex, endIndex);
+          const afterText = highlightedText.substring(endIndex);
+          
+          const highlightedSpan = `<span style="background-color: #dbeafe; border-bottom: 2px solid #3b82f6; color: #1e40af; font-weight: 500; padding: 1px 2px; border-radius: 2px; cursor: help;" title="Teacher Comment: ${comment.comment.replace(/"/g, '&quot;')}" data-comment-id="${comment.id}">${commentedText}</span>`;
+          
+          highlightedText = beforeText + highlightedSpan + afterText;
+        }
+      }
     });
 
     return highlightedText;
@@ -241,8 +259,7 @@ export default function SingleDocumentEditor({
                     whiteSpace: 'pre-wrap',
                     wordWrap: 'break-word',
                     color: 'transparent',
-                    zIndex: 2,
-                    backgroundColor: 'rgba(255, 0, 0, 0.1)' // Debug: light red background to see overlay
+                    zIndex: 2
                   }}
                   dangerouslySetInnerHTML={{
                     __html: highlightedHtml
