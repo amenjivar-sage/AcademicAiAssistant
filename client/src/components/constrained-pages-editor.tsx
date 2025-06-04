@@ -59,8 +59,9 @@ export default function ConstrainedPagesEditor({
   // Update pages when content changes (avoid infinite loop)
   useEffect(() => {
     const newPages = splitContentIntoPages(content);
-    // Only update if pages actually changed
-    if (JSON.stringify(newPages) !== JSON.stringify(pages)) {
+    // Only update if pages actually changed and content is different from current pages
+    const currentContent = pages.join('\n');
+    if (content !== currentContent) {
       setPages(newPages);
       textareaRefs.current = textareaRefs.current.slice(0, newPages.length);
     }
@@ -72,10 +73,13 @@ export default function ConstrainedPagesEditor({
     
     // Check if any page exceeds line limit and redistribute content
     const maxLinesPerPage = 22;
+    let needsReflow = false;
+    
     for (let i = 0; i < updatedPages.length; i++) {
       const pageLines = updatedPages[i].split('\n');
       
       if (pageLines.length > maxLinesPerPage) {
+        needsReflow = true;
         // Keep only allowed lines on current page
         const allowedLines = pageLines.slice(0, maxLinesPerPage);
         const overflowLines = pageLines.slice(maxLinesPerPage);
@@ -94,7 +98,7 @@ export default function ConstrainedPagesEditor({
         }
         
         // If we modified content, focus next page
-        if (i === pageIndex) {
+        if (i === pageIndex && needsReflow) {
           setTimeout(() => {
             const nextTextarea = textareaRefs.current[i + 1];
             if (nextTextarea) {
@@ -106,8 +110,12 @@ export default function ConstrainedPagesEditor({
       }
     }
     
+    // Update local state first
     setPages(updatedPages);
-    onContentChange(updatedPages.join('\n'));
+    
+    // Then notify parent with the combined content
+    const combinedContent = updatedPages.join('\n');
+    onContentChange(combinedContent);
   };
 
   const focusPage = (pageIndex: number) => {
