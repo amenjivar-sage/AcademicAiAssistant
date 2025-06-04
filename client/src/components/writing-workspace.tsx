@@ -416,7 +416,16 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
         {/* Writing Content */}
         <div className="flex-1 overflow-auto">
           {/* Grading Feedback Banner for Graded Assignments */}
-          {session?.status === 'graded' && (
+          {(() => {
+            console.log('Grading feedback check:', {
+              sessionStatus: session?.status,
+              sessionGrade: session?.grade,
+              sessionFeedback: session?.teacherFeedback,
+              sessionUpdated: session?.updatedAt,
+              shouldShow: session?.status === 'graded'
+            });
+            return session?.status === 'graded';
+          })() && (
             <div className="bg-green-50 border-b border-green-200 p-4 mx-6 mt-4 rounded-lg">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
