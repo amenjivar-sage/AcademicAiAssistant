@@ -1,4 +1,4 @@
-import { useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
+import { useEffect, useRef, forwardRef, useImperativeHandle, useState } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
@@ -23,6 +23,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
   placeholder = "Start writing..."
 }, ref) => {
   const quillRef = useRef<ReactQuill>(null);
+  const [pageCount, setPageCount] = useState(1);
 
   useImperativeHandle(ref, () => ({
     focus: () => {
@@ -105,12 +106,40 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
         .document-page {
           background: white;
           width: 8.5in;
-          min-height: 11in;
+          height: 1000px;
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
           border: 1px solid #e5e7eb;
           position: relative;
           display: flex;
           flex-direction: column;
+          padding: 72px;
+          box-sizing: border-box;
+        }
+
+        .document-page:not(:last-child):after {
+          content: '';
+          position: absolute;
+          bottom: -10px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 80%;
+          height: 2px;
+          background: repeating-linear-gradient(
+            to right,
+            #cbd5e1 0,
+            #cbd5e1 10px,
+            transparent 10px,
+            transparent 20px
+          );
+        }
+
+        .page-number {
+          position: absolute;
+          bottom: 20px;
+          right: 72px;
+          font-family: 'Times New Roman', serif;
+          font-size: 10pt;
+          color: #6b7280;
         }
 
         .ql-container {
@@ -120,20 +149,22 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
           flex: 1;
           display: flex;
           flex-direction: column;
+          height: 100%;
+          overflow: hidden;
         }
 
         .ql-editor {
           font-family: 'Times New Roman', serif !important;
           font-size: 12pt !important;
           line-height: 2.0 !important;
-          padding: 96px !important;
+          padding: 0 !important;
           background: transparent !important;
           border: none !important;
           margin: 0 !important;
           width: 100% !important;
-          min-height: calc(11in - 192px) !important;
+          height: 100% !important;
           flex: 1;
-          overflow: visible !important;
+          overflow: auto !important;
         }
         
         .ql-editor.ql-blank::before {
@@ -144,6 +175,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
 
         .ql-editor p {
           margin-bottom: 0 !important;
+          page-break-inside: avoid;
         }
 
         .ql-editor strong {
@@ -154,7 +186,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
           display: none !important;
         }
 
-        /* Custom scrollbar for the editor area */
+        /* Custom scrollbar */
         .rich-text-editor-container {
           scrollbar-width: thin;
           scrollbar-color: #cbd5e1 #f1f5f9;
@@ -176,21 +208,60 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
         .rich-text-editor-container::-webkit-scrollbar-thumb:hover {
           background: #94a3b8;
         }
+
+        /* Multi-page content flow */
+        .ql-editor {
+          position: relative;
+        }
+
+        .ql-editor::after {
+          content: '';
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          height: 2px;
+          background: repeating-linear-gradient(
+            to right,
+            transparent 0,
+            transparent 1000px,
+            #e5e7eb 1000px,
+            #e5e7eb calc(1000px + 2px),
+            transparent calc(1000px + 2px)
+          );
+        }
       `}</style>
       
       <div className="document-pages">
-        <div className="document-page">
-          <ReactQuill
-            ref={quillRef}
-            value={content}
-            onChange={handleChange}
-            modules={modules}
-            formats={formats}
-            readOnly={readOnly}
-            placeholder={placeholder}
-            theme="snow"
-          />
-        </div>
+        {Array.from({ length: pageCount }, (_, index) => (
+          <div key={index} className="document-page">
+            {index === 0 ? (
+              <ReactQuill
+                ref={quillRef}
+                value={content}
+                onChange={handleChange}
+                modules={modules}
+                formats={formats}
+                readOnly={readOnly}
+                placeholder={placeholder}
+                theme="snow"
+              />
+            ) : (
+              <div className="overflow-page" style={{
+                fontFamily: 'Times New Roman, serif',
+                fontSize: '12pt',
+                lineHeight: '2.0',
+                height: '100%',
+                overflow: 'hidden'
+              }}>
+                {/* Content overflow for additional pages */}
+              </div>
+            )}
+            <div className="page-number">
+              {index + 1}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
