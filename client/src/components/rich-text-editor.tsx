@@ -1,236 +1,138 @@
-import React, { useRef, useEffect, useState } from 'react';
+import { useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 
 interface RichTextEditorProps {
   content: string;
   onContentChange: (content: string) => void;
-  disabled?: boolean;
+  onTextSelection?: (selectedText: string) => void;
+  readOnly?: boolean;
   placeholder?: string;
-  onFormatRef?: React.MutableRefObject<((command: string, value?: string) => void) | null>;
-  className?: string;
-  style?: React.CSSProperties;
 }
 
-export default function RichTextEditor({
+export interface RichTextEditorHandle {
+  focus: () => void;
+  getEditor: () => ReactQuill | null;
+}
+
+const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
   content,
   onContentChange,
-  disabled = false,
-  placeholder = "Start writing...",
-  onFormatRef,
-  className = "",
-  style = {}
-}: RichTextEditorProps) {
-  const editorRef = useRef<HTMLDivElement>(null);
-  const [isUpdating, setIsUpdating] = useState(false);
+  onTextSelection,
+  readOnly = false,
+  placeholder = "Start writing..."
+}, ref) => {
+  const quillRef = useRef<ReactQuill>(null);
 
-  // Set up the editor
-  useEffect(() => {
-    if (editorRef.current && !disabled) {
-      editorRef.current.focus();
-    }
-  }, [disabled]);
-
-  // Handle content updates from parent
-  useEffect(() => {
-    if (editorRef.current && !isUpdating) {
-      const currentText = editorRef.current.innerText || '';
-      
-      // Always treat content as plain text to prevent XSS
-      // The rich text editor will handle formatting through user interactions
-      if (currentText !== content) {
-        editorRef.current.innerText = content;
+  useImperativeHandle(ref, () => ({
+    focus: () => {
+      if (quillRef.current) {
+        quillRef.current.focus();
       }
-    }
-  }, [content, isUpdating]);
+    },
+    getEditor: () => quillRef.current
+  }));
 
-  // Handle input changes with proper line break preservation
-  const handleInput = () => {
-    if (editorRef.current) {
-      setIsUpdating(true);
-      
-      // Get the plain text with proper line breaks preserved
-      const plainText = editorRef.current.innerText || '';
-      
-      // Convert plain text line breaks to proper format for saving
-      const contentToSave = plainText;
-      
-      onContentChange(contentToSave);
-      setTimeout(() => setIsUpdating(false), 0);
-    }
+  // Custom toolbar configuration
+  const modules = {
+    toolbar: false, // We'll use custom formatting buttons
+    clipboard: {
+      matchVisual: false,
+    },
   };
 
-  // Handle formatting commands
-  const executeCommand = (command: string, value?: string) => {
-    if (disabled || !editorRef.current) return;
+  const formats = [
+    'bold', 'italic', 'underline', 'strike',
+    'list', 'bullet', 'indent',
+    'link', 'color', 'background'
+  ];
+
+  const handleChange = (value: string, delta: any, source: any, editor: any) => {
+    onContentChange(value);
     
-    console.log('Executing format command:', command, value);
-    
-    try {
-      // Focus the editor first to ensure proper selection
-      editorRef.current.focus();
-      
-      // Handle font formatting with proper cleanup to prevent nesting
-      if (command === 'fontName' && value) {
-        const selection = window.getSelection();
-        if (selection && selection.rangeCount > 0) {
-          const range = selection.getRangeAt(0);
-          
-          if (!range.collapsed && range.toString().trim()) {
-            const selectedText = range.toString();
-            
-            // Create a clean span with just the font family
-            const span = document.createElement('span');
-            span.style.fontFamily = value;
-            span.textContent = selectedText;
-            
-            range.deleteContents();
-            range.insertNode(span);
-            
-            // Restore selection
-            selection.removeAllRanges();
-            const newRange = document.createRange();
-            newRange.selectNodeContents(span);
-            selection.addRange(newRange);
-          }
-        }
-      } else if (command === 'fontSize' && value) {
-        const selection = window.getSelection();
-        if (selection && selection.rangeCount > 0) {
-          const range = selection.getRangeAt(0);
-          
-          if (!range.collapsed && range.toString().trim()) {
-            const selectedText = range.toString();
-            
-            // Create a clean span with just the font size
-            const span = document.createElement('span');
-            span.style.fontSize = value;
-            span.textContent = selectedText;
-            
-            range.deleteContents();
-            range.insertNode(span);
-            
-            // Restore selection
-            selection.removeAllRanges();
-            const newRange = document.createRange();
-            newRange.selectNodeContents(span);
-            selection.addRange(newRange);
-          }
-        }
-      } else if (command === 'foreColor' && value) {
-        // Handle text color specifically
-        const selection = window.getSelection();
-        if (selection && selection.rangeCount > 0) {
-          const range = selection.getRangeAt(0);
-          const span = document.createElement('span');
-          span.style.color = value;
-          try {
-            range.surroundContents(span);
-          } catch (e) {
-            const contents = range.extractContents();
-            span.appendChild(contents);
-            range.insertNode(span);
-          }
-          selection.removeAllRanges();
-          selection.addRange(range);
-        }
-      } else if (command === 'insertUnorderedList' || command === 'insertOrderedList') {
-        // Simple approach: use execCommand directly
-        editorRef.current.focus();
-        const success = document.execCommand(command, false, value);
-        console.log('List command executed:', command, 'Success:', success);
-        
-        // Force the editor to maintain HTML formatting for lists
-        setTimeout(() => {
-          if (editorRef.current) {
-            // Preserve current HTML content to keep list structure
-            const currentHTML = editorRef.current.innerHTML;
-            console.log('Current HTML after list:', currentHTML);
-            handleInput();
-          }
-        }, 10);
-        return;
+    // Handle text selection for formatting feedback
+    if (onTextSelection) {
+      const selection = editor.getSelection();
+      if (selection && selection.length > 0) {
+        const selectedText = editor.getText(selection.index, selection.length);
+        onTextSelection(selectedText);
       } else {
-        // Use execCommand for other formatting
-        const success = document.execCommand(command, false, value);
-        console.log('execCommand result:', success, command, value);
+        onTextSelection('');
       }
-      
-      // Trigger content update after formatting
-      setTimeout(() => handleInput(), 10);
-    } catch (error) {
-      console.error('Error executing command:', command, error);
     }
   };
 
-  // Expose the format function to parent
+  // Apply bold formatting function
+  const applyBold = () => {
+    if (quillRef.current) {
+      const editor = quillRef.current.getEditor();
+      const selection = editor.getSelection();
+      
+      if (selection) {
+        const currentFormat = editor.getFormat(selection);
+        const isBold = currentFormat.bold;
+        editor.format('bold', !isBold);
+      }
+    }
+  };
+
+  // Expose formatting functions to parent
   useEffect(() => {
-    if (onFormatRef) {
-      onFormatRef.current = executeCommand;
+    if (ref && typeof ref === 'object' && ref.current) {
+      (ref.current as any).applyBold = applyBold;
     }
-  }, [onFormatRef, executeCommand]);
-
-  // Handle key events for proper Enter key behavior
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      
-      // Insert a line break at the current cursor position
-      const selection = window.getSelection();
-      if (selection && selection.rangeCount > 0) {
-        const range = selection.getRangeAt(0);
-        range.deleteContents();
-        
-        // Create a text node with a line break
-        const lineBreak = document.createTextNode('\n');
-        range.insertNode(lineBreak);
-        
-        // Move cursor after the line break
-        range.setStartAfter(lineBreak);
-        range.setEndAfter(lineBreak);
-        selection.removeAllRanges();
-        selection.addRange(range);
-        
-        // Trigger content update
-        handleInput();
-      }
-    }
-  };
-
-  // Handle paste events to clean up formatting
-  const handlePaste = (e: React.ClipboardEvent) => {
-    e.preventDefault();
-    const paste = e.clipboardData.getData('text/plain');
-    document.execCommand('insertText', false, paste);
-  };
-
-  // Convert HTML content to plain text for word counting and other operations
-  const getPlainText = () => {
-    if (editorRef.current) {
-      return editorRef.current.innerText || editorRef.current.textContent || '';
-    }
-    return '';
-  };
+  }, [ref]);
 
   return (
-    <div
-      ref={editorRef}
-      contentEditable={!disabled}
-      onInput={handleInput}
-      onKeyDown={handleKeyDown}
-      onPaste={handlePaste}
-      className={`outline-none ${className}`}
-      style={{
-        minHeight: '100%',
-        fontFamily: '"Times New Roman", serif',
-        fontSize: '16px',
-        lineHeight: '1.6',
-        direction: 'ltr',
-        textAlign: 'left',
-        unicodeBidi: 'normal',
-        whiteSpace: 'pre-wrap', // Preserve line breaks and spaces
-        ...style
-      }}
-      data-placeholder={placeholder}
-      suppressContentEditableWarning={true}
-    />
+    <div className="rich-text-editor-container">
+      <style>{`
+        .ql-editor {
+          font-family: 'Times New Roman', serif !important;
+          font-size: 12pt !important;
+          line-height: 2.0 !important;
+          padding: 96px !important;
+          min-height: 11in !important;
+          width: 8.5in !important;
+          margin: 0 auto !important;
+          background: white !important;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+          border: 1px solid #e5e7eb !important;
+        }
+        
+        .ql-container {
+          border: none !important;
+          font-family: 'Times New Roman', serif !important;
+        }
+        
+        .ql-editor.ql-blank::before {
+          font-family: 'Times New Roman', serif !important;
+          font-size: 12pt !important;
+          color: #9ca3af !important;
+        }
+
+        .ql-editor p {
+          margin-bottom: 0 !important;
+        }
+
+        .ql-editor strong {
+          font-weight: bold !important;
+        }
+      `}</style>
+      
+      <ReactQuill
+        ref={quillRef}
+        value={content}
+        onChange={handleChange}
+        modules={modules}
+        formats={formats}
+        readOnly={readOnly}
+        placeholder={placeholder}
+        theme="snow"
+      />
+    </div>
   );
-}
+});
+
+RichTextEditor.displayName = 'RichTextEditor';
+
+export default RichTextEditor;

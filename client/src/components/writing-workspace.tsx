@@ -13,7 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, Settings, Send, AlertTriangle, Shield, FileText, MessageSquare, Download, Save, GraduationCap, Trophy, Type, Bold, ChevronDown, ChevronUp } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import CopyPasteDetector from './copy-paste-detector';
-import SingleDocumentEditor from './single-document-editor';
+import RichTextEditor, { RichTextEditorHandle } from './rich-text-editor';
 import DocumentDownload from './document-download';
 import AiAssistant from './ai-assistant';
 
@@ -51,7 +51,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   const [isFormattingMinimized, setIsFormattingMinimized] = useState(false);
   const [selectedText, setSelectedText] = useState('');
 
-  const contentRef = useRef<HTMLTextAreaElement>(null);
+  const contentRef = useRef<RichTextEditorHandle>(null);
   const formatRef = useRef<((command: string, value?: string) => void) | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -462,8 +462,16 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                           <div className="flex flex-wrap gap-1">
                             <Button
                               onClick={() => {
-                                if (formatRef.current) {
-                                  formatRef.current('bold');
+                                if (contentRef.current) {
+                                  const editor = contentRef.current.getEditor();
+                                  if (editor) {
+                                    const quillEditor = editor.getEditor();
+                                    const selection = quillEditor.getSelection();
+                                    if (selection) {
+                                      const currentFormat = quillEditor.getFormat(selection);
+                                      quillEditor.format('bold', !currentFormat.bold);
+                                    }
+                                  }
                                 }
                               }}
                               size="sm"
@@ -551,24 +559,16 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
             onPasteDetected={handlePasteDetected}
             className="min-h-full"
           >
-            <SingleDocumentEditor
+            <RichTextEditor
+              ref={contentRef}
               content={content}
               onContentChange={(newContent) => {
-                console.log('Content changed from single editor:', newContent);
+                console.log('Content changed from rich editor:', newContent);
                 setContent(newContent);
               }}
-              studentName={session?.title || "Student Document"}
-              assignmentTitle={assignment?.title}
-              showPageNumbers={headerFooterSettings.pageNumbers}
-              showHeader={!!headerFooterSettings.header}
-              readOnly={session?.status === 'graded'}
-              pastedContent={pastedContents}
-              showCopyPasteHighlights={session?.status === 'graded'}
-              inlineComments={inlineComments}
               onTextSelection={setSelectedText}
-              onFormatRef={(formatFn) => {
-                formatRef.current = formatFn;
-              }}
+              readOnly={session?.status === 'graded'}
+              placeholder="Start writing your assignment..."
             />
           </CopyPasteDetector>
         </div>
