@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { 
@@ -23,7 +24,8 @@ import {
   Clock,
   Target,
   Eye,
-  Filter
+  Filter,
+  ChevronDown
 } from 'lucide-react';
 
 interface StudentAnalytics {
@@ -88,16 +90,19 @@ export default function StudentAnalyticsManagement() {
   });
 
   // Export function
-  const handleExport = async () => {
+  const handleExport = async (format: 'csv' | 'excel') => {
     try {
-      const response = await apiRequest('GET', '/api/admin/export-student-analytics');
-      const data = await response.text();
+      const endpoint = format === 'excel' 
+        ? '/api/admin/export-student-analytics-excel'
+        : '/api/admin/export-student-analytics';
       
-      const blob = new Blob([data], { type: 'text/csv' });
+      const response = await fetch(endpoint);
+      const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `student-analytics-${new Date().toISOString().split('T')[0]}.csv`;
+      const fileExtension = format === 'excel' ? 'xls' : 'csv';
+      a.download = `student-analytics-${new Date().toISOString().split('T')[0]}.${fileExtension}`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -105,7 +110,7 @@ export default function StudentAnalyticsManagement() {
       
       toast({
         title: "Export Successful",
-        description: "Student analytics data has been exported to CSV.",
+        description: `Student analytics data has been exported to ${format.toUpperCase()}.`,
       });
     } catch (error) {
       toast({

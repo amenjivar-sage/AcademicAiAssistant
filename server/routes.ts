@@ -1108,7 +1108,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Export student analytics
+  // Export student analytics (CSV)
   app.get("/api/admin/export-student-analytics", async (req, res) => {
     try {
       const currentUser = await getCurrentUser();
@@ -1163,6 +1163,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error exporting student analytics:", error);
       res.status(500).json({ message: "Failed to export student analytics" });
+    }
+  });
+
+  // Export student analytics (Excel)
+  app.get("/api/admin/export-student-analytics-excel", async (req, res) => {
+    try {
+      const currentUser = await getCurrentUser();
+      if (!currentUser || currentUser.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      // Get student analytics data (reuse the logic from above)
+      const analyticsResponse = await fetch(`${req.protocol}://${req.get('host')}/api/admin/student-analytics`, {
+        headers: { 'Cookie': req.headers.cookie || '' }
+      });
+      const studentAnalytics = await analyticsResponse.json();
+      
+      // Create Excel workbook manually (simple XML format)
+      const createExcelXML = (data: any[]) => {
+        const headers = [
+          'ID', 'First Name', 'Last Name', 'Email', 'Grade', 
+          'Total Assignments', 'Completed Assignments', 'Total Word Count',
+          'Average Word Count', 'Average Grade', 'AI Interactions',
+          'Total Time Spent (min)', 'Improvement Score', 'Last Activity',
+          'Strongest Subject', 'Areas for Improvement'
+        ];
+        
+        let xml = `<?xml version="1.0"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+<Worksheet ss:Name="Student Analytics">
+<Table>`;
+
+        // Add header row
+        xml += '<Row>';
+        headers.forEach(header => {
+          xml += `<Cell><Data ss:Type="String">${header}</Data></Cell>`;
+        });
+        xml += '</Row>';
+
+        // Add data rows
+        data.forEach((student: any) => {
+          xml += '<Row>';
+          xml += `<Cell><Data ss:Type="Number">${student.id}</Data></Cell>`;
+          xml += `<Cell><Data ss:Type="String">${student.firstName}</Data></Cell>`;
+          xml += `<Cell><Data ss:Type="String">${student.lastName}</Data></Cell>`;
+          xml += `<Cell><Data ss:Type="String">${student.email}</Data></Cell>`;
+          xml += `<Cell><Data ss:Type="String">${student.grade}</Data></Cell>`;
+          xml += `<Cell><Data ss:Type="Number">${student.totalAssignments}</Data></Cell>`;
+          xml += `<Cell><Data ss:Type="Number">${student.completedAssignments}</Data></Cell>`;
+          xml += `<Cell><Data ss:Type="Number">${student.totalWordCount}</Data></Cell>`;
+          xml += `<Cell><Data ss:Type="Number">${student.averageWordCount}</Data></Cell>`;
+          xml += `<Cell><Data ss:Type="String">${student.averageGrade}</Data></Cell>`;
+          xml += `<Cell><Data ss:Type="Number">${student.aiInteractions}</Data></Cell>`;
+          xml += `<Cell><Data ss:Type="Number">${student.totalTimeSpent}</Data></Cell>`;
+          xml += `<Cell><Data ss:Type="Number">${student.improvementScore}</Data></Cell>`;
+          xml += `<Cell><Data ss:Type="String">${student.lastActivity}</Data></Cell>`;
+          xml += `<Cell><Data ss:Type="String">${student.strongestSubject}</Data></Cell>`;
+          xml += `<Cell><Data ss:Type="String">${student.areasForImprovement.join('; ')}</Data></Cell>`;
+          xml += '</Row>';
+        });
+
+        xml += '</Table></Worksheet></Workbook>';
+        return xml;
+      };
+      
+      const excelContent = createExcelXML(studentAnalytics);
+      
+      res.setHeader('Content-Type', 'application/vnd.ms-excel');
+      res.setHeader('Content-Disposition', 'attachment; filename="student-analytics.xls"');
+      res.send(excelContent);
+    } catch (error) {
+      console.error("Error exporting student analytics to Excel:", error);
+      res.status(500).json({ message: "Failed to export student analytics to Excel" });
     }
   });
 
