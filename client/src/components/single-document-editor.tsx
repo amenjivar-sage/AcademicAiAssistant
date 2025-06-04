@@ -291,10 +291,42 @@ export default function SingleDocumentEditor({
               />
             )}
             
+            {/* Teacher inline comments as visible badges */}
+            {readOnly && inlineComments.length > 0 && (
+              <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 4 }}>
+                {inlineComments.map((comment: any) => {
+                  const text = comment.highlightedText;
+                  if (text && content.includes(text)) {
+                    const startIndex = content.indexOf(text);
+                    // Calculate approximate position (this is simplified)
+                    const lines = content.substring(0, startIndex).split('\n').length;
+                    const topPosition = (lines - 1) * 24 + PAGE_PADDING; // 24px line height approximation
+                    
+                    return (
+                      <div
+                        key={comment.id}
+                        className="absolute bg-blue-100 border-2 border-blue-500 text-blue-800 px-2 py-1 rounded text-xs font-medium shadow-lg pointer-events-auto"
+                        style={{
+                          top: `${topPosition}px`,
+                          right: '10px',
+                          maxWidth: '200px',
+                          zIndex: 5
+                        }}
+                        title={`Comment on: "${text.substring(0, 50)}..."`}
+                      >
+                        💬 {comment.comment.trim()}
+                      </div>
+                    );
+                  }
+                  return null;
+                })}
+              </div>
+            )}
+
             {/* Combined highlighting overlay for graded assignments */}
             {readOnly && (showCopyPasteHighlights || inlineComments.length > 0) && (
               <div 
-                className="absolute inset-0 pointer-events-auto"
+                className="absolute inset-0 pointer-events-none"
                 style={{
                   fontFamily: "'Times New Roman', serif",
                   fontSize: "12pt",
