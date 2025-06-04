@@ -24,6 +24,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
 }, ref) => {
   const quillRef = useRef<ReactQuill>(null);
   const [pageCount, setPageCount] = useState(1);
+  const [contentOverflow, setContentOverflow] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useImperativeHandle(ref, () => ({
@@ -51,6 +52,16 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
 
   const handleChange = (value: string, delta: any, source: any, editor: any) => {
     onContentChange(value);
+    
+    // Check for content overflow
+    setTimeout(() => {
+      if (quillRef.current) {
+        const editorElement = quillRef.current.getEditor().root;
+        const scrollHeight = editorElement.scrollHeight;
+        const clientHeight = editorElement.clientHeight;
+        setContentOverflow(scrollHeight > clientHeight);
+      }
+    }, 100);
     
     // Calculate approximate page count based on content length
     const textLength = value.replace(/<[^>]*>/g, '').length;
@@ -120,10 +131,13 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
         .single-document-page {
           background: white;
           width: 8.5in;
+          height: 1000px;
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
           border: 1px solid #e5e7eb;
           position: relative;
-          min-height: 1000px;
+          overflow-y: auto;
+          display: flex;
+          flex-direction: column;
         }
 
         .document-page:not(:last-child):after {
@@ -159,7 +173,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
           flex: 1;
           display: flex;
           flex-direction: column;
-          height: 100%;
+          height: calc(1000px - 40px);
           overflow: hidden;
         }
 
@@ -167,7 +181,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
           font-family: 'Times New Roman', serif !important;
           font-size: 12pt !important;
           line-height: 2.0 !important;
-          padding: 0 !important;
+          padding: 72px !important;
           background: transparent !important;
           border: none !important;
           margin: 0 !important;
@@ -175,6 +189,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
           height: 100% !important;
           flex: 1;
           overflow: auto !important;
+          box-sizing: border-box !important;
         }
         
         .ql-editor.ql-blank::before {
