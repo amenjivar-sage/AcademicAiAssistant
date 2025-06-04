@@ -320,13 +320,10 @@ export default function SingleDocumentEditor({
     return highlightedText;
   };
 
-  // Render bold text visually in display mode only
+  // Render bold text visually 
   const renderFormattedText = (text: string): string => {
-    if (readOnly) {
-      // Convert **text** to bold HTML for display
-      return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    }
-    return text; // Return plain text for editing
+    // Convert **text** to bold HTML
+    return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
   };
 
   // Handle text selection for formatting
@@ -497,9 +494,27 @@ export default function SingleDocumentEditor({
               />
             )}
 
+            {/* Visual formatting overlay - always visible for bold rendering */}
+            <div 
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                fontFamily: "'Times New Roman', serif",
+                fontSize: "12pt",
+                lineHeight: "2.0",
+                padding: `${PAGE_PADDING}px`,
+                whiteSpace: 'pre-wrap',
+                wordWrap: 'break-word',
+                color: '#1f2937',
+                zIndex: 1
+              }}
+              dangerouslySetInnerHTML={{
+                __html: renderFormattedText(content)
+              }}
+            />
+
             <textarea
               ref={textareaRef}
-              className={`w-full resize-none border-none outline-none bg-white ${readOnly ? 'cursor-default text-gray-900' : 'text-gray-900'} font-serif relative`}
+              className={`w-full resize-none border-none outline-none bg-transparent ${readOnly ? 'cursor-default' : ''} font-serif relative`}
               style={{
                 fontFamily: "'Times New Roman', serif",
                 fontSize: "12pt",
@@ -509,7 +524,7 @@ export default function SingleDocumentEditor({
                 minHeight: `${pages.length * PAGE_HEIGHT_INCHES}in`,
                 width: `${PAGE_WIDTH_INCHES}in`,
                 caretColor: '#000000',
-                color: '#111827',
+                color: 'transparent',
                 margin: '0 auto'
               }}
               value={content}
