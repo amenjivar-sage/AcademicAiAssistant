@@ -494,20 +494,40 @@ export default function SingleDocumentEditor({
               />
             )}
 
-            {/* Simple textarea approach - display asterisks for now, focus on functionality */}
-            <textarea
-              ref={textareaRef}
-              className={`w-full resize-none border-none outline-none bg-white ${readOnly ? 'cursor-default' : ''} font-serif relative`}
+            {/* Formatted text overlay */}
+            <div 
+              className="absolute inset-0 pointer-events-none"
               style={{
                 fontFamily: "'Times New Roman', serif",
                 fontSize: "12pt",
                 lineHeight: "2.0",
                 padding: `${PAGE_PADDING}px`,
-                zIndex: 10,
+                whiteSpace: 'pre-wrap',
+                wordWrap: 'break-word',
+                color: '#1f2937',
+                zIndex: 2,
+                overflow: 'hidden'
+              }}
+              dangerouslySetInnerHTML={{
+                __html: renderFormattedText(content)
+              }}
+            />
+
+            {/* Transparent textarea for input */}
+            <textarea
+              ref={textareaRef}
+              className={`w-full resize-none border-none outline-none bg-transparent ${readOnly ? 'cursor-default' : ''} font-serif relative`}
+              style={{
+                fontFamily: "'Times New Roman', serif",
+                fontSize: "12pt",
+                lineHeight: "2.0",
+                padding: `${PAGE_PADDING}px`,
+                zIndex: 3,
                 minHeight: `${pages.length * PAGE_HEIGHT_INCHES}in`,
                 width: `${PAGE_WIDTH_INCHES}in`,
                 caretColor: '#000000',
-                color: '#1f2937',
+                color: 'transparent',
+                resize: 'none',
                 margin: '0 auto'
               }}
               value={content}
