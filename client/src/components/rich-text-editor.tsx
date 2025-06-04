@@ -67,13 +67,13 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     // Check for content overflow and create new page if needed
     setTimeout(() => {
       const currentRef = pageRefs.current[pageIndex];
-      if (currentRef) {
+      if (currentRef && source === 'user') {
         const editorElement = currentRef.getEditor().root;
         const scrollHeight = editorElement.scrollHeight;
-        const clientHeight = editorElement.clientHeight;
         
-        // If content overflows and this is the last page, create a new page
-        if (scrollHeight > clientHeight && pageIndex === pages.length - 1) {
+        // If content overflows (exceeds 1000px) and this is the last page, create a new page
+        if (scrollHeight > 1000 && pageIndex === pages.length - 1) {
+          // Simply create a new empty page and focus it
           setPages(prev => [...prev, '']);
           setActivePage(pageIndex + 1);
           
@@ -82,11 +82,13 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
             const newPageRef = pageRefs.current[pageIndex + 1];
             if (newPageRef) {
               newPageRef.focus();
+              // Position cursor at the beginning of new page
+              newPageRef.getEditor().setSelection({ index: 0, length: 0 });
             }
           }, 100);
         }
         
-        setContentOverflow(scrollHeight > clientHeight);
+        setContentOverflow(scrollHeight > 1000);
       }
     }, 100);
     
@@ -346,8 +348,9 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
             <ReactQuill
               ref={(el) => {
                 pageRefs.current[index] = el;
-                if (index === 0) {
-                  quillRef.current = el;
+                if (index === 0 && el) {
+                  // Use type assertion to bypass readonly restriction
+                  (quillRef as { current: ReactQuill | null }).current = el;
                 }
               }}
               value={pageContent}
