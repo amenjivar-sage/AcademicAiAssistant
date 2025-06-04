@@ -272,7 +272,7 @@ export default function AssignmentForm({ teacherId, children, assignment, mode =
                       Select one or more classes for this assignment. You can assign the same assignment to multiple classes.
                     </FormDescription>
                     <div className="space-y-3 mt-3">
-                      {classrooms?.map((classroom) => {
+                      {classrooms?.filter(classroom => classroom.isActive).map((classroom) => {
                         const isChecked = field.value?.includes(classroom.id) || false;
                         return (
                           <div key={classroom.id} className="flex items-center space-x-2">
