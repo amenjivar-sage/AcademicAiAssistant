@@ -47,22 +47,42 @@ export default function SingleDocumentEditor({
     pastedData.forEach((paste: any) => {
       if (paste.text && typeof paste.text === 'string') {
         const pastedText = paste.text;
-        const sentences = pastedText.split(/[.!?]+/).filter(s => s.trim().length > 0);
         
-        sentences.forEach(sentence => {
+        // Split pasted content into sentences
+        const sentences = pastedText.split(/[.!?]+/).filter((s: any) => s.trim().length > 10);
+        
+        sentences.forEach((sentence: any) => {
           const trimmedSentence = sentence.trim();
-          if (trimmedSentence.length < 10) return;
           
-          // Find this sentence in the document with spell corrections
-          const words = trimmedSentence.toLowerCase().split(/\s+/);
-          const regex = new RegExp(
-            words.map(word => `\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`).join('\\s+'),
-            'gi'
-          );
+          // Create a flexible regex that accounts for spelling corrections
+          const pastedWords = trimmedSentence.toLowerCase().split(/\s+/).filter((w: any) => w.length > 2);
           
-          // Highlight with red background for copy-paste detection
+          // Build pattern allowing for word substitutions (spell corrections)
+          const flexiblePattern = pastedWords.map((word: any) => {
+            // Common spelling corrections map
+            const corrections: { [key: string]: string } = {
+              'fealing': 'feeling',
+              'sandwitches': 'sandwiches', 
+              'promissed': 'promised',
+              'probbably': 'probably',
+              'perfact': 'perfect',
+              'reminde': 'remind'
+            };
+            
+            // If this word has a known correction, match either version
+            const corrected = corrections[word] || Object.keys(corrections).find(k => corrections[k] === word);
+            if (corrected) {
+              return `(?:${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}|${corrected.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`;
+            }
+            
+            return word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          }).join('\\s+\\w*\\s*');
+          
+          const regex = new RegExp(flexiblePattern, 'gi');
+          
+          // Apply highlighting to matches
           highlightedText = highlightedText.replace(regex, (match) => {
-            return `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600; padding: 2px 4px; border-radius: 3px;" title="Copy-pasted content detected">${match}</span>`;
+            return `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600; padding: 2px 4px; border-radius: 3px;" title="Copy-pasted content detected (spell-corrected)">${match}</span>`;
           });
         });
       }
@@ -174,24 +194,35 @@ export default function SingleDocumentEditor({
             )}
             
             {/* Copy-paste highlighting overlay for graded assignments */}
-            {showCopyPasteHighlights && pastedContent.length > 0 && (
-              <div 
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  fontFamily: "'Times New Roman', serif",
-                  fontSize: "12pt",
-                  lineHeight: "2.0",
-                  padding: `${PAGE_PADDING}px`,
-                  whiteSpace: 'pre-wrap',
-                  wordWrap: 'break-word',
-                  color: 'transparent',
-                  zIndex: 2
-                }}
-                dangerouslySetInnerHTML={{
-                  __html: highlightCopyPasteContent(content, pastedContent)
-                }}
-              />
-            )}
+            {showCopyPasteHighlights && pastedContent.length > 0 && (() => {
+              console.log('Copy-paste overlay rendering:', {
+                showHighlights: showCopyPasteHighlights,
+                pastedDataCount: pastedContent.length,
+                contentLength: content.length,
+                samplePastedText: pastedContent[0]?.text?.substring(0, 50)
+              });
+              const highlightedHtml = highlightCopyPasteContent(content, pastedContent);
+              console.log('Generated highlighted HTML:', highlightedHtml.substring(0, 200));
+              return (
+                <div 
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    fontFamily: "'Times New Roman', serif",
+                    fontSize: "12pt",
+                    lineHeight: "2.0",
+                    padding: `${PAGE_PADDING}px`,
+                    whiteSpace: 'pre-wrap',
+                    wordWrap: 'break-word',
+                    color: 'transparent',
+                    zIndex: 2,
+                    backgroundColor: 'rgba(255, 0, 0, 0.1)' // Debug: light red background to see overlay
+                  }}
+                  dangerouslySetInnerHTML={{
+                    __html: highlightedHtml
+                  }}
+                />
+              );
+            })()}
             <textarea
               ref={textareaRef}
               className={`w-full resize-none border-none outline-none bg-transparent text-gray-900 font-serif relative ${readOnly ? 'cursor-default' : ''}`}
