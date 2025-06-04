@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import BubbleSpellCheckPanel from './bubble-spell-check-panel';
 
 interface SingleDocumentEditorProps {
   content: string;
@@ -26,6 +27,7 @@ export default function SingleDocumentEditor({
 }: SingleDocumentEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [pages, setPages] = useState<string[]>([]);
+  const [isSpellCheckActive, setIsSpellCheckActive] = useState(false);
 
   // Function to split text into pages based on character count per page
   function splitTextToPages(text: string, maxCharsPerPage = 1800) {
@@ -69,7 +71,31 @@ export default function SingleDocumentEditor({
   };
 
   return (
-    <div className="bg-gray-100 min-h-screen">
+    <div className="bg-gray-100 min-h-screen relative">
+      {/* Spell Check Toggle Button */}
+      <div className="fixed top-4 right-4 z-50">
+        <button
+          onClick={() => setIsSpellCheckActive(!isSpellCheckActive)}
+          className={`px-4 py-2 rounded-lg shadow-lg font-medium transition-all ${
+            isSpellCheckActive 
+              ? 'bg-blue-600 text-white' 
+              : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+          }`}
+        >
+          {isSpellCheckActive ? 'Disable Spell Check' : 'Enable Spell Check'}
+        </button>
+      </div>
+
+      {/* Spell Check Panel */}
+      {isSpellCheckActive && (
+        <BubbleSpellCheckPanel
+          content={content}
+          onContentChange={onContentChange}
+          isActive={isSpellCheckActive}
+          onClose={() => setIsSpellCheckActive(false)}
+        />
+      )}
+
       <div className="flex flex-col items-center py-6">
         {pages.map((pageContent, pageIndex) => (
           <div key={pageIndex} className="relative">
