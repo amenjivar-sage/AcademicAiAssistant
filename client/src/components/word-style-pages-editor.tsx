@@ -90,8 +90,8 @@ export default function WordStylePagesEditor({
     const updatedPages = [...pages];
     updatedPages[pageIndex] = newContent;
     
-    // Reconstruct full content and trigger onChange
-    const fullContent = updatedPages.join(" ");
+    // Reconstruct full content maintaining original line breaks
+    const fullContent = updatedPages.join("\n\n\n\n"); // Use 4 line breaks as page separator
     onContentChange(fullContent);
   };
 
@@ -109,7 +109,7 @@ export default function WordStylePagesEditor({
 
   const addNewPage = () => {
     const newPages = [...pages, ""];
-    const fullContent = newPages.join(" ");
+    const fullContent = newPages.join("\n\n\n\n");
     onContentChange(fullContent);
     
     // Focus the new page
