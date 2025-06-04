@@ -1358,6 +1358,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update classroom (archive/reactivate)
+  app.patch("/api/classrooms/:id", async (req, res) => {
+    try {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const classroomId = parseInt(req.params.id);
+      const updates = req.body;
+
+      // Only teachers can update their own classrooms or admins can update any
+      if (currentUser.role === 'teacher') {
+        // Verify teacher owns this classroom
+        const classrooms = await storage.getTeacherClassrooms(currentUser.id);
+        const classroom = classrooms.find(c => c.id === classroomId);
+        if (!classroom) {
+          return res.status(403).json({ message: "Access denied - not your classroom" });
+        }
+      } else if (currentUser.role !== 'admin' && currentUser.role !== 'school_admin') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const updatedClassroom = await storage.updateClassroom(classroomId, updates);
+      if (!updatedClassroom) {
+        return res.status(404).json({ message: "Classroom not found" });
+      }
+
+      console.log(`Classroom ${classroomId} updated:`, updates);
+      res.json(updatedClassroom);
+    } catch (error) {
+      console.error("Error updating classroom:", error);
+      res.status(500).json({ message: "Failed to update classroom" });
+    }
+  });
+
   // Individual writing session details for submission viewer
   app.get("/api/writing-sessions/:sessionId", async (req, res) => {
     try {
