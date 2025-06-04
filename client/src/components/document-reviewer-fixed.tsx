@@ -335,8 +335,12 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                   // Skip already highlighted content
                   if (result.includes(`<span style="background-color: #fecaca`) && 
                       result.includes(docSentTrimmed.substring(0, Math.min(20, docSentTrimmed.length)))) {
+                    console.log('Skipping already highlighted content:', docSentTrimmed.substring(0, 30));
                     return;
                   }
+                  
+                  // Add debug logging for sentence analysis
+                  console.log('Analyzing document sentence:', docSentTrimmed);
                   
                   const docWords = docSentTrimmed.split(/\s+/)
                     .filter(w => w.length >= 3)
