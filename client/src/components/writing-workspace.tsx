@@ -184,7 +184,14 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
         console.log('✓ Syncing with session content');
         setContent(session.content);
         setTitle(session.title || '');
-        setPastedContents(session.pastedContent || []);
+        // Properly handle pasted content with timestamp conversion
+        const pastedData = session.pastedContent || [];
+        const formattedPastedContent = pastedData.map(paste => ({
+          ...paste,
+          timestamp: new Date(paste.timestamp)
+        }));
+        setPastedContents(formattedPastedContent);
+        console.log('Loaded copy-paste data:', formattedPastedContent.length, 'items');
         
         const words = (session.content || '').split(/\s+/).filter((word: string) => word.length > 0);
         const actualWordCount = words.length;
