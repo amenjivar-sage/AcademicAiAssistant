@@ -64,37 +64,53 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     const combinedContent = newPages.join('');
     onContentChange(combinedContent);
     
-    // Check for content overflow and create new page if needed
-    if (source === 'user') {
-      setTimeout(() => {
-        const currentRef = pageRefs.current[pageIndex];
-        if (currentRef && pageIndex === pages.length - 1) {
-          const editorElement = currentRef.getEditor().root;
-          const scrollHeight = editorElement.scrollHeight;
-          const availableHeight = 856; // 1000px - 144px (72px padding top/bottom)
-          
-          // If content exceeds available height, create new page
-          if (scrollHeight > availableHeight) {
-            console.log(`Page ${pageIndex + 1} overflow detected: ${scrollHeight}px > ${availableHeight}px`);
+    // Check for Enter key and content overflow
+    if (source === 'user' && delta && delta.ops) {
+      const hasEnterKey = delta.ops.some((op: any) => op.insert === '\n');
+      
+      if (hasEnterKey) {
+        setTimeout(() => {
+          const currentRef = pageRefs.current[pageIndex];
+          if (currentRef && pageIndex === pages.length - 1) {
+            const editorElement = currentRef.getEditor().root;
+            const scrollHeight = editorElement.scrollHeight;
+            const maxHeight = 856; // 1000px - 144px padding
             
-            // Create new page
-            const newPagesList = [...pages, ''];
-            setPages(newPagesList);
-            setActivePage(pageIndex + 1);
-            
-            // Focus new page after state update
-            setTimeout(() => {
-              const newPageRef = pageRefs.current[pageIndex + 1];
-              if (newPageRef) {
-                newPageRef.focus();
-                const quillEditor = newPageRef.getEditor();
-                quillEditor.setSelection(0, 0);
-                console.log(`Focused on new page ${pageIndex + 2}`);
+            // Check if content exceeds page height after Enter
+            if (scrollHeight > maxHeight) {
+              console.log(`Enter triggered overflow: ${scrollHeight}px > ${maxHeight}px`);
+              
+              const quillEditor = currentRef.getEditor();
+              const selection = quillEditor.getSelection();
+              
+              if (selection) {
+                // Get cursor position and check if near bottom
+                const bounds = quillEditor.getBounds(selection.index);
+                const editorRect = editorElement.getBoundingClientRect();
+                const relativeY = bounds.top;
+                
+                // If cursor is near bottom of page, create new page
+                if (relativeY > maxHeight * 0.9) {
+                  // Create new page
+                  const newPagesList = [...pages, ''];
+                  setPages(newPagesList);
+                  setActivePage(pageIndex + 1);
+                  
+                  // Move to new page after creation
+                  setTimeout(() => {
+                    const newPageRef = pageRefs.current[pageIndex + 1];
+                    if (newPageRef) {
+                      newPageRef.focus();
+                      newPageRef.getEditor().setSelection(0, 0);
+                      console.log(`Moved to new page ${pageIndex + 2}`);
+                    }
+                  }, 100);
+                }
               }
-            }, 100);
+            }
           }
-        }
-      }, 100);
+        }, 50);
+      }
     }
     
     // Update overflow status
@@ -145,54 +161,70 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     pageRefs.current = pageRefs.current.slice(0, pages.length);
   }, [pages.length]);
 
-  // Add keyboard event listeners for Enter key detection
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent, pageIndex: number) => {
-      if (e.key === 'Enter' && pageIndex === pages.length - 1) {
-        setTimeout(() => {
-          const currentRef = pageRefs.current[pageIndex];
-          if (currentRef) {
-            const editorElement = currentRef.getEditor().root;
-            const scrollHeight = editorElement.scrollHeight;
-            const availableHeight = 856; // 1000px - 144px padding
-            
-            // Check if content exceeds page height
-            if (scrollHeight > availableHeight) {
-              console.log(`Enter key triggered page overflow: ${scrollHeight}px > ${availableHeight}px`);
-              
-              // Create new page
-              const newPagesList = [...pages, ''];
-              setPages(newPagesList);
-              setActivePage(pageIndex + 1);
-              
-              // Focus new page
-              setTimeout(() => {
-                const newPageRef = pageRefs.current[pageIndex + 1];
-                if (newPageRef) {
-                  newPageRef.focus();
-                  newPageRef.getEditor().setSelection(0, 0);
-                  console.log(`Enter key: Focused on new page ${pageIndex + 2}`);
-                }
-              }, 100);
-            }
-          }
-        }, 50);
-      }
-    };
+  // Create keyboard event handler for each page
+  const createKeyDownHandler = (pageIndex: number) => (e: KeyboardEvent) => {
+    if (e.key === 'Enter' && pageIndex === pages.length - 1) {
+      const currentRef = pageRefs.current[pageIndex];
+      if (!currentRef) return;
 
-    // Attach keyboard listeners to each page
-    pageRefs.current.forEach((ref, index) => {
+      const editorElement = currentRef.getEditor().root;
+      const scrollHeight = editorElement.scrollHeight;
+      const clientHeight = editorElement.clientHeight;
+      const scrollTop = editorElement.scrollTop;
+      
+      // Calculate if we're near the bottom of the page content
+      const currentBottom = scrollTop + clientHeight;
+      const isNearBottom = currentBottom >= scrollHeight - 50; // 50px threshold
+      
+      // Also check if content exceeds page height
+      const maxPageHeight = 856; // 1000px - 144px padding
+      const contentExceedsHeight = scrollHeight > maxPageHeight;
+      
+      if (isNearBottom || contentExceedsHeight) {
+        e.preventDefault();
+        console.log(`Creating new page - scrollHeight: ${scrollHeight}, maxHeight: ${maxPageHeight}`);
+        
+        // Create new page
+        const newPagesList = [...pages, ''];
+        setPages(newPagesList);
+        setActivePage(pageIndex + 1);
+        
+        // Move cursor to new page
+        setTimeout(() => {
+          const newPageRef = pageRefs.current[pageIndex + 1];
+          if (newPageRef) {
+            newPageRef.focus();
+            newPageRef.getEditor().setSelection(0, 0);
+            console.log(`Moved to page ${pageIndex + 2}`);
+          }
+        }, 100);
+      }
+    }
+  };
+
+  // Attach keyboard listeners when pages change
+  useEffect(() => {
+    // Cleanup existing listeners
+    pageRefs.current.forEach((ref) => {
       if (ref) {
         const editorElement = ref.getEditor().root;
-        const boundHandler = (e: KeyboardEvent) => handleKeyDown(e, index);
-        editorElement.addEventListener('keydown', boundHandler);
-        
-        // Store the handler for cleanup
-        (editorElement as any)._keydownHandler = boundHandler;
+        const handler = (editorElement as any)._keydownHandler;
+        if (handler) {
+          editorElement.removeEventListener('keydown', handler);
+        }
       }
     });
 
-    // Cleanup function
+    // Attach new listeners
+    pageRefs.current.forEach((ref, index) => {
+      if (ref) {
+        const editorElement = ref.getEditor().root;
+        const handler = createKeyDownHandler(index);
+        editorElement.addEventListener('keydown', handler);
+        (editorElement as any)._keydownHandler = handler;
+      }
+    });
+
     return () => {
       pageRefs.current.forEach((ref) => {
         if (ref) {
