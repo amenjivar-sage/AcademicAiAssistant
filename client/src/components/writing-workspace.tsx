@@ -362,7 +362,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
               className="gap-2"
             >
               <MessageSquare className="h-4 w-4" />
-              Zoë
+              ZoË
             </Button>
           </div>
         </div>
@@ -396,7 +396,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
           <div className={`${isAiSidebarMinimized ? 'w-16' : 'w-96'} border-l bg-white flex flex-col fixed right-0 top-0 h-full z-10 transition-all duration-300`}>
             <div className="p-4 border-b">
               <div className="flex items-center justify-between">
-                {!isAiSidebarMinimized && <h3 className="font-semibold">Zoë</h3>}
+                {!isAiSidebarMinimized && <h3 className="font-semibold">ZoË</h3>}
                 <div className="flex gap-1">
                   <Button
                     onClick={() => setIsAiSidebarMinimized(!isAiSidebarMinimized)}
@@ -432,10 +432,10 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                   variant="ghost"
                   size="sm"
                   className="w-full flex flex-col h-12"
-                  title="Expand Zoë"
+                  title="Expand ZoË"
                 >
                   <MessageSquare className="h-4 w-4" />
-                  <span className="text-xs">Zoë</span>
+                  <span className="text-xs">ZoË</span>
                 </Button>
               </div>
             )}
