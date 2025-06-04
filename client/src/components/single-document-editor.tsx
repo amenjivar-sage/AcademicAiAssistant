@@ -170,37 +170,59 @@ export default function SingleDocumentEditor({
                   height: `calc(100% - ${PAGE_PADDING * 2 + FOOTER_HEIGHT}px)`
                 }}
               >
-                <div 
-                  className="w-full h-full text-gray-900 font-serif whitespace-pre-wrap overflow-hidden relative"
-                  style={{
-                    fontFamily: "'Times New Roman', serif",
-                    fontSize: "12pt",
-                    lineHeight: "2.0"
-                  }}
-                >
-                  {pageContent}
-                  {pageIndex === 0 && (
-                    // Invisible textarea overlay for editing on first page only
+                {pageIndex === 0 ? (
+                  // First page: Full editable textarea with continuous content
+                  <div className="relative w-full h-full">
+                    {/* Spell check highlighting overlay */}
+                    {isSpellCheckActive && spellErrors.length > 0 && (
+                      <div 
+                        className="absolute inset-0 pointer-events-none"
+                        style={{
+                          fontFamily: "'Times New Roman', serif",
+                          fontSize: "12pt",
+                          lineHeight: "2.0",
+                          padding: 0,
+                          whiteSpace: 'pre-wrap',
+                          wordWrap: 'break-word',
+                          color: 'transparent',
+                          zIndex: 1
+                        }}
+                        dangerouslySetInnerHTML={{
+                          __html: highlightMisspelledWords(content, spellErrors)
+                        }}
+                      />
+                    )}
                     <textarea
                       ref={textareaRef}
-                      className="absolute inset-0 w-full h-full resize-none border-none outline-none bg-transparent text-transparent"
+                      className="w-full h-full resize-none border-none outline-none bg-transparent text-gray-900 font-serif relative"
                       style={{
                         fontFamily: "'Times New Roman', serif",
                         fontSize: "12pt",
                         lineHeight: "2.0",
                         padding: 0,
-                        zIndex: 10,
-                        caretColor: 'black'
+                        zIndex: 2
                       }}
                       value={content}
                       onChange={(e) => {
                         handleContentChange(e.target.value);
                       }}
-                      placeholder=""
+                      placeholder="Start writing your document..."
                       spellCheck={false}
                     />
-                  )}
-                </div>
+                  </div>
+                ) : (
+                  // Subsequent pages: Display page-specific content only
+                  <div 
+                    className="w-full h-full text-gray-900 font-serif whitespace-pre-wrap overflow-hidden"
+                    style={{
+                      fontFamily: "'Times New Roman', serif",
+                      fontSize: "12pt",
+                      lineHeight: "2.0"
+                    }}
+                  >
+                    {pageContent}
+                  </div>
+                )}
               </div>
 
               {/* Footer */}
