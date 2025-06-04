@@ -21,6 +21,7 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
   const { toast } = useToast();
   const [selectedClassroom, setSelectedClassroom] = useState<Classroom | null>(null);
   const [activeTab, setActiveTab] = useState<"active" | "archived">("active");
+  const [classroomTab, setClassroomTab] = useState<"assignments" | "students">("assignments");
   const queryClient = useQueryClient();
 
   const { data: classrooms, isLoading } = useQuery<Classroom[]>({
@@ -35,6 +36,12 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
   const { data: enrolledStudents } = useQuery<any[]>({
     queryKey: [`/api/teacher/${teacherId}/students`],
     enabled: !!teacherId,
+  });
+
+  // Get classroom students for selected classroom
+  const { data: classroomStudents } = useQuery<any[]>({
+    queryKey: [`/api/classrooms/${selectedClassroom?.id}/students`],
+    enabled: !!selectedClassroom?.id,
   });
 
   // Mark assignment complete mutation
@@ -360,7 +367,10 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
 
             {/* Class stats */}
             <div className="grid grid-cols-4 gap-4 mb-6">
-              <Card>
+              <Card 
+                className="cursor-pointer hover:shadow-md transition-shadow"
+                onClick={() => setClassroomTab('students')}
+              >
                 <CardContent className="p-4 text-center">
                   <Users className="h-8 w-8 mx-auto mb-2 text-blue-500" />
                   <div className="text-2xl font-bold">{getClassroomStats(selectedClassroom).enrolledStudents}</div>
@@ -394,19 +404,46 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
               </Card>
             </div>
 
-            {/* Assignments Section */}
-            <div className="mb-8">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold">Assignments</h2>
-                <AssignmentForm teacherId={teacherId} classroomId={selectedClassroom.id}>
-                  <Button>
-                    <PlusCircle className="h-4 w-4 mr-2" />
-                    New Assignment
-                  </Button>
-                </AssignmentForm>
+            {/* Content Tabs */}
+            <div className="mb-6">
+              <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+                <button
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    classroomTab === 'assignments'
+                      ? 'bg-white text-blue-600 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                  onClick={() => setClassroomTab('assignments')}
+                >
+                  Assignments
+                </button>
+                <button
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    classroomTab === 'students'
+                      ? 'bg-white text-blue-600 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                  onClick={() => setClassroomTab('students')}
+                >
+                  Students ({classroomStudents?.length || 0})
+                </button>
               </div>
+            </div>
 
-              {classroomAssignments.length === 0 ? (
+            {/* Assignments Section */}
+            {classroomTab === 'assignments' && (
+              <div className="mb-8">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold">Assignments</h2>
+                  <AssignmentForm teacherId={teacherId} classroomId={selectedClassroom.id}>
+                    <Button>
+                      <PlusCircle className="h-4 w-4 mr-2" />
+                      New Assignment
+                    </Button>
+                  </AssignmentForm>
+                </div>
+
+                {classroomAssignments.length === 0 ? (
                 <Card>
                   <CardContent className="p-8 text-center">
                     <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
@@ -473,8 +510,88 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
                   ))}
                 </div>
               )}
-            </div>
+            )}
 
+            {/* Students Section */}
+            {classroomTab === 'students' && (
+              <div className="mb-8">
+                <h2 className="text-xl font-semibold mb-4">Enrolled Students</h2>
+                
+                {!classroomStudents || classroomStudents.length === 0 ? (
+                  <Card>
+                    <CardContent className="p-8 text-center">
+                      <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No students enrolled</h3>
+                      <p className="text-gray-500 mb-4">Students can join using the class code: <span className="font-mono font-medium">{selectedClassroom.joinCode}</span></p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="space-y-4">
+                    {classroomStudents.map((student) => {
+                      const studentAssignments = classroomAssignments.map(assignment => {
+                        const submission = student.sessions?.find(session => session.assignmentId === assignment.id);
+                        return {
+                          ...assignment,
+                          submission,
+                          status: submission?.status || 'not_started'
+                        };
+                      });
+
+                      const submittedCount = studentAssignments.filter(a => a.status === 'submitted').length;
+                      const pendingCount = studentAssignments.filter(a => a.status === 'not_started' || a.status === 'in_progress').length;
+
+                      return (
+                        <Card key={student.id} className="hover:shadow-md transition-shadow">
+                          <CardHeader className="pb-3">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <CardTitle className="text-lg">{student.firstName} {student.lastName}</CardTitle>
+                                <p className="text-sm text-gray-600">{student.email}</p>
+                              </div>
+                              <div className="flex items-center space-x-4">
+                                <div className="text-center">
+                                  <div className="text-2xl font-bold text-green-600">{submittedCount}</div>
+                                  <p className="text-xs text-gray-600">Submitted</p>
+                                </div>
+                                <div className="text-center">
+                                  <div className="text-2xl font-bold text-orange-600">{pendingCount}</div>
+                                  <p className="text-xs text-gray-600">Pending</p>
+                                </div>
+                              </div>
+                            </div>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="space-y-2">
+                              <h4 className="font-medium text-sm text-gray-700">Assignment Status:</h4>
+                              <div className="grid grid-cols-1 gap-2">
+                                {studentAssignments.map((assignment) => (
+                                  <div key={assignment.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                                    <span className="text-sm font-medium">{assignment.title}</span>
+                                    <Badge 
+                                      variant={
+                                        assignment.status === 'submitted' ? 'default' :
+                                        assignment.status === 'graded' ? 'secondary' :
+                                        assignment.status === 'in_progress' ? 'outline' : 'destructive'
+                                      }
+                                    >
+                                      {assignment.status === 'not_started' ? 'Not Started' :
+                                       assignment.status === 'in_progress' ? 'In Progress' :
+                                       assignment.status === 'submitted' ? 'Submitted' :
+                                       assignment.status === 'graded' ? `Graded: ${assignment.submission?.grade}` :
+                                       assignment.status}
+                                    </Badge>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
 
           </div>
         </div>

@@ -822,6 +822,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get classroom students
+  app.get("/api/classrooms/:id/students", async (req, res) => {
+    try {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const classroomId = parseInt(req.params.id);
+      const students = await storage.getClassroomStudents(classroomId);
+      
+      // Get writing sessions for each student to determine submission status
+      const studentsWithSessions = await Promise.all(
+        students.map(async (student) => {
+          const sessions = await storage.getUserWritingSessions(student.id);
+          return {
+            ...student,
+            sessions
+          };
+        })
+      );
+      
+      console.log(`Found ${students.length} students for classroom ${classroomId}`);
+      res.json(studentsWithSessions);
+    } catch (error) {
+      console.error("Error fetching classroom students:", error);
+      res.status(500).json({ message: "Failed to fetch students" });
+    }
+  });
+
   // Admin endpoints
   app.get("/api/admin/users", async (req, res) => {
     try {
