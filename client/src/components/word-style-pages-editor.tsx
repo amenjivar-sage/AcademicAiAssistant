@@ -21,8 +21,8 @@ const CHARS_PER_LINE = 85; // Characters per line for text wrapping estimation
 function splitTextToPages(text: string): string[] {
   if (!text) return [""];
   
-  // Use a more direct approach - split by multiple consecutive line breaks
-  const sections = text.split(/\n{5,}/); // 5+ consecutive line breaks = new page
+  // Enhanced page break detection - look for multiple consecutive line breaks
+  const sections = text.split(/\n{4,}/); // 4+ consecutive line breaks = new page
   const pages: string[] = [];
   
   sections.forEach((section, index) => {
@@ -37,7 +37,8 @@ function splitTextToPages(text: string): string[] {
     let lineCount = 0;
     
     for (const line of lines) {
-      if (lineCount >= LINES_PER_PAGE && currentPage.trim()) {
+      // More aggressive page break - break at 35 lines or when we hit natural page breaks
+      if (lineCount >= 35 && currentPage.trim()) {
         pages.push(currentPage.trimEnd());
         currentPage = line + '\n';
         lineCount = 1;

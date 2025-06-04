@@ -11,7 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, Settings, Send, AlertTriangle, Shield, FileText, MessageSquare, Download } from 'lucide-react';
-import { aiRequest } from '@/lib/queryClient';
+import { apiRequest } from '@/lib/queryClient';
 import CopyPasteDetector from './copy-paste-detector';
 import WordStylePagesEditor from './word-style-pages-editor';
 import AiChatViewer from './ai-chat-viewer';
@@ -184,7 +184,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
         setTitle(session.title || '');
         setPastedContents(session.pastedContent || []);
         
-        const words = (session.content || '').split(/\s+/).filter(word => word.length > 0);
+        const words = (session.content || '').split(/\s+/).filter((word: string) => word.length > 0);
         const actualWordCount = words.length;
         setWordCount(actualWordCount);
         
@@ -407,19 +407,13 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
 
             <DocumentDownload 
               content={content}
-              title={title || 'Document'}
               studentName="Student"
               assignmentTitle={assignment?.title}
             />
 
             <AiChatViewer 
               sessionId={sessionId}
-              documentContent={content}
-              aiPermissions={assignment?.aiPermissions || 'none'}
-              allowBrainstorming={assignment?.allowBrainstorming}
-              allowOutlining={assignment?.allowOutlining}
-              allowGrammarCheck={assignment?.allowGrammarCheck}
-              allowResearchHelp={assignment?.allowResearchHelp}
+              studentName="Student"
             />
 
             {!isSubmitted && !isGraded && (
