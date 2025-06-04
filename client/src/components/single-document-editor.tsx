@@ -31,14 +31,14 @@ export default function SingleDocumentEditor({
   const [spellErrors, setSpellErrors] = useState<any[]>([]);
 
   // Function to split text into pages based on character count per page
-  function splitTextToPages(text: string, maxCharsPerPage = 800) {
-    const pages: string[] = [];
-    
+  function splitTextToPages(text: string, maxCharsPerPage = 1200) {
     if (!text || text.trim() === '') {
       return [''];
     }
     
-    // Simple character-based splitting
+    const pages: string[] = [];
+    
+    // Split text into pages
     for (let i = 0; i < text.length; i += maxCharsPerPage) {
       const pageContent = text.slice(i, i + maxCharsPerPage);
       pages.push(pageContent);
@@ -49,7 +49,7 @@ export default function SingleDocumentEditor({
 
   // Update pages when content changes
   useEffect(() => {
-    const newPages = splitTextToPages(content, 800); // ~800 chars per page for better flow
+    const newPages = splitTextToPages(content, 1200); // 1200 chars per page
     setPages(newPages);
   }, [content]);
 
@@ -146,8 +146,46 @@ export default function SingleDocumentEditor({
                   height: `calc(100% - ${PAGE_PADDING * 2 + FOOTER_HEIGHT}px)`
                 }}
               >
-                <div className="relative w-full h-full">
-                  {/* Show content for this specific page */}
+                {pageIndex === 0 ? (
+                  // First page: editable textarea with full content
+                  <div className="relative w-full h-full">
+                    {/* Highlighting overlay for misspelled words */}
+                    {isSpellCheckActive && spellErrors.length > 0 && (
+                      <div 
+                        className="absolute inset-0 pointer-events-none"
+                        style={{
+                          fontFamily: "'Times New Roman', serif",
+                          fontSize: "12pt",
+                          lineHeight: "2.0",
+                          padding: 0,
+                          whiteSpace: 'pre-wrap',
+                          wordWrap: 'break-word',
+                          color: 'transparent',
+                          zIndex: 1
+                        }}
+                        dangerouslySetInnerHTML={{
+                          __html: highlightMisspelledWords(content, spellErrors)
+                        }}
+                      />
+                    )}
+                    <textarea
+                      ref={textareaRef}
+                      className="w-full h-full resize-none border-none outline-none bg-transparent text-gray-900 font-serif relative"
+                      style={{
+                        fontFamily: "'Times New Roman', serif",
+                        fontSize: "12pt",
+                        lineHeight: "2.0",
+                        padding: 0,
+                        zIndex: 2
+                      }}
+                      value={content}
+                      onChange={(e) => handleContentChange(e.target.value)}
+                      placeholder="Start writing your document..."
+                      spellCheck={false}
+                    />
+                  </div>
+                ) : (
+                  // Subsequent pages: read-only display with page content
                   <div 
                     className="w-full h-full text-gray-900 font-serif whitespace-pre-wrap overflow-hidden"
                     style={{
@@ -158,47 +196,7 @@ export default function SingleDocumentEditor({
                   >
                     {pageContent}
                   </div>
-                  
-                  {/* Only show textarea on first page for editing */}
-                  {pageIndex === 0 && (
-                    <div className="absolute inset-0">
-                      {/* Highlighting overlay for misspelled words */}
-                      {isSpellCheckActive && spellErrors.length > 0 && (
-                        <div 
-                          className="absolute inset-0 pointer-events-none"
-                          style={{
-                            fontFamily: "'Times New Roman', serif",
-                            fontSize: "12pt",
-                            lineHeight: "2.0",
-                            padding: 0,
-                            whiteSpace: 'pre-wrap',
-                            wordWrap: 'break-word',
-                            color: 'transparent',
-                            zIndex: 1
-                          }}
-                          dangerouslySetInnerHTML={{
-                            __html: highlightMisspelledWords(content, spellErrors)
-                          }}
-                        />
-                      )}
-                      <textarea
-                        ref={textareaRef}
-                        className="w-full h-full resize-none border-none outline-none bg-transparent text-gray-900 font-serif relative"
-                        style={{
-                          fontFamily: "'Times New Roman', serif",
-                          fontSize: "12pt",
-                          lineHeight: "2.0",
-                          padding: 0,
-                          zIndex: 2
-                        }}
-                        value={content}
-                        onChange={(e) => handleContentChange(e.target.value)}
-                        placeholder="Start writing your document..."
-                        spellCheck={false}
-                      />
-                    </div>
-                  )}
-                </div>
+                )}
               </div>
 
               {/* Footer */}
