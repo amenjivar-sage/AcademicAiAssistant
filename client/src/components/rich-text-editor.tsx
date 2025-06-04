@@ -57,15 +57,20 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
   // More precise overflow detection and content splitting
   const checkAndHandleOverflow = useCallback((pageIndex: number, currentPages: string[]) => {
     const currentRef = pageRefs.current[pageIndex];
-    if (!currentRef) return;
+    if (!currentRef) {
+      console.log(`No ref found for page ${pageIndex + 1}`);
+      return;
+    }
 
     const editorElement = currentRef.getEditor().root;
     const scrollHeight = editorElement.scrollHeight;
     const maxHeight = 950;
 
+    console.log(`Checking overflow for page ${pageIndex + 1}: ${scrollHeight}px vs ${maxHeight}px`);
+
     // If content exceeds page height, find optimal break point
     if (scrollHeight > maxHeight) {
-      console.log(`Overflow detected on page ${pageIndex + 1}: ${scrollHeight}px > ${maxHeight}px`);
+      console.log(`OVERFLOW DETECTED on page ${pageIndex + 1}: ${scrollHeight}px > ${maxHeight}px`);
       
       const quillEditor = currentRef.getEditor();
       const delta = quillEditor.getContents();
@@ -193,13 +198,15 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     
     // Debounced overflow check for user input
     if (source === 'user') {
+      console.log(`User input detected on page ${pageIndex + 1}, scheduling overflow check`);
       if (overflowCheckTimeout.current) {
         clearTimeout(overflowCheckTimeout.current);
       }
       
       overflowCheckTimeout.current = setTimeout(() => {
+        console.log(`Running overflow check for page ${pageIndex + 1}`);
         checkAndHandleOverflow(pageIndex, newPages);
-      }, 200); // Debounce for 200ms
+      }, 300); // Increased debounce to 300ms
     }
     
     // Update overflow status
