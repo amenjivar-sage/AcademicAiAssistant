@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
 import BubbleSpellCheckPanel from './bubble-spell-check-panel';
-import FormattingToolbox from './formatting-toolbox';
 
 interface SingleDocumentEditorProps {
   content: string;
