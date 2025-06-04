@@ -180,14 +180,38 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
 
   // Helper function to highlight pasted content in red
   const highlightPastedContent = (text: string) => {
-    if (!session.pastedContent || !Array.isArray(session.pastedContent) || session.pastedContent.length === 0) {
+    console.log('=== DOCUMENT REVIEWER DEBUG ===');
+    console.log('Session ID:', session.id);
+    console.log('Raw pastedContent type:', typeof session.pastedContent);
+    console.log('Raw pastedContent value:', session.pastedContent);
+    console.log('Content length:', session.pastedContent ? session.pastedContent.length : 'null');
+
+    // Parse the pasted content from the database (stored as JSON string)
+    let pastedData = [];
+    if (session.pastedContent) {
+      try {
+        if (typeof session.pastedContent === 'string') {
+          pastedData = JSON.parse(session.pastedContent);
+        } else if (Array.isArray(session.pastedContent)) {
+          pastedData = session.pastedContent;
+        }
+      } catch (e) {
+        console.error('Error parsing pasted content:', e);
+        return text;
+      }
+    }
+
+    console.log('Parsed pasted data:', pastedData);
+    console.log('Pasted data length:', pastedData.length);
+
+    if (!pastedData || !Array.isArray(pastedData) || pastedData.length === 0) {
+      console.log('No valid pasted content found');
       return text;
     }
 
     let result = text;
-    console.log('Pasted content data:', session.pastedContent);
     
-    const pastedTexts = session.pastedContent.map((item: any) => {
+    const pastedTexts = pastedData.map((item: any) => {
       if (typeof item === 'string') return item;
       if (item && typeof item === 'object') {
         return item.text || item.content || item.value || '';
