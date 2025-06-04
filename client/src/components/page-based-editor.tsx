@@ -71,18 +71,22 @@ export default function PageBasedEditor({
     }
   }, [headerFooterSettings]);
   
-  // Calculate word count and total pages with debug logging
-  const words = content.split(/\s+/).filter(word => word.length > 0);
+  // Calculate word count and total pages - Google Docs style
+  const words = content.trim().split(/\s+/).filter(word => word.length > 0);
   const wordCount = words.length;
+  
+  // Create pages based on estimated content flow (like Google Docs)
+  // Approximate 500 words per page for page breaks, but allow content to flow
   const totalPages = Math.max(1, Math.ceil(wordCount / wordsPerPage));
   
   // Debug logging for page calculation
-  console.log('Page calculation:', {
+  console.log('Page calculation (Google Docs style):', {
     contentLength: content.length,
-    wordCount,
+    actualWordCount: wordCount,
     wordsPerPage,
-    totalPages,
-    shouldShowMultiplePages: totalPages > 1
+    calculatedPages: totalPages,
+    shouldShowMultiplePages: totalPages > 1,
+    contentPreview: content.substring(0, 100) + '...'
   });
   
   // Auto-focus the textarea
@@ -139,50 +143,23 @@ export default function PageBasedEditor({
     return words.slice(0, endIndex).join(' ');
   };
 
-  // Handle page-specific content editing - deployment-ready unlimited pages
-  const handlePageContentChange = (newPageContent: string) => {
+  // Handle content editing without word limits per page (like Google Docs)
+  const handlePageContentChange = (newContent: string) => {
     try {
-      const allWords = content.split(/\s+/).filter(word => word.length > 0);
-      const newPageWords = newPageContent.split(/\s+/).filter(word => word.length > 0);
+      // No word limits - just pass through the content directly
+      onContentChange(newContent);
       
-      const startIndex = (currentPage - 1) * wordsPerPage;
-      const endIndex = currentPage * wordsPerPage;
-      
-      // Get content before current page (all words from pages 1 to currentPage-1)
-      const beforePageWords = allWords.slice(0, startIndex);
-      
-      // Get content after current page (all words from pages currentPage+1 onwards)  
-      const afterPageWords = allWords.slice(endIndex);
-      
-      // Enforce word limit per page - truncate if exceeding 500 words
-      const limitedPageWords = newPageWords.slice(0, wordsPerPage);
-      
-      // Construct new content: before + limited current page + after
-      const reconstructedWords = [
-        ...beforePageWords,
-        ...limitedPageWords,
-        ...afterPageWords
-      ];
-      
-      const newContent = reconstructedWords.join(' ');
-      
-      // Deployment-optimized logging
       if (process.env.NODE_ENV === 'development') {
-        console.log(`Page ${currentPage} content update:`, {
-          pageNumber: currentPage,
-          wordsBeforeThisPage: beforePageWords.length,
-          wordsOnThisPage: limitedPageWords.length,
-          wordsAfterThisPage: afterPageWords.length,
-          totalWordsInDocument: reconstructedWords.length,
-          calculatedTotalPages: Math.ceil(reconstructedWords.length / wordsPerPage),
-          wordsTruncated: newPageWords.length - limitedPageWords.length
+        const newWordCount = newContent.split(/\s+/).filter(word => word.length > 0).length;
+        const newPageCount = Math.ceil(newWordCount / wordsPerPage) || 1;
+        console.log('Content updated:', {
+          totalWords: newWordCount,
+          estimatedPages: newPageCount,
+          contentLength: newContent.length
         });
       }
-      
-      onContentChange(newContent);
     } catch (error) {
-      console.error('Error updating page content:', error);
-      // Fallback to prevent data loss
+      console.error('Error updating content:', error);
       onContentChange(content);
     }
   };
@@ -493,135 +470,86 @@ export default function PageBasedEditor({
           </div>
         </div>
 
-        {/* Generate pages - unlimited page support with strict content isolation */}
-        {Array.from({ length: totalPages }, (_, index) => {
-          const pageNumber = index + 1;
-          const isLastPage = pageNumber === totalPages;
-          const pageContent = getPageContent(pageNumber);
-          const wordsOnPage = pageContent.split(/\s+/).filter(word => word.length > 0).length;
-          
-          // Debug logging for page content isolation
-          if (pageNumber <= 10) { // Only log first 10 pages to avoid spam
-            console.log(`Rendering page ${pageNumber}:`, {
-              totalPages,
-              wordsOnThisPage: wordsOnPage,
-              isCurrentPage: pageNumber === currentPage,
-              contentPreview: pageContent.substring(0, 50) + '...'
-            });
-          }
-          
-          return (
-            <div key={`page-${pageNumber}`} className="page-container">
-              {/* Page Header */}
-              <div className="flex justify-between items-center mb-4 px-2">
-                <div className="text-sm text-gray-500 font-medium">
-                  Page {pageNumber}
-                </div>
-                <div className="text-sm text-gray-500">
-                  {wordsOnPage} / {wordsPerPage} words
-                </div>
-              </div>
-
-              {/* Page Content */}
-              <div className="bg-white rounded-lg shadow-lg border border-gray-200 min-h-[11in] relative">
-                {/* Header */}
-                {(pageSettings.headerText || (pageSettings.showStudentName && pageSettings.studentName) || pageSettings.showPageNumbersInHeader) && (
-                  <div className="px-16 pt-8 pb-4 border-b border-gray-200">
-                    {renderHeaderFooterContent(
-                      pageSettings.studentName,
-                      pageSettings.headerText,
-                      pageNumber,
-                      pageSettings.namePosition,
-                      pageSettings.headerPosition,
-                      pageSettings.pageNumberPosition,
-                      pageSettings.showStudentName,
-                      !!pageSettings.headerText,
-                      pageSettings.showPageNumbersInHeader
-                    )}
-                  </div>
+        {/* Google Docs style continuous editor */}
+        <div className="page-container">
+          <div className="bg-white rounded-lg shadow-lg border border-gray-200 min-h-[11in] relative">
+            {/* Header */}
+            {(pageSettings.headerText || (pageSettings.showStudentName && pageSettings.studentName) || pageSettings.showPageNumbersInHeader) && (
+              <div className="px-16 pt-8 pb-4 border-b border-gray-200">
+                {renderHeaderFooterContent(
+                  pageSettings.studentName,
+                  pageSettings.headerText,
+                  1,
+                  pageSettings.namePosition,
+                  pageSettings.headerPosition,
+                  pageSettings.pageNumberPosition,
+                  pageSettings.showStudentName,
+                  !!pageSettings.headerText,
+                  pageSettings.showPageNumbersInHeader
                 )}
+              </div>
+            )}
 
-                {/* Page margins and content area */}
-                <div className={`px-16 ${(pageSettings.headerText || pageSettings.showStudentName) ? 'pt-8' : 'pt-16'} ${(pageSettings.footerText || pageSettings.showPageNumbers) ? 'pb-8' : 'pb-16'} min-h-[9in]`}>
-                  {pageNumber === currentPage ? (
-                    // Editable rich text editor for ONLY the current page's content
-                    <RichTextEditor
-                      content={getPageContent(pageNumber)}
-                      onContentChange={handlePageContentChange}
-                      placeholder={pageNumber === 1 ? placeholder : "Continue writing..."}
-                      disabled={disabled}
-                      onFormatRef={onFormatRef}
-                      className="w-full h-full min-h-[9in] resize-none border-none outline-none bg-transparent text-gray-900"
-                      style={{
-                        fontFamily: 'Times New Roman, serif',
-                        fontSize: '12pt',
-                        lineHeight: '2.0',
-                        letterSpacing: '0.2px'
-                      }}
-                    />
-                  ) : (
-                    // Static display of page-specific content only
-                    <div 
-                      className="w-full h-full min-h-[9in] text-gray-800 cursor-pointer hover:bg-gray-50 transition-colors rounded p-2 relative"
-                      onClick={() => setCurrentPage(pageNumber)}
-                      style={{
-                        fontFamily: 'Times New Roman, serif',
-                        fontSize: '12pt',
-                        lineHeight: '2.0',
-                        letterSpacing: '0.2px',
-                        whiteSpace: 'pre-wrap'
-                      }}
-                      title="Click to edit this page"
-                    >
-                      {getPageContent(pageNumber)}
-                      {/* Edit indicator */}
-                      <div className="absolute top-4 right-4 opacity-0 hover:opacity-100 transition-opacity">
-                        <span className="text-xs bg-blue-500 text-white px-2 py-1 rounded">Click to edit</span>
-                      </div>
-                    </div>
+            {/* Content Area - Full Content Editor */}
+            <div className={`px-16 ${(pageSettings.headerText || pageSettings.showStudentName) ? 'pt-8' : 'pt-16'} ${(pageSettings.footerText || pageSettings.showPageNumbers) ? 'pb-8' : 'pb-16'} min-h-[9in]`}>
+              <RichTextEditor
+                content={content}
+                onContentChange={handlePageContentChange}
+                placeholder={placeholder}
+                disabled={disabled}
+                onFormatRef={onFormatRef}
+                className="w-full h-full min-h-[9in] resize-none border-none outline-none bg-transparent text-gray-900"
+                style={{
+                  fontFamily: 'Times New Roman, serif',
+                  fontSize: '12pt',
+                  lineHeight: '2.0',
+                  letterSpacing: '0.2px'
+                }}
+              />
+            </div>
+
+            {/* Footer */}
+            {(pageSettings.footerText || pageSettings.showPageNumbers) && (
+              <div className="absolute bottom-8 left-16 right-16">
+                <div className="border-t border-gray-200 pt-4">
+                  {renderHeaderFooterContent(
+                    pageSettings.studentName,
+                    pageSettings.footerText,
+                    Math.ceil(wordCount / wordsPerPage) || 1,
+                    pageSettings.namePosition,
+                    pageSettings.footerPosition,
+                    pageSettings.pageNumberPosition,
+                    false,
+                    !!pageSettings.footerText,
+                    pageSettings.showPageNumbers
                   )}
                 </div>
-
-                {/* Footer */}
-                {(pageSettings.footerText || pageSettings.showPageNumbers) && (
-                  <div className="absolute bottom-8 left-16 right-16">
-                    <div className="border-t border-gray-200 pt-4">
-                      {renderHeaderFooterContent(
-                        pageSettings.studentName,
-                        pageSettings.footerText,
-                        pageNumber,
-                        pageSettings.namePosition,
-                        pageSettings.footerPosition,
-                        pageSettings.pageNumberPosition,
-                        false, // Don't show student name in footer unless specifically configured
-                        !!pageSettings.footerText,
-                        pageSettings.showPageNumbers
-                      )}
-                    </div>
-                  </div>
-                )}
               </div>
+            )}
+          </div>
+        </div>
 
-              {/* Page Break Indicator */}
-              {pageNumber < totalPages && (
-                <div className="flex items-center justify-center py-4">
-                  <div className="border-t border-dashed border-gray-400 flex-1"></div>
-                  <span className="px-4 text-xs text-gray-500 bg-gray-100 rounded-full">
-                    Page Break
-                  </span>
-                  <div className="border-t border-dashed border-gray-400 flex-1"></div>
-                </div>
-              )}
-            </div>
-          );
-        })}
+        {/* Visual Page Break Indicators */}
+        {wordCount > wordsPerPage && (
+          <div className="space-y-8">
+            {Array.from({ length: Math.floor(wordCount / wordsPerPage) }, (_, index) => (
+              <div key={index} className="flex items-center justify-center py-4">
+                <div className="border-t border-dashed border-gray-400 flex-1"></div>
+                <span className="px-4 text-xs text-gray-500 bg-gray-100 rounded-full">
+                  Page {index + 2} begins (estimated)
+                </span>
+                <div className="border-t border-dashed border-gray-400 flex-1"></div>
+              </div>
+            ))}
+          </div>
+        )}
 
-        {/* Add new page indicator when close to word limit */}
-        {wordCount > (totalPages - 1) * wordsPerPage + wordsPerPage * 0.8 && (
+        {/* Content continues indicator */}
+        {wordCount > wordsPerPage * 0.8 && (
           <div className="text-center py-8">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
               <FileText className="h-4 w-4" />
-              New page will be created automatically as you continue writing
+              Document: {wordCount} words ({Math.ceil(wordCount / wordsPerPage)} estimated pages)
             </div>
           </div>
         )}
