@@ -50,6 +50,12 @@ export default function SingleDocumentEditor({
   // Update pages when content changes
   useEffect(() => {
     const newPages = splitTextToPages(content, 600); // 600 chars per page for visible breaks
+    console.log('Page splitting debug:', {
+      contentLength: content.length,
+      pageCount: newPages.length,
+      firstPageLength: newPages[0]?.length || 0,
+      secondPageLength: newPages[1]?.length || 0
+    });
     setPages(newPages);
   }, [content]);
 
