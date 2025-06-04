@@ -127,6 +127,12 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
     enabled: !!teacherId,
   });
 
+  // Query to get writing sessions for pending grading calculation
+  const { data: allWritingSessions } = useQuery({
+    queryKey: ["/api/teacher/all-writing-sessions"],
+    enabled: !!teacherId,
+  });
+
   const getClassroomStats = (classroom: Classroom) => {
     // Get actual enrolled student count from database
     const studentsInClass = allClassroomStudents?.[classroom.id]?.length || 0;
@@ -136,11 +142,24 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
       a.classroomId === classroom.id || 
       (a.classroomIds && Array.isArray(a.classroomIds) && a.classroomIds.includes(classroom.id))
     ).length || 0;
+
+    // Count writing sessions that need grading for this classroom
+    const pendingGrading = allWritingSessions?.filter((session: any) => {
+      // Find the assignment this session belongs to
+      const assignment = assignments?.find(a => a.id === session.assignmentId);
+      const belongsToClassroom = assignment && (
+        assignment.classroomId === classroom.id || 
+        (assignment.classroomIds && Array.isArray(assignment.classroomIds) && assignment.classroomIds.includes(classroom.id))
+      );
+      
+      // Count sessions that are submitted but not graded
+      return belongsToClassroom && session.status === 'submitted' && !session.grade;
+    }).length || 0;
     
     return {
       enrolledStudents: studentsInClass,
       activeAssignments: classroomAssignmentCount,
-      pendingSubmissions: 0, // Will be updated when we get real submission data
+      pendingGrading: pendingGrading,
     };
   };
 
