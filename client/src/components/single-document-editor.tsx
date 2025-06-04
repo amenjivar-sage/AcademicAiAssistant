@@ -101,47 +101,47 @@ export default function SingleDocumentEditor({
 
     // First apply copy-paste highlighting if enabled
     if (showCopyPasteHighlights && pastedData && pastedData.length > 0) {
-      pastedData.forEach((paste: any) => {
+      console.log('Applying copy-paste highlights for student view:', pastedData.length, 'items');
+      
+      pastedData.forEach((paste: any, index: number) => {
+        console.log(`Processing paste ${index + 1}:`, paste.text?.substring(0, 100));
+        
         if (paste.text && typeof paste.text === 'string') {
-          const pastedText = paste.text;
+          // Simple approach: look for exact phrases and common spelling corrections
+          const originalText = paste.text;
           
-          // Split pasted content into sentences
-          const sentences = pastedText.split(/[.!?]+/).filter((s: any) => s.trim().length > 10);
+          // Split into sentences and look for matches
+          const sentences = originalText.split(/[.!?]+/).filter(s => s.trim().length > 20);
           
-          sentences.forEach((sentence: any) => {
+          sentences.forEach(sentence => {
             const trimmedSentence = sentence.trim();
             
-            // Create a flexible regex that accounts for spelling corrections
-            const pastedWords = trimmedSentence.toLowerCase().split(/\s+/).filter((w: any) => w.length > 2);
-            
-            // Build pattern allowing for word substitutions (spell corrections)
-            const flexiblePattern = pastedWords.map((word: any) => {
-              // Common spelling corrections map
-              const corrections: { [key: string]: string } = {
-                'fealing': 'feeling',
-                'sandwitches': 'sandwiches', 
-                'promissed': 'promised',
-                'probbably': 'probably',
-                'perfact': 'perfect',
-                'reminde': 'remind'
-              };
-              
-              // If this word has a known correction, match either version
-              const corrected = corrections[word] || Object.keys(corrections).find(k => corrections[k] === word);
-              if (corrected) {
-                return `(?:${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}|${corrected.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`;
-              }
-              
-              return word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            }).join('\\s+');
-
-            try {
-              const regex = new RegExp(`\\b${flexiblePattern}\\b`, 'gi');
+            // Check for exact match first
+            if (highlightedText.includes(trimmedSentence)) {
+              console.log('Found exact copy-paste match:', trimmedSentence.substring(0, 50));
+              const escapedSentence = trimmedSentence.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+              const regex = new RegExp(escapedSentence, 'g');
               highlightedText = highlightedText.replace(regex, (match) => {
-                return `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600; padding: 2px 4px; border-radius: 3px;" title="Copy-pasted content detected (spell-corrected)">${match}</span>`;
+                return `<span style="background-color: #fecaca; border: 2px solid #f87171; color: #991b1b; font-weight: 600; padding: 2px 4px; border-radius: 3px; margin: 0 1px;" title="Copy-pasted content detected">${match}</span>`;
               });
-            } catch (e) {
-              console.warn('Regex error for pattern:', flexiblePattern);
+            } else {
+              // Check for corrected versions of common misspellings
+              const correctedSentence = trimmedSentence
+                .replace(/fealing/gi, 'feeling')
+                .replace(/sandwitches/gi, 'sandwiches')
+                .replace(/promissed/gi, 'promised')
+                .replace(/probbably/gi, 'probably')
+                .replace(/perfact/gi, 'perfect')
+                .replace(/reminde/gi, 'remind');
+              
+              if (highlightedText.includes(correctedSentence)) {
+                console.log('Found corrected copy-paste match:', correctedSentence.substring(0, 50));
+                const escapedCorrected = correctedSentence.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const regex = new RegExp(escapedCorrected, 'g');
+                highlightedText = highlightedText.replace(regex, (match) => {
+                  return `<span style="background-color: #fecaca; border: 2px solid #f87171; color: #991b1b; font-weight: 600; padding: 2px 4px; border-radius: 3px; margin: 0 1px;" title="Copy-pasted content detected (spell-corrected)">${match}</span>`;
+                });
+              }
             }
           });
         }
