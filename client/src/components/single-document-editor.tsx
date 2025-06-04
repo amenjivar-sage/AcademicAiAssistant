@@ -31,7 +31,7 @@ export default function SingleDocumentEditor({
   const [spellErrors, setSpellErrors] = useState<any[]>([]);
 
   // Function to split text into pages based on character count per page
-  function splitTextToPages(text: string, maxCharsPerPage = 1200) {
+  function splitTextToPages(text: string, maxCharsPerPage = 600) {
     if (!text || text.trim() === '') {
       return [''];
     }
@@ -49,7 +49,7 @@ export default function SingleDocumentEditor({
 
   // Update pages when content changes
   useEffect(() => {
-    const newPages = splitTextToPages(content, 1200); // 1200 chars per page
+    const newPages = splitTextToPages(content, 600); // 600 chars per page for visible breaks
     setPages(newPages);
   }, [content]);
 
@@ -84,11 +84,11 @@ export default function SingleDocumentEditor({
 
   return (
     <div className="bg-gray-100 min-h-screen relative overflow-y-auto">
-      {/* Spell Check Toggle Button */}
-      <div className="fixed top-4 right-4 z-50">
+      {/* Control Panel */}
+      <div className="fixed top-4 right-4 z-50 space-y-2">
         <button
           onClick={() => setIsSpellCheckActive(!isSpellCheckActive)}
-          className={`px-4 py-2 rounded-lg shadow-lg font-medium transition-all ${
+          className={`px-4 py-2 rounded-lg shadow-lg font-medium transition-all block ${
             isSpellCheckActive 
               ? 'bg-blue-600 text-white' 
               : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
@@ -96,6 +96,16 @@ export default function SingleDocumentEditor({
         >
           {isSpellCheckActive ? 'Disable Spell Check' : 'Enable Spell Check'}
         </button>
+        
+        {/* Page Count Debug */}
+        <div className="bg-yellow-100 border border-yellow-400 px-4 py-2 rounded-lg shadow-lg">
+          <div className="text-sm font-medium text-yellow-800">
+            Pages: {pages.length}
+          </div>
+          <div className="text-xs text-yellow-700">
+            Chars: {content.length}
+          </div>
+        </div>
       </div>
 
       <div className="flex flex-col items-center py-6 relative space-y-6">
@@ -103,12 +113,12 @@ export default function SingleDocumentEditor({
           <div key={pageIndex} className="relative">
             {/* Page Break Indicator */}
             {pageIndex > 0 && (
-              <div className="flex items-center justify-center py-4 mb-4">
-                <div className="flex-1 border-t border-dashed border-blue-300"></div>
-                <div className="px-4 bg-blue-100 text-blue-700 text-sm font-medium rounded-lg">
-                  Page {pageIndex + 1}
+              <div className="flex items-center justify-center py-6 mb-6">
+                <div className="flex-1 border-t-4 border-dashed border-red-400"></div>
+                <div className="px-6 py-2 bg-red-500 text-white text-lg font-bold rounded-lg shadow-lg">
+                  📄 PAGE {pageIndex + 1} BREAK 📄
                 </div>
-                <div className="flex-1 border-t border-dashed border-blue-300"></div>
+                <div className="flex-1 border-t-4 border-dashed border-red-400"></div>
               </div>
             )}
             
