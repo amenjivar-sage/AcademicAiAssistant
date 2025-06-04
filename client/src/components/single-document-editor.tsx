@@ -306,6 +306,15 @@ export default function SingleDocumentEditor({
         </div>
       </div>
 
+      {/* Formatting Panel */}
+      <div className="fixed top-4 right-80 z-50">
+        <FormattingToolbox
+          selectedText={selectedText}
+          onBoldClick={applyBoldFormatting}
+          isVisible={showFormatting}
+        />
+      </div>
+
       <div className="flex flex-col items-center py-6 relative">
         {/* Single continuous textarea spanning multiple page layouts */}
         <div className="relative">
@@ -500,12 +509,6 @@ export default function SingleDocumentEditor({
           </div>
         )}
 
-        {/* Formatting Toolbox */}
-        <FormattingToolbox
-          selectedText={selectedText}
-          onBoldClick={applyBoldFormatting}
-          isVisible={showFormatting}
-        />
       </div>
     </div>
   );
