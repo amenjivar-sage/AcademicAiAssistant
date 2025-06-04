@@ -37,28 +37,26 @@ export default function SingleDocumentEditor({
     }
     
     const pages: string[] = [];
-    let currentIndex = 0;
+    const words = text.split(' ');
+    let currentPage = '';
     
-    while (currentIndex < text.length) {
-      let endIndex = currentIndex + maxCharsPerPage;
+    for (const word of words) {
+      const testPage = currentPage ? `${currentPage} ${word}` : word;
       
-      // If we're not at the end of the text, try to break at a word boundary
-      if (endIndex < text.length) {
-        // Look for the last space within the page limit
-        const lastSpaceIndex = text.lastIndexOf(' ', endIndex);
-        if (lastSpaceIndex > currentIndex) {
-          endIndex = lastSpaceIndex;
+      if (testPage.length <= maxCharsPerPage) {
+        currentPage = testPage;
+      } else {
+        // Current page is full, start a new page
+        if (currentPage) {
+          pages.push(currentPage);
         }
+        currentPage = word;
       }
-      
-      const pageContent = text.slice(currentIndex, endIndex);
-      pages.push(pageContent);
-      currentIndex = endIndex;
-      
-      // Skip the space to avoid starting next page with a space
-      if (currentIndex < text.length && text[currentIndex] === ' ') {
-        currentIndex++;
-      }
+    }
+    
+    // Add the last page if there's content
+    if (currentPage) {
+      pages.push(currentPage);
     }
     
     return pages.length > 0 ? pages : [''];
