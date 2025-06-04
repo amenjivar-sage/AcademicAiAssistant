@@ -43,6 +43,16 @@ export async function seedDatabase() {
       password: "demo123",
     });
 
+    await db.insert(users).values({
+      username: "alexander.menjivar",
+      email: "alexander.menjivar@student.edu",
+      firstName: "Alexander",
+      lastName: "Menjivar",
+      role: "student", 
+      grade: "Senior",
+      password: "Dodgers23",
+    });
+
     // Create demo classroom
     const [classroom] = await db.insert(classrooms).values({
       name: "Creative Writing Workshop",
