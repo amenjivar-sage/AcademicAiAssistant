@@ -54,31 +54,33 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
 
-  // Auto-save functionality
-  const autoSaveMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const response = await fetch(`/api/writing-sessions/${sessionId}`, {
-        method: 'PATCH',
+  // Create session mutation
+  const createSessionMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch('/api/writing-sessions', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        body: JSON.stringify({
+          assignmentId: assignmentId,
+          title: 'Untitled Document',
+          content: '',
+          pastedContent: [],
+          wordCount: 0
+        })
       });
-      if (!response.ok) throw new Error('Failed to save');
+      if (!response.ok) throw new Error('Failed to create session');
       return response.json();
     },
-    onSuccess: () => {
-      setIsSaving(false);
-      setLastSaved(new Date());
-      queryClient.invalidateQueries({ queryKey: ['writing-session', sessionId] });
+    onSuccess: (newSession) => {
+      setSessionId(newSession.id);
       queryClient.invalidateQueries({ queryKey: ['/api/student/writing-sessions'] });
-    },
-    onError: (error) => {
-      setIsSaving(false);
-      console.error('Auto-save failed:', error);
     }
   });
 
+
+
   const saveSession = useCallback(async () => {
-    if (isSaving || autoSaveMutation.isPending) return;
+    if (isSaving) return;
 
     const hasContent = content.trim().length > 0 || title.trim().length > 0;
     if (!hasContent) return;
@@ -91,25 +93,46 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
 
     try {
       setIsSaving(true);
-      console.log('Auto-saving session:', sessionId, 'with data:', ['title', 'content', 'pastedContent', 'wordCount']);
+      
+      // If no session exists, create one first
+      let currentSessionId = sessionId;
+      if (!sessionId || sessionId === 0) {
+        console.log('Creating new session for assignment:', assignmentId);
+        const newSession = await createSessionMutation.mutateAsync();
+        currentSessionId = newSession.id;
+        console.log('Created new session with ID:', currentSessionId);
+      }
+      
+      console.log('Auto-saving session:', currentSessionId, 'with data:', ['title', 'content', 'pastedContent', 'wordCount']);
       console.log('Copy-paste data being saved:', pastedContents.length, 'items:', pastedContents);
       
-      await autoSaveMutation.mutateAsync({
-        title: title.trim(),
-        content: content,
-        pastedContent: pastedContents,
-        wordCount: currentWordCount
+      const response = await fetch(`/api/writing-sessions/${currentSessionId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: title.trim(),
+          content: content,
+          pastedContent: pastedContents,
+          wordCount: currentWordCount
+        })
       });
+      
+      if (!response.ok) throw new Error('Failed to save');
 
-      console.log('✓ Save successful - Session ID:', sessionId, 'Content length:', content.length);
+      console.log('✓ Save successful - Session ID:', currentSessionId, 'Content length:', content.length);
       console.log('✓ Saved content preview:', content.substring(0, 100) + '...');
       console.log('✓ Syncing session data after save');
       
       setWordCount(currentWordCount);
+      setIsSaving(false);
+      setLastSaved(new Date());
+      queryClient.invalidateQueries({ queryKey: ['writing-session', currentSessionId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/student/writing-sessions'] });
     } catch (error) {
       console.error('Save failed:', error);
+      setIsSaving(false);
     }
-  }, [content, title, pastedContents, wordCount, sessionId, isSaving, autoSaveMutation]);
+  }, [content, title, pastedContents, wordCount, sessionId, isSaving, assignmentId, createSessionMutation, queryClient, session]);
 
   // Auto-save effect
   useEffect(() => {
