@@ -210,6 +210,14 @@ export default function SubmissionViewer({ sessionId, onClose }: SubmissionViewe
     return <div className="whitespace-pre-wrap">{parts}</div>;
   };
 
+  // Debug logging for copy-paste tracking at component entry
+  console.log('=== SUBMISSION VIEWER DEBUG ===');
+  console.log('Session ID:', session?.id);
+  console.log('Session pastedContent type:', typeof session?.pastedContent);
+  console.log('Session pastedContent value:', session?.pastedContent);
+  console.log('Session content length:', session?.content?.length || 0);
+  console.log('=== END SUBMISSION VIEWER DEBUG ===');
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <Card className="w-full max-w-6xl max-h-[95vh] overflow-hidden">
