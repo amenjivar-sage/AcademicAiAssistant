@@ -371,7 +371,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       {/* Main Content Area with Sidebar */}
       <div className="flex-1 flex overflow-hidden">
         {/* Writing Content */}
-        <div className={`flex-1 overflow-auto ${showAiSidebar && !isAiSidebarMinimized ? 'mr-96' : showAiSidebar && isAiSidebarMinimized ? 'mr-16' : ''}`}>
+        <div className="flex-1 overflow-auto">
           <CopyPasteDetector
             allowCopyPaste={allowCopyPaste}
             onPasteDetected={handlePasteDetected}
@@ -393,7 +393,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
 
         {/* AI Assistant Sidebar */}
         {showAiSidebar && (
-          <div className={`${isAiSidebarMinimized ? 'w-16' : 'w-96'} border-l bg-white flex flex-col fixed right-0 top-0 h-full z-10 transition-all duration-300`}>
+          <div className={`${isAiSidebarMinimized ? 'w-16' : 'w-96'} border-l bg-white flex flex-col h-full transition-all duration-300`}>
             <div className="p-4 border-b">
               <div className="flex items-center justify-between">
                 {!isAiSidebarMinimized && <h3 className="font-semibold">ZoË</h3>}
