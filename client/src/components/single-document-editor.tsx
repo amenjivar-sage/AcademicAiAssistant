@@ -466,7 +466,7 @@ export default function SingleDocumentEditor({
                 }}
               />
             )}
-            
+
             {/* Visual formatting overlay - renders bold text */}
             {!readOnly && (
               <div 
@@ -486,7 +486,7 @@ export default function SingleDocumentEditor({
                 }}
               />
             )}
-
+            
             <textarea
               ref={textareaRef}
               className={`w-full resize-none border-none outline-none bg-transparent ${readOnly ? 'cursor-default text-gray-900' : 'text-transparent caret-black'} font-serif relative`}
@@ -495,7 +495,7 @@ export default function SingleDocumentEditor({
                 fontSize: "12pt",
                 lineHeight: "2.0",
                 padding: `${PAGE_PADDING}px`,
-                zIndex: 2,
+                zIndex: 3,
                 minHeight: `${pages.length * PAGE_HEIGHT_INCHES}in`,
                 width: `${PAGE_WIDTH_INCHES}in`,
                 caretColor: '#000000',
