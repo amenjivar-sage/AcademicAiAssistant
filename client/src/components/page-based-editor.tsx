@@ -74,7 +74,7 @@ export default function PageBasedEditor({
   const words = content.trim().split(/\s+/).filter(word => word.length > 0);
   const wordCount = words.length;
   
-  // Calculate pages and page break positions
+  // Calculate pages and page break positions with proper spacing
   const estimatedPages = Math.max(1, Math.ceil(wordCount / wordsPerPage));
   const pageBreaks: Array<{
     pageNumber: number;
@@ -83,18 +83,27 @@ export default function PageBasedEditor({
     estimatedLinePosition: number;
   }> = [];
   
-  // Calculate approximate page break positions in the content
+  // Standard page formatting constants
+  const WORDS_PER_LINE = 11; // Average words per line in Times New Roman 12pt double-spaced
+  const LINE_HEIGHT = 32; // Line height in pixels for proper double spacing
+  const LINES_PER_PAGE = 22; // Lines per page with standard 1-inch margins
+  const HEADER_HEIGHT = 64; // Space reserved for header
+  const FOOTER_HEIGHT = 64; // Space reserved for footer
+  const PAGE_CONTENT_HEIGHT = LINES_PER_PAGE * LINE_HEIGHT; // Usable content height per page
+  
+  // Calculate page break positions based on standard formatting
   for (let page = 1; page < estimatedPages; page++) {
     const wordsInPage = page * wordsPerPage;
     const wordsBeforeBreak = words.slice(0, wordsInPage);
     const textBeforeBreak = wordsBeforeBreak.join(' ');
     
-    // More accurate positioning based on line count and word wrapping
-    const avgCharsPerLine = 70; // More accurate for Times New Roman 12pt with margins
-    const approximateLines = Math.floor(textBeforeBreak.length / avgCharsPerLine);
-    const lineHeight = 32; // Double spacing line height in pixels
-    const topPadding = 64; // Account for header padding
-    const estimatedPixelPosition = topPadding + (approximateLines * lineHeight);
+    // Calculate line position for this page break
+    const linesBeforeBreak = Math.floor(wordsInPage / WORDS_PER_LINE);
+    const pageNumber = Math.floor(linesBeforeBreak / LINES_PER_PAGE);
+    const lineInCurrentPage = linesBeforeBreak % LINES_PER_PAGE;
+    
+    // Position within the document considering multiple pages
+    const estimatedPixelPosition = HEADER_HEIGHT + (linesBeforeBreak * LINE_HEIGHT);
     
     pageBreaks.push({
       pageNumber: page + 1,
@@ -397,24 +406,32 @@ export default function PageBasedEditor({
 
           {/* Content Area with Visual Page Breaks */}
           <div className={`px-16 ${(pageSettings.headerText || pageSettings.showStudentName) ? 'pt-8' : 'pt-16'} ${(pageSettings.footerText || pageSettings.showPageNumbers) ? 'pb-8' : 'pb-16'} min-h-[9in] relative`}>
-            {/* Page Break Visual Separators - Like Word's page gaps */}
-            {pageBreaks.map((pageBreak, index) => (
-              <div
-                key={index}
-                className="absolute left-0 right-0 z-5 pointer-events-none"
-                style={{
-                  top: `${pageBreak.estimatedLinePosition}px`,
-                  height: '30px',
-                  transform: 'translateY(-15px)'
-                }}
-              >
-                {/* Empty space between pages with subtle shadow */}
-                <div className="h-full bg-gray-50 shadow-inner border-t border-b border-gray-200">
-                  {/* Subtle page break line */}
-                  <div className="absolute top-1/2 left-1/4 right-1/4 border-t border-gray-300 opacity-30"></div>
+            {/* Page Break Visual Separators - Properly positioned */}
+            {pageBreaks.map((pageBreak, index) => {
+              // Calculate safe positioning that doesn't interfere with headers/footers
+              const CONTENT_AREA_HEIGHT = 704; // 22 lines * 32px line height
+              const SAFE_MAX_POSITION = CONTENT_AREA_HEIGHT - 100; // Leave space for footer
+              const adjustedPosition = Math.min(pageBreak.estimatedLinePosition, SAFE_MAX_POSITION);
+              
+              return (
+                <div
+                  key={index}
+                  className="absolute left-0 right-0 z-1 pointer-events-none"
+                  style={{
+                    top: `${adjustedPosition}px`,
+                    height: '20px',
+                    margin: '0 32px'
+                  }}
+                >
+                  {/* Simple page separator bar */}
+                  <div className="h-full bg-gray-100 border-y border-gray-300 shadow-sm">
+                    <div className="h-full flex items-center justify-center">
+                      <div className="w-16 border-t border-gray-400 opacity-50"></div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
             
             <RichTextEditor
               content={content}
