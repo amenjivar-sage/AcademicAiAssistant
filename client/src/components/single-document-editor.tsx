@@ -489,7 +489,7 @@ export default function SingleDocumentEditor({
 
             <textarea
               ref={textareaRef}
-              className={`w-full resize-none border-none outline-none bg-transparent ${readOnly ? 'cursor-default text-gray-900' : 'text-transparent'} font-serif relative`}
+              className={`w-full resize-none border-none outline-none bg-transparent ${readOnly ? 'cursor-default text-gray-900' : 'text-transparent caret-black'} font-serif relative`}
               style={{
                 fontFamily: "'Times New Roman', serif",
                 fontSize: "12pt",
@@ -498,6 +498,7 @@ export default function SingleDocumentEditor({
                 zIndex: 2,
                 minHeight: `${pages.length * PAGE_HEIGHT_INCHES}in`,
                 width: `${PAGE_WIDTH_INCHES}in`,
+                caretColor: '#000000',
                 margin: '0 auto'
               }}
               value={content}
