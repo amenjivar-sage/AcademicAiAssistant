@@ -79,17 +79,7 @@ export default function SingleDocumentEditor({
         </button>
       </div>
 
-      {/* Spell Check Panel */}
-      {isSpellCheckActive && (
-        <BubbleSpellCheckPanel
-          content={content}
-          onContentChange={onContentChange}
-          isOpen={isSpellCheckActive}
-          onClose={() => setIsSpellCheckActive(false)}
-        />
-      )}
-
-      <div className="flex flex-col items-center py-6">
+      <div className="flex flex-col items-center py-6 relative">
         {pages.map((pageContent, pageIndex) => (
           <div key={pageIndex} className="relative">
             {/* Page Break Indicator */}
@@ -181,6 +171,18 @@ export default function SingleDocumentEditor({
             </div>
           </div>
         ))}
+
+        {/* Spell Check Panel positioned within document area */}
+        {isSpellCheckActive && (
+          <div className="fixed bottom-8 right-8 z-50 max-w-md">
+            <BubbleSpellCheckPanel
+              content={content}
+              onContentChange={onContentChange}
+              isOpen={isSpellCheckActive}
+              onClose={() => setIsSpellCheckActive(false)}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

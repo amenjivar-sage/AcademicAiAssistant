@@ -31,9 +31,9 @@ export default function BubbleSpellCheckPanel({
   const [recentChanges, setRecentChanges] = useState<Array<{original: string, corrected: string, timestamp: number}>>([]);
   const [showSuccessMessage, setShowSuccessMessage] = useState<string | null>(null);
 
-  // Debounced spell checking
+  // Debounced spell checking with performance optimization
   const debouncedSpellCheck = useCallback(() => {
-    if (!isOpen) return;
+    if (!isOpen || isLoading) return;
     
     setIsLoading(true);
     
@@ -42,10 +42,11 @@ export default function BubbleSpellCheckPanel({
     if (autoCorrectResult.changes.length > 0) {
       onContentChange(autoCorrectResult.corrected);
       setRecentChanges(prev => [...prev, ...autoCorrectResult.changes]);
+      setIsLoading(false);
       return;
     }
 
-    // Use AI-powered spell checking
+    // Use AI-powered spell checking with longer debounce
     checkSpellingWithAI(content).then(errors => {
       setSpellErrors(errors);
       onSpellErrorsChange?.(errors);
@@ -62,11 +63,11 @@ export default function BubbleSpellCheckPanel({
       onCurrentErrorChange?.(0);
       setIsLoading(false);
     });
-  }, [content, isOpen, onContentChange, onSpellErrorsChange, onCurrentErrorChange]);
+  }, [content, isOpen, isLoading, onContentChange, onSpellErrorsChange, onCurrentErrorChange]);
 
   useEffect(() => {
-    if (isOpen) {
-      const timer = setTimeout(debouncedSpellCheck, 300);
+    if (isOpen && !isLoading) {
+      const timer = setTimeout(debouncedSpellCheck, 1500); // Increased debounce time
       return () => clearTimeout(timer);
     }
   }, [debouncedSpellCheck]);
