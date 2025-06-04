@@ -159,32 +159,44 @@ export default function SingleTextareaPagesEditor({
           {/* Page backgrounds */}
           {generatePageBackgrounds()}
           
-          {/* Main textarea overlay */}
-          <textarea
-            ref={textareaRef}
-            className="absolute w-full resize-none border-none outline-none bg-transparent text-gray-900 font-serif"
+          {/* Single textarea with proper page boundaries */}
+          <div
+            className="absolute"
             style={{
-              fontFamily: "'Times New Roman', serif",
-              fontSize: "12pt",
-              lineHeight: "2.0",
-              top: `${HEADER_HEIGHT}px`,
+              top: `${HEADER_HEIGHT + 48}px`,
               left: '1.25in',
-              right: '1in',
-              bottom: `${FOOTER_HEIGHT}px`,
-              width: 'calc(8.5in - 2.25in)', // Total width minus left and right margins
-              height: `calc(${totalPages * 11.5}in - ${HEADER_HEIGHT + FOOTER_HEIGHT}px)`,
-              paddingTop: '0.5in', // Additional top padding after header
-              paddingBottom: '0.5in', // Additional bottom padding before footer
+              width: 'calc(8.5in - 2.25in)',
+              height: `calc(${totalPages * 11.5}in - ${(HEADER_HEIGHT + FOOTER_HEIGHT + 96) * totalPages}px)`,
               zIndex: 10
             }}
-            value={content}
-            onChange={handleContentChange}
-            onKeyDown={handleKeyDown}
-            onClick={handleClick}
-            onKeyUp={(e) => setCursorPosition(e.currentTarget.selectionStart)}
-            placeholder="Start writing your document..."
-            spellCheck={true}
-          />
+          >
+            <textarea
+              ref={textareaRef}
+              className="w-full h-full resize-none border-none outline-none bg-transparent text-gray-900 font-serif"
+              style={{
+                fontFamily: "'Times New Roman', serif",
+                fontSize: "12pt",
+                lineHeight: "2.0",
+                padding: '0',
+                backgroundImage: `repeating-linear-gradient(
+                  transparent,
+                  transparent ${LINES_PER_PAGE * 32 - 2}px,
+                  #ff0000 ${LINES_PER_PAGE * 32 - 1}px,
+                  #ff0000 ${LINES_PER_PAGE * 32}px,
+                  transparent ${LINES_PER_PAGE * 32 + 1}px,
+                  transparent ${LINES_PER_PAGE * 32 + (HEADER_HEIGHT + FOOTER_HEIGHT)}px
+                )`,
+                backgroundSize: `100% ${11.5 * 96}px`
+              }}
+              value={content}
+              onChange={handleContentChange}
+              onKeyDown={handleKeyDown}
+              onClick={handleClick}
+              onKeyUp={(e) => setCursorPosition(e.currentTarget.selectionStart)}
+              placeholder="Start writing your document..."
+              spellCheck={true}
+            />
+          </div>
         </div>
       </div>
     </div>
