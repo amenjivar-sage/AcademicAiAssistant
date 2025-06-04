@@ -247,7 +247,7 @@ export default function BubbleSpellCheckPanel({
   const hasErrors = spellErrors.length > 0;
 
   return (
-    <Card className="w-96 h-auto flex flex-col">
+    <Card className="w-80 h-auto flex flex-col">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg">Spell Check</CardTitle>

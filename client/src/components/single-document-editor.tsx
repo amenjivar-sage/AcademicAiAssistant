@@ -151,20 +151,42 @@ export default function SingleDocumentEditor({
                 }}
               >
                 {pageIndex === 0 ? (
-                  <textarea
-                    ref={textareaRef}
-                    className="w-full h-full resize-none border-none outline-none bg-transparent text-gray-900 font-serif"
-                    style={{
-                      fontFamily: "'Times New Roman', serif",
-                      fontSize: "12pt",
-                      lineHeight: "2.0",
-                      padding: 0
-                    }}
-                    value={content}
-                    onChange={(e) => handleContentChange(e.target.value)}
-                    placeholder="Start writing your document..."
-                    spellCheck={true}
-                  />
+                  <div className="relative w-full h-full">
+                    {/* Highlighting overlay for misspelled words */}
+                    {isSpellCheckActive && spellErrors.length > 0 && (
+                      <div 
+                        className="absolute inset-0 pointer-events-none"
+                        style={{
+                          fontFamily: "'Times New Roman', serif",
+                          fontSize: "12pt",
+                          lineHeight: "2.0",
+                          padding: 0,
+                          whiteSpace: 'pre-wrap',
+                          wordWrap: 'break-word',
+                          color: 'transparent',
+                          zIndex: 1
+                        }}
+                        dangerouslySetInnerHTML={{
+                          __html: highlightMisspelledWords(content, spellErrors)
+                        }}
+                      />
+                    )}
+                    <textarea
+                      ref={textareaRef}
+                      className="w-full h-full resize-none border-none outline-none bg-transparent text-gray-900 font-serif relative"
+                      style={{
+                        fontFamily: "'Times New Roman', serif",
+                        fontSize: "12pt",
+                        lineHeight: "2.0",
+                        padding: 0,
+                        zIndex: 2
+                      }}
+                      value={content}
+                      onChange={(e) => handleContentChange(e.target.value)}
+                      placeholder="Start writing your document..."
+                      spellCheck={false}
+                    />
+                  </div>
                 ) : (
                   <div 
                     className="w-full h-full text-gray-900 font-serif whitespace-pre-wrap"
@@ -197,7 +219,7 @@ export default function SingleDocumentEditor({
 
         {/* Spell Check Panel positioned within document area */}
         {isSpellCheckActive && (
-          <div className="fixed bottom-8 right-8 z-50 max-w-md">
+          <div className="fixed bottom-8 right-8 z-50">
             <BubbleSpellCheckPanel
               content={content}
               onContentChange={onContentChange}

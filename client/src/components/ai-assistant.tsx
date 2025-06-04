@@ -246,8 +246,9 @@ export default function AiAssistant({ sessionId, currentContent }: AiAssistantPr
 
         <TabsContent value="assistant" className="flex-1 flex flex-col min-h-0">
           {/* Scrollable Content Area */}
-          <div className="flex-1 overflow-y-auto min-h-0">
-            {/* Chat History */}
+          <ScrollArea className="flex-1 min-h-0">
+            <div className="p-1">
+              {/* Chat History */}
             {displayChatHistory && displayChatHistory.length > 0 && (
               <div className="p-4">
                 <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
@@ -293,7 +294,8 @@ export default function AiAssistant({ sessionId, currentContent }: AiAssistantPr
                 </Alert>
               </div>
             )}
-          </div>
+            </div>
+          </ScrollArea>
 
           {/* Fixed Input Area */}
           <div className="border-t bg-white p-4 space-y-4 flex-shrink-0">
