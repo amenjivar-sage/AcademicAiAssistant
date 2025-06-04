@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Settings, Send, AlertTriangle, Shield, FileText, MessageSquare, Download, Save, GraduationCap, Trophy } from 'lucide-react';
+import { ArrowLeft, Settings, Send, AlertTriangle, Shield, FileText, MessageSquare, Download, Save, GraduationCap, Trophy, Type, Bold, ChevronDown, ChevronUp } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import CopyPasteDetector from './copy-paste-detector';
 import SingleDocumentEditor from './single-document-editor';
@@ -47,6 +47,9 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     footer: "",
     pageNumbers: false
   });
+  const [showFormattingToolbox, setShowFormattingToolbox] = useState(false);
+  const [isFormattingMinimized, setIsFormattingMinimized] = useState(false);
+  const [selectedText, setSelectedText] = useState('');
 
   const contentRef = useRef<HTMLTextAreaElement>(null);
   const formatRef = useRef<((command: string, value?: string) => void) | null>(null);
@@ -406,6 +409,90 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                 </div>
               </DialogContent>
             </Dialog>
+
+            {/* Formatting Toolbox */}
+            {!showFormattingToolbox ? (
+              <Button
+                onClick={() => setShowFormattingToolbox(true)}
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                title="Open Formatting Tools"
+              >
+                <Type className="h-4 w-4" />
+              </Button>
+            ) : (
+              <div className="relative">
+                <Card className="absolute right-0 top-full mt-2 w-64 shadow-lg border-gray-300 z-50">
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-sm font-medium flex items-center">
+                        <Type className="h-4 w-4 mr-2" />
+                        {isFormattingMinimized ? "Format" : "Formatting Tools"}
+                      </CardTitle>
+                      <div className="flex items-center space-x-1">
+                        <Button
+                          onClick={() => setIsFormattingMinimized(!isFormattingMinimized)}
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 w-6 p-0"
+                          title={isFormattingMinimized ? "Expand" : "Minimize"}
+                        >
+                          {isFormattingMinimized ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
+                        </Button>
+                        <Button
+                          onClick={() => setShowFormattingToolbox(false)}
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 w-6 p-0"
+                          title="Close"
+                        >
+                          ×
+                        </Button>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  
+                  {!isFormattingMinimized && (
+                    <CardContent className="pt-0">
+                      <div className="space-y-3">
+                        {/* Text Formatting Section */}
+                        <div>
+                          <div className="text-xs font-medium text-gray-500 mb-2">Text Formatting</div>
+                          <div className="flex flex-wrap gap-1">
+                            <Button
+                              onClick={() => {
+                                if (formatRef.current) {
+                                  formatRef.current('bold');
+                                }
+                              }}
+                              size="sm"
+                              variant="outline"
+                              className={`h-8 w-8 p-0 ${selectedText ? 'hover:bg-blue-50' : 'opacity-50 cursor-not-allowed'}`}
+                              disabled={!selectedText}
+                              title="Bold (Ctrl+B)"
+                            >
+                              <Bold className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        {/* Status */}
+                        <div className="text-xs text-gray-400 border-t pt-2">
+                          {selectedText ? (
+                            <span className="text-blue-600">
+                              {selectedText.length} characters selected
+                            </span>
+                          ) : (
+                            "Select text to format"
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  )}
+                </Card>
+              </div>
+            )}
 
             <Button
               onClick={() => setShowAiSidebar(!showAiSidebar)}
