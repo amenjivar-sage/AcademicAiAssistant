@@ -835,7 +835,12 @@ function StudentDetailView({ student, sessions, allAssignments, allUsers, allCla
                                       <Button
                                         size="sm"
                                         variant="outline"
-                                        onClick={() => window.open(`/write?sessionId=${session.id}`, '_blank')}
+                                        onClick={() => {
+                                          const assignment = allAssignments.find((a: any) => a.id === session.assignmentId);
+                                          if (assignment) {
+                                            window.open(`/assignment/${assignment.id}/session/${session.id}`, '_blank');
+                                          }
+                                        }}
                                         className="text-xs h-7"
                                       >
                                         <Eye className="h-3 w-3 mr-1" />
