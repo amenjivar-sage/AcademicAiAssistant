@@ -294,24 +294,25 @@ export default function SingleDocumentEditor({
           {isSpellCheckActive ? 'Disable Spell Check' : 'Enable Spell Check'}
         </button>
 
-        {/* Formatting Tools */}
-        {selectedText && (
-          <div className="bg-white border border-gray-300 rounded-lg shadow-lg p-2">
-            <div className="flex items-center space-x-2">
-              <span className="text-xs text-gray-500">Format:</span>
-              <button
-                onClick={applyBoldFormatting}
-                className="px-2 py-1 text-sm font-bold border border-gray-300 rounded hover:bg-gray-50"
-                title="Bold"
-              >
-                B
-              </button>
-            </div>
-            <div className="text-xs text-gray-400 mt-1">
-              {selectedText.length} chars selected
-            </div>
+        {/* Formatting Tools - Always Visible */}
+        <div className="bg-white border border-gray-300 rounded-lg shadow-lg p-2">
+          <div className="flex items-center space-x-2">
+            <span className="text-xs text-gray-500">Format:</span>
+            <button
+              onClick={applyBoldFormatting}
+              className={`px-2 py-1 text-sm font-bold border border-gray-300 rounded hover:bg-gray-50 ${
+                selectedText ? 'bg-blue-50 border-blue-300' : 'opacity-50 cursor-not-allowed'
+              }`}
+              title="Bold (Select text first)"
+              disabled={!selectedText}
+            >
+              B
+            </button>
           </div>
-        )}
+          <div className="text-xs text-gray-400 mt-1">
+            {selectedText ? `${selectedText.length} chars selected` : 'Select text to format'}
+          </div>
+        </div>
         
         {/* Page Count Debug */}
         <div className="bg-yellow-100 border border-yellow-400 px-4 py-2 rounded-lg shadow-lg">
