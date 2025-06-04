@@ -21,51 +21,56 @@ const CHARS_PER_LINE = 85; // Characters per line for text wrapping estimation
 function splitTextToPages(text: string): string[] {
   if (!text) return [""];
   
-  // Split content into lines and process sequentially
-  const lines = text.split('\n');
+  // Debug logging
+  console.log("Splitting text to pages:", {
+    textLength: text.length,
+    lineBreakPattern: text.match(/\n{5,}/g),
+    totalLines: text.split('\n').length
+  });
+  
+  // Use a more direct approach - split by multiple consecutive line breaks
+  const sections = text.split(/\n{5,}/); // 5+ consecutive line breaks = new page
   const pages: string[] = [];
-  let currentPage = "";
-  let currentLineCount = 0;
-  let consecutiveEmptyLines = 0;
   
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    
-    // Track consecutive empty lines
-    if (line.trim() === "") {
-      consecutiveEmptyLines++;
-    } else {
-      consecutiveEmptyLines = 0;
-    }
-    
-    // If we have 5+ consecutive empty lines, start a new page
-    if (consecutiveEmptyLines >= 5 && currentPage.trim()) {
-      pages.push(currentPage.trimEnd());
-      currentPage = "";
-      currentLineCount = 0;
-      consecutiveEmptyLines = 0;
-      continue;
-    }
-    
-    // Check if adding this line would exceed page limits
-    if (currentLineCount >= LINES_PER_PAGE && currentPage.trim()) {
-      // Start new page
-      pages.push(currentPage.trimEnd());
-      currentPage = line + '\n';
-      currentLineCount = 1;
-    } else {
-      currentPage += line + '\n';
-      currentLineCount++;
-    }
-  }
+  console.log("Found sections:", sections.length);
   
-  // Add the last page
-  if (currentPage || pages.length === 0) {
-    pages.push(currentPage.trimEnd());
-  }
+  sections.forEach((section, index) => {
+    console.log(`Processing section ${index}:`, {
+      length: section.length,
+      lines: section.split('\n').length,
+      hasContent: section.trim().length > 0
+    });
+    
+    if (!section && index === 0) {
+      pages.push("");
+      return;
+    }
+    
+    // Split long sections by line count if needed
+    const lines = section.split('\n');
+    let currentPage = "";
+    let lineCount = 0;
+    
+    for (const line of lines) {
+      if (lineCount >= LINES_PER_PAGE && currentPage.trim()) {
+        pages.push(currentPage.trimEnd());
+        currentPage = line + '\n';
+        lineCount = 1;
+      } else {
+        currentPage += line + '\n';
+        lineCount++;
+      }
+    }
+    
+    if (currentPage || pages.length === 0) {
+      pages.push(currentPage.trimEnd());
+    }
+  });
   
   // Always have at least one page
   if (pages.length === 0) pages.push("");
+  
+  console.log("Final pages count:", pages.length);
   
   return pages;
 }
