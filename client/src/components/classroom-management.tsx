@@ -215,7 +215,7 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
                   className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
                 >
                   <Archive className="h-4 w-4 mr-1" />
-                  Archive
+                  {archiveClassroomMutation.isPending ? 'Archiving...' : 'Archive'}
                 </Button>
               ) : (
                 <Button 
@@ -226,7 +226,7 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
                   className="text-green-600 hover:text-green-700 hover:bg-green-50"
                 >
                   <RotateCcw className="h-4 w-4 mr-1" />
-                  Reactivate
+                  {reactivateClassroomMutation.isPending ? 'Reactivating...' : 'Reactivate'}
                 </Button>
               )}
             </div>
@@ -440,11 +440,18 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
                             </div>
                           </div>
                           <div className="flex items-center space-x-2">
-                            <Button variant="outline" size="sm">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => {
+                                // Navigate to submissions page for this assignment
+                                window.location.href = `/teacher/submissions/${assignment.id}`;
+                              }}
+                            >
                               <Eye className="h-4 w-4 mr-1" />
                               View Submissions
                             </Button>
-                            {assignment.status === 'active' && (
+                            {assignment.status === 'active' && selectedClassroom?.isActive && (
                               <Button 
                                 variant="outline" 
                                 size="sm"
