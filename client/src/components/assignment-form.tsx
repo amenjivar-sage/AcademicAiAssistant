@@ -28,6 +28,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import { CalendarIcon, Plus, FileText, Settings, Sparkles } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -43,6 +45,7 @@ interface AssignmentFormProps {
 
 const formSchema = insertAssignmentSchema.extend({
   dueDate: insertAssignmentSchema.shape.dueDate.nullable(),
+  classroomIds: insertAssignmentSchema.shape.classroomIds.optional(),
 });
 
 export default function AssignmentForm({ teacherId, children, assignment, mode = "create", classroomId }: AssignmentFormProps) {
@@ -61,6 +64,7 @@ export default function AssignmentForm({ teacherId, children, assignment, mode =
     defaultValues: {
       teacherId,
       classroomId: assignment?.classroomId || classroomId || null,
+      classroomIds: assignment?.classroomIds || (classroomId ? [classroomId] : []),
       title: assignment?.title || "",
       description: assignment?.description || "",
       dueDate: assignment?.dueDate ? new Date(assignment.dueDate) : null,
@@ -260,31 +264,55 @@ export default function AssignmentForm({ teacherId, children, assignment, mode =
 
               <FormField
                 control={form.control}
-                name="classroomId"
+                name="classroomIds"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Class</FormLabel>
-                    <Select 
-                      onValueChange={(value) => field.onChange(value === "0" ? null : parseInt(value))}
-                      value={field.value?.toString() || "0"}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a class for this assignment" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="0">No class (general assignment)</SelectItem>
-                        {classrooms?.map((classroom) => (
-                          <SelectItem key={classroom.id} value={classroom.id.toString()}>
-                            {classroom.name} - {classroom.subject} ({classroom.gradeLevel})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormLabel>Assign to Classes</FormLabel>
                     <FormDescription>
-                      Choose which class this assignment belongs to, or leave unselected for a general assignment.
+                      Select one or more classes for this assignment. You can assign the same assignment to multiple classes.
                     </FormDescription>
+                    <div className="space-y-3 mt-3">
+                      {classrooms?.map((classroom) => {
+                        const isChecked = field.value?.includes(classroom.id) || false;
+                        return (
+                          <div key={classroom.id} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`classroom-${classroom.id}`}
+                              checked={isChecked}
+                              onCheckedChange={(checked) => {
+                                const currentValue = field.value || [];
+                                if (checked) {
+                                  field.onChange([...currentValue, classroom.id]);
+                                } else {
+                                  field.onChange(currentValue.filter(id => id !== classroom.id));
+                                }
+                              }}
+                            />
+                            <label
+                              htmlFor={`classroom-${classroom.id}`}
+                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                            >
+                              {classroom.name} - {classroom.subject} ({classroom.gradeLevel})
+                            </label>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {field.value && field.value.length > 0 && (
+                      <div className="mt-3">
+                        <p className="text-sm text-gray-600 mb-2">Selected classes:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {field.value.map((classroomId: number) => {
+                            const classroom = classrooms?.find(c => c.id === classroomId);
+                            return classroom ? (
+                              <Badge key={classroomId} variant="secondary" className="text-xs">
+                                {classroom.name}
+                              </Badge>
+                            ) : null;
+                          })}
+                        </div>
+                      </div>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}

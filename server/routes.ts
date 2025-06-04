@@ -746,6 +746,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const assignmentData = {
         teacherId: currentUser.id,
         classroomId: req.body.classroomId ? parseInt(req.body.classroomId) : null,
+        classroomIds: req.body.classroomIds || [],
         title: String(req.body.title || '').trim(),
         description: String(req.body.description || '').trim(),
         dueDate: req.body.dueDate ? new Date(req.body.dueDate) : null,
