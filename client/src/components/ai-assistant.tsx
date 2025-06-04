@@ -300,9 +300,9 @@ export default function AiAssistant({ sessionId, currentContent }: AiAssistantPr
           </div>
 
           {/* Input Area */}
-          <div className="border-t bg-white p-8 space-y-6 flex-shrink-0">
-            <div>
-              <label className="block text-base font-medium text-gray-700 mb-4">
+          <div className="border-t bg-white p-8 space-y-8 flex-shrink-0">
+            <div className="space-y-6">
+              <label className="block text-base font-medium text-gray-700 mb-6">
                 Ask ZoË for help with your writing:
               </label>
               <Textarea
@@ -310,8 +310,8 @@ export default function AiAssistant({ sessionId, currentContent }: AiAssistantPr
                 onChange={(e) => setPrompt(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Example: 'Help me brainstorm ideas' or 'How can I improve this paragraph?'"
-                className="resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent min-h-[100px]"
-                rows={3}
+                className="resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent min-h-[140px]"
+                rows={5}
               />
             </div>
             
