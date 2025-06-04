@@ -156,7 +156,7 @@ export default function SingleDocumentEditor({
           const escapedSearchText = searchText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
           const regex = new RegExp(escapedSearchText, 'g');
           highlightedText = highlightedText.replace(regex, (match) => {
-            return `<span style="background-color: #dbeafe; border-bottom: 2px solid #3b82f6; color: #1e40af; font-weight: 500; padding: 1px 2px; border-radius: 2px; cursor: help;" title="Teacher Comment: ${comment.comment.replace(/"/g, '&quot;')}" data-comment-id="${comment.id}">${match}</span>`;
+            return `<span style="background-color: #dbeafe; border: 2px solid #3b82f6; color: #1e40af; font-weight: 600; padding: 2px 4px; border-radius: 4px; cursor: help; position: relative;" title="💬 Teacher Comment: ${comment.comment.trim()}" data-comment-id="${comment.id}">${match}</span>`;
           });
         }
       });
