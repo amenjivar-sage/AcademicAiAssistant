@@ -224,10 +224,14 @@ export default function SingleDocumentEditor({
       const end = textareaRef.current.selectionEnd;
       const selected = content.substring(start, end);
       
+      console.log('Text selection:', { start, end, selected, length: selected.length });
+      
       setSelectionStart(start);
       setSelectionEnd(end);
       setSelectedText(selected);
       setShowFormatting(selected.length > 0);
+      
+      console.log('ShowFormatting set to:', selected.length > 0);
     }
   };
 
