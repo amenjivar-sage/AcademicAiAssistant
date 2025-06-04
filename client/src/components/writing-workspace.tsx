@@ -167,6 +167,16 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     onError: (error) => {
       setIsSaving(false);
       console.error('Save failed:', error);
+      
+      // Don't show error toast if it's just a network timeout or connection issue
+      // The emergency save system will handle these cases
+      if (!error.message.includes('fetch') && !error.message.includes('network')) {
+        toast({
+          title: "Save Error",
+          description: "There was an issue saving your work. Your content is being preserved.",
+          variant: "destructive",
+        });
+      }
     },
   });
 

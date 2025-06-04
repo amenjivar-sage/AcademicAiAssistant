@@ -89,11 +89,12 @@ export default function PageBasedEditor({
     const wordsBeforeBreak = words.slice(0, wordsInPage);
     const textBeforeBreak = wordsBeforeBreak.join(' ');
     
-    // Estimate line position based on character count and line length
-    const avgCharsPerLine = 80; // Approximate characters per line in Times New Roman 12pt
-    const linesBeforeBreak = Math.floor(textBeforeBreak.length / avgCharsPerLine);
-    const lineHeight = 28; // Approximate line height in pixels for double spacing
-    const estimatedPixelPosition = linesBeforeBreak * lineHeight;
+    // More accurate positioning based on line count and word wrapping
+    const avgCharsPerLine = 70; // More accurate for Times New Roman 12pt with margins
+    const approximateLines = Math.floor(textBeforeBreak.length / avgCharsPerLine);
+    const lineHeight = 32; // Double spacing line height in pixels
+    const topPadding = 64; // Account for header padding
+    const estimatedPixelPosition = topPadding + (approximateLines * lineHeight);
     
     pageBreaks.push({
       pageNumber: page + 1,
@@ -400,18 +401,18 @@ export default function PageBasedEditor({
             {pageBreaks.map((pageBreak, index) => (
               <div
                 key={index}
-                className="absolute left-0 right-0 z-10 pointer-events-none"
+                className="absolute left-4 right-4 z-20 pointer-events-none"
                 style={{
                   top: `${pageBreak.estimatedLinePosition}px`,
-                  transform: 'translateY(-50%)'
+                  marginTop: '-12px'
                 }}
               >
-                <div className="flex items-center my-2">
-                  <div className="flex-1 border-t-2 border-dashed border-blue-400 opacity-75"></div>
-                  <div className="px-3 py-1 bg-blue-500 text-white text-xs font-medium rounded-full mx-2 shadow-sm">
-                    Page {pageBreak.pageNumber}
+                <div className="flex items-center py-2">
+                  <div className="flex-1 border-t-2 border-dashed border-blue-500"></div>
+                  <div className="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg mx-3 shadow-lg">
+                    📄 Page {pageBreak.pageNumber} begins here
                   </div>
-                  <div className="flex-1 border-t-2 border-dashed border-blue-400 opacity-75"></div>
+                  <div className="flex-1 border-t-2 border-dashed border-blue-500"></div>
                 </div>
               </div>
             ))}
