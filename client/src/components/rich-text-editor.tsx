@@ -86,22 +86,54 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
   return (
     <div className="rich-text-editor-container">
       <style>{`
+        .rich-text-editor-container {
+          background: #f3f4f6;
+          padding: 40px 20px;
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .document-pages {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+          width: 8.5in;
+        }
+
+        .document-page {
+          background: white;
+          width: 8.5in;
+          min-height: 11in;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+          border: 1px solid #e5e7eb;
+          position: relative;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .ql-container {
+          border: none !important;
+          font-family: 'Times New Roman', serif !important;
+          background: transparent !important;
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+        }
+
         .ql-editor {
           font-family: 'Times New Roman', serif !important;
           font-size: 12pt !important;
           line-height: 2.0 !important;
           padding: 96px !important;
-          min-height: 11in !important;
-          width: 8.5in !important;
-          margin: 0 auto !important;
-          background: white !important;
-          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
-          border: 1px solid #e5e7eb !important;
-        }
-        
-        .ql-container {
+          background: transparent !important;
           border: none !important;
-          font-family: 'Times New Roman', serif !important;
+          margin: 0 !important;
+          width: 100% !important;
+          min-height: calc(11in - 192px) !important;
+          flex: 1;
+          overflow: visible !important;
         }
         
         .ql-editor.ql-blank::before {
@@ -117,18 +149,49 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
         .ql-editor strong {
           font-weight: bold !important;
         }
+
+        .ql-toolbar {
+          display: none !important;
+        }
+
+        /* Custom scrollbar for the editor area */
+        .rich-text-editor-container {
+          scrollbar-width: thin;
+          scrollbar-color: #cbd5e1 #f1f5f9;
+        }
+
+        .rich-text-editor-container::-webkit-scrollbar {
+          width: 8px;
+        }
+
+        .rich-text-editor-container::-webkit-scrollbar-track {
+          background: #f1f5f9;
+        }
+
+        .rich-text-editor-container::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 4px;
+        }
+
+        .rich-text-editor-container::-webkit-scrollbar-thumb:hover {
+          background: #94a3b8;
+        }
       `}</style>
       
-      <ReactQuill
-        ref={quillRef}
-        value={content}
-        onChange={handleChange}
-        modules={modules}
-        formats={formats}
-        readOnly={readOnly}
-        placeholder={placeholder}
-        theme="snow"
-      />
+      <div className="document-pages">
+        <div className="document-page">
+          <ReactQuill
+            ref={quillRef}
+            value={content}
+            onChange={handleChange}
+            modules={modules}
+            formats={formats}
+            readOnly={readOnly}
+            placeholder={placeholder}
+            theme="snow"
+          />
+        </div>
+      </div>
     </div>
   );
 });
