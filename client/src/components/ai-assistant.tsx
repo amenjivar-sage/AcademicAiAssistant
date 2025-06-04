@@ -300,7 +300,7 @@ export default function AiAssistant({ sessionId, currentContent }: AiAssistantPr
           </div>
 
           {/* Input Area */}
-          <div className="border-t bg-white p-8 space-y-8 flex-shrink-0">
+          <div className="border-t bg-white p-8 space-y-8 flex-shrink-0 relative z-50 mb-20">
             <div className="space-y-6">
               <label className="block text-base font-medium text-gray-700 mb-6">
                 Ask ZoË for help with your writing:

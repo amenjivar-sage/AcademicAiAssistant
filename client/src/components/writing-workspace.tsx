@@ -479,7 +479,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       </div>
 
       {/* Footer Actions */}
-      <div className="border-t bg-white p-4">
+      <div className="border-t bg-white p-4 relative z-10">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             {!allowCopyPaste && (
