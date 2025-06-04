@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Settings, Send, AlertTriangle, Shield, FileText, MessageSquare, Download, Save, GraduationCap, Trophy, Type, Bold, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Settings, Send, AlertTriangle, Shield, FileText, MessageSquare, Download, Save, GraduationCap, Trophy, Type, Bold, Italic, Underline, ChevronDown, ChevronUp } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import CopyPasteDetector from './copy-paste-detector';
 import RichTextEditor, { RichTextEditorHandle } from './rich-text-editor';
@@ -483,6 +483,50 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                               title="Bold (Ctrl+B)"
                             >
                               <Bold className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              onClick={() => {
+                                if (contentRef.current) {
+                                  const editor = contentRef.current.getEditor();
+                                  if (editor) {
+                                    const quillEditor = editor.getEditor();
+                                    const selection = quillEditor.getSelection();
+                                    if (selection) {
+                                      const currentFormat = quillEditor.getFormat(selection);
+                                      quillEditor.format('italic', !currentFormat.italic);
+                                    }
+                                  }
+                                }
+                              }}
+                              size="sm"
+                              variant="outline"
+                              className="h-8 w-8 p-0 hover:bg-blue-50"
+                              disabled={false}
+                              title="Italic (Ctrl+I)"
+                            >
+                              <Italic className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              onClick={() => {
+                                if (contentRef.current) {
+                                  const editor = contentRef.current.getEditor();
+                                  if (editor) {
+                                    const quillEditor = editor.getEditor();
+                                    const selection = quillEditor.getSelection();
+                                    if (selection) {
+                                      const currentFormat = quillEditor.getFormat(selection);
+                                      quillEditor.format('underline', !currentFormat.underline);
+                                    }
+                                  }
+                                }
+                              }}
+                              size="sm"
+                              variant="outline"
+                              className="h-8 w-8 p-0 hover:bg-blue-50"
+                              disabled={false}
+                              title="Underline (Ctrl+U)"
+                            >
+                              <Underline className="h-4 w-4" />
                             </Button>
                           </div>
                         </div>
