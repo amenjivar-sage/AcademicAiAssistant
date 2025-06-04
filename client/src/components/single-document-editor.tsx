@@ -211,8 +211,11 @@ export default function SingleDocumentEditor({
                         padding: 0,
                         zIndex: 2
                       }}
-                      value={content}
-                      onChange={(e) => handleContentChange(e.target.value)}
+                      value={pageContent}
+                      onChange={(e) => {
+                        // Update the full content directly
+                        handleContentChange(e.target.value);
+                      }}
                       placeholder="Start writing your document..."
                       spellCheck={false}
                     />
