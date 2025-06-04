@@ -161,83 +161,60 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     pageRefs.current = pageRefs.current.slice(0, pages.length);
   }, [pages.length]);
 
-  // Create keyboard event handler for each page
-  const createKeyDownHandler = (pageIndex: number) => (e: KeyboardEvent) => {
+  // Handle keyboard events for automatic page creation
+  const handleKeyDown = (e: React.KeyboardEvent, pageIndex: number) => {
     if (e.key === 'Enter' && pageIndex === pages.length - 1) {
       const currentRef = pageRefs.current[pageIndex];
       if (!currentRef) return;
 
-      const editorElement = currentRef.getEditor().root;
-      const scrollHeight = editorElement.scrollHeight;
-      const clientHeight = editorElement.clientHeight;
-      const scrollTop = editorElement.scrollTop;
-      
-      // Calculate if we're near the bottom of the page content
-      const currentBottom = scrollTop + clientHeight;
-      const isNearBottom = currentBottom >= scrollHeight - 50; // 50px threshold
-      
-      // Also check if content exceeds page height
-      const maxPageHeight = 856; // 1000px - 144px padding
-      const contentExceedsHeight = scrollHeight > maxPageHeight;
-      
-      if (isNearBottom || contentExceedsHeight) {
+      // Get the container element for height calculation
+      const pageContainer = currentRef.getEditor().root.closest('.single-document-page') as HTMLElement;
+      if (!pageContainer) return;
+
+      const scrollHeight = pageContainer.scrollHeight;
+      const clientHeight = pageContainer.clientHeight;
+      const isNearBottom = scrollHeight >= clientHeight - 50; // 50px threshold
+
+      if (isNearBottom) {
         e.preventDefault();
-        console.log(`Creating new page - scrollHeight: ${scrollHeight}, maxHeight: ${maxPageHeight}`);
+        console.log(`Creating new page at Enter - page ${pageIndex + 1} -> ${pageIndex + 2}`);
         
         // Create new page
         const newPagesList = [...pages, ''];
         setPages(newPagesList);
         setActivePage(pageIndex + 1);
         
-        // Move cursor to new page
+        // Focus new page with proper cursor positioning
         setTimeout(() => {
           const newPageRef = pageRefs.current[pageIndex + 1];
           if (newPageRef) {
-            newPageRef.focus();
-            newPageRef.getEditor().setSelection(0, 0);
-            console.log(`Moved to page ${pageIndex + 2}`);
+            const newEditor = newPageRef.getEditor();
+            newEditor.focus();
+            
+            // Set cursor at beginning of new page using DOM range
+            const nextQuillEditor = newPageRef.getEditor().root;
+            if (nextQuillEditor) {
+              const range = document.createRange();
+              const sel = window.getSelection();
+              if (nextQuillEditor.firstChild) {
+                range.setStart(nextQuillEditor.firstChild, 0);
+                range.collapse(true);
+              } else {
+                range.selectNodeContents(nextQuillEditor);
+                range.collapse(true);
+              }
+              sel?.removeAllRanges();
+              sel?.addRange(range);
+              
+              console.log(`Focused on new page ${pageIndex + 2}`);
+            }
           }
         }, 100);
       }
     }
   };
 
-  // Attach keyboard listeners when pages change
-  useEffect(() => {
-    // Cleanup existing listeners
-    pageRefs.current.forEach((ref) => {
-      if (ref) {
-        const editorElement = ref.getEditor().root;
-        const handler = (editorElement as any)._keydownHandler;
-        if (handler) {
-          editorElement.removeEventListener('keydown', handler);
-        }
-      }
-    });
 
-    // Attach new listeners
-    pageRefs.current.forEach((ref, index) => {
-      if (ref) {
-        const editorElement = ref.getEditor().root;
-        const handler = createKeyDownHandler(index);
-        editorElement.addEventListener('keydown', handler);
-        (editorElement as any)._keydownHandler = handler;
-      }
-    });
-
-    return () => {
-      pageRefs.current.forEach((ref) => {
-        if (ref) {
-          const editorElement = ref.getEditor().root;
-          const handler = (editorElement as any)._keydownHandler;
-          if (handler) {
-            editorElement.removeEventListener('keydown', handler);
-            delete (editorElement as any)._keydownHandler;
-          }
-        }
-      });
-    };
-  }, [pages.length]);
 
   // Expose formatting functions to parent
   useEffect(() => {
@@ -464,6 +441,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
               }}
               value={pageContent}
               onChange={createHandleChange(index)}
+              onKeyDown={(e) => handleKeyDown(e, index)}
               modules={modules}
               formats={formats}
               readOnly={readOnly}

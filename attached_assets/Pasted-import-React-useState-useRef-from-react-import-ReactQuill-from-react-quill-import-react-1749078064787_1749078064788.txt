@@ -1,0 +1,116 @@
+import React, { useState, useRef } from "react";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
+
+// Import your existing features
+import AiSidebar from "./AiSidebar";       // Adjust the path if needed
+import CustomToolbar from "./CustomToolbar";
+import WordCount from "./WordCount";
+
+const PAGE_HEIGHT = 1122;
+
+export default function BetterEditor() {
+  const [pages, setPages] = useState([""]);
+  const pageRefs = useRef<HTMLDivElement[]>([]);
+
+  const handleChange = (value: string, index: number) => {
+    const newPages = [...pages];
+    newPages[index] = value;
+    setPages(newPages);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
+    const currentPage = pageRefs.current[index];
+    if (!currentPage) return;
+
+    const bottom = currentPage.scrollHeight;
+    const currentScroll = currentPage.scrollTop + currentPage.clientHeight;
+
+    if (e.key === "Enter" && currentScroll >= bottom - 10) {
+      e.preventDefault();
+      const newPages = [...pages];
+      newPages.splice(index + 1, 0, "");
+      setPages(newPages);
+
+      setTimeout(() => {
+        const nextQuill = pageRefs.current[index + 1]?.querySelector(".ql-editor");
+        if (nextQuill) {
+          nextQuill.focus();
+          const range = document.createRange();
+          const sel = window.getSelection();
+          range.selectNodeContents(nextQuill);
+          range.collapse(false);
+          sel?.removeAllRanges();
+          sel?.addRange(range);
+        }
+      }, 0);
+    }
+  };
+
+  return (
+    <div className="editor-wrapper">
+      <AiSidebar />
+
+      <div className="main-editor">
+        <CustomToolbar />
+
+        {pages.map((content, index) => (
+          <div
+            key={index}
+            ref={(el) => (pageRefs.current[index] = el!)}
+            className="page-container"
+          >
+            <div className="page-label">Page {index + 1}</div>
+            <ReactQuill
+              theme="snow"
+              value={content}
+              onChange={(value) => handleChange(value, index)}
+              onKeyDown={(e) => handleKeyDown(e, index)}
+              placeholder="Start typing here..."
+            />
+          </div>
+        ))}
+
+        <WordCount text={pages.join(" ")} />
+      </div>
+
+      <style>{`
+        .editor-wrapper {
+          display: flex;
+        }
+
+        .main-editor {
+          flex-grow: 1;
+          padding: 20px;
+        }
+
+        .page-container {
+          width: 800px;
+          height: ${PAGE_HEIGHT}px;
+          margin: 20px auto;
+          padding: 30px;
+          background: white;
+          box-shadow: 0 0 8px rgba(0,0,0,0.1);
+          overflow: auto;
+          position: relative;
+        }
+
+        .ql-editor {
+          min-height: 950px;
+          max-height: 100%;
+          overflow-y: auto;
+          font-family: 'Times New Roman', serif;
+          font-size: 14pt;
+        }
+
+        .page-label {
+          position: absolute;
+          top: 8px;
+          left: 30px;
+          font-size: 12px;
+          color: #888;
+        }
+      `}</style>
+    </div>
+  );
+}
