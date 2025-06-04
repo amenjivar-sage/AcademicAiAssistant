@@ -41,6 +41,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   const [showSpellCheck, setShowSpellCheck] = useState(false);
   const [spellCheckActive, setSpellCheckActive] = useState(false);
   const [showAiSidebar, setShowAiSidebar] = useState(false);
+  const [isAiSidebarMinimized, setIsAiSidebarMinimized] = useState(false);
   const [headerFooterSettings, setHeaderFooterSettings] = useState({
     header: "",
     footer: "",
@@ -370,7 +371,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       {/* Main Content Area with Sidebar */}
       <div className="flex-1 flex overflow-hidden">
         {/* Writing Content */}
-        <div className={`flex-1 overflow-auto ${showAiSidebar ? 'mr-96' : ''}`}>
+        <div className={`flex-1 overflow-auto ${showAiSidebar && !isAiSidebarMinimized ? 'mr-96' : showAiSidebar && isAiSidebarMinimized ? 'mr-16' : ''}`}>
           <CopyPasteDetector
             allowCopyPaste={allowCopyPaste}
             onPasteDetected={handlePasteDetected}
@@ -392,25 +393,52 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
 
         {/* AI Assistant Sidebar */}
         {showAiSidebar && (
-          <div className="w-96 border-l bg-white flex flex-col fixed right-0 top-0 h-full z-10">
+          <div className={`${isAiSidebarMinimized ? 'w-16' : 'w-96'} border-l bg-white flex flex-col fixed right-0 top-0 h-full z-10 transition-all duration-300`}>
             <div className="p-4 border-b">
               <div className="flex items-center justify-between">
-                <h3 className="font-semibold">AI Assistant</h3>
-                <Button
-                  onClick={() => setShowAiSidebar(false)}
-                  variant="ghost"
-                  size="sm"
-                >
-                  ×
-                </Button>
+                {!isAiSidebarMinimized && <h3 className="font-semibold">AI Assistant</h3>}
+                <div className="flex gap-1">
+                  <Button
+                    onClick={() => setIsAiSidebarMinimized(!isAiSidebarMinimized)}
+                    variant="ghost"
+                    size="sm"
+                    title={isAiSidebarMinimized ? "Expand" : "Minimize"}
+                  >
+                    {isAiSidebarMinimized ? '→' : '←'}
+                  </Button>
+                  <Button
+                    onClick={() => setShowAiSidebar(false)}
+                    variant="ghost"
+                    size="sm"
+                    title="Close"
+                  >
+                    ×
+                  </Button>
+                </div>
               </div>
             </div>
-            <div className="flex-1 overflow-hidden">
-              <AiAssistant
-                sessionId={sessionId}
-                currentContent={content}
-              />
-            </div>
+            {!isAiSidebarMinimized && (
+              <div className="flex-1 overflow-hidden">
+                <AiAssistant
+                  sessionId={sessionId}
+                  currentContent={content}
+                />
+              </div>
+            )}
+            {isAiSidebarMinimized && (
+              <div className="flex-1 flex flex-col items-center p-2 gap-2">
+                <Button
+                  onClick={() => setIsAiSidebarMinimized(false)}
+                  variant="ghost"
+                  size="sm"
+                  className="w-full flex flex-col h-12"
+                  title="Expand AI Assistant"
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  <span className="text-xs">AI</span>
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </div>
