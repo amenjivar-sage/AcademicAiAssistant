@@ -16,6 +16,7 @@ import CopyPasteDetector from './copy-paste-detector';
 import RichTextEditor, { RichTextEditorHandle } from './rich-text-editor';
 import DocumentDownload from './document-download';
 import AiAssistant from './ai-assistant';
+import { PDFExport } from './pdf-export';
 
 interface PastedContent {
   text: string;
@@ -501,6 +502,12 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                 </Card>
               </div>
             )}
+
+            {/* PDF Export */}
+            <PDFExport 
+              content={content}
+              title={title || assignment?.title || "Document"}
+            />
 
             <Button
               onClick={() => setShowAiSidebar(!showAiSidebar)}
