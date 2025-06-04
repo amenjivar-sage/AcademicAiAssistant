@@ -416,42 +416,33 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
         {/* Writing Content */}
         <div className="flex-1 overflow-auto">
           {/* Grading Feedback Banner for Graded Assignments */}
-          {(() => {
-            console.log('Feedback banner check:', {
-              sessionExists: !!session,
-              sessionStatus: session?.status,
-              sessionGrade: session?.grade,
-              sessionFeedback: session?.teacherFeedback,
-              shouldShowBanner: session?.status === 'graded'
-            });
-            return session?.status === 'graded';
-          })() && (
-            <div className="bg-green-50 border-l-4 border-green-400 p-6 mx-4 mb-4 shadow-lg">
+          {session?.status === 'graded' && (
+            <div className="bg-green-100 border-2 border-green-500 p-8 m-4 shadow-xl rounded-lg">
               <div className="flex items-start justify-between">
                 <div className="flex items-start gap-4">
-                  <Trophy className="h-6 w-6 text-green-600 mt-1" />
+                  <Trophy className="h-8 w-8 text-green-600 mt-1" />
                   <div>
-                    <h3 className="text-lg font-bold text-green-800 mb-1">Assignment Graded</h3>
-                    <p className="text-green-700 mb-3">Your teacher has reviewed and graded your work</p>
+                    <h3 className="text-xl font-bold text-green-800 mb-2">🎉 Assignment Graded!</h3>
+                    <p className="text-green-700 mb-4 text-lg">Your teacher has reviewed and graded your work</p>
                     
                     {session.teacherFeedback && (
-                      <div className="bg-white p-4 rounded-lg border border-green-200 mb-3">
-                        <div className="flex items-center gap-2 mb-2">
-                          <GraduationCap className="h-4 w-4 text-green-600" />
-                          <span className="font-semibold text-green-800">Teacher Feedback:</span>
+                      <div className="bg-white p-6 rounded-lg border-2 border-green-300 mb-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <GraduationCap className="h-5 w-5 text-green-600" />
+                          <span className="font-bold text-green-800 text-lg">Teacher Feedback:</span>
                         </div>
-                        <p className="text-gray-800 leading-relaxed">{session.teacherFeedback}</p>
+                        <p className="text-gray-800 leading-relaxed text-lg">{session.teacherFeedback}</p>
                       </div>
                     )}
                     
-                    <div className="text-sm text-green-600">
+                    <div className="text-base text-green-600 font-medium">
                       Graded on {session.updatedAt ? new Date(session.updatedAt).toLocaleDateString() : 'Unknown date'}
                     </div>
                   </div>
                 </div>
                 
                 <div className="text-right">
-                  <div className="bg-green-600 text-white px-4 py-2 rounded-lg font-bold text-lg">
+                  <div className="bg-green-600 text-white px-6 py-3 rounded-lg font-bold text-2xl shadow-lg">
                     {session.grade}
                   </div>
                 </div>
