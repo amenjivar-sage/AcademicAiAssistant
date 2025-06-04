@@ -1,4 +1,4 @@
-import { useEffect, useRef, forwardRef, useImperativeHandle, useState } from 'react';
+import { useEffect, useRef, forwardRef, useImperativeHandle, useState, useCallback } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
@@ -24,6 +24,9 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
 }, ref) => {
   const quillRef = useRef<ReactQuill>(null);
   const [pageCount, setPageCount] = useState(1);
+  const [pages, setPages] = useState<string[]>(['']);
+  const [currentPageIndex, setCurrentPageIndex] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useImperativeHandle(ref, () => ({
     focus: () => {
@@ -48,14 +51,59 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     'link', 'color', 'background'
   ];
 
+  // Split content across pages based on height
+  const splitContentIntoPages = useCallback((htmlContent: string) => {
+    // Create a temporary div to measure content height
+    const tempDiv = document.createElement('div');
+    tempDiv.style.position = 'absolute';
+    tempDiv.style.visibility = 'hidden';
+    tempDiv.style.width = '612px'; // 8.5in - 72px padding on each side
+    tempDiv.style.fontFamily = 'Times New Roman, serif';
+    tempDiv.style.fontSize = '12pt';
+    tempDiv.style.lineHeight = '2.0';
+    tempDiv.innerHTML = htmlContent;
+    document.body.appendChild(tempDiv);
+
+    const maxPageHeight = 856; // 1000px - 144px padding (72px top + 72px bottom)
+    const newPages: string[] = [];
+    let currentPageContent = '';
+    let currentHeight = 0;
+
+    // Split content by paragraphs to avoid breaking mid-sentence
+    const paragraphs = htmlContent.split('</p>').filter(p => p.trim());
+    
+    for (let i = 0; i < paragraphs.length; i++) {
+      const paragraph = paragraphs[i] + (i < paragraphs.length - 1 ? '</p>' : '');
+      
+      // Test height with this paragraph added
+      tempDiv.innerHTML = currentPageContent + paragraph;
+      const newHeight = tempDiv.offsetHeight;
+      
+      if (newHeight > maxPageHeight && currentPageContent) {
+        // This paragraph would overflow, start a new page
+        newPages.push(currentPageContent);
+        currentPageContent = paragraph;
+      } else {
+        currentPageContent += paragraph;
+      }
+    }
+    
+    // Add the last page
+    if (currentPageContent) {
+      newPages.push(currentPageContent);
+    }
+    
+    document.body.removeChild(tempDiv);
+    return newPages.length > 0 ? newPages : [''];
+  }, []);
+
   const handleChange = (value: string, delta: any, source: any, editor: any) => {
     onContentChange(value);
     
-    // Calculate pages needed based on content length
-    const textLength = value.replace(/<[^>]*>/g, '').length;
-    const charsPerPage = 2500; // Approximate characters per page
-    const neededPages = Math.max(1, Math.ceil(textLength / charsPerPage));
-    setPageCount(neededPages);
+    // Split content into pages
+    const newPages = splitContentIntoPages(value);
+    setPages(newPages);
+    setPageCount(newPages.length);
     
     // Handle text selection for formatting feedback
     if (onTextSelection) {
@@ -83,15 +131,14 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     }
   };
 
-  // Initialize page count based on existing content
+  // Initialize pages when content is loaded
   useEffect(() => {
     if (content) {
-      const textLength = content.replace(/<[^>]*>/g, '').length;
-      const charsPerPage = 2500;
-      const neededPages = Math.max(1, Math.ceil(textLength / charsPerPage));
-      setPageCount(neededPages);
+      const newPages = splitContentIntoPages(content);
+      setPages(newPages);
+      setPageCount(newPages.length);
     }
-  }, [content]);
+  }, [content, splitContentIntoPages]);
 
   // Expose formatting functions to parent
   useEffect(() => {
@@ -246,33 +293,70 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
             transparent calc(1000px + 2px)
           );
         }
+
+        /* Page content styling */
+        .page-content {
+          font-family: 'Times New Roman', serif !important;
+          font-size: 12pt !important;
+          line-height: 2.0 !important;
+          padding: 0 !important;
+          margin: 0 !important;
+          height: 100% !important;
+          overflow: hidden !important;
+        }
+
+        .page-content p {
+          margin-bottom: 0 !important;
+        }
+
+        .page-content strong {
+          font-weight: bold !important;
+        }
+
+        /* Hide Quill editor when content overflows to multiple pages */
+        .multi-page-mode .ql-editor {
+          max-height: 856px !important;
+          overflow: hidden !important;
+        }
       `}</style>
       
-      <div className="document-pages">
-        {Array.from({ length: pageCount }, (_, index) => (
-          <div key={index} className="document-page">
-            {index === 0 ? (
-              <ReactQuill
-                ref={quillRef}
-                value={content}
-                onChange={handleChange}
-                modules={modules}
-                formats={formats}
-                readOnly={readOnly}
-                placeholder={placeholder}
-                theme="snow"
-              />
-            ) : (
-              <div className="overflow-page" style={{
+      <div className="document-pages" ref={containerRef}>
+        {/* Hidden React Quill editor for editing functionality */}
+        <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
+          <ReactQuill
+            ref={quillRef}
+            value={content}
+            onChange={handleChange}
+            modules={modules}
+            formats={formats}
+            readOnly={readOnly}
+            placeholder={placeholder}
+            theme="snow"
+          />
+        </div>
+
+        {/* Visible document pages with split content */}
+        {pages.map((pageContent, index) => (
+          <div key={index} className="document-page" onClick={() => {
+            // Focus the hidden editor when clicking on any page
+            if (quillRef.current && !readOnly) {
+              quillRef.current.focus();
+            }
+          }}>
+            <div 
+              className="page-content"
+              dangerouslySetInnerHTML={{ __html: pageContent || (index === 0 ? `<p>${placeholder}</p>` : '') }}
+              style={{
                 fontFamily: 'Times New Roman, serif',
                 fontSize: '12pt',
                 lineHeight: '2.0',
                 height: '100%',
-                overflow: 'hidden'
-              }}>
-                {/* Content overflow for additional pages */}
-              </div>
-            )}
+                overflow: 'hidden',
+                wordWrap: 'break-word',
+                cursor: readOnly ? 'default' : 'text',
+                minHeight: '856px'
+              }}
+            />
             <div className="page-number">
               {index + 1}
             </div>
