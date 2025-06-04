@@ -214,13 +214,20 @@ export class DatabaseStorage implements IStorage {
     console.log('DatabaseStorage: Updating writing session', id, 'with updates:', Object.keys(updates));
     
     return await withRetry(async () => {
+      // Only update pastedContent if it's explicitly provided in updates
+      const updateData: any = { 
+        ...updates, 
+        updatedAt: new Date()
+      };
+      
+      // Only include pastedContent if it's explicitly in the updates
+      if (updates.pastedContent !== undefined) {
+        updateData.pastedContent = updates.pastedContent;
+      }
+      
       const [session] = await db
         .update(writingSessions)
-        .set({ 
-          ...updates, 
-          updatedAt: new Date(),
-          pastedContent: updates.pastedContent || []
-        })
+        .set(updateData)
         .where(eq(writingSessions.id, id))
         .returning();
         
@@ -229,7 +236,7 @@ export class DatabaseStorage implements IStorage {
         return undefined;
       }
       
-      console.log('Session updated successfully:', session.id, 'Content length:', session.content?.length);
+      console.log('Session updated successfully:', session.id, 'Content length:', session.content?.length, 'Pasted content items:', session.pastedContent?.length || 0);
       return {
         ...session,
         pastedContent: session.pastedContent || []
