@@ -324,7 +324,7 @@ export default function AiAssistant({ sessionId, currentContent }: AiAssistantPr
           </div>
         </TabsContent>
 
-        <TabsContent value="prompts" className="overflow-y-auto" style={{ height: 'calc(100% - 180px)', padding: '12px' }}>
+        <TabsContent value="prompts" className="overflow-y-auto" style={{ height: 'calc(100vh - 260px)', padding: '12px' }}>
           <h4 className="font-medium text-gray-700 mb-3 text-sm">Quick Writing Help</h4>
           <div className="space-y-2">
             {quickPrompts.map((quickPrompt, index) => {
