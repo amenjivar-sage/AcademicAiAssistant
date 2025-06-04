@@ -77,13 +77,18 @@ export default function SingleDocumentEditor({
     let formattedText = selectedText;
     
     if (command === 'bold') {
-      // Check if text is already bold (wrapped with **)
-      if (selectedText.startsWith('**') && selectedText.endsWith('**') && selectedText.length > 4) {
-        // Remove bold formatting
-        formattedText = selectedText.slice(2, -2);
+      // Clean the selected text first - remove any existing asterisks
+      const cleanText = selectedText.replace(/\*+/g, '');
+      
+      // Check if the original selection was already bold formatted
+      const isBold = selectedText.startsWith('**') && selectedText.endsWith('**');
+      
+      if (isBold) {
+        // Remove bold formatting - just use the clean text
+        formattedText = cleanText;
       } else {
-        // Add bold formatting to entire selection
-        formattedText = `**${selectedText}**`;
+        // Add bold formatting to the clean text
+        formattedText = `**${cleanText}**`;
       }
     }
     
