@@ -468,8 +468,8 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                               }}
                               size="sm"
                               variant="outline"
-                              className={`h-8 w-8 p-0 ${selectedText ? 'hover:bg-blue-50' : 'opacity-50 cursor-not-allowed'}`}
-                              disabled={!selectedText}
+                              className="h-8 w-8 p-0 hover:bg-blue-50"
+                              disabled={false}
                               title="Bold (Ctrl+B)"
                             >
                               <Bold className="h-4 w-4" />

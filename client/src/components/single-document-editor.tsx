@@ -72,9 +72,24 @@ export default function SingleDocumentEditor({
     const end = textarea.selectionEnd;
     const selectedText = textarea.value.substring(start, end);
     
-    if (!selectedText.trim()) return;
-    
     if (command === 'bold') {
+      // If no text is selected, insert bold markers at cursor position
+      if (!selectedText.trim()) {
+        const newContent = 
+          textarea.value.substring(0, start) + 
+          '****' + 
+          textarea.value.substring(end);
+        
+        onContentChange(newContent);
+        
+        // Position cursor between the markers
+        setTimeout(() => {
+          textarea.focus();
+          textarea.setSelectionRange(start + 2, start + 2);
+        }, 0);
+        return;
+      }
+      
       // Check if the selection is already surrounded by ** markers
       const beforeSelection = textarea.value.substring(Math.max(0, start - 2), start);
       const afterSelection = textarea.value.substring(end, end + 2);
