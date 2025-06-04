@@ -11,6 +11,7 @@ interface SingleDocumentEditorProps {
   readOnly?: boolean;
   pastedContent?: any[];
   showCopyPasteHighlights?: boolean;
+  inlineComments?: any[];
 }
 
 const PAGE_HEIGHT = 1122; // 11in at 96dpi
@@ -29,7 +30,8 @@ export default function SingleDocumentEditor({
   showHeader = true,
   readOnly = false,
   pastedContent = [],
-  showCopyPasteHighlights = false
+  showCopyPasteHighlights = false,
+  inlineComments = []
 }: SingleDocumentEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [pages, setPages] = useState<number[]>([]);

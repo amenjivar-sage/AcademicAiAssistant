@@ -156,6 +156,13 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     enabled: !!assignmentId
   });
 
+  // Fetch inline comments for graded assignments
+  const { data: inlineComments = [] } = useQuery({
+    queryKey: [`/api/sessions/${sessionId}/comments`],
+    enabled: !!sessionId && session?.status === 'graded',
+    retry: false,
+  });
+
   // Auto-save effect
   useEffect(() => {
     const timer = setTimeout(() => {
