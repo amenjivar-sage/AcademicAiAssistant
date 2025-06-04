@@ -214,13 +214,25 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
 
   // Handle paste detection
   const handlePasteDetected = (pastedContent: PastedContent) => {
-    setPastedContents(prev => [...prev, pastedContent]);
+    console.log('Handling paste detection:', pastedContent);
+    setPastedContents(prev => {
+      const updated = [...prev, pastedContent];
+      console.log('Total pasted content instances:', updated.length);
+      return updated;
+    });
     
     if (!allowCopyPaste) {
       toast({
         title: "Copy & Paste Detected",
         description: "This action has been logged for academic integrity review.",
         variant: "destructive",
+      });
+    } else {
+      // Show notification that paste was tracked
+      toast({
+        title: "Copy & Paste Tracked",
+        description: `Pasted ${pastedContent.text.length} characters - recorded for teacher review`,
+        variant: "default",
       });
     }
   };

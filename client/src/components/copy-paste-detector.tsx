@@ -65,7 +65,7 @@ export default function CopyPasteDetector({
           }
         }
         
-        // Track the paste
+        // Track the paste with more detailed information
         const pastedContent: PastedContent = {
           text: pastedText,
           startIndex: startIndex,
@@ -74,11 +74,17 @@ export default function CopyPasteDetector({
         };
         
         console.log('Copy-paste detected:', pastedContent);
+        console.log('Paste details:', {
+          textLength: pastedText.length,
+          startIndex,
+          endIndex: startIndex + pastedText.length,
+          preview: pastedText.substring(0, 50) + (pastedText.length > 50 ? '...' : '')
+        });
         
         // Delay the callback to let the paste complete first
         setTimeout(() => {
           onPasteDetected(pastedContent);
-        }, 0);
+        }, 100);
       }
     };
 

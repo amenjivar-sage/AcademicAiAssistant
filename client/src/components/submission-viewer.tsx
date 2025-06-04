@@ -101,16 +101,20 @@ export default function SubmissionViewer({ sessionId, onClose }: SubmissionViewe
         );
       }
 
-      // Add highlighted text
+      // Add highlighted text with enhanced styling
       parts.push(
         <span
           key={`highlight-${index}`}
           className={`${
             highlight.type === 'paste' 
-              ? 'bg-red-100 border-l-4 border-red-400 pl-2' 
+              ? 'bg-red-200 border-2 border-red-500 px-2 py-1 rounded font-semibold text-red-900' 
               : 'bg-yellow-100'
           }`}
           title={highlight.type === 'paste' ? 'Copy-pasted content detected' : ''}
+          style={{
+            backgroundColor: highlight.type === 'paste' ? '#fecaca' : undefined,
+            borderColor: highlight.type === 'paste' ? '#ef4444' : undefined
+          }}
         >
           {content.slice(highlight.start, highlight.end)}
         </span>
@@ -205,20 +209,62 @@ export default function SubmissionViewer({ sessionId, onClose }: SubmissionViewe
                     <Copy className="h-5 w-5 mr-2" />
                     Copy-Paste Detection ({session.pastedContent.length} instances)
                   </h3>
+                  
+                  {/* Summary Card */}
+                  <Card className="border-red-200 bg-red-50 mb-4">
+                    <CardContent className="p-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <span className="text-sm font-medium text-red-700">Total Pasted Instances:</span>
+                          <div className="text-2xl font-bold text-red-800">{session.pastedContent.length}</div>
+                        </div>
+                        <div>
+                          <span className="text-sm font-medium text-red-700">Total Characters Pasted:</span>
+                          <div className="text-2xl font-bold text-red-800">
+                            {session.pastedContent.reduce((total: number, paste: any) => total + (paste.text?.length || 0), 0)}
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  {/* Individual Paste Instances */}
                   <div className="space-y-2">
                     {session.pastedContent.map((paste: any, index: number) => (
                       <Card key={index} className="border-red-200">
                         <CardContent className="p-3">
-                          <div className="text-sm text-gray-600 mb-2">
-                            Pasted at {new Date(paste.timestamp).toLocaleString()}
+                          <div className="flex justify-between items-start mb-2">
+                            <div className="text-sm text-gray-600">
+                              Pasted at {new Date(paste.timestamp).toLocaleString()}
+                            </div>
+                            <div className="text-sm font-medium text-red-600">
+                              {paste.text?.length || 0} characters
+                            </div>
                           </div>
-                          <div className="bg-red-50 p-2 rounded text-sm">
-                            "{paste.text.slice(0, 100)}{paste.text.length > 100 ? '...' : ''}"
+                          <div className="bg-red-50 p-2 rounded text-sm border-l-4 border-red-400">
+                            "{paste.text?.slice(0, 150) || ''}{(paste.text?.length || 0) > 150 ? '...' : ''}"
                           </div>
                         </CardContent>
                       </Card>
                     ))}
                   </div>
+                </div>
+              )}
+              
+              {/* Show message if no copy-paste detected */}
+              {(!session.pastedContent || session.pastedContent.length === 0) && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-3 flex items-center text-green-600">
+                    <Copy className="h-5 w-5 mr-2" />
+                    Copy-Paste Detection
+                  </h3>
+                  <Card className="border-green-200 bg-green-50">
+                    <CardContent className="p-4">
+                      <div className="text-green-700 text-center">
+                        ✓ No copy-paste activity detected in this submission
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               )}
 
