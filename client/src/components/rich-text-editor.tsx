@@ -80,7 +80,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
       console.log(`Current page content length: ${currentPages[pageIndex]?.length || 0} characters`);
       
       const quillEditor = currentRef.getEditor();
-      const delta = quillEditor.getContents();
+      const contentDelta = quillEditor.getContents();
       const totalLength = quillEditor.getLength() - 1;
       
       if (totalLength <= 0) return;
