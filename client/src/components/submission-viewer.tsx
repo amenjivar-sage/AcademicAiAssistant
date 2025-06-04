@@ -66,23 +66,58 @@ export default function SubmissionViewer({ sessionId, onClose }: SubmissionViewe
 
   // Function to highlight copy-pasted content
   const renderContentWithHighlights = (content: string, pastedContent: any[]) => {
+    console.log('renderContentWithHighlights called with:', {
+      contentLength: content.length,
+      pastedContentCount: pastedContent?.length || 0,
+      pastedContent: pastedContent
+    });
+
     if (!pastedContent || pastedContent.length === 0) {
+      console.log('No pasted content to highlight');
       return <div className="whitespace-pre-wrap">{content}</div>;
     }
 
-    let highlightedContent = content;
-    const highlights: { start: number; end: number; type: string }[] = [];
+    const highlights: { start: number; end: number; type: string; text: string }[] = [];
 
-    // Add copy-paste highlights
-    pastedContent.forEach((paste) => {
-      if (paste.startIndex !== undefined && paste.endIndex !== undefined) {
-        highlights.push({
-          start: paste.startIndex,
-          end: paste.endIndex,
-          type: 'paste'
+    // Add copy-paste highlights with better validation
+    pastedContent.forEach((paste, index) => {
+      console.log(`Processing paste ${index}:`, paste);
+      
+      if (paste.startIndex !== undefined && paste.endIndex !== undefined && paste.text) {
+        // Find the actual position of the pasted text in current content
+        const pastedText = paste.text;
+        const contentIndex = content.indexOf(pastedText);
+        
+        if (contentIndex !== -1) {
+          highlights.push({
+            start: contentIndex,
+            end: contentIndex + pastedText.length,
+            type: 'paste',
+            text: pastedText
+          });
+          console.log(`Added highlight for paste ${index}:`, {
+            start: contentIndex,
+            end: contentIndex + pastedText.length,
+            text: pastedText.substring(0, 50) + '...'
+          });
+        } else {
+          console.log(`Could not find pasted text in content for paste ${index}`);
+        }
+      } else {
+        console.log(`Invalid paste data for paste ${index}:`, {
+          hasStartIndex: paste.startIndex !== undefined,
+          hasEndIndex: paste.endIndex !== undefined,
+          hasText: !!paste.text
         });
       }
     });
+
+    console.log(`Found ${highlights.length} highlights to apply`);
+
+    if (highlights.length === 0) {
+      console.log('No valid highlights found, returning plain content');
+      return <div className="whitespace-pre-wrap">{content}</div>;
+    }
 
     // Sort highlights by start position
     highlights.sort((a, b) => a.start - b.start);
@@ -91,7 +126,11 @@ export default function SubmissionViewer({ sessionId, onClose }: SubmissionViewe
     const parts = [];
     let lastIndex = 0;
 
+    console.log('Building highlighted content with', highlights.length, 'highlights');
+
     highlights.forEach((highlight, index) => {
+      console.log(`Processing highlight ${index}:`, highlight);
+      
       // Add text before highlight
       if (highlight.start > lastIndex) {
         parts.push(
@@ -101,19 +140,17 @@ export default function SubmissionViewer({ sessionId, onClose }: SubmissionViewe
         );
       }
 
-      // Add highlighted text with enhanced styling
+      // Add highlighted text with very visible styling
       parts.push(
         <span
           key={`highlight-${index}`}
-          className={`${
-            highlight.type === 'paste' 
-              ? 'bg-red-200 border-2 border-red-500 px-2 py-1 rounded font-semibold text-red-900' 
-              : 'bg-yellow-100'
-          }`}
-          title={highlight.type === 'paste' ? 'Copy-pasted content detected' : ''}
+          className="bg-red-300 border-2 border-red-600 px-2 py-1 rounded font-bold text-red-900 shadow-lg"
+          title={`Copy-pasted content detected: ${highlight.text?.substring(0, 50)}...`}
           style={{
-            backgroundColor: highlight.type === 'paste' ? '#fecaca' : undefined,
-            borderColor: highlight.type === 'paste' ? '#ef4444' : undefined
+            backgroundColor: '#fca5a5',
+            borderColor: '#dc2626',
+            boxShadow: '0 0 0 2px rgba(239, 68, 68, 0.3)',
+            fontWeight: 'bold'
           }}
         >
           {content.slice(highlight.start, highlight.end)}
@@ -132,6 +169,7 @@ export default function SubmissionViewer({ sessionId, onClose }: SubmissionViewe
       );
     }
 
+    console.log('Returning highlighted content with', parts.length, 'parts');
     return <div className="whitespace-pre-wrap">{parts}</div>;
   };
 

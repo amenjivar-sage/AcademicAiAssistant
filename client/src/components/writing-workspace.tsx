@@ -92,6 +92,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     try {
       setIsSaving(true);
       console.log('Auto-saving session:', sessionId, 'with data:', ['title', 'content', 'pastedContent', 'wordCount']);
+      console.log('Copy-paste data being saved:', pastedContents.length, 'items:', pastedContents);
       
       await autoSaveMutation.mutateAsync({
         title: title.trim(),
