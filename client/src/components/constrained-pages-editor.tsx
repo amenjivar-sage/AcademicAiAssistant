@@ -10,7 +10,7 @@ interface ConstrainedPagesEditorProps {
   showHeader?: boolean;
 }
 
-const LINES_PER_PAGE = 22;
+const CHARS_PER_PAGE = 1800; // Approximately 22 lines x 80 chars
 const LINE_HEIGHT_PX = 32; // 16pt * 2.0 line height converted to pixels
 const HEADER_HEIGHT = 96;
 const FOOTER_HEIGHT = 48;
@@ -29,49 +29,51 @@ export default function ConstrainedPagesEditor({
   const textareaRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
 
-  // Split content into pages based on line limits
+  // Split content into pages based on character limits
   const splitContentIntoPages = (text: string): string[] => {
-    const lines = text.split('\n');
     const pageArray: string[] = [];
+    let currentPos = 0;
     
-    for (let i = 0; i < lines.length; i += LINES_PER_PAGE) {
-      const pageLines = lines.slice(i, i + LINES_PER_PAGE);
-      pageArray.push(pageLines.join('\n'));
+    while (currentPos < text.length) {
+      const pageText = text.slice(currentPos, currentPos + CHARS_PER_PAGE);
+      pageArray.push(pageText);
+      currentPos += CHARS_PER_PAGE;
     }
     
     return pageArray.length > 0 ? pageArray : [""];
   };
 
-  // Update pages when content changes
+  // Update pages when content changes (avoid infinite loop)
   useEffect(() => {
     const newPages = splitContentIntoPages(content);
-    setPages(newPages);
-    textareaRefs.current = textareaRefs.current.slice(0, newPages.length);
-  }, [content]);
+    // Only update if pages actually changed
+    if (JSON.stringify(newPages) !== JSON.stringify(pages)) {
+      setPages(newPages);
+      textareaRefs.current = textareaRefs.current.slice(0, newPages.length);
+    }
+  }, [content]); // Remove pages from dependency to prevent loop
 
   const handlePageContentChange = (pageIndex: number, newPageContent: string) => {
     const updatedPages = [...pages];
     updatedPages[pageIndex] = newPageContent;
     
-    // Check if any page exceeds line limit and redistribute content
+    // Check if any page exceeds character limit and redistribute content
     for (let i = 0; i < updatedPages.length; i++) {
-      const pageLines = updatedPages[i].split('\n');
-      
-      if (pageLines.length > LINES_PER_PAGE) {
-        // Keep only allowed lines on current page
-        const allowedLines = pageLines.slice(0, LINES_PER_PAGE);
-        const overflowLines = pageLines.slice(LINES_PER_PAGE);
+      if (updatedPages[i].length > CHARS_PER_PAGE) {
+        // Keep only allowed characters on current page
+        const allowedContent = updatedPages[i].slice(0, CHARS_PER_PAGE);
+        const overflowContent = updatedPages[i].slice(CHARS_PER_PAGE);
         
-        updatedPages[i] = allowedLines.join('\n');
+        updatedPages[i] = allowedContent;
         
         // Move overflow to next page
         if (i + 1 < updatedPages.length) {
           // Prepend overflow to existing next page content
           const nextPageContent = updatedPages[i + 1];
-          updatedPages[i + 1] = overflowLines.join('\n') + (nextPageContent ? '\n' + nextPageContent : '');
+          updatedPages[i + 1] = overflowContent + nextPageContent;
         } else {
           // Create new page for overflow
-          updatedPages.push(overflowLines.join('\n'));
+          updatedPages.push(overflowContent);
         }
         
         // If we modified content, focus next page
@@ -88,7 +90,7 @@ export default function ConstrainedPagesEditor({
     }
     
     setPages(updatedPages);
-    onContentChange(updatedPages.join('\n\n\n\n'));
+    onContentChange(updatedPages.join(''));
   };
 
   const focusPage = (pageIndex: number) => {
@@ -158,7 +160,7 @@ export default function ConstrainedPagesEditor({
                     fontFamily: "'Times New Roman', serif",
                     fontSize: "12pt",
                     lineHeight: "2.0",
-                    maxHeight: `${LINES_PER_PAGE * LINE_HEIGHT_PX}px`,
+                    maxHeight: `${22 * LINE_HEIGHT_PX}px`,
                     overflow: 'hidden'
                   }}
                   value={pageContent}
