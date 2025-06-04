@@ -72,38 +72,45 @@ export default function SingleDocumentEditor({
     const end = textarea.selectionEnd;
     const selectedText = textarea.value.substring(start, end);
     
-    if (!selectedText) return;
-    
-    let formattedText = selectedText;
+    if (!selectedText.trim()) return;
     
     if (command === 'bold') {
-      // Clean the selected text first - remove any existing asterisks
-      const cleanText = selectedText.replace(/\*+/g, '');
+      // Check if the selection is already surrounded by ** markers
+      const beforeSelection = textarea.value.substring(Math.max(0, start - 2), start);
+      const afterSelection = textarea.value.substring(end, end + 2);
       
-      // Check if the original selection was already bold formatted
-      const isBold = selectedText.startsWith('**') && selectedText.endsWith('**');
+      const isAlreadyBold = beforeSelection === '**' && afterSelection === '**';
       
-      if (isBold) {
-        // Remove bold formatting - just use the clean text
-        formattedText = cleanText;
+      let newContent;
+      let newSelectionStart;
+      let newSelectionEnd;
+      
+      if (isAlreadyBold) {
+        // Remove bold formatting
+        newContent = 
+          textarea.value.substring(0, start - 2) + 
+          selectedText + 
+          textarea.value.substring(end + 2);
+        newSelectionStart = start - 2;
+        newSelectionEnd = end - 2;
       } else {
-        // Add bold formatting to the clean text
-        formattedText = `**${cleanText}**`;
+        // Add bold formatting
+        newContent = 
+          textarea.value.substring(0, start) + 
+          `**${selectedText}**` + 
+          textarea.value.substring(end);
+        newSelectionStart = start + 2;
+        newSelectionEnd = end + 2;
       }
+      
+      onContentChange(newContent);
+      
+      // Restore selection after formatting
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(newSelectionStart, newSelectionEnd);
+      }, 0);
     }
-    
-    const newContent = 
-      textarea.value.substring(0, start) + 
-      formattedText + 
-      textarea.value.substring(end);
-    
-    onContentChange(newContent);
-    
-    // Restore selection after formatting, selecting the formatted text
-    setTimeout(() => {
-      textarea.focus();
-      textarea.setSelectionRange(start, start + formattedText.length);
-    }, 0);
   };
 
   // Expose formatting function to parent
