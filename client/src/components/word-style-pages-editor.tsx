@@ -21,42 +21,48 @@ const CHARS_PER_LINE = 85; // Characters per line for text wrapping estimation
 function splitTextToPages(text: string): string[] {
   if (!text) return [""];
   
-  // Split by explicit page breaks first (multiple line breaks)
-  const explicitPages = text.split(/\n\s*\n\s*\n\s*\n/); // 4+ line breaks = new page
+  // Split content into lines and process sequentially
+  const lines = text.split('\n');
   const pages: string[] = [];
+  let currentPage = "";
+  let currentLineCount = 0;
+  let consecutiveEmptyLines = 0;
   
-  explicitPages.forEach(pageText => {
-    if (!pageText.trim()) {
-      pages.push("");
-      return;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    
+    // Track consecutive empty lines
+    if (line.trim() === "") {
+      consecutiveEmptyLines++;
+    } else {
+      consecutiveEmptyLines = 0;
     }
     
-    // For each section, check if it fits on one page
-    const lines = pageText.split('\n');
-    let currentPage = "";
-    let currentLineCount = 0;
-    
-    for (const line of lines) {
-      // Estimate how many visual lines this text line will take
-      const visualLines = Math.ceil(line.length / CHARS_PER_LINE) || 1;
-      
-      // Check if adding this line would exceed page limits
-      if (currentLineCount + visualLines > LINES_PER_PAGE && currentPage.trim()) {
-        // Start new page
-        pages.push(currentPage.trimEnd());
-        currentPage = line + '\n';
-        currentLineCount = visualLines;
-      } else {
-        currentPage += line + '\n';
-        currentLineCount += visualLines;
-      }
-    }
-    
-    // Add the last page
-    if (currentPage.trim()) {
+    // If we have 5+ consecutive empty lines, start a new page
+    if (consecutiveEmptyLines >= 5 && currentPage.trim()) {
       pages.push(currentPage.trimEnd());
+      currentPage = "";
+      currentLineCount = 0;
+      consecutiveEmptyLines = 0;
+      continue;
     }
-  });
+    
+    // Check if adding this line would exceed page limits
+    if (currentLineCount >= LINES_PER_PAGE && currentPage.trim()) {
+      // Start new page
+      pages.push(currentPage.trimEnd());
+      currentPage = line + '\n';
+      currentLineCount = 1;
+    } else {
+      currentPage += line + '\n';
+      currentLineCount++;
+    }
+  }
+  
+  // Add the last page
+  if (currentPage || pages.length === 0) {
+    pages.push(currentPage.trimEnd());
+  }
   
   // Always have at least one page
   if (pages.length === 0) pages.push("");
@@ -124,12 +130,8 @@ export default function WordStylePagesEditor({
   };
 
   const getPageLineCount = (pageContent: string) => {
-    const lines = pageContent.split('\n');
-    let totalLines = 0;
-    lines.forEach(line => {
-      totalLines += Math.ceil(line.length / CHARS_PER_LINE) || 1;
-    });
-    return totalLines;
+    // Count actual line breaks - each \n represents one line
+    return pageContent.split('\n').length - 1;
   };
 
   return (
