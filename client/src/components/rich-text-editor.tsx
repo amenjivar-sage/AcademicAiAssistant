@@ -73,14 +73,46 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
         
         // If content overflows (exceeds 1000px) and this is the last page, create a new page
         if (scrollHeight > 1000 && pageIndex === pages.length - 1) {
-          // Simply create a new empty page and focus it
-          setPages(prev => [...prev, '']);
+          const quillEditor = currentRef.getEditor();
+          const fullContent = quillEditor.getContents();
+          const fullText = quillEditor.getText();
+          
+          // Find a good break point around 80% of the content
+          let breakPoint = Math.floor(fullText.length * 0.8);
+          
+          // Look for paragraph or sentence breaks near the break point
+          for (let i = breakPoint; i < fullText.length - 1; i++) {
+            if (fullText[i] === '\n' || fullText[i] === '.' || fullText[i] === '!' || fullText[i] === '?') {
+              breakPoint = i + 1;
+              break;
+            }
+          }
+          
+          // Split content at the break point
+          const currentPageContent = quillEditor.getContents(0, breakPoint);
+          const overflowContent = quillEditor.getContents(breakPoint);
+          
+          // Update current page with trimmed content
+          const updatedPages = [...newPages];
+          updatedPages[pageIndex] = currentPageContent.ops ? quillEditor.root.innerHTML.substring(0, Math.floor(quillEditor.root.innerHTML.length * 0.8)) : value;
+          
+          // Create new page with overflow content
+          setPages([...updatedPages, '']);
           setActivePage(pageIndex + 1);
           
-          // Focus the new page after it's created
+          // Set the content after state updates
           setTimeout(() => {
+            // Update current page with trimmed content
+            if (pageRefs.current[pageIndex] && currentPageContent.ops) {
+              pageRefs.current[pageIndex].getEditor().setContents(currentPageContent);
+            }
+            
+            // Set overflow content in new page and focus it
             const newPageRef = pageRefs.current[pageIndex + 1];
             if (newPageRef) {
+              if (overflowContent.ops && overflowContent.ops.length > 0) {
+                newPageRef.getEditor().setContents(overflowContent);
+              }
               newPageRef.focus();
               // Position cursor at the beginning of new page
               newPageRef.getEditor().setSelection({ index: 0, length: 0 });
