@@ -31,9 +31,29 @@ export default function SingleDocumentEditor({
   const contentLines = content.split('\n');
   const totalPages = Math.max(1, Math.ceil(contentLines.length / LINES_PER_PAGE));
 
-  // Handle content changes
+  // Handle content changes with page boundary enforcement
   const handleContentChange = (newContent: string) => {
-    onContentChange(newContent);
+    // Calculate how many lines the content has
+    const lines = newContent.split('\n');
+    const totalLines = lines.length;
+    
+    // Calculate maximum allowed lines based on page constraints
+    const writableHeight = (PAGE_HEIGHT_INCHES * 96) - HEADER_HEIGHT - FOOTER_HEIGHT - 32; // 32px for padding
+    const maxLinesPerPage = Math.floor(writableHeight / LINE_HEIGHT_PX);
+    
+    // If content exceeds boundaries, trim it
+    if (totalLines > maxLinesPerPage) {
+      const trimmedLines = lines.slice(0, maxLinesPerPage);
+      const trimmedContent = trimmedLines.join('\n');
+      onContentChange(trimmedContent);
+      
+      // Update textarea value to reflect the trim
+      if (textareaRef.current) {
+        textareaRef.current.value = trimmedContent;
+      }
+    } else {
+      onContentChange(newContent);
+    }
   };
 
   // Handle scroll to sync with page breaks
@@ -94,23 +114,25 @@ export default function SingleDocumentEditor({
             {/* Page Break Indicators */}
             {renderPageBreaks()}
             
-            {/* Writing Area with Boundaries */}
+            {/* Writing Area with Strict Boundaries */}
             <div 
-              className="absolute inset-0 border border-gray-200"
+              className="absolute border border-gray-200 overflow-hidden"
               style={{
                 top: `${HEADER_HEIGHT}px`,
                 bottom: `${FOOTER_HEIGHT}px`,
                 left: '1in',
-                right: '1in'
+                right: '1in',
+                height: `${(PAGE_HEIGHT_INCHES * 96) - HEADER_HEIGHT - FOOTER_HEIGHT}px`
               }}
             >
               <textarea
                 ref={textareaRef}
-                className="w-full h-full resize-none border-none outline-none bg-transparent text-gray-900 font-serif p-4"
+                className="w-full h-full resize-none border-none outline-none bg-transparent text-gray-900 font-serif p-4 overflow-hidden"
                 style={{
                   fontFamily: "'Times New Roman', serif",
                   fontSize: "12pt",
-                  lineHeight: "2.0"
+                  lineHeight: "2.0",
+                  maxHeight: `${(PAGE_HEIGHT_INCHES * 96) - HEADER_HEIGHT - FOOTER_HEIGHT - 32}px`
                 }}
                 value={content}
                 onChange={(e) => handleContentChange(e.target.value)}
