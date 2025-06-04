@@ -397,22 +397,21 @@ export default function PageBasedEditor({
 
           {/* Content Area with Visual Page Breaks */}
           <div className={`px-16 ${(pageSettings.headerText || pageSettings.showStudentName) ? 'pt-8' : 'pt-16'} ${(pageSettings.footerText || pageSettings.showPageNumbers) ? 'pb-8' : 'pb-16'} min-h-[9in] relative`}>
-            {/* Page Break Indicators - Word-style visual breaks */}
+            {/* Page Break Visual Separators - Like Word's page gaps */}
             {pageBreaks.map((pageBreak, index) => (
               <div
                 key={index}
-                className="absolute left-4 right-4 z-20 pointer-events-none"
+                className="absolute left-0 right-0 z-10 pointer-events-none"
                 style={{
                   top: `${pageBreak.estimatedLinePosition}px`,
-                  marginTop: '-12px'
+                  height: '30px',
+                  transform: 'translateY(-15px)'
                 }}
               >
-                <div className="flex items-center py-2">
-                  <div className="flex-1 border-t-2 border-dashed border-blue-500"></div>
-                  <div className="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg mx-3 shadow-lg">
-                    📄 Page {pageBreak.pageNumber} begins here
-                  </div>
-                  <div className="flex-1 border-t-2 border-dashed border-blue-500"></div>
+                {/* Empty space between pages with subtle shadow */}
+                <div className="h-full bg-gray-50 shadow-inner border-t border-b border-gray-200">
+                  {/* Optional: subtle page break line */}
+                  <div className="absolute top-1/2 left-1/4 right-1/4 border-t border-gray-300 opacity-30"></div>
                 </div>
               </div>
             ))}
