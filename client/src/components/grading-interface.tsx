@@ -28,6 +28,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { GraduationCap, FileText, Clock, CheckCircle, Star, BookOpen } from "lucide-react";
 import DocumentReviewer from "./document-reviewer-fixed";
+import DocumentDownload from "./document-download";
 import type { WritingSession, User } from "@shared/schema";
 
 interface GradingInterfaceProps {
@@ -152,16 +153,28 @@ export default function GradingInterface({ assignmentId, children }: GradingInte
               <GraduationCap className="h-5 w-5" />
               Grade Student Submissions
             </DialogTitle>
-            {selectedSubmission && viewMode === "list" && (
-              <Button
-                variant="outline"
-                onClick={() => setViewMode("document")}
-                className="flex items-center gap-2"
-              >
-                <BookOpen className="h-4 w-4" />
-                Review Document
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {selectedSubmission && viewMode === "list" && (
+                <Button
+                  variant="outline"
+                  onClick={() => setViewMode("document")}
+                  className="flex items-center gap-2"
+                >
+                  <BookOpen className="h-4 w-4" />
+                  Review Document
+                </Button>
+              )}
+              {selectedSubmission && (
+                <DocumentDownload
+                  content={selectedSubmission.content}
+                  studentName={selectedSubmission.student?.username || 'Student'}
+                  assignmentTitle={`Assignment_${assignmentId}`}
+                  submissionDate={selectedSubmission.submittedAt ? new Date(selectedSubmission.submittedAt).toLocaleDateString() : undefined}
+                  variant="outline"
+                  size="sm"
+                />
+              )}
+            </div>
             {viewMode === "document" && (
               <Button
                 variant="outline"
