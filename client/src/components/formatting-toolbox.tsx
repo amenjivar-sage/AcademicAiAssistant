@@ -29,7 +29,7 @@ export default function FormattingToolbox({ selectedText, onBoldClick, isVisible
   // Floating tool icon when closed
   if (!isOpen) {
     return (
-      <div className="fixed left-4 top-1/2 transform -translate-y-1/2 z-40">
+      <div className="fixed left-1/2 top-1/2 transform -translate-x-[calc(50%+4.5in)] -translate-y-1/2 z-40">
         <Button
           onClick={toggleOpen}
           size="sm"
@@ -44,7 +44,7 @@ export default function FormattingToolbox({ selectedText, onBoldClick, isVisible
   }
 
   return (
-    <div className="fixed left-4 top-1/2 transform -translate-y-1/2 z-40">
+    <div className="fixed left-1/2 top-1/2 transform -translate-x-[calc(50%+4.5in)] -translate-y-1/2 z-40">
       <Card className="w-64 shadow-lg border-gray-300">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
