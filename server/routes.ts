@@ -1276,6 +1276,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get student counts for all classrooms
+  app.get("/api/classrooms/students-count", async (req, res) => {
+    try {
+      const currentUser = await getCurrentUser();
+      if (!currentUser || currentUser.role !== 'teacher') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      // Get all teacher's classrooms
+      const teacherClassrooms = await storage.getTeacherClassrooms(currentUser.id);
+      const studentCounts: {[classroomId: number]: any[]} = {};
+
+      // For each classroom, get the enrolled students
+      for (const classroom of teacherClassrooms) {
+        try {
+          const students = await storage.getClassroomStudents(classroom.id);
+          studentCounts[classroom.id] = students;
+        } catch (error) {
+          console.error(`Error fetching students for classroom ${classroom.id}:`, error);
+          studentCounts[classroom.id] = [];
+        }
+      }
+
+      res.json(studentCounts);
+    } catch (error) {
+      console.error("Error fetching classroom student counts:", error);
+      res.status(500).json({ message: "Failed to fetch student counts" });
+    }
+  });
+
   // Inline comments routes
   app.post("/api/sessions/:sessionId/comments", async (req, res) => {
     try {

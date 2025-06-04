@@ -121,13 +121,15 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
     },
   });
 
+  // Query to get actual enrolled students count for each classroom
+  const { data: allClassroomStudents } = useQuery<{[classroomId: number]: any[]}>({
+    queryKey: ["/api/classrooms/students-count"],
+    enabled: !!teacherId,
+  });
+
   const getClassroomStats = (classroom: Classroom) => {
-    // Count students enrolled in this specific classroom
-    // Need to trim both classroom name and student classroom names for proper matching
-    const classroomName = classroom.name.trim();
-    const studentsInClass = enrolledStudents?.filter(student => 
-      student.classrooms && student.classrooms.some && student.classrooms.some((cls: string) => cls.trim() === classroomName)
-    ).length || 0;
+    // Get actual enrolled student count from database
+    const studentsInClass = allClassroomStudents?.[classroom.id]?.length || 0;
     
     return {
       enrolledStudents: studentsInClass,
