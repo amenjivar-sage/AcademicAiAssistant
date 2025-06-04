@@ -108,22 +108,22 @@ export default function SingleDocumentEditor({
         </div>
       </div>
 
-      <div className="flex flex-col items-center py-6 relative space-y-6">
+      <div className="flex flex-col items-center py-6 relative">
         {pages.map((pageContent, pageIndex) => (
           <div key={pageIndex} className="relative">
             {/* Page Break Indicator */}
             {pageIndex > 0 && (
-              <div className="flex items-center justify-center py-6 mb-6">
-                <div className="flex-1 border-t-4 border-dashed border-red-400"></div>
-                <div className="px-6 py-2 bg-red-500 text-white text-lg font-bold rounded-lg shadow-lg">
-                  📄 PAGE {pageIndex + 1} BREAK 📄
+              <div className="flex items-center justify-center py-2 mb-2">
+                <div className="flex-1 border-t-2 border-dashed border-red-400"></div>
+                <div className="px-4 py-1 bg-red-500 text-white text-sm font-bold rounded shadow">
+                  PAGE {pageIndex + 1}
                 </div>
-                <div className="flex-1 border-t-4 border-dashed border-red-400"></div>
+                <div className="flex-1 border-t-2 border-dashed border-red-400"></div>
               </div>
             )}
             
             <div
-              className="bg-white shadow-lg mx-auto relative mb-6"
+              className="bg-white shadow-lg mx-auto relative mb-3"
               style={{ 
                 width: `${PAGE_WIDTH_INCHES}in`, 
                 height: `${PAGE_HEIGHT_INCHES}in`,
