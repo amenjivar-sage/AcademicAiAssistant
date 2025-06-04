@@ -259,10 +259,9 @@ export default function SchoolAdminDashboard() {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="teachers" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="teachers">Teachers</TabsTrigger>
             <TabsTrigger value="students">Students</TabsTrigger>
-            <TabsTrigger value="assignments">Assignments</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
 
@@ -499,6 +498,7 @@ export default function SchoolAdminDashboard() {
                     allAssignments={allAssignments}
                     allUsers={allUsers}
                     allClassrooms={allClassrooms}
+                    setSelectedSubmission={setSelectedSubmission}
                   />
                 ) : (
                   <Card>
@@ -881,7 +881,7 @@ function TeacherDetailView({ teacher, assignments, classrooms, allSessions, allU
 }
 
 // Student Detail Component
-function StudentDetailView({ student, sessions, allAssignments, allUsers, allClassrooms }: any) {
+function StudentDetailView({ student, sessions, allAssignments, allUsers, allClassrooms, setSelectedSubmission }: any) {
   // Get unique classrooms from student's assignments
   const studentClassrooms = [...new Set(
     sessions.map((session: any) => {
@@ -996,12 +996,36 @@ function StudentDetailView({ student, sessions, allAssignments, allUsers, allCla
                                       )}
                                     </div>
                                   </div>
-                                  <div className="flex items-center space-x-4 text-xs text-gray-500">
-                                    <span>{session.wordCount} words</span>
-                                    {session.submittedAt && (
-                                      <span>Submitted: {new Date(session.submittedAt).toLocaleDateString()}</span>
-                                    )}
-                                    <span>AI: {assignment?.aiPermissions || 'Unknown'}</span>
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center space-x-4 text-xs text-gray-500">
+                                      <span>{session.wordCount} words</span>
+                                      {session.submittedAt && (
+                                        <span>Submitted: {new Date(session.submittedAt).toLocaleDateString()}</span>
+                                      )}
+                                      <span>AI: {assignment?.aiPermissions || 'Unknown'}</span>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => window.open(`/write?sessionId=${session.id}`, '_blank')}
+                                        className="text-xs h-7"
+                                      >
+                                        <Eye className="h-3 w-3 mr-1" />
+                                        View Draft
+                                      </Button>
+                                      {(session.status === 'submitted' || session.status === 'graded') && (
+                                        <Button
+                                          size="sm"
+                                          variant="default"
+                                          onClick={() => setSelectedSubmission && setSelectedSubmission(session.id)}
+                                          className="text-xs h-7"
+                                        >
+                                          <FileText className="h-3 w-3 mr-1" />
+                                          View Submission
+                                        </Button>
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
                               );
