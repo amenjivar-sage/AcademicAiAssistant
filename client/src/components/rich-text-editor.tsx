@@ -54,7 +54,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     'link', 'color', 'background'
   ];
 
-  // Recursive function to handle overflow on any page
+  // More precise overflow detection and content splitting
   const checkAndHandleOverflow = useCallback((pageIndex: number, currentPages: string[]) => {
     const currentRef = pageRefs.current[pageIndex];
     if (!currentRef) return;
@@ -63,50 +63,120 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     const scrollHeight = editorElement.scrollHeight;
     const maxHeight = 950;
 
-    // If content exceeds page height, split it
+    // If content exceeds page height, find optimal break point
     if (scrollHeight > maxHeight) {
       console.log(`Overflow detected on page ${pageIndex + 1}: ${scrollHeight}px > ${maxHeight}px`);
       
       const quillEditor = currentRef.getEditor();
-      const totalLength = quillEditor.getLength() - 1; // Subtract 1 for the trailing newline
+      const delta = quillEditor.getContents();
+      const totalLength = quillEditor.getLength() - 1;
       
       if (totalLength <= 0) return;
 
-      // Find a better break point by measuring content height
-      let breakPoint = Math.floor(totalLength * 0.7); // Start with 70% of content
+      // Binary search to find the optimal break point where content fits exactly
+      let low = 0;
+      let high = totalLength;
+      let bestBreakPoint = Math.floor(totalLength * 0.8);
+
+      // Try to find the break point by testing different lengths
+      for (let i = 0; i < 10; i++) {
+        const testPoint = Math.floor((low + high) / 2);
+        
+        // Test if content up to this point fits
+        const testContent = quillEditor.getText(0, testPoint);
+        
+        // Create temporary measurement
+        const tempElement = document.createElement('div');
+        tempElement.style.cssText = `
+          position: absolute;
+          left: -9999px;
+          width: calc(8.5in - 144px);
+          font-family: 'Times New Roman', serif;
+          font-size: 14pt;
+          line-height: 2.0;
+          padding: 0;
+          white-space: pre-wrap;
+        `;
+        tempElement.textContent = testContent;
+        document.body.appendChild(tempElement);
+        
+        const testHeight = tempElement.offsetHeight;
+        document.body.removeChild(tempElement);
+        
+        if (testHeight <= maxHeight - 72) { // Account for padding
+          low = testPoint;
+          bestBreakPoint = testPoint;
+        } else {
+          high = testPoint;
+        }
+        
+        if (high - low <= 5) break; // Close enough
+      }
+
+      // Find a good word boundary near the break point
+      const text = quillEditor.getText();
+      let finalBreakPoint = bestBreakPoint;
       
-      // Get content before and after break point
-      const firstPageContent = quillEditor.getText(0, breakPoint);
-      const overflowContent = quillEditor.getText(breakPoint);
+      // Look backwards for a space or punctuation to avoid breaking words
+      for (let i = bestBreakPoint; i > bestBreakPoint - 50 && i > 0; i--) {
+        const char = text[i];
+        if (char === ' ' || char === '\n' || char === '.' || char === '!' || char === '?') {
+          finalBreakPoint = i + 1;
+          break;
+        }
+      }
+
+      // Split content at the break point
+      const firstPageText = quillEditor.getText(0, finalBreakPoint).trim();
+      const overflowText = quillEditor.getText(finalBreakPoint).trim();
       
-      // Update current page with truncated content
+      if (!overflowText) return; // No actual overflow
+      
+      // Update pages
       const updatedPages = [...currentPages];
-      updatedPages[pageIndex] = `<p>${firstPageContent.trim()}</p>`;
+      updatedPages[pageIndex] = firstPageText ? `<p>${firstPageText}</p>` : '';
       
       // Handle overflow content
-      if (overflowContent.trim()) {
-        // If next page exists, prepend overflow to it
-        if (pageIndex + 1 < updatedPages.length) {
-          const nextPageContent = updatedPages[pageIndex + 1];
-          // Remove existing <p> tags and combine content
-          const cleanNextContent = nextPageContent.replace(/<\/?p>/g, '').trim();
-          updatedPages[pageIndex + 1] = `<p>${overflowContent.trim()}${cleanNextContent ? ' ' + cleanNextContent : ''}</p>`;
-        } else {
-          // Create new page with overflow content
-          updatedPages.push(`<p>${overflowContent.trim()}</p>`);
-        }
+      if (pageIndex + 1 < updatedPages.length) {
+        // Merge with existing next page content
+        const nextPageText = updatedPages[pageIndex + 1].replace(/<\/?p>/g, '').trim();
+        const combinedText = overflowText + (nextPageText ? ' ' + nextPageText : '');
+        updatedPages[pageIndex + 1] = `<p>${combinedText}</p>`;
+      } else {
+        // Create new page
+        updatedPages.push(`<p>${overflowText}</p>`);
       }
       
       setPages(updatedPages);
       
-      // Recursively check if the next page now has overflow
+      // Store current cursor position
+      const selection = quillEditor.getSelection();
+      const cursorInOverflow = selection && selection.index >= finalBreakPoint;
+      
+      // Recursively check next page after content update
       setTimeout(() => {
         if (pageIndex + 1 < updatedPages.length) {
           checkAndHandleOverflow(pageIndex + 1, updatedPages);
         }
-      }, 150);
+        
+        // Restore cursor position if it was in the overflow
+        if (cursorInOverflow && selection) {
+          const newPosition = selection.index - finalBreakPoint;
+          const nextPageRef = pageRefs.current[pageIndex + 1];
+          if (nextPageRef && newPosition >= 0) {
+            setTimeout(() => {
+              nextPageRef.focus();
+              nextPageRef.getEditor().setSelection(newPosition, 0);
+              setActivePage(pageIndex + 1);
+            }, 50);
+          }
+        }
+      }, 100);
     }
   }, []);
+
+  // Debounced overflow check to prevent rapid page creation
+  const overflowCheckTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const createHandleChange = (pageIndex: number) => (value: string, delta: any, source: any, editor: any) => {
     // Prevent recursive updates by checking if this is the expected change
@@ -121,11 +191,15 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     const combinedContent = newPages.join('');
     onContentChange(combinedContent);
     
-    // Check for content overflow on any page when user types
+    // Debounced overflow check for user input
     if (source === 'user') {
-      setTimeout(() => {
+      if (overflowCheckTimeout.current) {
+        clearTimeout(overflowCheckTimeout.current);
+      }
+      
+      overflowCheckTimeout.current = setTimeout(() => {
         checkAndHandleOverflow(pageIndex, newPages);
-      }, 100);
+      }, 200); // Debounce for 200ms
     }
     
     // Update overflow status
@@ -185,6 +259,50 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     pageRefs.current = pageRefs.current.slice(0, pages.length);
   }, [pages.length]);
 
+  // Clean up empty pages and consolidate content
+  const consolidatePages = useCallback(() => {
+    const newPages: string[] = [];
+    let currentPageText = '';
+    
+    for (let i = 0; i < pages.length; i++) {
+      const pageText = pages[i].replace(/<\/?p>/g, '').trim();
+      if (pageText) {
+        currentPageText += (currentPageText ? ' ' : '') + pageText;
+      }
+    }
+    
+    if (!currentPageText) {
+      setPages(['']);
+      return;
+    }
+    
+    // Split content back into properly sized pages
+    const words = currentPageText.split(' ');
+    let currentPage = '';
+    
+    for (const word of words) {
+      const testPage = currentPage + (currentPage ? ' ' : '') + word;
+      
+      // Rough estimation: ~80 characters per line, ~30 lines per page
+      if (testPage.length > 2000 && currentPage) {
+        newPages.push(`<p>${currentPage}</p>`);
+        currentPage = word;
+      } else {
+        currentPage = testPage;
+      }
+    }
+    
+    if (currentPage) {
+      newPages.push(`<p>${currentPage}</p>`);
+    }
+    
+    if (newPages.length === 0) {
+      newPages.push('');
+    }
+    
+    setPages(newPages);
+  }, [pages]);
+
   // Handle keyboard events for automatic page creation
   const handleKeyDown = (e: React.KeyboardEvent, pageIndex: number) => {
     if (e.key === 'Enter') {
@@ -192,6 +310,16 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
       setTimeout(() => {
         checkAndHandleOverflow(pageIndex, pages);
       }, 50);
+    } else if (e.key === 'Backspace' || e.key === 'Delete') {
+      // Check if we need to consolidate pages after deletion
+      setTimeout(() => {
+        const hasEmptyPages = pages.some((page, index) => 
+          index > 0 && page.replace(/<\/?p>/g, '').trim() === ''
+        );
+        if (hasEmptyPages) {
+          consolidatePages();
+        }
+      }, 100);
     }
   };
 
