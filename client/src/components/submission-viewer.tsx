@@ -232,7 +232,30 @@ export default function SubmissionViewer({ sessionId, onClose }: SubmissionViewe
                 <Card>
                   <CardContent className="p-4">
                     {session.content ? (
-                      renderContentWithHighlights(session.content, session.pastedContent || [])
+                      (() => {
+                        let parsedPastedContent = [];
+                        
+                        console.log('Raw pastedContent:', session.pastedContent);
+                        console.log('Type of pastedContent:', typeof session.pastedContent);
+                        
+                        try {
+                          if (typeof session.pastedContent === 'string') {
+                            parsedPastedContent = JSON.parse(session.pastedContent);
+                            console.log('Successfully parsed JSON pastedContent:', parsedPastedContent);
+                          } else if (Array.isArray(session.pastedContent)) {
+                            parsedPastedContent = session.pastedContent;
+                            console.log('Using array pastedContent:', parsedPastedContent);
+                          } else {
+                            parsedPastedContent = [];
+                            console.log('No valid pastedContent found, using empty array');
+                          }
+                        } catch (error) {
+                          console.error('Error parsing pastedContent:', error);
+                          parsedPastedContent = [];
+                        }
+                        
+                        return renderContentWithHighlights(session.content, parsedPastedContent);
+                      })()
                     ) : (
                       <p className="text-gray-500 italic">No content submitted</p>
                     )}
