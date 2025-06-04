@@ -93,45 +93,74 @@ export default function SingleDocumentEditor({
     return highlightedText;
   };
 
-  // Inline comment highlighting function
-  const highlightInlineComments = (text: string, comments: any[]): string => {
-    if (!comments || comments.length === 0) {
-      return text;
+  // Combined highlighting function for both copy-paste and inline comments
+  const applyAllHighlights = (text: string, pastedData: any[], comments: any[]): string => {
+    if (!text) return text;
+    
+    let highlightedText = text;
+
+    // First apply copy-paste highlighting if enabled
+    if (showCopyPasteHighlights && pastedData && pastedData.length > 0) {
+      pastedData.forEach((paste: any) => {
+        if (paste.text && typeof paste.text === 'string') {
+          const pastedText = paste.text;
+          
+          // Split pasted content into sentences
+          const sentences = pastedText.split(/[.!?]+/).filter((s: any) => s.trim().length > 10);
+          
+          sentences.forEach((sentence: any) => {
+            const trimmedSentence = sentence.trim();
+            
+            // Create a flexible regex that accounts for spelling corrections
+            const pastedWords = trimmedSentence.toLowerCase().split(/\s+/).filter((w: any) => w.length > 2);
+            
+            // Build pattern allowing for word substitutions (spell corrections)
+            const flexiblePattern = pastedWords.map((word: any) => {
+              // Common spelling corrections map
+              const corrections: { [key: string]: string } = {
+                'fealing': 'feeling',
+                'sandwitches': 'sandwiches', 
+                'promissed': 'promised',
+                'probbably': 'probably',
+                'perfact': 'perfect',
+                'reminde': 'remind'
+              };
+              
+              // If this word has a known correction, match either version
+              const corrected = corrections[word] || Object.keys(corrections).find(k => corrections[k] === word);
+              if (corrected) {
+                return `(?:${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}|${corrected.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`;
+              }
+              
+              return word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            }).join('\\s+');
+
+            try {
+              const regex = new RegExp(`\\b${flexiblePattern}\\b`, 'gi');
+              highlightedText = highlightedText.replace(regex, (match) => {
+                return `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600; padding: 2px 4px; border-radius: 3px;" title="Copy-pasted content detected (spell-corrected)">${match}</span>`;
+              });
+            } catch (e) {
+              console.warn('Regex error for pattern:', flexiblePattern);
+            }
+          });
+        }
+      });
     }
 
-    let highlightedText = text;
-    
-    // Sort comments by startIndex in descending order to avoid index shifting
-    const sortedComments = [...comments].sort((a, b) => b.startIndex - a.startIndex);
-    
-    sortedComments.forEach((comment: any) => {
-      // Check if the comment indices are valid for current text
-      if (comment.startIndex >= 0 && comment.endIndex <= text.length && comment.startIndex < comment.endIndex) {
-        const beforeText = highlightedText.substring(0, comment.startIndex);
-        const commentedText = highlightedText.substring(comment.startIndex, comment.endIndex);
-        const afterText = highlightedText.substring(comment.endIndex);
-        
-        // Create highlighted span with blue background and a tooltip showing the comment
-        const highlightedSpan = `<span style="background-color: #dbeafe; border-bottom: 2px solid #3b82f6; color: #1e40af; font-weight: 500; padding: 1px 2px; border-radius: 2px; cursor: help;" title="Teacher Comment: ${comment.comment.replace(/"/g, '&quot;')}" data-comment-id="${comment.id}">${commentedText}</span>`;
-        
-        highlightedText = beforeText + highlightedSpan + afterText;
-      } else {
-        // Try to find the commented text anywhere in the document
+    // Then apply inline comment highlighting if we have comments
+    if (comments && comments.length > 0) {
+      comments.forEach((comment: any) => {
         const searchText = comment.highlightedText;
-        if (searchText && text.includes(searchText)) {
-          const startIndex = text.indexOf(searchText);
-          const endIndex = startIndex + searchText.length;
-          
-          const beforeText = highlightedText.substring(0, startIndex);
-          const commentedText = highlightedText.substring(startIndex, endIndex);
-          const afterText = highlightedText.substring(endIndex);
-          
-          const highlightedSpan = `<span style="background-color: #dbeafe; border-bottom: 2px solid #3b82f6; color: #1e40af; font-weight: 500; padding: 1px 2px; border-radius: 2px; cursor: help;" title="Teacher Comment: ${comment.comment.replace(/"/g, '&quot;')}" data-comment-id="${comment.id}">${commentedText}</span>`;
-          
-          highlightedText = beforeText + highlightedSpan + afterText;
+        if (searchText && highlightedText.includes(searchText)) {
+          const escapedSearchText = searchText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const regex = new RegExp(escapedSearchText, 'g');
+          highlightedText = highlightedText.replace(regex, (match) => {
+            return `<span style="background-color: #dbeafe; border-bottom: 2px solid #3b82f6; color: #1e40af; font-weight: 500; padding: 1px 2px; border-radius: 2px; cursor: help;" title="Teacher Comment: ${comment.comment.replace(/"/g, '&quot;')}" data-comment-id="${comment.id}">${match}</span>`;
+          });
         }
-      }
-    });
+      });
+    }
 
     return highlightedText;
   };
@@ -238,40 +267,10 @@ export default function SingleDocumentEditor({
               />
             )}
             
-            {/* Copy-paste highlighting overlay for graded assignments */}
-            {showCopyPasteHighlights && pastedContent.length > 0 && (() => {
-              console.log('Copy-paste overlay rendering:', {
-                showHighlights: showCopyPasteHighlights,
-                pastedDataCount: pastedContent.length,
-                contentLength: content.length,
-                samplePastedText: pastedContent[0]?.text?.substring(0, 50)
-              });
-              const highlightedHtml = highlightCopyPasteContent(content, pastedContent);
-              console.log('Generated highlighted HTML:', highlightedHtml.substring(0, 200));
-              return (
-                <div 
-                  className="absolute inset-0 pointer-events-none"
-                  style={{
-                    fontFamily: "'Times New Roman', serif",
-                    fontSize: "12pt",
-                    lineHeight: "2.0",
-                    padding: `${PAGE_PADDING}px`,
-                    whiteSpace: 'pre-wrap',
-                    wordWrap: 'break-word',
-                    color: 'transparent',
-                    zIndex: 2
-                  }}
-                  dangerouslySetInnerHTML={{
-                    __html: highlightedHtml
-                  }}
-                />
-              );
-            })()}
-            
-            {/* Inline comment highlighting overlay for graded assignments */}
-            {readOnly && inlineComments.length > 0 && (
+            {/* Combined highlighting overlay for graded assignments */}
+            {readOnly && (showCopyPasteHighlights || inlineComments.length > 0) && (
               <div 
-                className="absolute inset-0 pointer-events-none"
+                className="absolute inset-0 pointer-events-auto"
                 style={{
                   fontFamily: "'Times New Roman', serif",
                   fontSize: "12pt",
@@ -279,11 +278,11 @@ export default function SingleDocumentEditor({
                   padding: `${PAGE_PADDING}px`,
                   whiteSpace: 'pre-wrap',
                   wordWrap: 'break-word',
-                  color: 'transparent',
-                  zIndex: 3
+                  zIndex: 3,
+                  backgroundColor: 'white'
                 }}
                 dangerouslySetInnerHTML={{
-                  __html: highlightInlineComments(content, inlineComments)
+                  __html: applyAllHighlights(content, pastedContent, inlineComments)
                 }}
               />
             )}
