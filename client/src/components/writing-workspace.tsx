@@ -49,6 +49,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     footer: "",
     pageNumbers: false
   });
+  const [viewMode, setViewMode] = useState<'edit' | 'document' | 'pages'>('edit');
 
   const contentRef = useRef<HTMLTextAreaElement>(null);
   const formatRef = useRef<((command: string, value?: string) => void) | null>(null);
@@ -491,6 +492,34 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
               />
             </div>
             <div className="flex items-center gap-4">
+              {/* View Mode Toggle */}
+              <div className="flex border rounded-lg overflow-hidden">
+                <Button
+                  variant={viewMode === 'edit' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('edit')}
+                  className="rounded-none border-r"
+                >
+                  Edit
+                </Button>
+                <Button
+                  variant={viewMode === 'document' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('document')}
+                  className="rounded-none border-r"
+                >
+                  Document
+                </Button>
+                <Button
+                  variant={viewMode === 'pages' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('pages')}
+                  className="rounded-none"
+                >
+                  Pages
+                </Button>
+              </div>
+              
               <div className="text-sm text-gray-500">
                 {wordCount} words
               </div>
@@ -537,39 +566,52 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
           </div>
         </div>
 
-        {/* Writing Content - Horizontal and Vertical Scrolling */}
+        {/* Writing Content - Conditional View Based on Mode */}
         <div className="flex-1 overflow-auto">
-          <CopyPasteDetector
-            allowCopyPaste={allowCopyPaste}
-            onPasteDetected={handlePasteDetected}
-            className="min-h-full"
-          >
-            <div className="relative w-full min-h-full">
-              {/* Enhanced Document View with Page Progression */}
-              <div className="p-6 min-h-full">
-                {/* Document Status Bar */}
-                <div className="mb-4 bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <FileText className="h-5 w-5 text-gray-600" />
-                      <span className="text-sm font-medium text-gray-700">
-                        Document: {Math.ceil(wordCount / 500) || 1} page{Math.ceil(wordCount / 500) !== 1 ? 's' : ''}
-                      </span>
-                      <span className="text-sm text-gray-500">
-                        {wordCount} words
-                      </span>
-                      {wordCount > 0 && (
-                        <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
-                          Currently on page {Math.ceil(wordCount / 500)}
+          {viewMode === 'pages' ? (
+            <WordStylePagesEditor
+              content={content}
+              onContentChange={(newContent) => {
+                console.log('Content changed from pages view:', newContent);
+                setContent(newContent);
+              }}
+              studentName={session?.title || "Student Document"}
+              assignmentTitle={assignment?.title}
+              showPageNumbers={headerFooterSettings.pageNumbers}
+              showHeader={!!headerFooterSettings.header}
+            />
+          ) : (
+            <CopyPasteDetector
+              allowCopyPaste={allowCopyPaste}
+              onPasteDetected={handlePasteDetected}
+              className="min-h-full"
+            >
+              <div className="relative w-full min-h-full">
+                {/* Enhanced Document View with Page Progression */}
+                <div className="p-6 min-h-full">
+                  {/* Document Status Bar */}
+                  <div className="mb-4 bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <FileText className="h-5 w-5 text-gray-600" />
+                        <span className="text-sm font-medium text-gray-700">
+                          Document: {Math.ceil(wordCount / 500) || 1} page{Math.ceil(wordCount / 500) !== 1 ? 's' : ''}
                         </span>
-                      )}
-                    </div>
-                    
-                    <div className="text-xs text-gray-500">
-                      Auto page breaks every 250 words
+                        <span className="text-sm text-gray-500">
+                          {wordCount} words
+                        </span>
+                        {wordCount > 0 && (
+                          <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                            Currently on page {Math.ceil(wordCount / 500)}
+                          </span>
+                        )}
+                      </div>
+                      
+                      <div className="text-xs text-gray-500">
+                        {viewMode === 'document' ? 'Page breaks every 500 words' : 'Standard editing mode'}
+                      </div>
                     </div>
                   </div>
-                </div>
                 
                 <div className="relative">
                   <PageBasedEditor
@@ -633,6 +675,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
               </div>
             </div>
           </CopyPasteDetector>
+          )}
         </div>
 
         {/* Footer Actions */}
