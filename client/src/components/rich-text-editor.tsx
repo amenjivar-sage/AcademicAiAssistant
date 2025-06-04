@@ -25,15 +25,19 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
   const quillRef = useRef<ReactQuill>(null);
   const [pageCount, setPageCount] = useState(1);
   const [contentOverflow, setContentOverflow] = useState(false);
+  const [pages, setPages] = useState<string[]>([content || '']);
+  const [activePage, setActivePage] = useState(0);
+  const pageRefs = useRef<(ReactQuill | null)[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useImperativeHandle(ref, () => ({
     focus: () => {
-      if (quillRef.current) {
-        quillRef.current.focus();
+      const activeRef = pageRefs.current[activePage] || pageRefs.current[0];
+      if (activeRef) {
+        activeRef.focus();
       }
     },
-    getEditor: () => quillRef.current
+    getEditor: () => pageRefs.current[activePage] || pageRefs.current[0]
   }));
 
   // Custom toolbar configuration
@@ -50,24 +54,41 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     'link', 'color', 'background'
   ];
 
-  const handleChange = (value: string, delta: any, source: any, editor: any) => {
-    onContentChange(value);
+  const createHandleChange = (pageIndex: number) => (value: string, delta: any, source: any, editor: any) => {
+    // Update the specific page content
+    const newPages = [...pages];
+    newPages[pageIndex] = value;
+    setPages(newPages);
     
-    // Check for content overflow
+    // Combine all pages for parent callback
+    const combinedContent = newPages.join('');
+    onContentChange(combinedContent);
+    
+    // Check for content overflow and create new page if needed
     setTimeout(() => {
-      if (quillRef.current) {
-        const editorElement = quillRef.current.getEditor().root;
+      const currentRef = pageRefs.current[pageIndex];
+      if (currentRef) {
+        const editorElement = currentRef.getEditor().root;
         const scrollHeight = editorElement.scrollHeight;
         const clientHeight = editorElement.clientHeight;
+        
+        // If content overflows and this is the last page, create a new page
+        if (scrollHeight > clientHeight && pageIndex === pages.length - 1) {
+          setPages(prev => [...prev, '']);
+          setActivePage(pageIndex + 1);
+          
+          // Focus the new page after it's created
+          setTimeout(() => {
+            const newPageRef = pageRefs.current[pageIndex + 1];
+            if (newPageRef) {
+              newPageRef.focus();
+            }
+          }, 100);
+        }
+        
         setContentOverflow(scrollHeight > clientHeight);
       }
     }, 100);
-    
-    // Calculate approximate page count based on content length
-    const textLength = value.replace(/<[^>]*>/g, '').length;
-    const charsPerPage = 2500; // Approximate characters per page
-    const neededPages = Math.max(1, Math.ceil(textLength / charsPerPage));
-    setPageCount(neededPages);
     
     // Handle text selection for formatting feedback
     if (onTextSelection) {
@@ -95,15 +116,17 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     }
   };
 
-  // Initialize page count when content is loaded
+  // Initialize pages when content is loaded
   useEffect(() => {
-    if (content) {
-      const textLength = content.replace(/<[^>]*>/g, '').length;
-      const charsPerPage = 2500;
-      const neededPages = Math.max(1, Math.ceil(textLength / charsPerPage));
-      setPageCount(neededPages);
+    if (content && content !== pages.join('')) {
+      setPages([content]);
     }
   }, [content]);
+
+  // Initialize page refs array
+  useEffect(() => {
+    pageRefs.current = pageRefs.current.slice(0, pages.length);
+  }, [pages.length]);
 
   // Expose formatting functions to parent
   useEffect(() => {
@@ -318,62 +341,30 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
       `}</style>
       
       <div className="document-container" ref={containerRef}>
-        <div className="single-document-page">
-          <ReactQuill
-            ref={quillRef}
-            value={content}
-            onChange={handleChange}
-            modules={modules}
-            formats={formats}
-            readOnly={readOnly}
-            placeholder={placeholder}
-            theme="snow"
-          />
-          
-          {/* Content overflow warning */}
-          {contentOverflow && (
-            <div className="overflow-warning">
-              🚫 This page is full. Please start a new page.
-            </div>
-          )}
-          
-          {/* Page break indicators */}
-          {Array.from({ length: pageCount - 1 }, (_, index) => (
-            <div 
-              key={index}
-              className="page-break-indicator"
-              style={{
-                position: 'absolute',
-                top: `${(index + 1) * 1000}px`,
-                left: '0',
-                right: '0',
-                height: '2px',
-                background: 'repeating-linear-gradient(to right, #ccc 0, #ccc 10px, transparent 10px, transparent 20px)',
-                zIndex: 10,
-                pointerEvents: 'none'
+        {pages.map((pageContent, index) => (
+          <div key={index} className="single-document-page" style={{ marginBottom: index < pages.length - 1 ? '20px' : '0' }}>
+            <ReactQuill
+              ref={(el) => {
+                pageRefs.current[index] = el;
+                if (index === 0) {
+                  quillRef.current = el;
+                }
               }}
+              value={pageContent}
+              onChange={createHandleChange(index)}
+              modules={modules}
+              formats={formats}
+              readOnly={readOnly}
+              placeholder={index === 0 ? placeholder : "Continue writing..."}
+              theme="snow"
             />
-          ))}
-          
-          {/* Page numbers */}
-          {Array.from({ length: pageCount }, (_, index) => (
-            <div 
-              key={index}
-              className="page-number-indicator"
-              style={{
-                position: 'absolute',
-                top: `${(index + 1) * 1000 - 30}px`,
-                right: '72px',
-                fontSize: '12px',
-                color: '#666',
-                zIndex: 10,
-                pointerEvents: 'none'
-              }}
-            >
+            
+            {/* Page number */}
+            <div className="page-number">
               {index + 1}
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
     </div>
   );
