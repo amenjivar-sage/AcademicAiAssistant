@@ -73,47 +73,56 @@ export default function ConstrainedPagesEditor({
     
     // Check if any page exceeds line limit and redistribute content
     const maxLinesPerPage = 22;
-    let needsReflow = false;
+    let redistributed = false;
     
+    // Process all pages for overflow
     for (let i = 0; i < updatedPages.length; i++) {
       const pageLines = updatedPages[i].split('\n');
       
       if (pageLines.length > maxLinesPerPage) {
-        needsReflow = true;
+        redistributed = true;
+        
         // Keep only allowed lines on current page
         const allowedLines = pageLines.slice(0, maxLinesPerPage);
         const overflowLines = pageLines.slice(maxLinesPerPage);
         
         updatedPages[i] = allowedLines.join('\n');
         
-        // Move overflow to next page
-        if (i + 1 < updatedPages.length) {
-          // Prepend overflow to existing next page content
-          const nextPageContent = updatedPages[i + 1];
-          const nextPageLines = nextPageContent.split('\n');
-          updatedPages[i + 1] = [...overflowLines, ...nextPageLines].join('\n');
-        } else {
-          // Create new page for overflow
-          updatedPages.push(overflowLines.join('\n'));
-        }
-        
-        // If we modified content, focus next page
-        if (i === pageIndex && needsReflow) {
-          setTimeout(() => {
-            const nextTextarea = textareaRefs.current[i + 1];
-            if (nextTextarea) {
-              nextTextarea.focus();
-              nextTextarea.setSelectionRange(0, 0);
-            }
-          }, 100);
+        // Handle overflow
+        if (overflowLines.length > 0) {
+          if (i + 1 < updatedPages.length) {
+            // Add overflow to beginning of next page
+            const nextPageLines = updatedPages[i + 1].split('\n');
+            updatedPages[i + 1] = [...overflowLines, ...nextPageLines].join('\n');
+          } else {
+            // Create new page for overflow
+            updatedPages.push(overflowLines.join('\n'));
+            // Ensure we have a textarea ref for the new page
+            textareaRefs.current.push(null);
+          }
         }
       }
     }
     
-    // Update local state first
+    // Update state
     setPages(updatedPages);
     
-    // Then notify parent with the combined content
+    // If content was redistributed and we're on the page that overflowed, focus next page
+    if (redistributed && pageIndex < updatedPages.length - 1) {
+      setTimeout(() => {
+        const nextTextarea = textareaRefs.current[pageIndex + 1];
+        if (nextTextarea) {
+          nextTextarea.focus();
+          // Position cursor at start of overflow content
+          const currentPageLines = updatedPages[pageIndex].split('\n').length;
+          if (currentPageLines >= maxLinesPerPage) {
+            nextTextarea.setSelectionRange(0, 0);
+          }
+        }
+      }, 50);
+    }
+    
+    // Notify parent component
     const combinedContent = updatedPages.join('\n');
     onContentChange(combinedContent);
   };
@@ -192,10 +201,13 @@ export default function ConstrainedPagesEditor({
                   onChange={(e) => handlePageContentChange(pageIndex, e.target.value)}
                   onFocus={() => setCurrentPageIndex(pageIndex)}
                   onKeyDown={(e) => {
-                    // Allow Enter key to create new lines
+                    // Handle Enter key to ensure proper line breaks
                     if (e.key === 'Enter') {
-                      e.stopPropagation();
-                      // Let the default behavior happen (insert newline)
+                      // Allow default behavior but ensure it triggers content change
+                      setTimeout(() => {
+                        const textarea = e.target as HTMLTextAreaElement;
+                        handlePageContentChange(pageIndex, textarea.value);
+                      }, 0);
                     }
                   }}
                   placeholder={pageIndex === 0 ? "Start writing your document..." : ""}
