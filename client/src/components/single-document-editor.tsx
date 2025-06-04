@@ -101,14 +101,10 @@ export default function SingleDocumentEditor({
 
     // First apply inline comment highlighting (before copy-paste)
     if (comments && comments.length > 0) {
-      console.log('Applying inline comments first:', comments);
-      
       comments.forEach((comment: any) => {
         const searchText = comment.highlightedText;
-        console.log('Looking for comment text in original:', searchText);
         
         if (searchText && highlightedText.includes(searchText)) {
-          console.log('Found exact match for comment:', searchText.substring(0, 50));
           const escapedSearchText = searchText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
           const regex = new RegExp(escapedSearchText, 'g');
           highlightedText = highlightedText.replace(regex, (match) => {
@@ -120,10 +116,7 @@ export default function SingleDocumentEditor({
 
     // Then apply copy-paste highlighting if enabled
     if (showCopyPasteHighlights && pastedData && pastedData.length > 0) {
-      console.log('Applying copy-paste highlights for student view:', pastedData.length, 'items');
-      
       pastedData.forEach((paste: any, index: number) => {
-        console.log(`Processing paste ${index + 1}:`, paste.text?.substring(0, 100));
         
         if (paste.text && typeof paste.text === 'string') {
           // Simple approach: look for exact phrases and common spelling corrections
@@ -137,7 +130,6 @@ export default function SingleDocumentEditor({
             
             // Check for exact match first
             if (highlightedText.includes(trimmedSentence)) {
-              console.log('Found exact copy-paste match:', trimmedSentence.substring(0, 50));
               const escapedSentence = trimmedSentence.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
               const regex = new RegExp(escapedSentence, 'g');
               highlightedText = highlightedText.replace(regex, (match) => {
@@ -154,7 +146,6 @@ export default function SingleDocumentEditor({
                 .replace(/reminde/gi, 'remind');
               
               if (highlightedText.includes(correctedSentence)) {
-                console.log('Found corrected copy-paste match:', correctedSentence.substring(0, 50));
                 const escapedCorrected = correctedSentence.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
                 const regex = new RegExp(escapedCorrected, 'g');
                 highlightedText = highlightedText.replace(regex, (match) => {
@@ -188,10 +179,7 @@ export default function SingleDocumentEditor({
     // Create array representing pages - just for layout purposes
     const pageArray = Array.from({ length: pageCount }, (_, i) => i);
     setPages(pageArray);
-    console.log('Page count debug:', {
-      contentLength: content.length,
-      estimatedPages: pageCount
-    });
+
   }, [content]);
 
   const totalPages = Math.max(1, pages.length);
