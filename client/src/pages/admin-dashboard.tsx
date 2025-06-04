@@ -1,8 +1,10 @@
 import AdminUserManagement from "@/components/admin-user-management";
+import StudentAnalyticsManagement from "@/components/student-analytics-management";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Shield, Users, TrendingUp, Clock, BookOpen, Brain, Target, Award, Settings, LogOut } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Shield, Users, TrendingUp, Clock, BookOpen, Brain, Target, Award, Settings, LogOut, BarChart3 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import SageLogo from "@/components/sage-logo";
@@ -256,22 +258,41 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        {/* User Management Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              School User Management
-            </CardTitle>
-            <p className="text-gray-600">
-              Manage teacher and student accounts using any email provider - Gmail, Outlook, Yahoo, or school domains. 
-              Usernames are intelligently generated to handle duplicate names automatically.
-            </p>
-          </CardHeader>
-          <CardContent>
-            <AdminUserManagement />
-          </CardContent>
-        </Card>
+        {/* Management Sections */}
+        <Tabs defaultValue="users" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="users" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              User Management
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Student Analytics
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="users">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  School User Management
+                </CardTitle>
+                <p className="text-gray-600">
+                  Manage teacher and student accounts using any email provider - Gmail, Outlook, Yahoo, or school domains. 
+                  Usernames are intelligently generated to handle duplicate names automatically.
+                </p>
+              </CardHeader>
+              <CardContent>
+                <AdminUserManagement />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="analytics">
+            <StudentAnalyticsManagement />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );

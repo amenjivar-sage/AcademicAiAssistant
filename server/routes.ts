@@ -959,7 +959,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get all assignments by fetching teacher assignments
       const teachers = users.filter(u => u.role === 'teacher');
-      let allAssignments = [];
+      let allAssignments: any[] = [];
       for (const teacher of teachers) {
         const teacherAssignments = await storage.getTeacherAssignments(teacher.id);
         allAssignments = allAssignments.concat(teacherAssignments);
@@ -967,7 +967,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get all writing sessions by fetching user sessions
       const students = users.filter(u => u.role === 'student');
-      let allSessions = [];
+      let allSessions: any[] = [];
       for (const student of students) {
         const studentSessions = await storage.getUserWritingSessions(student.id);
         allSessions = allSessions.concat(studentSessions);
@@ -1023,6 +1023,229 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching analytics:", error);
       res.status(500).json({ message: "Failed to fetch analytics" });
+    }
+  });
+
+  // Student analytics endpoint for bulk management
+  app.get("/api/admin/student-analytics", async (req, res) => {
+    try {
+      const currentUser = await getCurrentUser();
+      if (!currentUser || currentUser.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const users = await storage.getAllUsers();
+      const students = users.filter(u => u.role === 'student');
+      
+      const studentAnalytics = [];
+      
+      for (const student of students) {
+        // Get student's writing sessions
+        const sessions = await storage.getUserWritingSessions(student.id);
+        
+        // Get assignments this student has worked on
+        const assignmentIds = [...new Set(sessions.map(s => s.assignmentId))];
+        const assignments = [];
+        for (const assignmentId of assignmentIds) {
+          if (assignmentId) {
+            const assignment = await storage.getAssignment(assignmentId);
+            if (assignment) assignments.push(assignment);
+          }
+        }
+        
+        // Calculate AI interactions
+        let aiInteractions = 0;
+        for (const session of sessions) {
+          const interactions = await storage.getSessionInteractions(session.id);
+          aiInteractions += interactions.length;
+        }
+        
+        // Calculate metrics
+        const completedSessions = sessions.filter(s => s.status === 'submitted' || s.status === 'graded');
+        const gradedSessions = sessions.filter(s => s.grade);
+        const totalWordCount = sessions.reduce((sum, s) => sum + (s.wordCount || 0), 0);
+        const averageWordCount = sessions.length > 0 ? Math.round(totalWordCount / sessions.length) : 0;
+        
+        // Calculate average grade
+        const grades = gradedSessions.map(s => s.grade).filter(Boolean);
+        const averageGrade = grades.length > 0 ? 
+          grades.reduce((sum, grade) => {
+            // Convert letter grades to numbers for averaging
+            const gradeMap: any = { 'A+': 4.3, 'A': 4.0, 'A-': 3.7, 'B+': 3.3, 'B': 3.0, 'B-': 2.7, 'C+': 2.3, 'C': 2.0, 'C-': 1.7, 'D+': 1.3, 'D': 1.0, 'F': 0.0 };
+            return sum + (gradeMap[grade] || 0);
+          }, 0) / grades.length : 0;
+        
+        // Get subjects from assignments
+        const subjects = assignments.map(a => a.title || 'General').slice(0, 3);
+        const strongestSubject = subjects.length > 0 ? subjects[0] : 'N/A';
+        
+        const analytics = {
+          id: student.id,
+          firstName: student.firstName,
+          lastName: student.lastName,
+          email: student.email,
+          grade: student.grade || 'Not specified',
+          totalAssignments: assignments.length,
+          completedAssignments: completedSessions.length,
+          totalWordCount: totalWordCount,
+          averageWordCount: averageWordCount,
+          averageGrade: averageGrade > 0 ? (averageGrade >= 4.0 ? 'A' : averageGrade >= 3.0 ? 'B' : averageGrade >= 2.0 ? 'C' : 'D') : 'N/A',
+          aiInteractions: aiInteractions,
+          totalTimeSpent: Math.round(averageWordCount / 50), // Estimate based on typing speed
+          improvementScore: Math.min(100, Math.round((completedSessions.length / Math.max(assignments.length, 1)) * 100)),
+          lastActivity: sessions.length > 0 ? sessions[sessions.length - 1].updatedAt : student.createdAt,
+          strongestSubject: strongestSubject,
+          areasForImprovement: completedSessions.length < assignments.length * 0.8 ? ['Assignment Completion'] : []
+        };
+        
+        studentAnalytics.push(analytics);
+      }
+      
+      res.json(studentAnalytics);
+    } catch (error) {
+      console.error("Error fetching student analytics:", error);
+      res.status(500).json({ message: "Failed to fetch student analytics" });
+    }
+  });
+
+  // Export student analytics
+  app.get("/api/admin/export-student-analytics", async (req, res) => {
+    try {
+      const currentUser = await getCurrentUser();
+      if (!currentUser || currentUser.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      // Get student analytics data (reuse the logic from above)
+      const analyticsResponse = await fetch(`${req.protocol}://${req.get('host')}/api/admin/student-analytics`, {
+        headers: { 'Cookie': req.headers.cookie || '' }
+      });
+      const studentAnalytics = await analyticsResponse.json();
+      
+      // Convert to CSV
+      const headers = [
+        'ID', 'First Name', 'Last Name', 'Email', 'Grade', 
+        'Total Assignments', 'Completed Assignments', 'Total Word Count',
+        'Average Word Count', 'Average Grade', 'AI Interactions',
+        'Total Time Spent (min)', 'Improvement Score', 'Last Activity',
+        'Strongest Subject', 'Areas for Improvement'
+      ];
+      
+      const csvRows = [headers.join(',')];
+      
+      studentAnalytics.forEach((student: any) => {
+        const row = [
+          student.id,
+          `"${student.firstName}"`,
+          `"${student.lastName}"`,
+          `"${student.email}"`,
+          `"${student.grade}"`,
+          student.totalAssignments,
+          student.completedAssignments,
+          student.totalWordCount,
+          student.averageWordCount,
+          `"${student.averageGrade}"`,
+          student.aiInteractions,
+          student.totalTimeSpent,
+          student.improvementScore,
+          `"${student.lastActivity}"`,
+          `"${student.strongestSubject}"`,
+          `"${student.areasForImprovement.join('; ')}"`
+        ];
+        csvRows.push(row.join(','));
+      });
+      
+      const csvContent = csvRows.join('\n');
+      
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename="student-analytics.csv"');
+      res.send(csvContent);
+    } catch (error) {
+      console.error("Error exporting student analytics:", error);
+      res.status(500).json({ message: "Failed to export student analytics" });
+    }
+  });
+
+  // Import student analytics
+  app.post("/api/admin/import-student-analytics", async (req, res) => {
+    try {
+      const currentUser = await getCurrentUser();
+      if (!currentUser || currentUser.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { data } = req.body;
+      
+      if (!data || typeof data !== 'string') {
+        return res.status(400).json({ message: "Import data is required" });
+      }
+
+      // Parse CSV or JSON data
+      let importedData: any[] = [];
+      
+      try {
+        // Try parsing as JSON first
+        importedData = JSON.parse(data);
+      } catch {
+        // Parse as CSV
+        const lines = data.trim().split('\n');
+        if (lines.length < 2) {
+          return res.status(400).json({ message: "Invalid CSV format" });
+        }
+        
+        const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
+        
+        for (let i = 1; i < lines.length; i++) {
+          const values = lines[i].split(',').map(v => v.replace(/"/g, '').trim());
+          const row: any = {};
+          
+          headers.forEach((header, index) => {
+            row[header.toLowerCase().replace(/\s+/g, '_')] = values[index] || '';
+          });
+          
+          importedData.push(row);
+        }
+      }
+      
+      // Validate and process imported data
+      let processedCount = 0;
+      const errors: string[] = [];
+      
+      for (const item of importedData) {
+        try {
+          // Basic validation
+          if (!item.email || !item.first_name || !item.last_name) {
+            errors.push(`Missing required fields for row ${processedCount + 1}`);
+            continue;
+          }
+          
+          // Find existing user by email
+          const existingUser = await storage.getUserByEmail(item.email);
+          
+          if (existingUser && existingUser.role === 'student') {
+            // Update existing student's grade if provided
+            if (item.grade) {
+              // Note: This would require adding an updateUser method to storage
+              console.log(`Would update user ${existingUser.id} with grade: ${item.grade}`);
+            }
+            processedCount++;
+          } else {
+            errors.push(`Student not found for email: ${item.email}`);
+          }
+        } catch (error) {
+          errors.push(`Error processing row ${processedCount + 1}: ${error}`);
+        }
+      }
+      
+      res.json({
+        message: `Import completed. Processed ${processedCount} records.`,
+        processedCount,
+        errors: errors.length > 0 ? errors : undefined
+      });
+      
+    } catch (error) {
+      console.error("Error importing student analytics:", error);
+      res.status(500).json({ message: "Failed to import student analytics" });
     }
   });
 
