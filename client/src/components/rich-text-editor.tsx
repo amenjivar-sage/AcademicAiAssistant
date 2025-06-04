@@ -55,45 +55,65 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
   ];
 
   const createHandleChange = (pageIndex: number) => (value: string, delta: any, source: any, editor: any) => {
-    // Update the specific page content
+    // Prevent recursive updates by checking if this is the expected change
+    if (pages[pageIndex] === value) return;
+    
+    // Update the specific page content without affecting other pages
     const newPages = [...pages];
     newPages[pageIndex] = value;
+    
+    // Only update pages state if there's actually a change
     setPages(newPages);
     
     // Combine all pages for parent callback
     const combinedContent = newPages.join('');
     onContentChange(combinedContent);
     
-    // Check for content overflow on any user input
-    if (source === 'user' && pageIndex === pages.length - 1) {
+    // Check for content overflow on user input for the last page only
+    if (source === 'user' && pageIndex === newPages.length - 1) {
       setTimeout(() => {
         const currentRef = pageRefs.current[pageIndex];
         if (currentRef) {
           const editorElement = currentRef.getEditor().root;
           const scrollHeight = editorElement.scrollHeight;
-          const maxHeight = 950; // Fixed height from CSS
+          const maxHeight = 950;
           
-          // If content exceeds page height, create new page
+          // If content exceeds page height, create new page and move overflow
           if (scrollHeight > maxHeight) {
-            console.log(`Content overflow detected - creating new page: ${scrollHeight}px > ${maxHeight}px`);
+            console.log(`Overflow detected on page ${pageIndex + 1}: ${scrollHeight}px > ${maxHeight}px`);
             
-            // Create new page
-            const newPagesList = [...pages, ''];
-            setPages(newPagesList);
+            // Get the current content
+            const quillEditor = currentRef.getEditor();
+            const currentContent = quillEditor.getContents();
+            
+            // Find a good break point (approximately where overflow starts)
+            const totalLength = quillEditor.getLength();
+            const breakPoint = Math.floor(totalLength * 0.8); // Take 80% of content
+            
+            // Split content at break point
+            const firstPageContent = quillEditor.getText(0, breakPoint);
+            const overflowContent = quillEditor.getText(breakPoint);
+            
+            // Update current page with truncated content
+            const updatedPages = [...newPages];
+            updatedPages[pageIndex] = `<p>${firstPageContent}</p>`;
+            updatedPages.push(`<p>${overflowContent}</p>`);
+            
+            setPages(updatedPages);
             setActivePage(pageIndex + 1);
             
-            // Move cursor to new page
+            // Focus on new page
             setTimeout(() => {
               const newPageRef = pageRefs.current[pageIndex + 1];
               if (newPageRef) {
                 newPageRef.focus();
                 newPageRef.getEditor().setSelection(0, 0);
-                console.log(`Moved to new page ${pageIndex + 2}`);
+                console.log(`Created page ${pageIndex + 2} with overflow content`);
               }
-            }, 100);
+            }, 150);
           }
         }
-      }, 50);
+      }, 100);
     }
     
     // Update overflow status
@@ -135,7 +155,10 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
   // Initialize pages when content is loaded
   useEffect(() => {
     if (content && content !== pages.join('')) {
-      setPages([content]);
+      // Only reset if we're starting fresh or content is significantly different
+      if (pages.length === 1 && pages[0] === '') {
+        setPages([content]);
+      }
     }
   }, [content]);
 
@@ -361,13 +384,38 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
           font-size: 12pt !important;
         }
 
+        .single-document-page {
+          width: 8.5in;
+          height: 1122px;
+          background: white;
+          box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+          margin: 0 auto;
+          position: relative;
+          page-break-after: always;
+          print-color-adjust: exact;
+          transition: all 0.3s ease-in-out;
+          animation: pageSlideIn 0.3s ease-out;
+        }
+
+        @keyframes pageSlideIn {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
         .single-document-page .ql-editor {
           padding: 72px !important;
           line-height: 2.0 !important;
           font-family: 'Times New Roman', serif !important;
-          font-size: 12pt !important;
+          font-size: 14pt !important;
           box-sizing: border-box !important;
-          min-height: 856px !important;
+          height: 950px !important;
+          overflow: hidden !important;
         }
 
         .single-document-page .ql-editor:focus {
