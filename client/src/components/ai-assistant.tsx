@@ -300,18 +300,18 @@ export default function AiAssistant({ sessionId, currentContent }: AiAssistantPr
           </div>
 
           {/* Input Area - Always visible at bottom */}
-          <div className="border-t bg-white p-3 space-y-3 flex-shrink-0">
-            <div className="space-y-3">
-              <label className="block text-sm font-medium text-gray-700">
-                Ask ZoË for help with your writing:
+          <div className="border-t bg-white p-2 space-y-2 flex-shrink-0">
+            <div className="space-y-2">
+              <label className="block text-xs font-medium text-gray-700">
+                Ask ZoË for help:
               </label>
               <Textarea
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Example: 'Help me brainstorm ideas' or 'How can I improve this paragraph?'"
-                className="resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent min-h-[100px]"
-                rows={4}
+                placeholder="Ask ZoË a question..."
+                className="resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                rows={2}
               />
             </div>
             
