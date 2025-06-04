@@ -51,6 +51,12 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
   const handleChange = (value: string, delta: any, source: any, editor: any) => {
     onContentChange(value);
     
+    // Calculate pages needed based on content length
+    const textLength = value.replace(/<[^>]*>/g, '').length;
+    const charsPerPage = 2500; // Approximate characters per page
+    const neededPages = Math.max(1, Math.ceil(textLength / charsPerPage));
+    setPageCount(neededPages);
+    
     // Handle text selection for formatting feedback
     if (onTextSelection) {
       const selection = editor.getSelection();
@@ -76,6 +82,16 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
       }
     }
   };
+
+  // Initialize page count based on existing content
+  useEffect(() => {
+    if (content) {
+      const textLength = content.replace(/<[^>]*>/g, '').length;
+      const charsPerPage = 2500;
+      const neededPages = Math.max(1, Math.ceil(textLength / charsPerPage));
+      setPageCount(neededPages);
+    }
+  }, [content]);
 
   // Expose formatting functions to parent
   useEffect(() => {
