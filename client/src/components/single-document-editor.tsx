@@ -163,7 +163,7 @@ export default function SingleDocumentEditor({
                 }}
               >
                 {pageIndex === 0 ? (
-                  // First page: editable textarea with full content
+                  // First page: editable textarea showing only first page content
                   <div className="relative w-full h-full">
                     {/* Highlighting overlay for misspelled words */}
                     {isSpellCheckActive && spellErrors.length > 0 && (
@@ -180,7 +180,7 @@ export default function SingleDocumentEditor({
                           zIndex: 1
                         }}
                         dangerouslySetInnerHTML={{
-                          __html: highlightMisspelledWords(content, spellErrors)
+                          __html: highlightMisspelledWords(pageContent, spellErrors)
                         }}
                       />
                     )}
