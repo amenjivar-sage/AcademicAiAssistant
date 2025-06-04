@@ -31,10 +31,10 @@ export default function SingleDocumentEditor({
   const [spellErrors, setSpellErrors] = useState<any[]>([]);
 
   // Function to split text into pages based on character count per page
-  function splitTextToPages(text: string, maxCharsPerPage = 1800) {
+  function splitTextToPages(text: string, maxCharsPerPage = 800) {
     const pages: string[] = [];
     
-    if (!text) {
+    if (!text || text.trim() === '') {
       return [''];
     }
     
@@ -49,12 +49,8 @@ export default function SingleDocumentEditor({
 
   // Update pages when content changes
   useEffect(() => {
-    if (content.trim() === '') {
-      setPages(['']); // Always show at least one empty page
-    } else {
-      const newPages = splitTextToPages(content, 1800); // ~1800 chars per page
-      setPages(newPages);
-    }
+    const newPages = splitTextToPages(content, 800); // ~800 chars per page for better flow
+    setPages(newPages);
   }, [content]);
 
   const totalPages = Math.max(1, pages.length);
@@ -87,7 +83,7 @@ export default function SingleDocumentEditor({
   };
 
   return (
-    <div className="bg-gray-100 min-h-screen relative">
+    <div className="bg-gray-100 min-h-screen relative overflow-y-auto">
       {/* Spell Check Toggle Button */}
       <div className="fixed top-4 right-4 z-50">
         <button
@@ -102,14 +98,14 @@ export default function SingleDocumentEditor({
         </button>
       </div>
 
-      <div className="flex flex-col items-center py-6 relative">
+      <div className="flex flex-col items-center py-6 relative space-y-6">
         {pages.map((pageContent, pageIndex) => (
           <div key={pageIndex} className="relative">
             {/* Page Break Indicator */}
             {pageIndex > 0 && (
-              <div className="flex items-center justify-center py-2">
+              <div className="flex items-center justify-center py-4 mb-4">
                 <div className="flex-1 border-t border-dashed border-blue-300"></div>
-                <div className="px-3 bg-blue-100 text-blue-700 text-xs font-medium rounded">
+                <div className="px-4 bg-blue-100 text-blue-700 text-sm font-medium rounded-lg">
                   Page {pageIndex + 1}
                 </div>
                 <div className="flex-1 border-t border-dashed border-blue-300"></div>
