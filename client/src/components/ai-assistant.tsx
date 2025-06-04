@@ -237,16 +237,16 @@ export default function AiAssistant({ sessionId, currentContent }: AiAssistantPr
         </p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
         <TabsList className="grid w-full grid-cols-3 h-auto m-2 flex-shrink-0">
           <TabsTrigger value="assistant" className="text-xs px-2">Chat</TabsTrigger>
           <TabsTrigger value="prompts" className="text-xs px-2">Help</TabsTrigger>
           <TabsTrigger value="citations" className="text-xs px-2">Cite</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="assistant" className="flex-1 flex flex-col h-full relative">
+        <TabsContent value="assistant" className="flex-1 flex flex-col min-h-0">
           {/* Chat History Area */}
-          <div className="overflow-y-auto p-3 space-y-3" style={{ height: 'calc(100% - 180px)' }}>
+          <div className="flex-1 overflow-y-auto p-3 space-y-3 min-h-0">
             {displayChatHistory && displayChatHistory.length > 0 ? (
               <>
                 <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
@@ -300,7 +300,7 @@ export default function AiAssistant({ sessionId, currentContent }: AiAssistantPr
           </div>
 
           {/* Input Area - Always visible at bottom */}
-          <div className="border-t bg-white p-3 space-y-3 flex-shrink-0" style={{ height: '180px' }}>
+          <div className="border-t bg-white p-3 space-y-3 flex-shrink-0">
             <div className="space-y-3">
               <label className="block text-sm font-medium text-gray-700">
                 Ask ZoË for help with your writing:
