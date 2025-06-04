@@ -261,7 +261,7 @@ export default function AiAssistant({ sessionId, currentContent }: AiAssistantPr
                     </div>
                     <div className="bg-purple-50 p-4 rounded-lg">
                       <p className="text-sm font-medium text-purple-900 mb-2">ZoË replied:</p>
-                      <div className="text-sm text-purple-800 whitespace-pre-line leading-relaxed max-h-64 overflow-y-auto bg-white p-3 rounded border">
+                      <div className="text-base text-purple-800 whitespace-pre-line leading-relaxed min-h-[150px] max-h-96 overflow-y-auto bg-white p-5 rounded-lg border-2 shadow-sm font-medium">
                         {interaction.response}
                       </div>
                     </div>
@@ -291,7 +291,7 @@ export default function AiAssistant({ sessionId, currentContent }: AiAssistantPr
               <Alert variant={getResponseVariant(lastResponse.isRestricted)}>
                 {getResponseIcon(lastResponse.isRestricted)}
                 <AlertDescription>
-                  <div className="whitespace-pre-line text-sm leading-relaxed max-h-80 overflow-y-auto bg-gray-50 p-4 rounded border mt-2">
+                  <div className="whitespace-pre-line text-base leading-relaxed min-h-[200px] max-h-[400px] overflow-y-auto bg-white p-6 rounded-lg border-2 shadow-sm mt-3 font-medium">
                     {lastResponse.response}
                   </div>
                 </AlertDescription>
