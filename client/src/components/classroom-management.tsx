@@ -531,15 +531,27 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
                     {classroomStudents.map((student) => {
                       const studentAssignments = classroomAssignments.map(assignment => {
                         const submission = student.sessions?.find((session: any) => session.assignmentId === assignment.id);
+                        const currentDate = new Date();
+                        const dueDate = assignment.dueDate ? new Date(assignment.dueDate) : null;
+                        const isOverdue = dueDate && currentDate > dueDate && (!submission || submission.status !== 'submitted');
+                        
+                        let status = submission?.status || 'not_started';
+                        if (isOverdue && status !== 'submitted' && status !== 'graded') {
+                          status = 'late';
+                        }
+                        
                         return {
                           ...assignment,
                           submission,
-                          status: submission?.status || 'not_started'
+                          status,
+                          isOverdue,
+                          dueDate
                         };
                       });
 
-                      const submittedCount = studentAssignments.filter(a => a.status === 'submitted').length;
+                      const submittedCount = studentAssignments.filter(a => a.status === 'submitted' || a.status === 'graded').length;
                       const pendingCount = studentAssignments.filter(a => a.status === 'not_started' || a.status === 'in_progress').length;
+                      const lateCount = studentAssignments.filter(a => a.status === 'late').length;
 
                       return (
                         <Card key={student.id} className="hover:shadow-md transition-shadow">
@@ -558,6 +570,12 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
                                   <div className="text-2xl font-bold text-orange-600">{pendingCount}</div>
                                   <p className="text-xs text-gray-600">Pending</p>
                                 </div>
+                                {lateCount > 0 && (
+                                  <div className="text-center">
+                                    <div className="text-2xl font-bold text-red-600">{lateCount}</div>
+                                    <p className="text-xs text-gray-600">Late</p>
+                                  </div>
+                                )}
                               </div>
                             </div>
                           </CardHeader>
@@ -567,18 +585,33 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
                               <div className="grid grid-cols-1 gap-2">
                                 {studentAssignments.map((assignment) => (
                                   <div key={assignment.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                                    <span className="text-sm font-medium">{assignment.title}</span>
+                                    <div className="flex-1">
+                                      <span className="text-sm font-medium">{assignment.title}</span>
+                                      {assignment.dueDate && (
+                                        <div className="text-xs text-gray-500 mt-1">
+                                          Due: {new Date(assignment.dueDate).toLocaleDateString()}
+                                          {assignment.isOverdue && assignment.status !== 'submitted' && (
+                                            <span className="text-red-600 ml-1">(Overdue)</span>
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
                                     <Badge 
                                       variant={
                                         assignment.status === 'submitted' ? 'default' :
                                         assignment.status === 'graded' ? 'secondary' :
-                                        assignment.status === 'in_progress' ? 'outline' : 'destructive'
+                                        assignment.status === 'in_progress' ? 'outline' :
+                                        assignment.status === 'late' ? 'destructive' : 'destructive'
+                                      }
+                                      className={
+                                        assignment.status === 'late' ? 'bg-red-100 text-red-800 border-red-300' : ''
                                       }
                                     >
                                       {assignment.status === 'not_started' ? 'Not Started' :
                                        assignment.status === 'in_progress' ? 'In Progress' :
                                        assignment.status === 'submitted' ? 'Submitted' :
                                        assignment.status === 'graded' ? `Graded: ${assignment.submission?.grade}` :
+                                       assignment.status === 'late' ? 'Late' :
                                        assignment.status}
                                     </Badge>
                                   </div>
