@@ -5,8 +5,8 @@ import { setupVite, serveStatic, log } from "./vite";
 import { seedDatabase } from "./seed-database";
 
 const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 
 // Add session middleware
 app.use(session({

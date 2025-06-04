@@ -50,42 +50,43 @@ export default function ConstrainedPagesEditor({
   }, [content]);
 
   const handlePageContentChange = (pageIndex: number, newPageContent: string) => {
-    const lines = newPageContent.split('\n');
-    
-    // If content exceeds page limit, truncate and move overflow
-    if (lines.length > LINES_PER_PAGE) {
-      const pageLines = lines.slice(0, LINES_PER_PAGE);
-      const overflowLines = lines.slice(LINES_PER_PAGE);
-      
-      // Update current page with truncated content
-      const updatedPages = [...pages];
-      updatedPages[pageIndex] = pageLines.join('\n');
-      
-      // Add overflow to next page
-      if (pageIndex + 1 < updatedPages.length) {
-        const nextPageLines = updatedPages[pageIndex + 1].split('\n');
-        updatedPages[pageIndex + 1] = [...overflowLines, ...nextPageLines].join('\n');
-      } else {
-        updatedPages.push(overflowLines.join('\n'));
-      }
-      
-      setPages(updatedPages);
-      onContentChange(updatedPages.join('\n\n\n\n')); // Use page separators
-      
-      // Focus next page if overflow occurred
-      setTimeout(() => {
-        if (textareaRefs.current[pageIndex + 1]) {
-          textareaRefs.current[pageIndex + 1]?.focus();
-          textareaRefs.current[pageIndex + 1]?.setSelectionRange(overflowLines.join('\n').length, overflowLines.join('\n').length);
-        }
-      }, 100);
-      
-      return;
-    }
-    
-    // Normal content change
     const updatedPages = [...pages];
     updatedPages[pageIndex] = newPageContent;
+    
+    // Check if any page exceeds line limit and redistribute content
+    for (let i = 0; i < updatedPages.length; i++) {
+      const pageLines = updatedPages[i].split('\n');
+      
+      if (pageLines.length > LINES_PER_PAGE) {
+        // Keep only allowed lines on current page
+        const allowedLines = pageLines.slice(0, LINES_PER_PAGE);
+        const overflowLines = pageLines.slice(LINES_PER_PAGE);
+        
+        updatedPages[i] = allowedLines.join('\n');
+        
+        // Move overflow to next page
+        if (i + 1 < updatedPages.length) {
+          // Prepend overflow to existing next page content
+          const nextPageContent = updatedPages[i + 1];
+          updatedPages[i + 1] = overflowLines.join('\n') + (nextPageContent ? '\n' + nextPageContent : '');
+        } else {
+          // Create new page for overflow
+          updatedPages.push(overflowLines.join('\n'));
+        }
+        
+        // If we modified content, focus next page
+        if (i === pageIndex) {
+          setTimeout(() => {
+            const nextTextarea = textareaRefs.current[i + 1];
+            if (nextTextarea) {
+              nextTextarea.focus();
+              nextTextarea.setSelectionRange(0, 0);
+            }
+          }, 100);
+        }
+      }
+    }
+    
     setPages(updatedPages);
     onContentChange(updatedPages.join('\n\n\n\n'));
   };
