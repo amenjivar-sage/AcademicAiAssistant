@@ -131,9 +131,15 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
     // Get actual enrolled student count from database
     const studentsInClass = allClassroomStudents?.[classroom.id]?.length || 0;
     
+    // Count all assignments for this classroom (regardless of status)
+    const classroomAssignmentCount = assignments?.filter(a => 
+      a.classroomId === classroom.id || 
+      (a.classroomIds && Array.isArray(a.classroomIds) && a.classroomIds.includes(classroom.id))
+    ).length || 0;
+    
     return {
       enrolledStudents: studentsInClass,
-      activeAssignments: assignments?.filter(a => a.status === 'active' && (a.classroomId === classroom.id || a.classroomId === null)).length || 0,
+      activeAssignments: classroomAssignmentCount,
       pendingSubmissions: 0, // Will be updated when we get real submission data
     };
   };
