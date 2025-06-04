@@ -246,7 +246,7 @@ export default function AiAssistant({ sessionId, currentContent }: AiAssistantPr
 
         <TabsContent value="assistant" className="flex-1 flex flex-col h-full relative">
           {/* Chat History Area */}
-          <div className="flex-1 overflow-y-auto p-3 space-y-3 pb-48">
+          <div className="overflow-y-auto p-3 space-y-3" style={{ height: 'calc(100% - 180px)' }}>
             {displayChatHistory && displayChatHistory.length > 0 ? (
               <>
                 <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
@@ -339,7 +339,7 @@ export default function AiAssistant({ sessionId, currentContent }: AiAssistantPr
           </div>
         </TabsContent>
 
-        <TabsContent value="prompts" className="p-3 pb-48 overflow-y-auto">
+        <TabsContent value="prompts" className="overflow-y-auto" style={{ height: 'calc(100% - 180px)', padding: '12px' }}>
           <h4 className="font-medium text-gray-700 mb-3 text-sm">Quick Writing Help</h4>
           <div className="space-y-2">
             {quickPrompts.map((quickPrompt, index) => {
