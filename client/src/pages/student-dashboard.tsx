@@ -267,7 +267,8 @@ export default function StudentDashboard() {
                   </div>
                   <Badge variant="outline">
                     {assignments?.filter(a => 
-                      a.classroomId === selectedClassroom.id
+                      a.classroomId === selectedClassroom.id || 
+                      (a.classroomIds && a.classroomIds.includes(selectedClassroom.id))
                     ).length || 0} assignments
                   </Badge>
                 </div>
@@ -276,7 +277,8 @@ export default function StudentDashboard() {
                 <div className="space-y-4">
                   {(() => {
                     const classAssignments = assignments?.filter(a => 
-                      a.classroomId === selectedClassroom.id
+                      a.classroomId === selectedClassroom.id || 
+                      (a.classroomIds && a.classroomIds.includes(selectedClassroom.id))
                     ) || [];
                     
                     if (classAssignments.length === 0) {

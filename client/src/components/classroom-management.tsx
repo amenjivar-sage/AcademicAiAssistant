@@ -62,10 +62,11 @@ export default function ClassroomManagement({ teacherId }: ClassroomManagementPr
     },
   });
 
-  // Filter assignments for the selected classroom (only classroom-specific assignments)
+  // Filter assignments for the selected classroom (check both classroomId and classroomIds)
   const classroomAssignments = selectedClassroom 
     ? assignments?.filter(assignment => 
-        assignment.classroomId === selectedClassroom.id
+        assignment.classroomId === selectedClassroom.id || 
+        (assignment.classroomIds && assignment.classroomIds.includes(selectedClassroom.id))
       ) || []
     : [];
 
