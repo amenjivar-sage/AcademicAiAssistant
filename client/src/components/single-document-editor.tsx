@@ -150,46 +150,10 @@ export default function SingleDocumentEditor({
                   height: `calc(100% - ${PAGE_PADDING * 2 + FOOTER_HEIGHT}px)`
                 }}
               >
-                {pageIndex === 0 ? (
-                  <div className="relative w-full h-full">
-                    {/* Highlighting overlay for misspelled words */}
-                    {isSpellCheckActive && spellErrors.length > 0 && (
-                      <div 
-                        className="absolute inset-0 pointer-events-none"
-                        style={{
-                          fontFamily: "'Times New Roman', serif",
-                          fontSize: "12pt",
-                          lineHeight: "2.0",
-                          padding: 0,
-                          whiteSpace: 'pre-wrap',
-                          wordWrap: 'break-word',
-                          color: 'transparent',
-                          zIndex: 1
-                        }}
-                        dangerouslySetInnerHTML={{
-                          __html: highlightMisspelledWords(content, spellErrors)
-                        }}
-                      />
-                    )}
-                    <textarea
-                      ref={textareaRef}
-                      className="w-full h-full resize-none border-none outline-none bg-transparent text-gray-900 font-serif relative"
-                      style={{
-                        fontFamily: "'Times New Roman', serif",
-                        fontSize: "12pt",
-                        lineHeight: "2.0",
-                        padding: 0,
-                        zIndex: 2
-                      }}
-                      value={content}
-                      onChange={(e) => handleContentChange(e.target.value)}
-                      placeholder="Start writing your document..."
-                      spellCheck={false}
-                    />
-                  </div>
-                ) : (
+                <div className="relative w-full h-full">
+                  {/* Show content for this specific page */}
                   <div 
-                    className="w-full h-full text-gray-900 font-serif whitespace-pre-wrap"
+                    className="w-full h-full text-gray-900 font-serif whitespace-pre-wrap overflow-hidden"
                     style={{
                       fontFamily: "'Times New Roman', serif",
                       fontSize: "12pt",
@@ -198,7 +162,47 @@ export default function SingleDocumentEditor({
                   >
                     {pageContent}
                   </div>
-                )}
+                  
+                  {/* Only show textarea on first page for editing */}
+                  {pageIndex === 0 && (
+                    <div className="absolute inset-0">
+                      {/* Highlighting overlay for misspelled words */}
+                      {isSpellCheckActive && spellErrors.length > 0 && (
+                        <div 
+                          className="absolute inset-0 pointer-events-none"
+                          style={{
+                            fontFamily: "'Times New Roman', serif",
+                            fontSize: "12pt",
+                            lineHeight: "2.0",
+                            padding: 0,
+                            whiteSpace: 'pre-wrap',
+                            wordWrap: 'break-word',
+                            color: 'transparent',
+                            zIndex: 1
+                          }}
+                          dangerouslySetInnerHTML={{
+                            __html: highlightMisspelledWords(content, spellErrors)
+                          }}
+                        />
+                      )}
+                      <textarea
+                        ref={textareaRef}
+                        className="w-full h-full resize-none border-none outline-none bg-transparent text-gray-900 font-serif relative"
+                        style={{
+                          fontFamily: "'Times New Roman', serif",
+                          fontSize: "12pt",
+                          lineHeight: "2.0",
+                          padding: 0,
+                          zIndex: 2
+                        }}
+                        value={content}
+                        onChange={(e) => handleContentChange(e.target.value)}
+                        placeholder="Start writing your document..."
+                        spellCheck={false}
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Footer */}
