@@ -183,6 +183,13 @@ export default function ConstrainedPagesEditor({
                   value={pageContent}
                   onChange={(e) => handlePageContentChange(pageIndex, e.target.value)}
                   onFocus={() => setCurrentPageIndex(pageIndex)}
+                  onKeyDown={(e) => {
+                    // Allow Enter key to create new lines
+                    if (e.key === 'Enter') {
+                      e.stopPropagation();
+                      // Let the default behavior happen (insert newline)
+                    }
+                  }}
                   placeholder={pageIndex === 0 ? "Start writing your document..." : ""}
                   spellCheck={true}
                 />
