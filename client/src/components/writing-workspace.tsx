@@ -54,7 +54,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   const [isFormattingMinimized, setIsFormattingMinimized] = useState(false);
   const [selectedText, setSelectedText] = useState('');
   const [isSpellCheckActive, setIsSpellCheckActive] = useState(false);
-  const [spellErrors, setSpellErrors] = useState([]);
+  const [spellErrors, setSpellErrors] = useState<any[]>([]);
 
   const contentRef = useRef<RichTextEditorHandle>(null);
   const formatRef = useRef<((command: string, value?: string) => void) | null>(null);
@@ -227,7 +227,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
         setTitle(session.title || '');
         // Properly handle pasted content with timestamp conversion
         const pastedData = session.pastedContent || [];
-        const formattedPastedContent = pastedData.map(paste => ({
+        const formattedPastedContent = pastedData.map((paste: any) => ({
           ...paste,
           timestamp: new Date(paste.timestamp)
         }));
@@ -781,7 +781,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
             onContentChange={setContent}
             isOpen={isSpellCheckActive}
             onClose={() => setIsSpellCheckActive(false)}
-            onSpellErrorsChange={setSpellErrors}
+            onSpellErrorsChange={(errors) => setSpellErrors(errors)}
           />
         </div>
       )}
