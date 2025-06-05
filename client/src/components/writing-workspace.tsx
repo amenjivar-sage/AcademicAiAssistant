@@ -11,13 +11,14 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Settings, Send, AlertTriangle, Shield, FileText, MessageSquare, Download, Save, GraduationCap, Trophy, Type, Bold, Italic, Underline, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Settings, Send, AlertTriangle, Shield, FileText, MessageSquare, Download, Save, GraduationCap, Trophy, Type, Bold, Italic, Underline, ChevronDown, ChevronUp, SpellCheck } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import CopyPasteDetector from './copy-paste-detector';
 import RichTextEditor, { RichTextEditorHandle } from './rich-text-editor';
 import DocumentDownload from './document-download';
 import AiAssistant from './ai-assistant';
 import { PDFExport } from './pdf-export';
+import BubbleSpellCheckPanel from './bubble-spell-check-panel';
 
 interface PastedContent {
   text: string;
@@ -52,6 +53,8 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   const [showFormattingToolbox, setShowFormattingToolbox] = useState(false);
   const [isFormattingMinimized, setIsFormattingMinimized] = useState(false);
   const [selectedText, setSelectedText] = useState('');
+  const [isSpellCheckActive, setIsSpellCheckActive] = useState(false);
+  const [spellErrors, setSpellErrors] = useState([]);
 
   const contentRef = useRef<RichTextEditorHandle>(null);
   const formatRef = useRef<((command: string, value?: string) => void) | null>(null);
@@ -528,6 +531,20 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                             >
                               <Underline className="h-4 w-4" />
                             </Button>
+                            
+                            {/* Separator */}
+                            <div className="w-px h-6 bg-gray-200"></div>
+                            
+                            {/* Spell Check Button */}
+                            <Button
+                              onClick={() => setIsSpellCheckActive(!isSpellCheckActive)}
+                              size="sm"
+                              variant={isSpellCheckActive ? "default" : "outline"}
+                              className="h-8 w-8 p-0 hover:bg-blue-50"
+                              title="Check spelling"
+                            >
+                              <SpellCheck className="h-4 w-4" />
+                            </Button>
                           </div>
                         </div>
                         
@@ -755,6 +772,19 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
           </div>
         </div>
       </div>
+
+      {/* Spell Check Panel */}
+      {isSpellCheckActive && (
+        <div className="fixed bottom-8 right-8 z-50">
+          <BubbleSpellCheckPanel
+            content={content}
+            onContentChange={setContent}
+            isOpen={isSpellCheckActive}
+            onClose={() => setIsSpellCheckActive(false)}
+            onSpellErrorsChange={setSpellErrors}
+          />
+        </div>
+      )}
     </div>
   );
 }
