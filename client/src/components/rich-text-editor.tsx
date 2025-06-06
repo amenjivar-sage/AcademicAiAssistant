@@ -65,55 +65,34 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     'link', 'color', 'background'
   ];
 
-  // Split content by actual height using DOM measurement
-  const splitContentByHeight = useCallback((html: string): string[] => {
-    if (!html || html.trim() === '<p><br></p>') return [''];
+  // Simple height-based pagination
+  const checkForOverflow = useCallback((pageIndex: number) => {
+    const pageRef = pageRefs.current[pageIndex];
+    if (!pageRef) return;
     
-    const tempDiv = document.createElement('div');
-    tempDiv.style.cssText = `
-      position: absolute;
-      visibility: hidden;
-      width: calc(8.5in - 144px);
-      font-family: 'Times New Roman', serif;
-      font-size: 14pt;
-      line-height: 2.0;
-      padding: 72px;
-      box-sizing: border-box;
-    `;
-    tempDiv.innerHTML = html;
-    document.body.appendChild(tempDiv);
-
-    const paragraphs = tempDiv.querySelectorAll('p');
-    const pages: string[] = [];
-    let currentPageDiv = document.createElement('div');
+    const editorElement = pageRef.getEditor().root;
+    const contentHeight = editorElement.scrollHeight;
+    const maxHeight = 950;
     
-    paragraphs.forEach((paragraph) => {
-      const testDiv = currentPageDiv.cloneNode(true) as HTMLElement;
-      testDiv.appendChild(paragraph.cloneNode(true));
+    console.log(`Page ${pageIndex + 1} height check: ${contentHeight}px vs ${maxHeight}px`);
+    
+    if (contentHeight > maxHeight + 10) {
+      console.log(`Page ${pageIndex + 1} overflow detected - creating new page`);
       
-      // Test if adding this paragraph exceeds page height
-      tempDiv.innerHTML = '';
-      tempDiv.appendChild(testDiv);
-      
-      if (tempDiv.scrollHeight > 950 && currentPageDiv.children.length > 0) {
-        // Current page is full, save it and start new page
-        pages.push(currentPageDiv.innerHTML);
-        currentPageDiv = document.createElement('div');
-        currentPageDiv.appendChild(paragraph.cloneNode(true));
-      } else {
-        // Paragraph fits, add to current page
-        currentPageDiv.appendChild(paragraph.cloneNode(true));
+      // Add empty page if this is the last page
+      if (pageIndex === pages.length - 1) {
+        setPages(prev => [...prev, '']);
+        
+        // Focus new page after creation
+        setTimeout(() => {
+          const newPageRef = pageRefs.current[pageIndex + 1];
+          if (newPageRef) {
+            newPageRef.focus();
+          }
+        }, 100);
       }
-    });
-
-    // Add remaining content as last page
-    if (currentPageDiv.children.length > 0) {
-      pages.push(currentPageDiv.innerHTML);
     }
-
-    document.body.removeChild(tempDiv);
-    return pages.length > 0 ? pages : [''];
-  }, []);
+  }, [pages.length]);
 
   // Simple content redistribution - only when significant deletion occurs
   const redistributeContentOnDelete = useCallback((pageIndex: number) => {
@@ -168,14 +147,16 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
       clearTimeout(overflowCheckTimeout.current);
     }
     
-    // Split content properly by height after content change
+    // Update the current page immediately
+    const newPages = [...pages];
+    newPages[pageIndex] = value;
+    setPages(newPages);
+    onContentChange(combinedContent);
+    
+    // Check for overflow after a brief delay
     overflowCheckTimeout.current = setTimeout(() => {
-      const newPages = splitContentByHeight(combinedContent);
-      console.log(`Content split into ${newPages.length} pages`);
-      
-      setPages(newPages);
-      onContentChange(combinedContent);
-    }, 300);
+      checkForOverflow(pageIndex);
+    }, 400);
   };
 
   // Handle text selection across pages
@@ -283,24 +264,17 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     if (content && content !== pages.join('')) {
       console.log('External content change detected, syncing with editor:', content.length, 'chars');
       
-      const newPages = splitContentIntoPages(content);
-      setPages(newPages);
+      // For now, put all content in first page and let overflow detection handle pagination
+      setPages([content]);
       
-      // Update ReactQuill editors with new content
+      // Check for overflow after content is loaded
       setTimeout(() => {
-        newPages.forEach((pageContent, index) => {
-          const pageRef = pageRefs.current[index];
-          if (pageRef) {
-            const quillEditor = pageRef.getEditor();
-            if (quillEditor) {
-              quillEditor.root.innerHTML = pageContent;
-              console.log(`Updated page ${index + 1} with ${pageContent.length} chars`);
-            }
-          }
-        });
-      }, 100);
+        if (pageRefs.current[0]) {
+          checkForOverflow(0);
+        }
+      }, 200);
     }
-  }, [content, splitContentIntoPages]);
+  }, [content, checkForOverflow]);
 
   // Initialize page refs array
   useEffect(() => {

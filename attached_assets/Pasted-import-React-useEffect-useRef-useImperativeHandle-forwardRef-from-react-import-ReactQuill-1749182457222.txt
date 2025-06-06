@@ -1,0 +1,114 @@
+import React, { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
+
+interface RichTextEditorProps {
+  content: string;
+  onContentChange: (content: string) => void;
+  onTextSelection: (text: string) => void;
+  readOnly?: boolean;
+  placeholder?: string;
+}
+
+export interface RichTextEditorHandle {
+  getEditor: () => ReactQuill | null;
+}
+
+const PAGE_HEIGHT = 950; // px
+
+const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({ content, onContentChange, onTextSelection, readOnly = false, placeholder = '' }, ref) => {
+  const editorRef = useRef<ReactQuill>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useImperativeHandle(ref, () => ({
+    getEditor: () => editorRef.current
+  }));
+
+  useEffect(() => {
+    paginate();
+  }, [content]);
+
+  const paginate = () => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const rawHtml = container.innerHTML;
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = rawHtml;
+
+    const paragraphs = Array.from(wrapper.querySelectorAll('p'));
+    let pages: HTMLElement[] = [];
+    let currentPage = document.createElement('div');
+    currentPage.className = 'page';
+    currentPage.style.minHeight = `${PAGE_HEIGHT}px`;
+    currentPage.style.maxHeight = `${PAGE_HEIGHT}px`;
+    currentPage.style.overflow = 'hidden';
+    currentPage.style.boxSizing = 'border-box';
+    currentPage.style.padding = '40px';
+
+    let temp = document.createElement('div');
+    paragraphs.forEach(p => {
+      temp.appendChild(p.cloneNode(true));
+      currentPage.innerHTML = temp.innerHTML;
+      document.body.appendChild(currentPage);
+
+      if (currentPage.scrollHeight > PAGE_HEIGHT) {
+        currentPage.removeChild(currentPage.lastChild!);
+        pages.push(currentPage);
+
+        // New page
+        currentPage = document.createElement('div');
+        currentPage.className = 'page';
+        currentPage.style.minHeight = `${PAGE_HEIGHT}px`;
+        currentPage.style.maxHeight = `${PAGE_HEIGHT}px`;
+        currentPage.style.overflow = 'hidden';
+        currentPage.style.boxSizing = 'border-box';
+        currentPage.style.padding = '40px';
+
+        currentPage.appendChild(p.cloneNode(true));
+        temp.innerHTML = '';
+        temp.appendChild(p.cloneNode(true));
+      }
+    });
+    pages.push(currentPage);
+
+    const finalWrapper = document.createElement('div');
+    finalWrapper.className = 'paged-editor';
+    finalWrapper.innerHTML = '';
+    pages.forEach(page => finalWrapper.appendChild(page));
+
+    container.innerHTML = finalWrapper.innerHTML;
+  };
+
+  return (
+    <div ref={containerRef} className="paged-editor">
+      <ReactQuill
+        ref={editorRef}
+        value={content}
+        onChange={onContentChange}
+        readOnly={readOnly}
+        placeholder={placeholder}
+        onChangeSelection={(range, source, editor) => {
+          if (range && range.length > 0) {
+            const text = editor.getText(range.index, range.length);
+            onTextSelection(text);
+          } else {
+            onTextSelection('');
+          }
+        }}
+        theme="snow"
+        modules={{
+          toolbar: [
+            ['bold', 'italic', 'underline'],
+            [{ list: 'ordered' }, { list: 'bullet' }],
+            ['clean']
+          ]
+        }}
+      />
+    </div>
+  );
+});
+
+RichTextEditor.displayName = 'RichTextEditor';
+
+export default RichTextEditor;
