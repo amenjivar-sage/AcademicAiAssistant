@@ -460,12 +460,9 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                         console.log('- Is reference:', isReference);
                         console.log('- Is random text:', isRandomText);
                         
-                        // Filter out obvious student original content to prevent false positives
-                        const isOriginalStudentContent = /\b(hey|hi|hello|how are you|doing|good|today|better)\b/i.test(docSentTrimmed);
-                        
-                        // Only highlight content with high similarity, sufficient length, and that isn't original student writing
-                        if (matchPercentage >= 0.7 && docSentTrimmed.length > 50 && !isOriginalStudentContent) {
-                          console.log('✓ Highlighting high-confidence copy-pasted content:', docSentTrimmed.substring(0, 50));
+                        // Highlight content based on exact word matches and similarity percentage
+                        if ((matchPercentage >= 0.4 && exactMatches >= 5) || (matchPercentage >= 0.6 && exactMatches >= 3)) {
+                          console.log('✓ Highlighting detected copy-paste content:', docSentTrimmed.substring(0, 50));
                           const escapedSentence = docSentTrimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
                           const sentenceRegex = new RegExp(escapedSentence, 'gi');
                           
@@ -478,7 +475,7 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                             return match;
                           });
                         } else {
-                          console.log('✗ Skipped to avoid false positive:', matchPercentage, docSentTrimmed.length, 'isOriginal:', isOriginalStudentContent);
+                          console.log('✗ Skipped - insufficient match criteria:', matchPercentage, 'exactMatches:', exactMatches);
                         }
                       } catch (error) {
                         console.error('Error in highlighting logic:', error);
