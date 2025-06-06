@@ -309,6 +309,11 @@ export function DocumentReviewer({ sessionId }: DocumentReviewerProps) {
         </div>
 
         <div className="space-y-4">
+          <AiChatViewer 
+            sessionId={sessionId} 
+            studentName={student?.firstName && student?.lastName ? `${student.firstName} ${student.lastName}` : 'Student'} 
+          />
+
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
