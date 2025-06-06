@@ -372,17 +372,24 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     if (e.key === 'Enter') {
       const textLength = editor.getLength();
       const cursorPosition = range.index;
+      const editorElement = editor.root;
+      const contentHeight = editorElement.scrollHeight;
       
-      // Simple rule: if at end of content and have some content, allow moving to next page
-      if (cursorPosition >= textLength - 1 && textLength > 5) {
-        console.log(`Enter pressed at end of page ${pageIndex + 1}, moving to next page`);
+      console.log(`Enter pressed on page ${pageIndex + 1}: cursor at ${cursorPosition}/${textLength}, height: ${contentHeight}px`);
+      
+      // Check if at end of content OR if page is getting full
+      const atEndOfContent = cursorPosition >= textLength - 1;
+      const pageIsFull = contentHeight > 900;
+      
+      if (atEndOfContent || pageIsFull) {
+        console.log(`Moving to next page: atEnd=${atEndOfContent}, isFull=${pageIsFull}`);
         
         // Create next page if needed
         if (pageIndex >= pages.length - 1) {
           setPages(prev => [...prev, '<p><br></p>']);
         }
         
-        // Simple focus to next page
+        // Move to next page
         setTimeout(() => {
           const nextPageRef = pageRefs.current[pageIndex + 1];
           if (nextPageRef) {
@@ -390,10 +397,14 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
             if (nextEditor) {
               nextEditor.focus();
               nextEditor.setSelection(0, 0);
-              console.log(`Moved to page ${pageIndex + 2}`);
+              console.log(`Successfully moved to page ${pageIndex + 2}`);
+            } else {
+              console.log(`No editor found for page ${pageIndex + 2}`);
             }
+          } else {
+            console.log(`No page ref found for page ${pageIndex + 2}`);
           }
-        }, 100);
+        }, 150);
       }
     }
     
