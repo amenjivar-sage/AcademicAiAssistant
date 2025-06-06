@@ -276,7 +276,8 @@ export function DocumentReviewer({ sessionId }: DocumentReviewerProps) {
             </CardHeader>
             <CardContent>
               <div 
-                className="prose max-w-none min-h-[400px] p-4 border rounded-lg bg-white"
+                className="prose prose-sm max-w-full min-h-[400px] p-6 border rounded-lg bg-white overflow-y-auto whitespace-pre-wrap break-words"
+                style={{ maxWidth: '100%', wordWrap: 'break-word', overflowWrap: 'break-word' }}
                 onMouseUp={handleTextSelection}
                 dangerouslySetInnerHTML={{ __html: finalContent }}
               />
