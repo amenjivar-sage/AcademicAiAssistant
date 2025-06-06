@@ -550,9 +550,9 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
         </CardHeader>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
         {/* Document Content with AI Chat Tabs */}
-        <div className="lg:col-span-3">
+        <div className="xl:col-span-3 min-w-0">
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between mb-4">
@@ -599,22 +599,27 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                       Select any text to add specific feedback comments. Copy-pasted content appears highlighted in red.
                     </p>
                   </div>
-                  <div className="relative">
+                  <div className="relative w-full overflow-hidden">
                     <div
                       ref={contentRef}
-                      className="bg-white border border-gray-200 rounded-lg shadow-sm min-h-96 cursor-text mx-auto"
+                      className="bg-white border border-gray-200 rounded-lg shadow-sm min-h-96 cursor-text mx-auto prose prose-sm max-w-none"
                       onMouseUp={handleTextSelection}
                       style={{ 
                         userSelect: 'text',
-                        maxWidth: '8.5in',
+                        maxWidth: '650px',
                         width: '100%',
-                        padding: '1in',
+                        padding: '60px',
                         lineHeight: '1.6',
-                        fontSize: '12pt',
-                        fontFamily: 'Times, "Times New Roman", serif'
+                        fontSize: '14px',
+                        fontFamily: 'Times, "Times New Roman", serif',
+                        wordWrap: 'break-word',
+                        overflowWrap: 'break-word',
+                        hyphens: 'auto'
                       }}
                     >
-                      {renderContentWithHighlights()}
+                      <div style={{ wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
+                        {renderContentWithHighlights()}
+                      </div>
                     </div>
                     
                     {/* Floating Comment Form */}
