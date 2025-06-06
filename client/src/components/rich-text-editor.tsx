@@ -40,7 +40,17 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     getEditor: () => pageRefs.current[activePage] || pageRefs.current[0]
   }));
 
-  // Custom toolbar configuration
+  // Helper function to determine which page an editor belongs to
+  const getCurrentPageIndex = useCallback((editor: any) => {
+    for (let i = 0; i < pageRefs.current.length; i++) {
+      if (pageRefs.current[i]?.getEditor() === editor) {
+        return i;
+      }
+    }
+    return -1;
+  }, []);
+
+  // Custom toolbar configuration with keyboard bindings
   const modules = {
     toolbar: false, // We'll use custom formatting buttons
     clipboard: {
@@ -57,6 +67,140 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
       maxStack: 100,
       userOnly: true
     },
+    keyboard: {
+      bindings: {
+        // Override default Enter behavior
+        'customEnter': {
+          key: 'Enter',
+          handler: (range: any, context: any) => {
+            console.log('Quill keyboard binding triggered for Enter');
+            
+            // Find which page this event came from
+            let currentPageIndex = -1;
+            let currentEditor: any = null;
+            
+            for (let i = 0; i < pageRefs.current.length; i++) {
+              const pageRef = pageRefs.current[i];
+              if (pageRef) {
+                const editor = pageRef.getEditor();
+                const selection = editor.getSelection();
+                if (selection && selection.index === range.index) {
+                  currentPageIndex = i;
+                  currentEditor = editor;
+                  break;
+                }
+              }
+            }
+            
+            if (currentPageIndex !== -1 && currentEditor) {
+              const textLength = currentEditor.getLength();
+              const cursorPosition = range.index;
+              const contentHeight = currentEditor.root.scrollHeight;
+              
+              const atVeryEnd = cursorPosition >= textLength - 1;
+              const pageOverflowing = contentHeight > 950;
+              
+              console.log(`Enter debug page ${currentPageIndex + 1}: cursor ${cursorPosition}/${textLength}, height ${contentHeight}px, atEnd: ${atVeryEnd}, overflow: ${pageOverflowing}`);
+              
+              // Check for page navigation conditions
+              if (atVeryEnd && pageOverflowing) {
+                console.log(`Auto-overflow: moving to next page`);
+                
+                // Create next page if needed
+                if (currentPageIndex >= pages.length - 1) {
+                  setPages(prev => [...prev, '<p><br></p>']);
+                }
+                
+                // Move to next page
+                setTimeout(() => {
+                  const nextPageRef = pageRefs.current[currentPageIndex + 1];
+                  if (nextPageRef) {
+                    const nextEditor = nextPageRef.getEditor();
+                    if (nextEditor) {
+                      nextEditor.focus();
+                      nextEditor.setSelection(0, 0);
+                      console.log(`Auto-moved to page ${currentPageIndex + 2}`);
+                    }
+                  }
+                }, 200);
+                
+                return false; // Prevent default
+              }
+              
+              // Manual page break check
+              if (atVeryEnd && contentHeight > 600) {
+                const content = currentEditor.getText();
+                const lastChars = content.slice(-5);
+                const consecutiveBreaks = (lastChars.match(/\n/g) || []).length;
+                
+                if (consecutiveBreaks >= 3) {
+                  console.log(`Manual page break detected (${consecutiveBreaks} breaks)`);
+                  
+                  if (currentPageIndex >= pages.length - 1) {
+                    setPages(prev => [...prev, '<p><br></p>']);
+                  }
+                  
+                  setTimeout(() => {
+                    const nextPageRef = pageRefs.current[currentPageIndex + 1];
+                    if (nextPageRef) {
+                      const nextEditor = nextPageRef.getEditor();
+                      if (nextEditor) {
+                        nextEditor.focus();
+                        nextEditor.setSelection(0, 0);
+                        console.log(`Manual-moved to page ${currentPageIndex + 2}`);
+                      }
+                    }
+                  }, 200);
+                  
+                  return false; // Prevent default
+                }
+              }
+            }
+            
+            return true; // Allow default Enter behavior
+          }
+        },
+        // Override default Backspace behavior
+        'customBackspace': {
+          key: 'Backspace',
+          handler: (range: any, context: any) => {
+            // Find which page this event came from
+            let currentPageIndex = -1;
+            
+            for (let i = 0; i < pageRefs.current.length; i++) {
+              const pageRef = pageRefs.current[i];
+              if (pageRef) {
+                const editor = pageRef.getEditor();
+                const selection = editor.getSelection();
+                if (selection && selection.index === range.index) {
+                  currentPageIndex = i;
+                  break;
+                }
+              }
+            }
+            
+            if (currentPageIndex !== -1 && currentPageIndex > 0 && range.index === 0) {
+              console.log(`Backspace at beginning of page ${currentPageIndex + 1}, moving to previous page`);
+              
+              const prevPageRef = pageRefs.current[currentPageIndex - 1];
+              if (prevPageRef) {
+                const prevEditor = prevPageRef.getEditor();
+                if (prevEditor) {
+                  const prevLength = prevEditor.getLength();
+                  prevEditor.focus();
+                  prevEditor.setSelection(Math.max(0, prevLength - 1), 0);
+                  console.log(`Moved back to page ${currentPageIndex}`);
+                }
+              }
+              
+              return false; // Prevent default
+            }
+            
+            return true; // Allow default Backspace behavior
+          }
+        }
+      }
+    }
   };
 
   const formats = [
@@ -360,143 +504,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     }
   }, [pages]);
 
-  // Store keyboard handlers for cleanup
-  const keyboardHandlers = useRef<Map<HTMLElement, (e: KeyboardEvent) => void>>(new Map());
 
-  // Add keyboard event listeners to Quill editors
-  const attachKeyboardListeners = useCallback(() => {
-    pageRefs.current.forEach((pageRef, pageIndex) => {
-      if (pageRef) {
-        const editor = pageRef.getEditor();
-        const editorElement = editor.root as HTMLElement;
-        
-        // Remove existing listener if any
-        const existingHandler = keyboardHandlers.current.get(editorElement);
-        if (existingHandler) {
-          editorElement.removeEventListener('keydown', existingHandler);
-          keyboardHandlers.current.delete(editorElement);
-        }
-        
-        // Create new handler
-        const keydownHandler = (e: KeyboardEvent) => {
-          const range = editor.getSelection();
-          if (!range) return;
-          
-          if (e.key === 'Enter') {
-            const textLength = editor.getLength();
-            const cursorPosition = range.index;
-            const contentHeight = editorElement.scrollHeight;
-            
-            const atVeryEnd = cursorPosition >= textLength - 1;
-            const pageOverflowing = contentHeight > 950;
-            
-            console.log(`Enter debug page ${pageIndex + 1}: cursor ${cursorPosition}/${textLength}, height ${contentHeight}px, atEnd: ${atVeryEnd}, overflow: ${pageOverflowing}`);
-            
-            // Automatic overflow when page is full
-            if (atVeryEnd && pageOverflowing) {
-              e.preventDefault();
-              console.log(`Auto-overflow: moving to next page`);
-              
-              // Create next page if needed
-              if (pageIndex >= pages.length - 1) {
-                setPages(prev => [...prev, '<p><br></p>']);
-              }
-              
-              // Move to next page
-              setTimeout(() => {
-                const nextPageRef = pageRefs.current[pageIndex + 1];
-                if (nextPageRef) {
-                  const nextEditor = nextPageRef.getEditor();
-                  if (nextEditor) {
-                    nextEditor.focus();
-                    nextEditor.setSelection(0, 0);
-                    console.log(`Auto-moved to page ${pageIndex + 2}`);
-                  }
-                }
-              }, 200);
-            }
-            
-            // Manual page break - multiple enters at end
-            else if (atVeryEnd && contentHeight > 600) {
-              const content = editor.getText();
-              const lastChars = content.slice(-5);
-              const consecutiveBreaks = (lastChars.match(/\n/g) || []).length;
-              
-              if (consecutiveBreaks >= 3) {
-                e.preventDefault();
-                console.log(`Manual page break detected (${consecutiveBreaks} breaks)`);
-                
-                if (pageIndex >= pages.length - 1) {
-                  setPages(prev => [...prev, '<p><br></p>']);
-                }
-                
-                setTimeout(() => {
-                  const nextPageRef = pageRefs.current[pageIndex + 1];
-                  if (nextPageRef) {
-                    const nextEditor = nextPageRef.getEditor();
-                    if (nextEditor) {
-                      nextEditor.focus();
-                      nextEditor.setSelection(0, 0);
-                      console.log(`Manual-moved to page ${pageIndex + 2}`);
-                    }
-                  }
-                }, 200);
-              }
-            }
-          }
-          
-          if (e.key === 'Backspace') {
-            const cursorPosition = range.index;
-            
-            if (cursorPosition === 0 && pageIndex > 0) {
-              e.preventDefault();
-              
-              const prevPageRef = pageRefs.current[pageIndex - 1];
-              if (prevPageRef) {
-                const prevEditor = prevPageRef.getEditor();
-                if (prevEditor) {
-                  const prevLength = prevEditor.getLength();
-                  prevEditor.focus();
-                  prevEditor.setSelection(Math.max(0, prevLength - 1), 0);
-                  console.log(`Moved back to page ${pageIndex}`);
-                }
-              }
-            }
-          }
-        };
-        
-        // Store handler reference and attach
-        keyboardHandlers.current.set(editorElement, keydownHandler);
-        editorElement.addEventListener('keydown', keydownHandler);
-      }
-    });
-  }, [pages.length]);
-
-  // Attach keyboard listeners when pages change
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      console.log('Attempting to attach keyboard listeners to', pageRefs.current.length, 'pages');
-      attachKeyboardListeners();
-    }, 500); // Increased delay to ensure ReactQuill is fully initialized
-    
-    return () => clearTimeout(timer);
-  }, [pages.length, attachKeyboardListeners]);
-
-  // Also attach listeners when refs are updated
-  useEffect(() => {
-    const checkAndAttach = () => {
-      const validRefs = pageRefs.current.filter(ref => ref && ref.getEditor());
-      if (validRefs.length > 0) {
-        console.log('ReactQuill editors ready, attaching keyboard listeners');
-        attachKeyboardListeners();
-      } else {
-        console.log('ReactQuill editors not ready yet, retrying...');
-        setTimeout(checkAndAttach, 200);
-      }
-    };
-    
-    checkAndAttach();
-  }, [pages]);
 
   // Handle page navigation with content management
   const handlePageNavigation = (currentPageIndex: number, direction: 'next' | 'prev', isOverflow: boolean) => {
