@@ -53,19 +53,43 @@ export default function DocumentExportDialog({
       console.log('Export Debug - Student Name:', studentName);
       console.log('Export Debug - Settings:', settings);
       // Clean and parse HTML content more thoroughly
-      const cleanText = content
+      let cleanText = content;
+      
+      // First pass: Convert structural HTML to text breaks
+      cleanText = cleanText
         .replace(/<\/p>/gi, '\n') // Convert closing p tags to line breaks
         .replace(/<p[^>]*>/gi, '') // Remove opening p tags
         .replace(/<br\s*\/?>/gi, '\n') // Convert br tags to line breaks
+        .replace(/<\/div>/gi, '\n') // Convert closing div tags to line breaks
+        .replace(/<div[^>]*>/gi, '') // Remove opening div tags
+        .replace(/<\/li>/gi, '\n') // Convert closing li tags to line breaks
+        .replace(/<li[^>]*>/gi, '• ') // Convert li tags to bullet points
+        .replace(/<\/ul>/gi, '\n') // Convert closing ul tags to line breaks
+        .replace(/<ul[^>]*>/gi, '') // Remove opening ul tags
+        .replace(/<\/ol>/gi, '\n') // Convert closing ol tags to line breaks
+        .replace(/<ol[^>]*>/gi, '') // Remove opening ol tags;
+      
+      // Second pass: Remove formatting tags but keep content
+      cleanText = cleanText
         .replace(/<strong[^>]*>(.*?)<\/strong>/gi, '$1') // Remove strong tags but keep content
+        .replace(/<b[^>]*>(.*?)<\/b>/gi, '$1') // Remove b tags but keep content
         .replace(/<em[^>]*>(.*?)<\/em>/gi, '$1') // Remove em tags but keep content
+        .replace(/<i[^>]*>(.*?)<\/i>/gi, '$1') // Remove i tags but keep content
+        .replace(/<u[^>]*>(.*?)<\/u>/gi, '$1') // Remove u tags but keep content
         .replace(/<span[^>]*>(.*?)<\/span>/gi, '$1') // Remove span tags but keep content
+        .replace(/<a[^>]*>(.*?)<\/a>/gi, '$1') // Remove a tags but keep content;
+        
+      // Third pass: Remove any remaining HTML tags
+      cleanText = cleanText
         .replace(/<[^>]*>/g, '') // Remove any remaining HTML tags
         .replace(/&nbsp;/g, ' ') // Replace &nbsp; with spaces
         .replace(/&amp;/g, '&') // Replace &amp; with &
         .replace(/&lt;/g, '<') // Replace &lt; with <
         .replace(/&gt;/g, '>') // Replace &gt; with >
+        .replace(/&quot;/g, '"') // Replace &quot; with "
+        .replace(/&#39;/g, "'") // Replace &#39; with '
         .replace(/\n\s*\n/g, '\n') // Remove multiple line breaks
+        .replace(/^\s+|\s+$/g, '') // Trim whitespace from start and end
         .trim();
 
       // Split into paragraphs and create document paragraphs
