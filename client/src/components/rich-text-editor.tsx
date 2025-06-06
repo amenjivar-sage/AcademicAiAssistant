@@ -353,7 +353,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     }
   }, [pages]);
 
-  // Simple keyboard navigation between pages
+  // Comprehensive page navigation system
   const handleKeyDown = (e: React.KeyboardEvent, pageIndex: number) => {
     const pageRef = pageRefs.current[pageIndex];
     if (!pageRef) return;
@@ -365,83 +365,142 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     if (e.key === 'Enter') {
       const textLength = editor.getLength();
       const cursorPosition = range.index;
+      const editorElement = editor.root;
+      const contentHeight = editorElement.scrollHeight;
       
-      // Check if we're at the end of the page content
+      // Case 1: Manual page navigation - at end of content
       if (cursorPosition >= textLength - 1) {
-        const editorElement = editor.root;
-        const contentHeight = editorElement.scrollHeight;
-        
-        // If page is getting full (over 900px), prepare to move to next page
+        // Case 1a: Page is getting full, move to next page
         if (contentHeight > 900) {
           setTimeout(() => {
             const updatedHeight = editorElement.scrollHeight;
             
-            // If the Enter push us over the limit, move to next page
             if (updatedHeight > 950) {
-              console.log(`Page ${pageIndex + 1} overflow detected, moving cursor to next page`);
-              
-              // Set navigation flag to prevent content resets
-              setIsNavigating(true);
-              
-              // Remove the last line break that caused overflow
-              const currentContent = editor.root.innerHTML;
-              const lastBreakIndex = currentContent.lastIndexOf('<p><br></p>');
-              if (lastBreakIndex > -1) {
-                const trimmedContent = currentContent.substring(0, lastBreakIndex);
-                editor.root.innerHTML = trimmedContent;
-              }
-              
-              // Ensure next page exists and add the line break there
-              if (pageIndex >= pages.length - 1) {
-                setPages(prev => [...prev, '<p><br></p>']);
-              } else {
-                // Add line break to existing next page
-                setPages(prev => {
-                  const newPages = [...prev];
-                  if (newPages[pageIndex + 1] === '<p><br></p>') {
-                    newPages[pageIndex + 1] = '<p><br></p><p><br></p>';
-                  }
-                  return newPages;
-                });
-              }
-              
-              // Focus next page
-              setTimeout(() => {
-                const nextPageRef = pageRefs.current[pageIndex + 1];
-                if (nextPageRef) {
-                  nextPageRef.focus();
-                  const nextEditor = nextPageRef.getEditor();
-                  nextEditor.setSelection(0, 0);
-                }
-                
-                // Clear navigation flag after navigation complete
-                setTimeout(() => setIsNavigating(false), 500);
-              }, 150);
+              console.log(`Moving to next page from page ${pageIndex + 1} due to overflow`);
+              handlePageNavigation(pageIndex, 'next', true);
             }
           }, 50);
         }
+        // Case 1b: Manual navigation even if page isn't full
+        else if (contentHeight > 400) { // Allow manual navigation when there's substantial content
+          setTimeout(() => {
+            const updatedHeight = editorElement.scrollHeight;
+            console.log(`Manual navigation to next page from page ${pageIndex + 1}`);
+            handlePageNavigation(pageIndex, 'next', false);
+          }, 50);
+        }
+      }
+      
+      // Case 2: Automatic overflow during typing (not at end)
+      else if (contentHeight > 950) {
+        console.log(`Auto-overflow detected on page ${pageIndex + 1}`);
+        handleContentOverflow(pageIndex);
       }
     }
     
     if (e.key === 'Backspace') {
       const cursorPosition = range.index;
       
-      // If at beginning of page and not first page, move to previous page
+      // Navigate to previous page when at beginning
       if (cursorPosition === 0 && pageIndex > 0) {
         e.preventDefault();
-        
-        setIsNavigating(true);
-        
-        const prevPageRef = pageRefs.current[pageIndex - 1];
-        if (prevPageRef) {
-          prevPageRef.focus();
-          const prevEditor = prevPageRef.getEditor();
-          const prevLength = prevEditor.getLength();
-          prevEditor.setSelection(Math.max(0, prevLength - 1), 0);
+        handlePageNavigation(pageIndex, 'prev', false);
+      }
+    }
+  };
+
+  // Handle page navigation with content management
+  const handlePageNavigation = (currentPageIndex: number, direction: 'next' | 'prev', isOverflow: boolean) => {
+    setIsNavigating(true);
+    
+    if (direction === 'next') {
+      const currentPageRef = pageRefs.current[currentPageIndex];
+      if (!currentPageRef) return;
+      
+      const currentEditor = currentPageRef.getEditor();
+      
+      if (isOverflow) {
+        // Remove the overflow content from current page
+        const currentContent = currentEditor.root.innerHTML;
+        const lastBreakIndex = currentContent.lastIndexOf('<p><br></p>');
+        if (lastBreakIndex > -1) {
+          const trimmedContent = currentContent.substring(0, lastBreakIndex);
+          currentEditor.root.innerHTML = trimmedContent || '<p><br></p>';
+        }
+      }
+      
+      // Ensure next page exists
+      if (currentPageIndex >= pages.length - 1) {
+        setPages(prev => [...prev, '<p><br></p>']);
+      }
+      
+      // Focus next page
+      setTimeout(() => {
+        const nextPageRef = pageRefs.current[currentPageIndex + 1];
+        if (nextPageRef) {
+          nextPageRef.focus();
+          const nextEditor = nextPageRef.getEditor();
+          
+          if (isOverflow) {
+            // Add the content that was removed
+            const existingContent = nextEditor.root.innerHTML;
+            if (existingContent === '<p><br></p>') {
+              nextEditor.root.innerHTML = '<p><br></p>';
+            }
+          }
+          
+          nextEditor.setSelection(0, 0);
         }
         
-        setTimeout(() => setIsNavigating(false), 500);
+        setTimeout(() => setIsNavigating(false), 300);
+      }, 100);
+    }
+    
+    else if (direction === 'prev') {
+      const prevPageRef = pageRefs.current[currentPageIndex - 1];
+      if (prevPageRef) {
+        prevPageRef.focus();
+        const prevEditor = prevPageRef.getEditor();
+        const prevLength = prevEditor.getLength();
+        prevEditor.setSelection(Math.max(0, prevLength - 1), 0);
       }
+      
+      setTimeout(() => setIsNavigating(false), 300);
+    }
+  };
+
+  // Handle automatic content overflow
+  const handleContentOverflow = (pageIndex: number) => {
+    const pageRef = pageRefs.current[pageIndex];
+    if (!pageRef) return;
+    
+    const editor = pageRef.getEditor();
+    const content = editor.root.innerHTML;
+    
+    // Split content by paragraphs
+    const paragraphs = content.split('</p>').filter(p => p.trim()).map(p => p + '</p>');
+    
+    if (paragraphs.length > 1) {
+      // Keep 70% of content on current page
+      const splitPoint = Math.floor(paragraphs.length * 0.7);
+      const currentPageContent = paragraphs.slice(0, splitPoint).join('');
+      const nextPageContent = paragraphs.slice(splitPoint).join('');
+      
+      // Update current page
+      editor.root.innerHTML = currentPageContent || '<p><br></p>';
+      
+      // Create or update next page
+      if (pageIndex >= pages.length - 1) {
+        setPages(prev => [...prev, nextPageContent]);
+      } else {
+        setPages(prev => {
+          const newPages = [...prev];
+          newPages[pageIndex + 1] = nextPageContent + (newPages[pageIndex + 1] === '<p><br></p>' ? '' : newPages[pageIndex + 1]);
+          return newPages;
+        });
+      }
+      
+      console.log(`Content overflow: split ${paragraphs.length} paragraphs at ${splitPoint}`);
     }
   };
 
