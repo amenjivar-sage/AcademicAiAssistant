@@ -50,6 +50,8 @@ export default function DocumentExportDialog({
   const generateWordDocument = async () => {
     setIsExporting(true);
     try {
+      console.log('Export Debug - Student Name:', studentName);
+      console.log('Export Debug - Settings:', settings);
       // Clean and parse HTML content
       const cleanText = content
         .replace(/<[^>]*>/g, '') // Remove HTML tags
