@@ -48,15 +48,13 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
       matchers: [
         // Preserve HTML formatting when pasting
         ['STRONG', 'bold'],
-        ['B', 'bold'],
         ['EM', 'italic'],
-        ['I', 'italic'],
-        ['U', 'underline'],
-      ],
+        ['U', 'underline']
+      ]
     },
     history: {
       delay: 1000,
-      maxStack: 500,
+      maxStack: 100,
       userOnly: true
     },
   };
@@ -67,7 +65,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     'link', 'color', 'background'
   ];
 
-  // More precise overflow detection and content splitting
+  // Improved overflow detection with better height measurement
   const checkAndHandleOverflow = useCallback((pageIndex: number, currentPages: string[]) => {
     const currentRef = pageRefs.current[pageIndex];
     if (!currentRef) {
@@ -77,67 +75,68 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
 
     const editorElement = currentRef.getEditor().root;
     const scrollHeight = editorElement.scrollHeight;
-    const maxHeight = 950;
+    const maxHeight = 950; // Exact page height limit
+    const buffer = 10; // Small buffer to prevent premature overflow
 
     console.log(`Checking overflow for page ${pageIndex + 1}: ${scrollHeight}px vs ${maxHeight}px`);
 
-    // If content exceeds page height, find optimal break point
-    if (scrollHeight > maxHeight) {
-      console.log(`OVERFLOW DETECTED on page ${pageIndex + 1}: ${scrollHeight}px > ${maxHeight}px`);
-      console.log(`Current page content length: ${currentPages[pageIndex]?.length || 0} characters`);
+    // Only trigger overflow if we're significantly over the limit to fill pages completely
+    if (scrollHeight > maxHeight + buffer) {
+      console.log(`OVERFLOW DETECTED on page ${pageIndex + 1}: ${scrollHeight}px > ${maxHeight + buffer}px`);
       
       const quillEditor = currentRef.getEditor();
-      const contentDelta = quillEditor.getContents();
       const totalLength = quillEditor.getLength() - 1;
       
       if (totalLength <= 0) return;
 
-      // Binary search to find the optimal break point where content fits exactly
+      // Create measurement container with exact same styling as editor
+      const measurementDiv = document.createElement('div');
+      measurementDiv.style.cssText = `
+        position: absolute;
+        left: -9999px;
+        width: calc(8.5in - 144px);
+        font-family: 'Times New Roman', serif;
+        font-size: 14pt;
+        line-height: 2.0;
+        padding: 72px;
+        box-sizing: border-box;
+        height: auto;
+        visibility: hidden;
+      `;
+      document.body.appendChild(measurementDiv);
+
+      // Binary search to find maximum content that fits exactly in 950px
       let low = 0;
       let high = totalLength;
-      let bestBreakPoint = Math.floor(totalLength * 0.8);
+      let bestBreakPoint = Math.floor(totalLength * 0.9); // Start with aggressive estimate to fill pages
 
-      // Try to find the break point by testing different lengths
-      for (let i = 0; i < 10; i++) {
+      for (let attempt = 0; attempt < 15; attempt++) {
         const testPoint = Math.floor((low + high) / 2);
-        
-        // Test if content up to this point fits
         const testContent = quillEditor.getText(0, testPoint);
         
-        // Create temporary measurement
-        const tempElement = document.createElement('div');
-        tempElement.style.cssText = `
-          position: absolute;
-          left: -9999px;
-          width: calc(8.5in - 144px);
-          font-family: 'Times New Roman', serif;
-          font-size: 14pt;
-          line-height: 2.0;
-          padding: 0;
-          white-space: pre-wrap;
-        `;
-        tempElement.textContent = testContent;
-        document.body.appendChild(tempElement);
+        measurementDiv.innerHTML = `<p>${testContent}</p>`;
+        const testHeight = measurementDiv.scrollHeight;
         
-        const testHeight = tempElement.offsetHeight;
-        document.body.removeChild(tempElement);
+        console.log(`Test point ${testPoint}: height ${testHeight}px`);
         
-        if (testHeight <= maxHeight - 72) { // Account for padding
-          low = testPoint;
+        if (testHeight <= maxHeight) {
           bestBreakPoint = testPoint;
+          low = testPoint + 1;
         } else {
-          high = testPoint;
+          high = testPoint - 1;
         }
         
-        if (high - low <= 5) break; // Close enough
+        if (high - low < 5) break; // Converged to optimal point
       }
+
+      document.body.removeChild(measurementDiv);
 
       // Find a good word boundary near the break point
       const text = quillEditor.getText();
       let finalBreakPoint = bestBreakPoint;
       
       // Look backwards for a space or punctuation to avoid breaking words
-      for (let i = bestBreakPoint; i > bestBreakPoint - 50 && i > 0; i--) {
+      for (let i = bestBreakPoint; i > bestBreakPoint - 100 && i > 0; i--) {
         const char = text[i];
         if (char === ' ' || char === '\n' || char === '.' || char === '!' || char === '?') {
           finalBreakPoint = i + 1;
@@ -185,20 +184,18 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
           console.log(`Moving cursor to page ${pageIndex + 2} at position ${newPosition}`);
           
           if (nextPageRef) {
-            nextPageRef.focus();
-            setTimeout(() => {
-              nextPageRef.getEditor().setSelection(newPosition, 0);
-              setActivePage(pageIndex + 1);
-            }, 100);
+            const nextQuillEditor = nextPageRef.getEditor();
+            if (nextQuillEditor) {
+              nextQuillEditor.setSelection(newPosition, 0);
+              nextQuillEditor.focus();
+            }
           }
         } else {
           // Keep cursor on current page
           const currentPageRef = pageRefs.current[pageIndex];
-          if (currentPageRef && selection) {
-            const newPosition = Math.min(cursorPosition, finalBreakPoint);
-            setTimeout(() => {
-              currentPageRef.getEditor().setSelection(newPosition, 0);
-            }, 100);
+          if (currentPageRef) {
+            const adjustedPosition = Math.min(cursorPosition, finalBreakPoint);
+            currentPageRef.getEditor().setSelection(adjustedPosition, 0);
           }
         }
         
@@ -209,6 +206,74 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
           }, 200);
         }
       }, 150);
+    }
+  }, []);
+
+  // Content redistribution for backspace - moves content back to previous pages when there's space
+  const redistributeContentOnDelete = useCallback((pageIndex: number, currentPages: string[]) => {
+    if (pageIndex === 0) return; // Can't redistribute from first page
+    
+    const currentRef = pageRefs.current[pageIndex];
+    const prevRef = pageRefs.current[pageIndex - 1];
+    
+    if (!currentRef || !prevRef) return;
+    
+    const currentContent = currentRef.getEditor().getText().trim();
+    const prevContent = prevRef.getEditor().getText().trim();
+    
+    // Check if previous page has space for current page content
+    const measurementDiv = document.createElement('div');
+    measurementDiv.style.cssText = `
+      position: absolute;
+      left: -9999px;
+      width: calc(8.5in - 144px);
+      font-family: 'Times New Roman', serif;
+      font-size: 14pt;
+      line-height: 2.0;
+      padding: 72px;
+      box-sizing: border-box;
+      height: auto;
+      visibility: hidden;
+    `;
+    document.body.appendChild(measurementDiv);
+    
+    const combinedContent = prevContent + ' ' + currentContent;
+    measurementDiv.innerHTML = `<p>${combinedContent}</p>`;
+    const combinedHeight = measurementDiv.scrollHeight;
+    
+    document.body.removeChild(measurementDiv);
+    
+    const maxHeight = 950;
+    
+    if (combinedHeight <= maxHeight) {
+      console.log(`Redistributing content: moving page ${pageIndex + 1} back to page ${pageIndex}`);
+      
+      // Move content back to previous page
+      const updatedPages = [...currentPages];
+      updatedPages[pageIndex - 1] = `<p>${combinedContent}</p>`;
+      
+      // Remove current page if it's empty, or shift remaining pages
+      if (pageIndex === updatedPages.length - 1) {
+        updatedPages.pop(); // Remove last page
+      } else {
+        // Shift remaining pages down
+        for (let i = pageIndex; i < updatedPages.length - 1; i++) {
+          updatedPages[i] = updatedPages[i + 1];
+        }
+        updatedPages.pop();
+      }
+      
+      setPages(updatedPages);
+      
+      // Focus back to previous page
+      setTimeout(() => {
+        const targetRef = pageRefs.current[pageIndex - 1];
+        if (targetRef) {
+          const editor = targetRef.getEditor();
+          editor.setSelection(prevContent.length + 1, 0);
+          editor.focus();
+        }
+      }, 100);
     }
   }, []);
 
@@ -279,23 +344,22 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
       if (currentRef) {
         const editorElement = currentRef.getEditor().root;
         const scrollHeight = editorElement.scrollHeight;
-        const maxHeight = 950;
         
-        console.log(`Overflow check for page ${pageIndex + 1}: ${scrollHeight}px vs ${maxHeight}px`);
+        console.log(`Page ${pageIndex + 1} height after change: ${scrollHeight}px`);
         
-        if (scrollHeight > maxHeight) {
-          console.log(`OVERFLOW DETECTED! Creating new page while preserving formatting...`);
+        // Check for overflow
+        if (scrollHeight > 955) { // Allow slight buffer before overflow
           checkAndHandleOverflow(pageIndex, newPages);
         }
         
-        setContentOverflow(scrollHeight > maxHeight);
+        setContentOverflow(scrollHeight > 950);
       }
-    }, 150);
+    }, 300);
   };
 
-  // Handle text selection for AI assistance
-  const handleTextSelection = (range: any, oldRange: any, source: any, pageIndex: number) => {
-    if (source === 'user' && range && onTextSelection) {
+  // Handle text selection across pages
+  const handleTextSelection = (range: any, oldRange: any, source: string, pageIndex: number) => {
+    if (range && onTextSelection) {
       const currentRef = pageRefs.current[pageIndex];
       if (currentRef) {
         const selectedText = currentRef.getEditor().getText(range.index, range.length);
@@ -340,7 +404,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
       font-family: 'Times New Roman', serif;
       font-size: 14pt;
       line-height: 2.0;
-      padding: 70px 72px;
+      padding: 72px;
       box-sizing: border-box;
       height: auto;
       visibility: hidden;
@@ -507,7 +571,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     setPages(newPages);
   }, [pages]);
 
-  // Handle keyboard events for automatic page creation
+  // Handle keyboard events for automatic page creation and content redistribution
   const handleKeyDown = (e: React.KeyboardEvent, pageIndex: number) => {
     const currentRef = pageRefs.current[pageIndex];
     if (!currentRef) return;
@@ -528,6 +592,10 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     } else if (e.key === 'Backspace' || e.key === 'Delete') {
       // Check if we need to consolidate pages after deletion
       setTimeout(() => {
+        // First check if current page is nearly empty and can be consolidated
+        redistributeContentOnDelete(pageIndex, pages);
+        
+        // Then check for empty pages that should be removed
         const hasEmptyPages = pages.some((page, index) => 
           index > 0 && page.replace(/<\/?p>/g, '').trim() === ''
         );
@@ -651,51 +719,18 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
         }
 
         .ql-editor {
-          height: 950px !important;
-          overflow: hidden !important;
+          border: none !important;
+          padding: 72px !important;
+          line-height: 2.0 !important;
           font-family: 'Times New Roman', serif !important;
           font-size: 14pt !important;
-          line-height: 2.0 !important;
-          padding: 72px !important;
-          background: transparent !important;
-          border: none !important;
+          height: 950px !important;
+          overflow: hidden !important;
           box-sizing: border-box !important;
         }
 
-        .ql-editor.ql-blank::before {
-          font-family: 'Times New Roman', serif !important;
-          font-size: 14pt !important;
-          color: #9ca3af !important;
-          font-style: italic !important;
-        }
-
-        .ql-toolbar {
-          display: none !important;
-        }
-
-        .ql-snow .ql-tooltip {
-          z-index: 1000;
-        }
-
         .ql-editor p {
-          margin-bottom: 0 !important;
-          font-family: 'Times New Roman', serif !important;
-          font-size: 14pt !important;
-        }
-
-        .ql-editor strong {
-          font-weight: bold !important;
-        }
-
-        .ql-editor em {
-          font-style: italic !important;
-        }
-
-        .ql-editor ul, .ql-editor ol {
-          padding-left: 30px !important;
-        }
-
-        .ql-editor li {
+          margin: 0 0 14pt 0 !important;
           font-family: 'Times New Roman', serif !important;
           font-size: 14pt !important;
         }
