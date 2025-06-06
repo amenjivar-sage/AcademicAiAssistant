@@ -428,14 +428,14 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                     console.log('Match analysis for sentence:', docSentTrimmed, 
                                'Exact:', exactMatches, 'Close:', closeMatches, 'Percentage:', matchPercentage);
                     
-                    // More conservative criteria to reduce false positives
-                    const meetsThreshold = matchPercentage >= 0.75; // Higher threshold - 75% similarity required
-                    const hasEnoughExactMatches = exactMatches >= Math.max(3, Math.floor(pastedWords.length * 0.5)); // Require 50% exact matches
-                    const hasMinLength = pastedWords.length >= 8 && docWords.length >= 8; // Longer minimum length
+                    // Balanced criteria to catch real plagiarism while avoiding false positives
+                    const meetsThreshold = matchPercentage >= 0.60; // 60% similarity required
+                    const hasEnoughExactMatches = exactMatches >= Math.max(2, Math.floor(pastedWords.length * 0.3)); // Require 30% exact matches
+                    const hasMinLength = pastedWords.length >= 5 && docWords.length >= 5; // Reasonable minimum length
                     
                     console.log('Criteria check for:', docSentTrimmed);
-                    console.log('- Meets threshold (75%):', meetsThreshold, matchPercentage);
-                    console.log('- Has enough exact matches (40%):', hasEnoughExactMatches, exactMatches, 'needed:', Math.floor(pastedWords.length * 0.4));
+                    console.log('- Meets threshold (60%):', meetsThreshold, matchPercentage);
+                    console.log('- Has enough exact matches (30%):', hasEnoughExactMatches, exactMatches, 'needed:', Math.floor(pastedWords.length * 0.3));
                     console.log('- Has min length:', hasMinLength, 'pasted:', pastedWords.length, 'doc:', docWords.length);
                     
                     if (meetsThreshold && hasEnoughExactMatches && hasMinLength) {
