@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Document, Packer, Paragraph, TextRun, Header, Footer, AlignmentType, HeadingLevel } from 'docx';
+import { Document, Packer, Paragraph, TextRun, Header, Footer, AlignmentType, HeadingLevel, PageNumber } from 'docx';
 import { saveAs } from 'file-saver';
 
 interface DocumentExportDialogProps {
