@@ -633,7 +633,7 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                 <h3 className="text-lg font-semibold">Document Review</h3>
                 <DocumentExportDialog
                   content={session.content}
-                  studentName={currentUser?.firstName && currentUser?.lastName ? `${currentUser.firstName} ${currentUser.lastName}` : 'Student'}
+                  studentName={studentInfo?.firstName && studentInfo?.lastName ? `${studentInfo.firstName} ${studentInfo.lastName}` : 'Student'}
                   assignmentTitle={session.title || `Assignment_${session.assignmentId}`}
                   submissionDate={session.submittedAt ? new Date(session.submittedAt).toLocaleDateString() : undefined}
                   variant="outline"
