@@ -65,33 +65,55 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     'link', 'color', 'background'
   ];
 
-  // Clean overflow detection with automatic page creation
-  const checkAndAddPage = useCallback(() => {
-    const lastIndex = pages.length - 1;
-    const lastRef = pageRefs.current[lastIndex];
+  // Split content by actual height using DOM measurement
+  const splitContentByHeight = useCallback((html: string): string[] => {
+    if (!html || html.trim() === '<p><br></p>') return [''];
     
-    if (!lastRef) return;
+    const tempDiv = document.createElement('div');
+    tempDiv.style.cssText = `
+      position: absolute;
+      visibility: hidden;
+      width: calc(8.5in - 144px);
+      font-family: 'Times New Roman', serif;
+      font-size: 14pt;
+      line-height: 2.0;
+      padding: 72px;
+      box-sizing: border-box;
+    `;
+    tempDiv.innerHTML = html;
+    document.body.appendChild(tempDiv);
+
+    const paragraphs = tempDiv.querySelectorAll('p');
+    const pages: string[] = [];
+    let currentPageDiv = document.createElement('div');
     
-    const editorElement = lastRef.getEditor().root;
-    const contentHeight = editorElement.scrollHeight;
-    const visibleHeight = 950; // Fixed page height
-    
-    console.log(`Last page (${lastIndex + 1}) height: ${contentHeight}px vs ${visibleHeight}px`);
-    
-    if (contentHeight > visibleHeight + 5) {
-      console.log(`Creating new page - content overflow detected`);
+    paragraphs.forEach((paragraph) => {
+      const testDiv = currentPageDiv.cloneNode(true) as HTMLElement;
+      testDiv.appendChild(paragraph.cloneNode(true));
       
-      setPages(prev => [...prev, '']);
+      // Test if adding this paragraph exceeds page height
+      tempDiv.innerHTML = '';
+      tempDiv.appendChild(testDiv);
       
-      // Focus on new page after creation
-      setTimeout(() => {
-        const newPageRef = pageRefs.current[lastIndex + 1];
-        if (newPageRef) {
-          newPageRef.focus();
-        }
-      }, 100);
+      if (tempDiv.scrollHeight > 950 && currentPageDiv.children.length > 0) {
+        // Current page is full, save it and start new page
+        pages.push(currentPageDiv.innerHTML);
+        currentPageDiv = document.createElement('div');
+        currentPageDiv.appendChild(paragraph.cloneNode(true));
+      } else {
+        // Paragraph fits, add to current page
+        currentPageDiv.appendChild(paragraph.cloneNode(true));
+      }
+    });
+
+    // Add remaining content as last page
+    if (currentPageDiv.children.length > 0) {
+      pages.push(currentPageDiv.innerHTML);
     }
-  }, [pages.length]);
+
+    document.body.removeChild(tempDiv);
+    return pages.length > 0 ? pages : [''];
+  }, []);
 
   // Simple content redistribution - only when significant deletion occurs
   const redistributeContentOnDelete = useCallback((pageIndex: number) => {
@@ -136,23 +158,23 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
       return;
     }
     
-    // Update page content
-    const newPages = [...pages];
-    newPages[pageIndex] = value;
-    setPages(newPages);
-    
-    // Combine all pages for parent callback
-    const combinedContent = newPages.join('');
-    onContentChange(combinedContent);
+    // Combine all current pages and the new content
+    const allContent = [...pages];
+    allContent[pageIndex] = value;
+    const combinedContent = allContent.join('');
     
     // Clear existing timeout
     if (overflowCheckTimeout.current) {
       clearTimeout(overflowCheckTimeout.current);
     }
     
-    // Check for page creation after content change
+    // Split content properly by height after content change
     overflowCheckTimeout.current = setTimeout(() => {
-      checkAndAddPage();
+      const newPages = splitContentByHeight(combinedContent);
+      console.log(`Content split into ${newPages.length} pages`);
+      
+      setPages(newPages);
+      onContentChange(combinedContent);
     }, 300);
   };
 
@@ -285,10 +307,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     pageRefs.current = pageRefs.current.slice(0, pages.length);
   }, [pages.length]);
 
-  // Check for page creation when pages array changes
-  useEffect(() => {
-    checkAndAddPage();
-  }, [pages, checkAndAddPage]);
+
 
   // Clean up empty pages and consolidate content
   const consolidatePages = useCallback(() => {

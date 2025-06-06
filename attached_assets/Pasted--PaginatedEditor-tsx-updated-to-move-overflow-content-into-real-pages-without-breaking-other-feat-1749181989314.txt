@@ -1,0 +1,100 @@
+// PaginatedEditor.tsx (updated to move overflow content into real pages without breaking other features)
+
+import React, { useEffect, useRef, useState } from 'react';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
+
+const PAGE_HEIGHT = 950;
+
+export default function PaginatedEditor() {
+  const [pages, setPages] = useState<string[]>(['']);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  // Splits content by visible height using a hidden div
+  const splitContentByHeight = (html: string): string[] => {
+    const tempDiv = document.createElement('div');
+    tempDiv.style.position = 'absolute';
+    tempDiv.style.visibility = 'hidden';
+    tempDiv.style.width = '800px';
+    tempDiv.style.padding = '30px';
+    tempDiv.style.boxSizing = 'border-box';
+    tempDiv.innerHTML = html;
+    document.body.appendChild(tempDiv);
+
+    const children = Array.from(tempDiv.childNodes);
+    const pages: string[] = [];
+    let currentPage = document.createElement('div');
+
+    children.forEach((node) => {
+      currentPage.appendChild(node.cloneNode(true));
+      if (currentPage.scrollHeight > PAGE_HEIGHT - 100) {
+        // remove last node that caused overflow
+        currentPage.removeChild(node);
+        pages.push(currentPage.innerHTML);
+        currentPage = document.createElement('div');
+        currentPage.appendChild(node.cloneNode(true));
+      }
+    });
+
+    if (currentPage.innerHTML.trim() !== '') {
+      pages.push(currentPage.innerHTML);
+    }
+
+    document.body.removeChild(tempDiv);
+    return pages;
+  };
+
+  const handleChange = (value: string) => {
+    const newPages = splitContentByHeight(value);
+    setPages(newPages);
+  };
+
+  return (
+    <div className="editor-container" ref={containerRef}>
+      {pages.map((content, index) => (
+        <div className="page" key={index}>
+          <div className="page-number">Page {index + 1}</div>
+          <ReactQuill
+            value={content}
+            onChange={handleChange}
+            theme="snow"
+            placeholder="Start typing..."
+          />
+        </div>
+      ))}
+
+      <style>{`
+        .editor-container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 24px;
+        }
+
+        .page {
+          background: white;
+          width: 800px;
+          height: ${PAGE_HEIGHT}px;
+          padding: 30px;
+          box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+          position: relative;
+        }
+
+        .ql-editor {
+          height: ${PAGE_HEIGHT - 100}px;
+          overflow-y: hidden;
+          font-family: 'Times New Roman', serif;
+          font-size: 14pt;
+        }
+
+        .page-number {
+          position: absolute;
+          bottom: 10px;
+          right: 30px;
+          font-size: 12px;
+          color: #888;
+        }
+      `}</style>
+    </div>
+  );
+}
