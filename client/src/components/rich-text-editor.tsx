@@ -341,58 +341,70 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
           console.log(`Backspace key - Page ${activePageIndex + 1}, at start: ${atStart}, cursor: ${selection.index}`);
           
           if (atStart && activePageIndex > 0) {
-            event.preventDefault();
-            
-            // Get current page content
+            // Check if current page has minimal content (only empty paragraphs or very little text)
             const currentPageContent = pages[activePageIndex];
-            const prevPageContent = pages[activePageIndex - 1];
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = currentPageContent;
+            const textContent = tempDiv.textContent || '';
+            const hasMinimalContent = textContent.trim().length < 10; // Less than 10 characters
             
-            // Merge current page content with previous page
-            const mergedContent = prevPageContent + currentPageContent;
-            
-            // Update pages state - merge content and remove current empty page
-            setPages(prev => {
-              const newPages = [...prev];
-              newPages[activePageIndex - 1] = mergedContent;
-              newPages.splice(activePageIndex, 1); // Remove current page
+            if (hasMinimalContent) {
+              event.preventDefault();
               
-              // Update parent with combined content
-              const combinedContent = newPages.join('');
-              onContentChange(combinedContent);
+              // Get previous page content
+              const prevPageContent = pages[activePageIndex - 1];
               
-              return newPages;
-            });
-            
-            setTimeout(() => {
-              const prevPageRef = pageRefs.current[activePageIndex - 1];
-              if (prevPageRef) {
-                const prevEditor = prevPageRef.getEditor();
-                if (prevEditor) {
-                  // Set the merged content
-                  prevEditor.root.innerHTML = mergedContent;
-                  
-                  // Calculate cursor position - place it where the previous page ended
-                  const tempDiv = document.createElement('div');
-                  tempDiv.innerHTML = prevPageContent;
-                  const prevContentLength = tempDiv.textContent?.length || 0;
-                  
-                  prevEditor.focus();
-                  prevEditor.setSelection(prevContentLength, 0);
-                  console.log(`Merged content and moved to page ${activePageIndex}, cursor at position ${prevContentLength}`);
-                  
-                  // Check if merged content overflows and needs to be split again
-                  setTimeout(() => {
-                    const editorElement = prevEditor.root;
-                    const contentHeight = editorElement.scrollHeight;
+              // Merge current page content with previous page only if current page is nearly empty
+              const mergedContent = prevPageContent + currentPageContent;
+              
+              // Update pages state - merge content and remove current empty page
+              setPages(prev => {
+                const newPages = [...prev];
+                newPages[activePageIndex - 1] = mergedContent;
+                newPages.splice(activePageIndex, 1); // Remove current page
+                
+                // Update parent with combined content
+                const combinedContent = newPages.join('');
+                onContentChange(combinedContent);
+                
+                return newPages;
+              });
+              
+              setTimeout(() => {
+                const prevPageRef = pageRefs.current[activePageIndex - 1];
+                if (prevPageRef) {
+                  const prevEditor = prevPageRef.getEditor();
+                  if (prevEditor) {
+                    // Set the merged content
+                    prevEditor.root.innerHTML = mergedContent;
                     
-                    // Only split if significantly overflowing (more than 20% over limit)
-                    if (contentHeight > 1140) { // 950 + 20% = 1140
-                      handleContentFlow(activePageIndex - 1, mergedContent);
-                    }
-                  }, 200);
+                    // Calculate cursor position - place it where the previous page ended
+                    const tempDiv2 = document.createElement('div');
+                    tempDiv2.innerHTML = prevPageContent;
+                    const prevContentLength = tempDiv2.textContent?.length || 0;
+                    
+                    prevEditor.focus();
+                    prevEditor.setSelection(prevContentLength, 0);
+                    console.log(`Merged minimal content and moved to page ${activePageIndex}, cursor at position ${prevContentLength}`);
+                  }
                 }
-              }
-            }, 100);
+              }, 100);
+            } else {
+              // If current page has substantial content, just navigate without merging
+              event.preventDefault();
+              setTimeout(() => {
+                const prevPageRef = pageRefs.current[activePageIndex - 1];
+                if (prevPageRef) {
+                  const prevEditor = prevPageRef.getEditor();
+                  if (prevEditor) {
+                    const prevLength = prevEditor.getLength();
+                    prevEditor.focus();
+                    prevEditor.setSelection(Math.max(0, prevLength - 1), 0);
+                    console.log(`Navigated to page ${activePageIndex} without merging - current page has content`);
+                  }
+                }
+              }, 50);
+            }
           }
         }
       }
