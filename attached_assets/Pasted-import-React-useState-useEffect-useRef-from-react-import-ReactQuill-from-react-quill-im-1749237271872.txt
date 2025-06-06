@@ -1,0 +1,78 @@
+import React, { useState, useEffect, useRef } from 'react';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
+
+const PAGE_HEIGHT = 950; // pixels
+
+const WordStyleEditor = () => {
+  const [pages, setPages] = useState(['']);
+  const containerRef = useRef(null);
+  const editorRefs = useRef([]);
+
+  useEffect(() => {
+    redistributeContent();
+  }, [pages]);
+
+  const redistributeContent = () => {
+    const updatedPages = [...pages];
+    for (let i = 0; i < editorRefs.current.length; i++) {
+      const editorDiv = editorRefs.current[i]?.editor?.container;
+      if (editorDiv && editorDiv.scrollHeight > PAGE_HEIGHT + 10) {
+        const quill = editorRefs.current[i].getEditor();
+        const delta = quill.getContents();
+        const text = quill.getText();
+
+        const middle = Math.floor(text.length / 2);
+        let breakPoint = text.lastIndexOf(' ', middle);
+        if (breakPoint === -1) breakPoint = middle;
+
+        const newDelta = delta.slice(breakPoint);
+        quill.deleteText(breakPoint, text.length);
+
+        updatedPages[i] = quill.root.innerHTML;
+        updatedPages.splice(i + 1, 0, '');
+        setPages(updatedPages);
+        break;
+      }
+    }
+  };
+
+  const handleChange = (value, index) => {
+    const newPages = [...pages];
+    newPages[index] = value;
+    setPages(newPages);
+  };
+
+  const modules = {
+    toolbar: [
+      ['bold', 'italic', 'underline'],
+      [{ list: 'ordered' }, { list: 'bullet' }],
+    ],
+  };
+
+  return (
+    <div ref={containerRef} className="p-4 bg-gray-200 min-h-screen">
+      {pages.map((content, i) => (
+        <div
+          key={i}
+          className="bg-white shadow-xl mx-auto mb-6 p-6 relative"
+          style={{ height: PAGE_HEIGHT, width: '816px', padding: '40px', boxSizing: 'border-box' }}
+        >
+          <ReactQuill
+            ref={(el) => (editorRefs.current[i] = el)}
+            theme="snow"
+            value={content}
+            onChange={(value) => handleChange(value, i)}
+            modules={modules}
+            className="h-full"
+          />
+          <div className="absolute bottom-2 right-4 text-xs text-gray-500">
+            Page {i + 1}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export default WordStyleEditor;

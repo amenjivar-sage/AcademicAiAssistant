@@ -15,7 +15,7 @@ export interface RichTextEditorHandle {
   getEditor: () => ReactQuill | null;
 }
 
-const PAGE_HEIGHT = 950;
+const PAGE_HEIGHT = 950; // pixels
 
 export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
   content,
@@ -26,8 +26,9 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
 }, ref) => {
   
   const [pages, setPages] = useState<string[]>(['']);
+  const containerRef = useRef<HTMLDivElement>(null);
   const editorRefs = useRef<(ReactQuill | null)[]>([]);
-  
+
   // Initialize content
   useEffect(() => {
     if (content && content !== pages.join('')) {
@@ -35,85 +36,36 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
     }
   }, [content]);
 
-  // Check if we need to add a new page and split content
-  const checkAndAddPage = () => {
-    const lastIndex = pages.length - 1;
-    const lastRef = editorRefs.current[lastIndex];
-    if (!lastRef) return;
+  useEffect(() => {
+    redistributeContent();
+  }, [pages]);
 
-    const editorEl = lastRef.getEditor()?.root;
-    if (!editorEl) return;
-
-    const contentHeight = editorEl.scrollHeight;
-    const visibleHeight = PAGE_HEIGHT - 144; // Account for padding
-
-    console.log(`Checking page ${lastIndex + 1}: content=${contentHeight}px, limit=${visibleHeight}px`);
-
-    if (contentHeight > visibleHeight) {
-      console.log(`Page overflow detected - splitting content`);
-      
-      // Get all content from the current page
-      const htmlContent = editorEl.innerHTML;
-      
-      // Split by paragraphs for clean breaks
-      const paragraphs = htmlContent.split('</p>').filter(p => p.trim()).map(p => p + '</p>');
-      
-      if (paragraphs.length > 1) {
-        // Use binary search to find optimal split point
-        let low = 1;
-        let high = paragraphs.length - 1;
-        let bestSplit = low;
+  const redistributeContent = () => {
+    const updatedPages = [...pages];
+    for (let i = 0; i < editorRefs.current.length; i++) {
+      const editorDiv = editorRefs.current[i]?.getEditor()?.container;
+      if (editorDiv && editorDiv.scrollHeight > PAGE_HEIGHT + 10) {
+        const quill = editorRefs.current[i]?.getEditor();
+        if (!quill) continue;
         
-        // Create temp element for measurement
-        const tempDiv = document.createElement('div');
-        tempDiv.style.cssText = `
-          position: absolute;
-          visibility: hidden;
-          width: calc(8.5in - 144px);
-          padding: 72px;
-          font-family: 'Times New Roman', serif;
-          font-size: 14pt;
-          line-height: 2.0;
-          box-sizing: border-box;
-          top: -9999px;
-        `;
-        document.body.appendChild(tempDiv);
-        
-        try {
-          while (low <= high) {
-            const mid = Math.floor((low + high) / 2);
-            const testContent = paragraphs.slice(0, mid).join('');
-            tempDiv.innerHTML = testContent;
-            
-            if (tempDiv.scrollHeight <= visibleHeight) {
-              bestSplit = mid;
-              low = mid + 1;
-            } else {
-              high = mid - 1;
-            }
-          }
-          
-          const firstPageContent = paragraphs.slice(0, bestSplit).join('') || '<p><br></p>';
-          const overflowContent = paragraphs.slice(bestSplit).join('') || '<p><br></p>';
-          
-          console.log(`Optimal split: ${bestSplit}/${paragraphs.length} paragraphs on current page`);
-          
-          // Update pages with split content
-          setPages(prev => {
-            const newPages = [...prev];
-            newPages[lastIndex] = firstPageContent;
-            newPages.push(overflowContent);
-            return newPages;
-          });
-          
-        } finally {
-          document.body.removeChild(tempDiv);
-        }
+        const delta = quill.getContents();
+        const text = quill.getText();
+
+        const middle = Math.floor(text.length / 2);
+        let breakPoint = text.lastIndexOf(' ', middle);
+        if (breakPoint === -1) breakPoint = middle;
+
+        const newDelta = delta.slice(breakPoint);
+        quill.deleteText(breakPoint, text.length);
+
+        updatedPages[i] = quill.root.innerHTML;
+        updatedPages.splice(i + 1, 0, '');
+        setPages(updatedPages);
+        break;
       }
     }
   };
 
-  // Handle content changes
   const handleChange = (value: string, index: number) => {
     const newPages = [...pages];
     newPages[index] = value;
@@ -122,11 +74,6 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
     // Update parent with combined content
     const combinedContent = newPages.join('');
     onContentChange(combinedContent);
-    
-    // Trigger overflow check after content changes
-    setTimeout(() => {
-      checkAndAddPage();
-    }, 100);
   };
 
   // Expose methods through ref
@@ -141,11 +88,6 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
       return editorRefs.current[0] || null;
     }
   }));
-
-  // Check for overflow when content changes
-  useEffect(() => {
-    checkAndAddPage();
-  }, [pages]);
 
   const modules = {
     toolbar: [
@@ -173,36 +115,18 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
   ];
 
   return (
-    <div className="rich-text-editor-container">
+    <div ref={containerRef} className="p-4 bg-gray-200 min-h-screen">
       <style>
         {`
-        .rich-text-editor-container {
-          width: 100%;
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          padding: 20px;
-          background: #f5f5f5;
-          overflow-y: auto;
-        }
-
-        .editor-pages {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 24px;
-        }
-
         .editor-page {
           background: white;
-          width: 8.5in;
-          min-height: 11in;
-          padding: 0;
           box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-          border-radius: 8px;
+          margin: 0 auto 24px auto;
+          padding: 40px;
+          box-sizing: border-box;
           position: relative;
-          overflow: hidden;
+          width: 816px;
+          height: ${PAGE_HEIGHT}px;
         }
 
         .editor-page .ql-toolbar {
@@ -215,17 +139,16 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
         .editor-page .ql-container {
           border: none;
           font-family: 'Times New Roman', serif;
+          height: calc(100% - 42px);
         }
 
         .editor-page .ql-editor {
-          padding: 72px !important;
+          padding: 0 !important;
           line-height: 2.0 !important;
           font-family: 'Times New Roman', serif !important;
           font-size: 14pt !important;
-          box-sizing: border-box !important;
-          min-height: ${PAGE_HEIGHT}px !important;
-          max-height: ${PAGE_HEIGHT}px !important;
-          overflow-y: auto !important;
+          height: 100% !important;
+          overflow-y: hidden !important;
         }
 
         .editor-page .ql-editor:focus {
@@ -234,8 +157,8 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
 
         .page-number {
           position: absolute;
-          bottom: 20px;
-          right: 30px;
+          bottom: 8px;
+          right: 16px;
           font-size: 12px;
           color: #666;
           pointer-events: none;
@@ -243,24 +166,24 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
         `}
       </style>
 
-      <div className="editor-pages">
-        {pages.map((content, index) => (
-          <div key={index} className="editor-page">
-            <ReactQuill
-              ref={(el) => (editorRefs.current[index] = el)}
-              theme="snow"
-              value={content}
-              onChange={(val) => handleChange(val, index)}
-              onBlur={checkAndAddPage}
-              readOnly={readOnly}
-              placeholder={index === 0 ? placeholder : ''}
-              modules={modules}
-              formats={formats}
-            />
-            <div className="page-number">Page {index + 1}</div>
+      {pages.map((content, i) => (
+        <div key={i} className="editor-page">
+          <ReactQuill
+            ref={(el) => (editorRefs.current[i] = el)}
+            theme="snow"
+            value={content}
+            onChange={(value) => handleChange(value, i)}
+            readOnly={readOnly}
+            placeholder={i === 0 ? placeholder : ''}
+            modules={modules}
+            formats={formats}
+            className="h-full"
+          />
+          <div className="page-number">
+            Page {i + 1}
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
     </div>
   );
 });
