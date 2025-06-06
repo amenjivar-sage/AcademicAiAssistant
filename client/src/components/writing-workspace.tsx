@@ -808,7 +808,29 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
         <div className="fixed bottom-8 right-8 z-50">
           <BubbleSpellCheckPanel
             content={content}
-            onContentChange={setContent}
+            onContentChange={(newContent) => {
+              console.log('Spellcheck applying content change:', newContent.length, 'chars');
+              
+              // Update the content state directly
+              setContent(newContent);
+              
+              // Trigger a re-render by forcing the rich text editor to update
+              setTimeout(() => {
+                if (contentRef.current) {
+                  const editor = contentRef.current.getEditor();
+                  if (editor && editor.getEditor) {
+                    const quill = editor.getEditor();
+                    if (quill) {
+                      // Use Quill's proper API to set content
+                      const currentLength = quill.getLength();
+                      quill.deleteText(0, currentLength);
+                      quill.clipboard.dangerouslyPasteHTML(0, newContent);
+                      console.log('Updated editor with corrected content');
+                    }
+                  }
+                }
+              }, 10);
+            }}
             isOpen={isSpellCheckActive}
             onClose={() => setIsSpellCheckActive(false)}
             onSpellErrorsChange={(errors) => setSpellErrors(errors)}

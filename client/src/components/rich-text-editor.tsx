@@ -326,10 +326,24 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
   // Initialize pages when content is loaded
   useEffect(() => {
     if (content && content !== pages.join('')) {
-      // Only reset if we're starting fresh or content is significantly different
-      if (pages.length === 1 && pages[0] === '') {
-        setPages([content]);
-      }
+      console.log('External content change detected, syncing with editor:', content.length, 'chars');
+      
+      // Update pages array with new content
+      setPages([content]);
+      
+      // Force ReactQuill to update its internal state
+      setTimeout(() => {
+        const currentRef = pageRefs.current[0];
+        if (currentRef) {
+          const quillEditor = currentRef.getEditor();
+          if (quillEditor && quillEditor.root.innerHTML !== content) {
+            console.log('Forcing ReactQuill content update');
+            quillEditor.root.innerHTML = content;
+            // Trigger change event to update internal state
+            quillEditor.setSelection(quillEditor.getLength(), 0);
+          }
+        }
+      }, 0);
     }
   }, [content]);
 
