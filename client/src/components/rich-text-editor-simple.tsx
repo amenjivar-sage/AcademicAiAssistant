@@ -204,21 +204,43 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
           overflow-y: auto;
         }
 
+        .document-container {
+          max-width: 8.5in;
+          margin: 0 auto;
+          background: white;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+          border-radius: 8px;
+          position: relative;
+        }
+
+        .document-header {
+          padding: 20px 72px 10px 72px;
+          border-bottom: 1px solid #eee;
+          font-family: 'Times New Roman', serif;
+          font-size: 12pt;
+          text-align: center;
+          background: #fafafa;
+          border-radius: 8px 8px 0 0;
+        }
+
+        .document-footer {
+          padding: 10px 72px 20px 72px;
+          border-top: 1px solid #eee;
+          font-family: 'Times New Roman', serif;
+          font-size: 12pt;
+          text-align: center;
+          background: #fafafa;
+          border-radius: 0 0 8px 8px;
+        }
+
         .editor-wrapper .ql-container {
           border: none;
           font-family: 'Times New Roman', serif;
           background: white;
-          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-          border-radius: 8px;
-          max-width: 8.5in;
-          margin: 0 auto;
         }
 
         .editor-wrapper .ql-toolbar {
-          border: none;
-          border-bottom: 1px solid #ddd;
-          background: #f8f9fa;
-          border-radius: 8px 8px 0 0;
+          display: none; /* Hidden since we use EnhancedToolbar */
         }
 
         .editor-wrapper .ql-editor {
@@ -227,11 +249,15 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
           font-family: 'Times New Roman', serif !important;
           font-size: 14pt !important;
           min-height: 100vh !important;
-          border-radius: 0 0 8px 8px;
         }
 
         .editor-wrapper .ql-editor:focus {
           outline: none !important;
+        }
+
+        /* Times New Roman font support */
+        .ql-font-times {
+          font-family: 'Times New Roman', serif !important;
         }
 
         /* Page break styling */
@@ -256,16 +282,43 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
         `}
       </style>
       
-      <ReactQuill 
-        ref={quillRef}
-        value={content}
-        onChange={onContentChange}
-        readOnly={readOnly}
-        placeholder={placeholder}
-        modules={modules}
-        formats={formats}
-        style={{ minHeight: '100vh' }}
-      />
+      <div className="document-container">
+        {/* Header */}
+        {headerFooterSettings && (headerFooterSettings.header || headerFooterSettings.pageNumbers) && (
+          <div className="document-header">
+            {headerFooterSettings.header && (
+              <div>{headerFooterSettings.header}</div>
+            )}
+            {headerFooterSettings.pageNumbers && (
+              <div style={{ fontSize: '10pt', marginTop: '5px' }}>Page 1</div>
+            )}
+          </div>
+        )}
+
+        {/* Main Editor */}
+        <ReactQuill 
+          ref={quillRef}
+          value={content}
+          onChange={onContentChange}
+          readOnly={readOnly}
+          placeholder={placeholder}
+          modules={modules}
+          formats={formats}
+          style={{ minHeight: '100vh' }}
+        />
+
+        {/* Footer */}
+        {headerFooterSettings && (headerFooterSettings.footer || headerFooterSettings.pageNumbers) && (
+          <div className="document-footer">
+            {headerFooterSettings.footer && (
+              <div>{headerFooterSettings.footer}</div>
+            )}
+            {headerFooterSettings.pageNumbers && !headerFooterSettings.header && (
+              <div style={{ fontSize: '10pt' }}>Page 1</div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 });
