@@ -35,7 +35,7 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
     }
   }, [content]);
 
-  // Check if we need to add a new page
+  // Check if we need to add a new page and split content
   const checkAndAddPage = () => {
     const lastIndex = pages.length - 1;
     const lastRef = editorRefs.current[lastIndex];
@@ -45,11 +45,71 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
     if (!editorEl) return;
 
     const contentHeight = editorEl.scrollHeight;
-    const visibleHeight = editorEl.clientHeight;
+    const visibleHeight = PAGE_HEIGHT - 144; // Account for padding
 
-    if (contentHeight > visibleHeight + 20) {
-      console.log(`Adding new page - content height: ${contentHeight}px, visible: ${visibleHeight}px`);
-      setPages(prev => [...prev, '']);
+    console.log(`Checking page ${lastIndex + 1}: content=${contentHeight}px, limit=${visibleHeight}px`);
+
+    if (contentHeight > visibleHeight) {
+      console.log(`Page overflow detected - splitting content`);
+      
+      // Get all content from the current page
+      const htmlContent = editorEl.innerHTML;
+      
+      // Split by paragraphs for clean breaks
+      const paragraphs = htmlContent.split('</p>').filter(p => p.trim()).map(p => p + '</p>');
+      
+      if (paragraphs.length > 1) {
+        // Use binary search to find optimal split point
+        let low = 1;
+        let high = paragraphs.length - 1;
+        let bestSplit = low;
+        
+        // Create temp element for measurement
+        const tempDiv = document.createElement('div');
+        tempDiv.style.cssText = `
+          position: absolute;
+          visibility: hidden;
+          width: calc(8.5in - 144px);
+          padding: 72px;
+          font-family: 'Times New Roman', serif;
+          font-size: 14pt;
+          line-height: 2.0;
+          box-sizing: border-box;
+          top: -9999px;
+        `;
+        document.body.appendChild(tempDiv);
+        
+        try {
+          while (low <= high) {
+            const mid = Math.floor((low + high) / 2);
+            const testContent = paragraphs.slice(0, mid).join('');
+            tempDiv.innerHTML = testContent;
+            
+            if (tempDiv.scrollHeight <= visibleHeight) {
+              bestSplit = mid;
+              low = mid + 1;
+            } else {
+              high = mid - 1;
+            }
+          }
+          
+          const firstPageContent = paragraphs.slice(0, bestSplit).join('') || '<p><br></p>';
+          const overflowContent = paragraphs.slice(bestSplit).join('') || '<p><br></p>';
+          
+          console.log(`Optimal split: ${bestSplit}/${paragraphs.length} paragraphs on current page`);
+          
+          // Update pages with split content
+          setPages(prev => {
+            const newPages = [...prev];
+            newPages[lastIndex] = firstPageContent;
+            newPages.push(overflowContent);
+            return newPages;
+          });
+          
+        } finally {
+          document.body.removeChild(tempDiv);
+        }
+      }
     }
   };
 
@@ -62,6 +122,11 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
     // Update parent with combined content
     const combinedContent = newPages.join('');
     onContentChange(combinedContent);
+    
+    // Trigger overflow check after content changes
+    setTimeout(() => {
+      checkAndAddPage();
+    }, 100);
   };
 
   // Expose methods through ref
@@ -158,9 +223,9 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
           font-family: 'Times New Roman', serif !important;
           font-size: 14pt !important;
           box-sizing: border-box !important;
-          height: ${PAGE_HEIGHT}px !important;
-          overflow-y: hidden !important;
           min-height: ${PAGE_HEIGHT}px !important;
+          max-height: ${PAGE_HEIGHT}px !important;
+          overflow-y: auto !important;
         }
 
         .editor-page .ql-editor:focus {
