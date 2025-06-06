@@ -37,36 +37,53 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
   const quillRef = useRef<ReactQuill>(null);
 
   useEffect(() => {
-    // Simple approach - just add visual indicators without continuous monitoring
-    const addPageIndicators = () => {
-      const editor = editorRef.current;
-      if (!editor) return;
-
-      const container = editor.querySelector('.ql-editor');
-      if (!container) return;
-
-      // Add CSS for page boundaries
+    // Simple CSS-based page break approach to prevent performance issues
+    const addEditorStyling = () => {
       const style = document.createElement('style');
       style.textContent = `
         .ql-editor {
-          background: 
-            linear-gradient(transparent calc(${PAGE_HEIGHT}px - 1px), #ddd calc(${PAGE_HEIGHT}px), transparent calc(${PAGE_HEIGHT}px + 1px)),
-            linear-gradient(transparent calc(${PAGE_HEIGHT * 2}px - 1px), #ddd calc(${PAGE_HEIGHT * 2}px), transparent calc(${PAGE_HEIGHT * 2}px + 1px)),
-            linear-gradient(transparent calc(${PAGE_HEIGHT * 3}px - 1px), #ddd calc(${PAGE_HEIGHT * 3}px), transparent calc(${PAGE_HEIGHT * 3}px + 1px)),
-            linear-gradient(transparent calc(${PAGE_HEIGHT * 4}px - 1px), #ddd calc(${PAGE_HEIGHT * 4}px), transparent calc(${PAGE_HEIGHT * 4}px + 1px)),
-            linear-gradient(transparent calc(${PAGE_HEIGHT * 5}px - 1px), #ddd calc(${PAGE_HEIGHT * 5}px), transparent calc(${PAGE_HEIGHT * 5}px + 1px)),
-            white;
+          min-height: ${PAGE_HEIGHT}px;
+          padding: 72px;
+          background: white;
+          line-height: 1.6;
+          font-family: 'Times New Roman', serif;
+          font-size: 12pt;
+          position: relative;
+          /* Add subtle page break indicators using background gradients */
+          background-image: 
+            linear-gradient(transparent ${PAGE_HEIGHT - 1}px, #e0e0e0 ${PAGE_HEIGHT}px, transparent ${PAGE_HEIGHT + 1}px),
+            linear-gradient(transparent ${PAGE_HEIGHT * 2 - 1}px, #e0e0e0 ${PAGE_HEIGHT * 2}px, transparent ${PAGE_HEIGHT * 2 + 1}px),
+            linear-gradient(transparent ${PAGE_HEIGHT * 3 - 1}px, #e0e0e0 ${PAGE_HEIGHT * 3}px, transparent ${PAGE_HEIGHT * 3 + 1}px),
+            linear-gradient(transparent ${PAGE_HEIGHT * 4 - 1}px, #e0e0e0 ${PAGE_HEIGHT * 4}px, transparent ${PAGE_HEIGHT * 4 + 1}px),
+            linear-gradient(transparent ${PAGE_HEIGHT * 5 - 1}px, #e0e0e0 ${PAGE_HEIGHT * 5}px, transparent ${PAGE_HEIGHT * 5 + 1}px),
+            linear-gradient(transparent ${PAGE_HEIGHT * 6 - 1}px, #e0e0e0 ${PAGE_HEIGHT * 6}px, transparent ${PAGE_HEIGHT * 6 + 1}px),
+            linear-gradient(transparent ${PAGE_HEIGHT * 7 - 1}px, #e0e0e0 ${PAGE_HEIGHT * 7}px, transparent ${PAGE_HEIGHT * 7 + 1}px),
+            linear-gradient(transparent ${PAGE_HEIGHT * 8 - 1}px, #e0e0e0 ${PAGE_HEIGHT * 8}px, transparent ${PAGE_HEIGHT * 8 + 1}px),
+            linear-gradient(transparent ${PAGE_HEIGHT * 9 - 1}px, #e0e0e0 ${PAGE_HEIGHT * 9}px, transparent ${PAGE_HEIGHT * 9 + 1}px),
+            linear-gradient(transparent ${PAGE_HEIGHT * 10 - 1}px, #e0e0e0 ${PAGE_HEIGHT * 10}px, transparent ${PAGE_HEIGHT * 10 + 1}px);
+          background-repeat: no-repeat;
+          background-size: 100% auto;
+        }
+        
+        .ql-editor p {
+          margin-bottom: 12pt;
+        }
+        
+        .ql-editor h1, .ql-editor h2, .ql-editor h3 {
+          font-family: 'Times New Roman', serif;
+          font-weight: bold;
+          margin-top: 12pt;
+          margin-bottom: 6pt;
         }
       `;
       
-      if (!document.querySelector('#page-indicators')) {
-        style.id = 'page-indicators';
+      if (!document.querySelector('#editor-page-styling')) {
+        style.id = 'editor-page-styling';
         document.head.appendChild(style);
       }
     };
 
-    // Add indicators after editor is ready
-    setTimeout(addPageIndicators, 500);
+    addEditorStyling();
   }, []);
 
   // Formatting function for toolbar commands
