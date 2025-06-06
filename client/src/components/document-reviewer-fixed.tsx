@@ -428,10 +428,10 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                     console.log('Match analysis for sentence:', docSentTrimmed, 
                                'Exact:', exactMatches, 'Close:', closeMatches, 'Percentage:', matchPercentage);
                     
-                    // More aggressive criteria for spell-corrected copy-paste content
-                    const meetsThreshold = matchPercentage >= 0.25; // Lower threshold for spell corrections
-                    const hasEnoughExactMatches = exactMatches >= 1; // Reduce required exact matches
-                    const hasMinLength = pastedWords.length >= 4 && docWords.length >= 4;
+                    // More conservative criteria to reduce false positives
+                    const meetsThreshold = matchPercentage >= 0.75; // Higher threshold - 75% similarity required
+                    const hasEnoughExactMatches = exactMatches >= Math.max(3, Math.floor(pastedWords.length * 0.5)); // Require 50% exact matches
+                    const hasMinLength = pastedWords.length >= 8 && docWords.length >= 8; // Longer minimum length
                     
                     console.log('Criteria check for:', docSentTrimmed);
                     console.log('- Meets threshold (75%):', meetsThreshold, matchPercentage);
@@ -439,12 +439,20 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                     console.log('- Has min length:', hasMinLength, 'pasted:', pastedWords.length, 'doc:', docWords.length);
                     
                     if (meetsThreshold && hasEnoughExactMatches && hasMinLength) {
-                      // Simple check: avoid highlighting obvious original content
+                      // Enhanced check: avoid highlighting legitimate content patterns
                       const hasOriginalPatterns = /\b(sky|hello|how are you|doing|good morning|dear|sincerely)\b/i.test(docSentTrimmed);
                       
-                      console.log('- Has original patterns:', hasOriginalPatterns);
+                      // Skip code snippets and technical documentation - these are often legitimate references
+                      const isCodeSnippet = /(\{|\}|function|const|let|var|import|export|return|if\s*\(|\.map\(|\.filter\(|className=|style=|<\/|&gt;|&lt;)/i.test(docSentTrimmed);
                       
-                      if (!hasOriginalPatterns) {
+                      // Skip content that looks like legitimate references or citations
+                      const isReference = /(\(\d{4}\)|et al\.|pp\.|Vol\.|No\.|ISBN|DOI:|https?:\/\/)/i.test(docSentTrimmed);
+                      
+                      console.log('- Has original patterns:', hasOriginalPatterns);
+                      console.log('- Is code snippet:', isCodeSnippet);
+                      console.log('- Is reference:', isReference);
+                      
+                      if (!hasOriginalPatterns && !isCodeSnippet && !isReference) {
                         console.log('✓ Highlighting copy-pasted content:', docSentTrimmed);
                         const escapedSentence = docSentTrimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
                         const sentenceRegex = new RegExp(escapedSentence, 'gi');
@@ -582,20 +590,27 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                         </div>
                         <div className="text-sm text-red-600 font-semibold">
                           {(() => {
-                            const totalWords = session.content ? session.content.split(/\s+/).filter(w => w.trim()).length : 0;
-                            const originalPastedWords = session.pastedContent.reduce((total: number, item: any) => {
-                              const text = item.text || item.content || item.value || '';
-                              return total + (text ? text.split(/\s+/).filter((w: string) => w.trim()).length : 0);
+                            // Calculate based on how much content is actually highlighted as suspicious
+                            const cleanContent = session.content ? session.content.replace(/<[^>]*>/g, '') : '';
+                            const totalWords = cleanContent.split(/\s+/).filter(w => w.trim()).length;
+                            
+                            // Check if there are highlighted sections in the content
+                            const contentHTML = detectCopyPastedContent(session.content || '', session.pastedContent ? Array.isArray(session.pastedContent) ? session.pastedContent : [] : []);
+                            const hasHighlights = contentHTML.includes('background-color: #fecaca');
+                            
+                            if (!hasHighlights) {
+                              return 'Content tracked, no issues detected';
+                            }
+                            
+                            // Count only what was actually flagged as problematic
+                            const highlightMatches = contentHTML.match(/<span[^>]*background-color: #fecaca[^>]*>([^<]*)<\/span>/gi) || [];
+                            const flaggedWords = highlightMatches.reduce((total: number, match: string) => {
+                              const text = match.replace(/<[^>]*>/g, '');
+                              return total + text.split(/\s+/).filter((w: string) => w.trim()).length;
                             }, 0);
                             
-                            // Calculate percentage based on original pasted content length vs total content
-                            // This gives a more accurate representation since pasted content may be spell-corrected
-                            const percentage = totalWords > 0 ? Math.round((originalPastedWords / totalWords) * 100) : 0;
-                            
-                            // Cap at 100% to avoid over-reporting due to corrections/edits
-                            const cappedPercentage = Math.min(percentage, 100);
-                            
-                            return `${cappedPercentage}% pasted content`;
+                            const percentage = totalWords > 0 ? Math.round((flaggedWords / totalWords) * 100) : 0;
+                            return `${Math.min(percentage, 100)}% flagged content`;
                           })()}
                         </div>
                       </div>
