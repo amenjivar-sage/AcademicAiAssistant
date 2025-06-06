@@ -339,9 +339,16 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     }
   }, [content, isNavigating]);
 
-  // Initialize page refs array
+  // Initialize page refs array - ensure refs exist for all pages
   useEffect(() => {
+    // Extend refs array if we have more pages than refs
+    while (pageRefs.current.length < pages.length) {
+      pageRefs.current.push(null);
+    }
+    // Trim refs array if we have fewer pages
     pageRefs.current = pageRefs.current.slice(0, pages.length);
+    
+    console.log(`Page refs updated: ${pageRefs.current.length} refs for ${pages.length} pages`);
   }, [pages.length]);
 
 
@@ -411,11 +418,16 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
 
   // Handle page navigation with content management
   const handlePageNavigation = (currentPageIndex: number, direction: 'next' | 'prev', isOverflow: boolean) => {
+    console.log(`Navigation requested: ${direction} from page ${currentPageIndex + 1}, overflow: ${isOverflow}`);
     setIsNavigating(true);
     
     if (direction === 'next') {
       const currentPageRef = pageRefs.current[currentPageIndex];
-      if (!currentPageRef) return;
+      if (!currentPageRef) {
+        console.log(`No ref found for current page ${currentPageIndex + 1}`);
+        setIsNavigating(false);
+        return;
+      }
       
       const currentEditor = currentPageRef.getEditor();
       
@@ -431,34 +443,53 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
       
       // Ensure next page exists
       if (currentPageIndex >= pages.length - 1) {
+        console.log(`Creating new page ${currentPageIndex + 2}`);
         setPages(prev => [...prev, '<p><br></p>']);
-      }
-      
-      // Focus next page
-      setTimeout(() => {
-        const nextPageRef = pageRefs.current[currentPageIndex + 1];
-        if (nextPageRef) {
-          nextPageRef.focus();
-          const nextEditor = nextPageRef.getEditor();
-          
-          if (isOverflow) {
-            // Add the content that was removed
-            const existingContent = nextEditor.root.innerHTML;
-            if (existingContent === '<p><br></p>') {
-              nextEditor.root.innerHTML = '<p><br></p>';
-            }
-          }
-          
-          nextEditor.setSelection(0, 0);
-        }
         
-        setTimeout(() => setIsNavigating(false), 300);
-      }, 100);
+        // Wait for page creation and ref initialization
+        setTimeout(() => {
+          console.log(`Attempting to focus page ${currentPageIndex + 2} after creation`);
+          const nextPageRef = pageRefs.current[currentPageIndex + 1];
+          if (nextPageRef) {
+            nextPageRef.focus();
+            const nextEditor = nextPageRef.getEditor();
+            nextEditor.setSelection(0, 0);
+            console.log(`Successfully focused page ${currentPageIndex + 2}`);
+          } else {
+            console.log(`Failed to find ref for new page ${currentPageIndex + 2}`);
+          }
+          setIsNavigating(false);
+        }, 200);
+      } else {
+        // Focus existing next page
+        setTimeout(() => {
+          console.log(`Focusing existing page ${currentPageIndex + 2}`);
+          const nextPageRef = pageRefs.current[currentPageIndex + 1];
+          if (nextPageRef) {
+            nextPageRef.focus();
+            const nextEditor = nextPageRef.getEditor();
+            
+            if (isOverflow) {
+              const existingContent = nextEditor.root.innerHTML;
+              if (existingContent === '<p><br></p>') {
+                nextEditor.root.innerHTML = '<p><br></p>';
+              }
+            }
+            
+            nextEditor.setSelection(0, 0);
+            console.log(`Successfully focused existing page ${currentPageIndex + 2}`);
+          } else {
+            console.log(`Failed to find ref for existing page ${currentPageIndex + 2}`);
+          }
+          setIsNavigating(false);
+        }, 100);
+      }
     }
     
     else if (direction === 'prev') {
       const prevPageRef = pageRefs.current[currentPageIndex - 1];
       if (prevPageRef) {
+        console.log(`Moving back to page ${currentPageIndex}`);
         prevPageRef.focus();
         const prevEditor = prevPageRef.getEditor();
         const prevLength = prevEditor.getLength();
