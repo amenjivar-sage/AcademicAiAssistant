@@ -26,7 +26,7 @@ interface DocumentExportDialogProps {
   size?: 'default' | 'sm' | 'lg';
 }
 
-export default function DocumentExportDialog({
+export function DocumentExportDialog({
   content,
   studentName = 'Student',
   assignmentTitle = 'Assignment',
