@@ -182,10 +182,7 @@ export default function DocumentExportDialog({
           } else {
             footerChildren.push(new TextRun({ text: 'Page ', size: 20 }));
           }
-          footerChildren.push(new TextRun({
-            text: '1', // Simple page number - docx will handle auto-numbering in Word
-            size: 20
-          }));
+          footerChildren.push(new PageNumber());
         }
 
         const alignment = settings.pageNumberPosition === 'left' 
@@ -231,7 +228,13 @@ export default function DocumentExportDialog({
 
       // Generate and save the document
       const blob = await Packer.toBlob(doc);
-      const fileName = `${studentName.replace(/[^a-zA-Z0-9]/g, '_')}_${assignmentTitle.replace(/[^a-zA-Z0-9]/g, '_')}.docx`;
+      
+      // Use custom header text for filename if provided, otherwise use student name
+      const nameForFile = (settings.headerText && settings.headerText.trim()) 
+        ? settings.headerText.trim() 
+        : studentName;
+      const fileName = `${nameForFile.replace(/[^a-zA-Z0-9]/g, '_')}_${assignmentTitle.replace(/[^a-zA-Z0-9]/g, '_')}.docx`;
+      console.log('Export Debug - Generated filename:', fileName);
       saveAs(blob, fileName);
       
       setIsOpen(false);
