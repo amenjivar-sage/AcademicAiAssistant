@@ -343,26 +343,51 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
           
           if (atStart && activePageIndex > 0) {
             event.preventDefault();
+            
+            // Get current page content
+            const currentPageContent = pages[activePageIndex];
+            const prevPageContent = pages[activePageIndex - 1];
+            
+            // Merge current page content with previous page
+            const mergedContent = prevPageContent + currentPageContent;
+            
+            // Update pages state - merge content and remove current empty page
+            setPages(prev => {
+              const newPages = [...prev];
+              newPages[activePageIndex - 1] = mergedContent;
+              newPages.splice(activePageIndex, 1); // Remove current page
+              
+              // Update parent with combined content
+              const combinedContent = newPages.join('');
+              onContentChange(combinedContent);
+              
+              return newPages;
+            });
+            
             setTimeout(() => {
               const prevPageRef = pageRefs.current[activePageIndex - 1];
               if (prevPageRef) {
                 const prevEditor = prevPageRef.getEditor();
                 if (prevEditor) {
-                  const prevLength = prevEditor.getLength();
-                  // Position cursor at the very end of the content (before the final newline)
-                  const cursorPosition = Math.max(0, prevLength - 1);
-                  prevEditor.focus();
-                  prevEditor.setSelection(cursorPosition, 0);
-                  console.log(`Navigated to page ${activePageIndex}, cursor at position ${cursorPosition}/${prevLength}`);
+                  // Set the merged content
+                  prevEditor.root.innerHTML = mergedContent;
                   
-                  // Ensure the editor is properly focused
+                  // Calculate cursor position - place it where the previous page ended
+                  const tempDiv = document.createElement('div');
+                  tempDiv.innerHTML = prevPageContent;
+                  const prevContentLength = tempDiv.textContent?.length || 0;
+                  
+                  prevEditor.focus();
+                  prevEditor.setSelection(prevContentLength, 0);
+                  console.log(`Merged content and moved to page ${activePageIndex}, cursor at position ${prevContentLength}`);
+                  
+                  // Check if merged content overflows and needs to be split again
                   setTimeout(() => {
-                    prevEditor.blur();
-                    prevEditor.focus();
-                  }, 10);
+                    handleContentFlow(activePageIndex - 1, mergedContent);
+                  }, 100);
                 }
               }
-            }, 50);
+            }, 100);
           }
         }
       }
