@@ -654,8 +654,8 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
             </div>
           )}
           
-          {/* Enhanced Toolbar */}
-          <div className="border-b bg-white">
+          {/* Enhanced Toolbar - Sticky */}
+          <div className="sticky top-0 z-50 border-b bg-white shadow-sm">
             <EnhancedToolbar
               onFormatting={(command, value) => {
                 console.log('Toolbar formatting called:', command, value);
