@@ -52,13 +52,20 @@ export default function DocumentExportDialog({
     try {
       console.log('Export Debug - Student Name:', studentName);
       console.log('Export Debug - Settings:', settings);
-      // Clean and parse HTML content
+      // Clean and parse HTML content more thoroughly
       const cleanText = content
-        .replace(/<[^>]*>/g, '') // Remove HTML tags
+        .replace(/<\/p>/gi, '\n') // Convert closing p tags to line breaks
+        .replace(/<p[^>]*>/gi, '') // Remove opening p tags
+        .replace(/<br\s*\/?>/gi, '\n') // Convert br tags to line breaks
+        .replace(/<strong[^>]*>(.*?)<\/strong>/gi, '$1') // Remove strong tags but keep content
+        .replace(/<em[^>]*>(.*?)<\/em>/gi, '$1') // Remove em tags but keep content
+        .replace(/<span[^>]*>(.*?)<\/span>/gi, '$1') // Remove span tags but keep content
+        .replace(/<[^>]*>/g, '') // Remove any remaining HTML tags
         .replace(/&nbsp;/g, ' ') // Replace &nbsp; with spaces
         .replace(/&amp;/g, '&') // Replace &amp; with &
         .replace(/&lt;/g, '<') // Replace &lt; with <
         .replace(/&gt;/g, '>') // Replace &gt; with >
+        .replace(/\n\s*\n/g, '\n') // Remove multiple line breaks
         .trim();
 
       // Split into paragraphs and create document paragraphs
@@ -91,8 +98,13 @@ export default function DocumentExportDialog({
       // Create header content - prioritize custom header text
       const headerParagraphs = [];
       
+      console.log('Header Debug - Custom text:', settings.headerText);
+      console.log('Header Debug - Trimmed:', settings.headerText?.trim());
+      console.log('Header Debug - Has custom text:', !!(settings.headerText && settings.headerText.trim()));
+      
       // If custom header text is provided, use only that
       if (settings.headerText && settings.headerText.trim()) {
+        console.log('Header Debug - Adding custom header:', settings.headerText);
         headerParagraphs.push(
           new Paragraph({
             children: [new TextRun({ text: settings.headerText, size: 20 })],
