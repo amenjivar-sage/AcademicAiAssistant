@@ -143,7 +143,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     setPages(newPages);
     onContentChange(combinedContent);
     
-    // Simple overflow check - create new page when needed
+    // Check for overflow and move content to next page
     if (pageIndex === pages.length - 1) {
       overflowCheckTimeout.current = setTimeout(() => {
         const pageRef = pageRefs.current[pageIndex];
@@ -151,12 +151,73 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
           const editorElement = pageRef.getEditor().root;
           const contentHeight = editorElement.scrollHeight;
           
-          if (contentHeight > 950 && pages.length === 1) {
-            console.log(`Creating page 2 due to overflow (${contentHeight}px > 950px)`);
-            setPages(prev => [...prev, '']);
+          console.log(`Page ${pageIndex + 1} height: ${contentHeight}px`);
+          
+          if (contentHeight > 950) {
+            const pageContent = pages[pageIndex];
+            
+            // Create temporary element to measure content
+            const tempDiv = document.createElement('div');
+            tempDiv.style.cssText = `
+              position: absolute;
+              visibility: hidden;
+              width: calc(8.5in - 144px);
+              font-family: 'Times New Roman', serif;
+              font-size: 14pt;
+              line-height: 2.0;
+              padding: 72px;
+              top: -9999px;
+            `;
+            document.body.appendChild(tempDiv);
+            
+            try {
+              // Split content by paragraphs
+              tempDiv.innerHTML = pageContent;
+              const paragraphs = Array.from(tempDiv.querySelectorAll('p'));
+              
+              if (paragraphs.length > 1) {
+                // Find split point where content fits on first page
+                let splitIndex = Math.floor(paragraphs.length * 0.7);
+                let testContent = paragraphs.slice(0, splitIndex).map(p => p.outerHTML).join('');
+                
+                tempDiv.innerHTML = testContent;
+                
+                // Adjust split point if still too tall
+                while (tempDiv.scrollHeight > 950 && splitIndex > 1) {
+                  splitIndex--;
+                  testContent = paragraphs.slice(0, splitIndex).map(p => p.outerHTML).join('');
+                  tempDiv.innerHTML = testContent;
+                }
+                
+                const firstPageContent = testContent;
+                const secondPageContent = paragraphs.slice(splitIndex).map(p => p.outerHTML).join('');
+                
+                console.log(`Moving content: ${paragraphs.length} paragraphs -> ${splitIndex} | ${paragraphs.length - splitIndex}`);
+                
+                // Update pages with split content
+                setPages(prev => {
+                  const newPages = [...prev];
+                  newPages[pageIndex] = firstPageContent || '<p><br></p>';
+                  
+                  if (newPages.length === pageIndex + 1) {
+                    newPages.push(secondPageContent || '<p><br></p>');
+                  } else {
+                    newPages[pageIndex + 1] = secondPageContent || '<p><br></p>';
+                  }
+                  
+                  return newPages;
+                });
+              } else if (pages.length === 1) {
+                // Just add empty second page for single paragraph
+                console.log('Adding empty second page for continued typing');
+                setPages(prev => [...prev, '<p><br></p>']);
+              }
+            } finally {
+              document.body.removeChild(tempDiv);
+            }
           }
         }
-      }, 1000);
+      }, 1200);
     }
   };
 
@@ -268,19 +329,67 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
       // For now, put all content in first page and let overflow detection handle pagination
       setPages([content]);
       
-      // Simple overflow check after content loads
+      // Check for overflow and redistribute existing content
       setTimeout(() => {
         const pageRef = pageRefs.current[0];
         if (pageRef) {
           const editorElement = pageRef.getEditor().root;
           const contentHeight = editorElement.scrollHeight;
           
+          console.log(`Initial content height: ${contentHeight}px`);
+          
           if (contentHeight > 950 && pages.length === 1) {
-            console.log(`Adding page 2 for existing content (${contentHeight}px > 950px)`);
-            setPages(prev => [...prev, '']);
+            console.log(`Redistributing existing content (${contentHeight}px > 950px)`);
+            
+            const pageContent = pages[0];
+            if (pageContent && pageContent.trim()) {
+              // Use same logic as real-time overflow detection
+              const tempDiv = document.createElement('div');
+              tempDiv.style.cssText = `
+                position: absolute;
+                visibility: hidden;
+                width: calc(8.5in - 144px);
+                font-family: 'Times New Roman', serif;
+                font-size: 14pt;
+                line-height: 2.0;
+                padding: 72px;
+                top: -9999px;
+              `;
+              document.body.appendChild(tempDiv);
+              
+              try {
+                tempDiv.innerHTML = pageContent;
+                const paragraphs = Array.from(tempDiv.querySelectorAll('p'));
+                
+                if (paragraphs.length > 1) {
+                  let splitIndex = Math.floor(paragraphs.length * 0.7);
+                  let testContent = paragraphs.slice(0, splitIndex).map(p => p.outerHTML).join('');
+                  
+                  tempDiv.innerHTML = testContent;
+                  
+                  while (tempDiv.scrollHeight > 950 && splitIndex > 1) {
+                    splitIndex--;
+                    testContent = paragraphs.slice(0, splitIndex).map(p => p.outerHTML).join('');
+                    tempDiv.innerHTML = testContent;
+                  }
+                  
+                  const firstPageContent = testContent;
+                  const secondPageContent = paragraphs.slice(splitIndex).map(p => p.outerHTML).join('');
+                  
+                  console.log(`Initial split: ${paragraphs.length} paragraphs -> ${splitIndex} | ${paragraphs.length - splitIndex}`);
+                  
+                  setPages([
+                    firstPageContent || '<p><br></p>',
+                    secondPageContent || '<p><br></p>'
+                  ]);
+                }
+              } finally {
+                document.body.removeChild(tempDiv);
+              }
+            }
           }
         }
-      }, 500);
+      }, 800);
     }
   }, [content]);
 
