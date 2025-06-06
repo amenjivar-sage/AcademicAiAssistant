@@ -19,6 +19,7 @@ import DocumentDownload from './document-download';
 import AiAssistant from './ai-assistant';
 import { PDFExport } from './pdf-export';
 import BubbleSpellCheckPanel from './bubble-spell-check-panel';
+import EnhancedToolbar from './enhanced-toolbar';
 
 interface PastedContent {
   text: string;

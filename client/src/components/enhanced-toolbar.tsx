@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { 
@@ -57,6 +57,11 @@ export default function EnhancedToolbar({
   onSpellCheck,
   onHeaderFooterChange
 }: EnhancedToolbarProps) {
+  const [headerText, setHeaderText] = useState('');
+  const [footerText, setFooterText] = useState('');
+  const [showPageNumbers, setShowPageNumbers] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
   const handleFormat = (command: string, value?: string) => {
     onFormatting?.(command, value);
   };
@@ -253,7 +258,7 @@ export default function EnhancedToolbar({
 
       {/* Page Elements */}
       <div className="flex items-center gap-1">
-        <Dialog>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button variant="ghost" size="sm">
               <Type className="h-4 w-4 mr-1" />
@@ -271,6 +276,8 @@ export default function EnhancedToolbar({
                 </label>
                 <Input 
                   id="header-input" 
+                  value={headerText}
+                  onChange={(e) => setHeaderText(e.target.value)}
                   placeholder="Enter header text..." 
                   className="col-span-3" 
                 />
@@ -281,6 +288,8 @@ export default function EnhancedToolbar({
                 </label>
                 <Input 
                   id="footer-input" 
+                  value={footerText}
+                  onChange={(e) => setFooterText(e.target.value)}
                   placeholder="Enter footer text..." 
                   className="col-span-3" 
                 />
@@ -290,7 +299,11 @@ export default function EnhancedToolbar({
                   Options:
                 </label>
                 <div className="col-span-3 flex items-center space-x-2">
-                  <Checkbox id="page-numbers" />
+                  <Checkbox 
+                    id="page-numbers" 
+                    checked={showPageNumbers}
+                    onCheckedChange={(checked) => setShowPageNumbers(checked === true)}
+                  />
                   <label htmlFor="page-numbers" className="text-sm">
                     Show page numbers
                   </label>
@@ -301,14 +314,6 @@ export default function EnhancedToolbar({
               <Button 
                 type="submit" 
                 onClick={() => {
-                  const headerInput = document.getElementById('header-input') as HTMLInputElement;
-                  const footerInput = document.getElementById('footer-input') as HTMLInputElement;
-                  const pageNumbersCheck = document.getElementById('page-numbers') as HTMLInputElement;
-                  
-                  const headerText = headerInput?.value || '';
-                  const footerText = footerInput?.value || '';
-                  const showPageNumbers = pageNumbersCheck?.checked || false;
-                  
                   console.log('Header/Footer settings saved:', {
                     header: headerText,
                     footer: footerText,
@@ -321,6 +326,8 @@ export default function EnhancedToolbar({
                     footer: footerText,
                     pageNumbers: showPageNumbers
                   });
+                  
+                  setIsDialogOpen(false);
                 }}
               >
                 Save Settings
