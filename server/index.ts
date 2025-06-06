@@ -13,7 +13,12 @@ app.use(session({
   secret: 'sage-demo-secret-key', // In production: use environment variable
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 } // 24 hours
+  rolling: true, // Reset session timeout on each request
+  cookie: { 
+    secure: false, 
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    httpOnly: true
+  }
 }));
 
 app.use((req, res, next) => {
