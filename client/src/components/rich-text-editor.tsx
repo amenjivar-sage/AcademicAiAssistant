@@ -69,93 +69,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     },
     keyboard: {
       bindings: {
-        // Manual page break with Ctrl+Enter
-        'page-break': {
-          key: 'Enter',
-          ctrlKey: true,
-          handler: (range: any, context: any) => {
-            console.log('Manual page break triggered with Ctrl+Enter');
-            
-            // Find the currently focused page by checking selection
-            let currentPageIndex = -1;
-            for (let i = 0; i < pageRefs.current.length; i++) {
-              const pageRef = pageRefs.current[i];
-              if (pageRef) {
-                const editor = pageRef.getEditor();
-                const selection = editor.getSelection();
-                if (selection && selection.index === range.index) {
-                  currentPageIndex = i;
-                  break;
-                }
-              }
-            }
-            
-            if (currentPageIndex !== -1) {
-              console.log(`Creating page break from page ${currentPageIndex + 1}`);
-              
-              // Create next page if needed
-              if (currentPageIndex >= pages.length - 1) {
-                setPages(prev => [...prev, '<p><br></p>']);
-              }
-              
-              // Move to next page
-              setTimeout(() => {
-                const nextPageRef = pageRefs.current[currentPageIndex + 1];
-                if (nextPageRef) {
-                  const nextEditor = nextPageRef.getEditor();
-                  if (nextEditor) {
-                    nextEditor.focus();
-                    nextEditor.setSelection(0, 0);
-                    console.log(`Moved to page ${currentPageIndex + 2}`);
-                  }
-                }
-              }, 100);
-              
-              return false; // Prevent default
-            }
-            
-            return true;
-          }
-        },
-        // Backspace navigation between pages
-        'page-back': {
-          key: 'Backspace',
-          handler: (range: any, context: any) => {
-            // Only trigger at very beginning of page
-            if (range.index === 0) {
-              let currentPageIndex = -1;
-              for (let i = 0; i < pageRefs.current.length; i++) {
-                const pageRef = pageRefs.current[i];
-                if (pageRef) {
-                  const editor = pageRef.getEditor();
-                  const selection = editor.getSelection();
-                  if (selection && selection.index === range.index) {
-                    currentPageIndex = i;
-                    break;
-                  }
-                }
-              }
-              
-              if (currentPageIndex > 0) {
-                console.log(`Moving back from page ${currentPageIndex + 1} to page ${currentPageIndex}`);
-                
-                const prevPageRef = pageRefs.current[currentPageIndex - 1];
-                if (prevPageRef) {
-                  const prevEditor = prevPageRef.getEditor();
-                  if (prevEditor) {
-                    const prevLength = prevEditor.getLength();
-                    prevEditor.focus();
-                    prevEditor.setSelection(Math.max(0, prevLength - 1), 0);
-                    return false; // Prevent default
-                  }
-                }
-              }
-            }
-            
-            return true; // Allow normal backspace
-          }
-        },
-        'tab': false // Disable tab handling
+        'tab': false // Disable tab handling to avoid conflicts
       }
     }
   };
@@ -804,20 +718,47 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
               {index + 1}
             </div>
             
-            {index === 0 && (
-              <div className="page-break-hint" style={{
-                position: 'absolute',
-                top: '10px',
-                right: '80px',
-                fontSize: '11px',
-                color: '#666',
-                backgroundColor: 'rgba(255,255,255,0.9)',
-                padding: '4px 8px',
-                borderRadius: '4px',
-                border: '1px solid #ddd'
-              }}>
-                Press Ctrl+Enter for page break
-              </div>
+            {index === pages.length - 1 && (
+              <button
+                onClick={() => {
+                  console.log(`Adding new page after page ${index + 1}`);
+                  setPages(prev => [...prev, '<p><br></p>']);
+                  
+                  // Focus the new page after creation
+                  setTimeout(() => {
+                    const newPageRef = pageRefs.current[index + 1];
+                    if (newPageRef) {
+                      const newEditor = newPageRef.getEditor();
+                      if (newEditor) {
+                        newEditor.focus();
+                        newEditor.setSelection(0, 0);
+                        console.log(`Focused new page ${index + 2}`);
+                      }
+                    }
+                  }, 100);
+                }}
+                style={{
+                  position: 'absolute',
+                  bottom: '20px',
+                  right: '20px',
+                  backgroundColor: '#0066cc',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '8px 16px',
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.backgroundColor = '#0052a3';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.backgroundColor = '#0066cc';
+                }}
+              >
+                + Add Page
+              </button>
             )}
           </div>
         ))}
