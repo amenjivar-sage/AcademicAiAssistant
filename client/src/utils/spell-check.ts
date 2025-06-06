@@ -380,53 +380,64 @@ export function applySpellCheckSuggestion(text: string, result: SpellCheckResult
     textLength: text.length
   });
   
-  // Strategy 1: Try the original position first
-  if (result.startIndex >= 0 && result.endIndex <= text.length) {
-    const originalWord = text.substring(result.startIndex, result.endIndex);
-    console.log('Word at original position:', originalWord, 'vs expected:', result.word);
+  // For HTML content, we need to be more careful about replacements
+  // Strategy 1: HTML-aware word replacement
+  const htmlAwareReplace = (htmlText: string, word: string, newWord: string): string => {
+    const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     
-    if (originalWord.toLowerCase() === result.word.toLowerCase()) {
-      const beforeText = text.substring(0, result.startIndex);
-      const afterText = text.substring(result.endIndex);
-      return beforeText + replacement + afterText;
+    // Find all matches and check if they're inside HTML tags
+    const originalRegex = new RegExp(`\\b${escapedWord}\\b`, 'gi');
+    let match;
+    let replacedText = htmlText;
+    let offset = 0;
+    
+    while ((match = originalRegex.exec(htmlText)) !== null) {
+      const matchStart = match.index;
+      const matchEnd = matchStart + match[0].length;
+      
+      // Check if this match is inside an HTML tag
+      const beforeMatch = htmlText.substring(0, matchStart);
+      const afterMatch = htmlText.substring(matchEnd);
+      
+      // Count open and close tags before the match
+      const openTags = (beforeMatch.match(/</g) || []).length;
+      const closeTags = (beforeMatch.match(/>/g) || []).length;
+      
+      // If we're not inside a tag (equal number of < and >), replace
+      if (openTags === closeTags) {
+        const adjustedStart = matchStart + offset;
+        const adjustedEnd = adjustedStart + match[0].length;
+        
+        const before = replacedText.substring(0, adjustedStart);
+        const after = replacedText.substring(adjustedEnd);
+        replacedText = before + newWord + after;
+        
+        // Adjust offset for next iteration
+        offset += newWord.length - match[0].length;
+        console.log('HTML-aware replacement:', word, '->', newWord, 'at position:', adjustedStart);
+        return replacedText; // Replace only the first occurrence
+      }
     }
+    
+    return replacedText;
+  };
+  
+  // Try HTML-aware replacement first
+  const htmlResult = htmlAwareReplace(text, result.word, replacement);
+  if (htmlResult !== text) {
+    return htmlResult;
   }
   
-  console.warn('Word mismatch, trying fallback strategies');
-  
-  // Strategy 2: Find by word boundaries (most reliable)
+  // Fallback: Simple word boundary replacement
   const escapedWord = result.word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const wordRegex = new RegExp(`\\b${escapedWord}\\b`, 'gi');
-  let match;
-  const matches = [];
+  const wordRegex = new RegExp(`\\b${escapedWord}\\b`, 'i');
   
-  // Find all matches
-  while ((match = wordRegex.exec(text)) !== null) {
-    matches.push({
-      index: match.index,
-      word: match[0]
-    });
+  if (wordRegex.test(text)) {
+    console.log('Using simple word boundary replacement');
+    return text.replace(wordRegex, replacement);
   }
   
-  if (matches.length > 0) {
-    // Use the first match (or closest to original position)
-    let bestMatch = matches[0];
-    if (matches.length > 1 && result.startIndex >= 0) {
-      // Find the match closest to the original position
-      bestMatch = matches.reduce((closest, current) => {
-        const closestDiff = Math.abs(closest.index - result.startIndex);
-        const currentDiff = Math.abs(current.index - result.startIndex);
-        return currentDiff < closestDiff ? current : closest;
-      });
-    }
-    
-    const actualStartIndex = bestMatch.index;
-    const actualEndIndex = actualStartIndex + bestMatch.word.length;
-    console.log('Using word boundary match at:', actualStartIndex, '-', actualEndIndex);
-    return text.substring(0, actualStartIndex) + replacement + text.substring(actualEndIndex);
-  }
-  
-  // Strategy 3: Simple case-insensitive search
+  // Last resort: case-insensitive replacement
   const lowerText = text.toLowerCase();
   const lowerWord = result.word.toLowerCase();
   const findIndex = lowerText.indexOf(lowerWord);
@@ -434,7 +445,7 @@ export function applySpellCheckSuggestion(text: string, result: SpellCheckResult
   if (findIndex !== -1) {
     const actualStartIndex = findIndex;
     const actualEndIndex = actualStartIndex + result.word.length;
-    console.log('Using simple search match at:', actualStartIndex, '-', actualEndIndex);
+    console.log('Using case-insensitive replacement at:', actualStartIndex, '-', actualEndIndex);
     return text.substring(0, actualStartIndex) + replacement + text.substring(actualEndIndex);
   }
   
