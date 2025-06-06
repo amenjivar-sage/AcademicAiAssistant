@@ -14,7 +14,7 @@ import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, Settings, Send, AlertTriangle, Shield, FileText, MessageSquare, Download, Save, GraduationCap, Trophy, Type, Bold, Italic, Underline, ChevronDown, ChevronUp, SpellCheck } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import CopyPasteDetector from './copy-paste-detector';
-import RichTextEditor, { RichTextEditorHandle } from './rich-text-editor';
+import { RichTextEditor, RichTextEditorHandle } from './rich-text-editor-simple';
 import DocumentDownload from './document-download';
 import AiAssistant from './ai-assistant';
 import { PDFExport } from './pdf-export';

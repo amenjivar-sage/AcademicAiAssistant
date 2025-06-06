@@ -107,89 +107,24 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     'link', 'color', 'background'
   ];
 
-  // Enhanced content overflow detection with automatic content splitting
-  const handleContentFlow = useCallback((pageIndex: number, content: string) => {
+  // Simple overflow detection - just add new pages when needed
+  const checkOverflow = useCallback((pageIndex: number) => {
     const pageRef = pageRefs.current[pageIndex];
     if (!pageRef) return;
     
     const editor = pageRef.getEditor();
     const editorElement = editor.root;
     const contentHeight = editorElement.scrollHeight;
-    const selection = editor.getSelection();
+    const visibleHeight = editorElement.clientHeight;
     
-    console.log(`Page ${pageIndex + 1} height: ${contentHeight}px (limit: 950px), cursor: ${selection?.index}`);
+    console.log(`Page ${pageIndex + 1} height check: content=${contentHeight}px, visible=${visibleHeight}px`);
     
-    // Only split if significantly overflowing (more than 10% over limit)
-    if (contentHeight > 1045) { // 950 + 10% = 1045
-      console.log(`Page ${pageIndex + 1} is significantly overflowing, splitting content...`);
-      
-      // Get the HTML content and split it by paragraphs
-      const htmlContent = editor.root.innerHTML;
-      const paragraphs = htmlContent.split('</p>').filter(p => p.trim()).map(p => p + '</p>');
-      
-      if (paragraphs.length > 2) { // Need at least 3 paragraphs to split
-        // Create a temporary element to measure content
-        const tempDiv = document.createElement('div');
-        tempDiv.style.cssText = `
-          position: absolute;
-          visibility: hidden;
-          width: calc(8.5in - 144px);
-          font-family: 'Times New Roman', serif;
-          font-size: 14pt;
-          line-height: 2.0;
-          padding: 72px;
-          box-sizing: border-box;
-          top: -9999px;
-        `;
-        document.body.appendChild(tempDiv);
-        
-        try {
-          // Start from 80% of content and find the split point
-          let splitIndex = Math.floor(paragraphs.length * 0.8);
-          let firstPageContent = paragraphs.slice(0, splitIndex).join('');
-          
-          tempDiv.innerHTML = firstPageContent;
-          
-          // Adjust split point if still too tall, but don't go below 70%
-          const minSplitIndex = Math.max(2, Math.floor(paragraphs.length * 0.7));
-          
-          while (tempDiv.scrollHeight > 950 && splitIndex > minSplitIndex) {
-            splitIndex--;
-            firstPageContent = paragraphs.slice(0, splitIndex).join('');
-            tempDiv.innerHTML = firstPageContent;
-          }
-          
-          const overflowContent = paragraphs.slice(splitIndex).join('');
-          
-          if (overflowContent && splitIndex < paragraphs.length && splitIndex >= minSplitIndex) {
-            console.log(`Content split: keeping ${splitIndex}/${paragraphs.length} paragraphs on page ${pageIndex + 1}`);
-            
-            // Update current page with split content
-            setPages(prev => {
-              const newPages = [...prev];
-              newPages[pageIndex] = firstPageContent || '<p><br></p>';
-              
-              // Create or update next page with overflow content
-              if (pageIndex >= newPages.length - 1) {
-                newPages.push(overflowContent);
-              } else {
-                // Replace next page content with overflow
-                newPages[pageIndex + 1] = overflowContent;
-              }
-              
-              // Update parent with combined content
-              const combinedContent = newPages.join('');
-              onContentChange(combinedContent);
-              
-              return newPages;
-            });
-          }
-        } finally {
-          document.body.removeChild(tempDiv);
-        }
-      }
+    // If content overflows the visible area, add a new page
+    if (contentHeight > visibleHeight + 20 && pageIndex === pages.length - 1) {
+      console.log(`Adding new page due to overflow on page ${pageIndex + 1}`);
+      setPages(prev => [...prev, '<p><br></p>']);
     }
-  }, [onContentChange]);
+  }, [pages.length]);
 
   // Content change handler with overflow detection
   const createHandleChange = (pageIndex: number) => (value: string, delta: any, source: any, editor: any) => {
@@ -215,18 +150,10 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
       clearTimeout(overflowCheckTimeout.current);
     }
     
-    // Only check for overflow if content is being added (not just rearranged)
-    if (delta && delta.ops) {
-      const isAddingContent = delta.ops.some((op: any) => 
-        op.insert && typeof op.insert === 'string' && op.insert.length > 0
-      );
-      
-      if (isAddingContent) {
-        overflowCheckTimeout.current = setTimeout(() => {
-          handleContentFlow(pageIndex, value);
-        }, 300);
-      }
-    }
+    // Check for overflow after content changes
+    overflowCheckTimeout.current = setTimeout(() => {
+      checkOverflow(pageIndex);
+    }, 200);
   };
 
   // Handle text selection across pages

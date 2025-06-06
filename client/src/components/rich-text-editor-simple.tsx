@@ -1,4 +1,4 @@
-import { useEffect, useRef, forwardRef, useImperativeHandle, useState, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
@@ -15,275 +15,184 @@ export interface RichTextEditorHandle {
   getEditor: () => ReactQuill | null;
 }
 
-const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
+const PAGE_HEIGHT = 950;
+
+export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
   content,
   onContentChange,
   onTextSelection,
   readOnly = false,
   placeholder = "Start writing..."
 }, ref) => {
-  const quillRef = useRef<ReactQuill>(null);
-  const [pages, setPages] = useState<string[]>([content || '']);
-  const pageRefs = useRef<(ReactQuill | null)[]>([]);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useImperativeHandle(ref, () => ({
-    focus: () => {
-      const firstRef = pageRefs.current[0];
-      if (firstRef) {
-        firstRef.focus();
-      }
-    },
-    getEditor: () => pageRefs.current[0]
-  }));
-
-  // Simple modules configuration
-  const modules = {
-    toolbar: false,
-    clipboard: {
-      matchVisual: true,
-    },
-    history: {
-      delay: 1000,
-      maxStack: 100,
-      userOnly: true
-    },
-  };
-
-  const formats = [
-    'bold', 'italic', 'underline', 'strike',
-    'list', 'bullet', 'indent',
-    'link', 'color', 'background'
-  ];
-
-  // Simple overflow check with page creation
-  const checkForOverflow = useCallback((pageIndex: number) => {
-    const currentRef = pageRefs.current[pageIndex];
-    if (!currentRef) return;
-
-    const editorElement = currentRef.getEditor().root;
-    const scrollHeight = editorElement.scrollHeight;
-    
-    console.log(`Page ${pageIndex + 1} height: ${scrollHeight}px`);
-
-    if (scrollHeight > 950) {
-      console.log(`Creating new page due to overflow`);
-      
-      const editor = currentRef.getEditor();
-      const fullText = editor.getText().trim();
-      
-      if (fullText.length > 100) {
-        // Split at roughly 60% to ensure first page fits
-        const words = fullText.split(/\s+/);
-        const splitPoint = Math.floor(words.length * 0.6);
-        
-        const firstPageText = words.slice(0, splitPoint).join(' ');
-        const secondPageText = words.slice(splitPoint).join(' ');
-        
-        console.log(`Splitting ${words.length} words at position ${splitPoint}`);
-        
-        setPages(prev => {
-          const newPages = [...prev];
-          newPages[pageIndex] = `<p>${firstPageText}</p>`;
-          
-          if (pageIndex + 1 < newPages.length) {
-            newPages[pageIndex + 1] = `<p>${secondPageText}</p>` + newPages[pageIndex + 1];
-          } else {
-            newPages.push(`<p>${secondPageText}</p>`);
-          }
-          
-          return newPages;
-        });
-        
-        // Move cursor to next page
-        setTimeout(() => {
-          const nextRef = pageRefs.current[pageIndex + 1];
-          if (nextRef) {
-            nextRef.focus();
-            nextRef.getEditor().setSelection(0, 0);
-          }
-        }, 100);
-      }
-    }
-  }, []);
-
-  const createHandleChange = (pageIndex: number) => (value: string, delta: any, source: any) => {
-    if (source !== 'user') return;
-    
-    setPages(prev => {
-      const newPages = [...prev];
-      newPages[pageIndex] = value;
-      
-      // Combine all pages for parent callback
-      const combinedContent = newPages.join('');
-      onContentChange(combinedContent);
-      
-      // Check for overflow after a delay
-      setTimeout(() => {
-        checkForOverflow(pageIndex);
-      }, 300);
-      
-      return newPages;
-    });
-  };
-
-  // Handle text selection
-  const handleTextSelection = (range: any, oldRange: any, source: string, pageIndex: number) => {
-    if (range && onTextSelection) {
-      const currentRef = pageRefs.current[pageIndex];
-      if (currentRef) {
-        const selectedText = currentRef.getEditor().getText(range.index, range.length);
-        onTextSelection(selectedText);
-      }
-    } else if (!range && onTextSelection) {
-      onTextSelection('');
-    }
-  };
-
-  // Initialize pages when content changes
+  
+  const [pages, setPages] = useState<string[]>(['']);
+  const editorRefs = useRef<(ReactQuill | null)[]>([]);
+  
+  // Initialize content
   useEffect(() => {
     if (content && content !== pages.join('')) {
-      console.log('External content change detected');
       setPages([content]);
     }
   }, [content]);
 
-  // Initialize page refs array
+  // Check if we need to add a new page
+  const checkAndAddPage = () => {
+    const lastIndex = pages.length - 1;
+    const lastRef = editorRefs.current[lastIndex];
+    if (!lastRef) return;
+
+    const editorEl = lastRef.getEditor()?.root;
+    if (!editorEl) return;
+
+    const contentHeight = editorEl.scrollHeight;
+    const visibleHeight = editorEl.clientHeight;
+
+    if (contentHeight > visibleHeight + 20) {
+      console.log(`Adding new page - content height: ${contentHeight}px, visible: ${visibleHeight}px`);
+      setPages(prev => [...prev, '']);
+    }
+  };
+
+  // Handle content changes
+  const handleChange = (value: string, index: number) => {
+    const newPages = [...pages];
+    newPages[index] = value;
+    setPages(newPages);
+    
+    // Update parent with combined content
+    const combinedContent = newPages.join('');
+    onContentChange(combinedContent);
+  };
+
+  // Expose methods through ref
+  useImperativeHandle(ref, () => ({
+    focus: () => {
+      const firstEditor = editorRefs.current[0];
+      if (firstEditor) {
+        firstEditor.focus();
+      }
+    },
+    getEditor: () => {
+      return editorRefs.current[0] || null;
+    }
+  }));
+
+  // Check for overflow when content changes
   useEffect(() => {
-    pageRefs.current = pageRefs.current.slice(0, pages.length);
-  }, [pages.length]);
+    checkAndAddPage();
+  }, [pages]);
+
+  const modules = {
+    toolbar: [
+      [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ 'color': [] }, { 'background': [] }],
+      [{ 'font': [] }],
+      [{ 'align': [] }],
+      ['blockquote', 'code-block'],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      [{ 'indent': '-1'}, { 'indent': '+1' }],
+      ['link', 'image'],
+      ['clean']
+    ],
+    clipboard: {
+      matchVisual: false
+    }
+  };
+
+  const formats = [
+    'header', 'font', 'size',
+    'bold', 'italic', 'underline', 'strike', 'blockquote',
+    'list', 'bullet', 'indent',
+    'link', 'color', 'background'
+  ];
 
   return (
-    <div 
-      ref={containerRef}
-      className="rich-text-editor-container"
-      style={{
-        width: '100%',
-        minHeight: '100vh',
-        backgroundColor: '#f5f5f5',
-        paddingTop: '40px',
-        paddingBottom: '40px'
-      }}
-    >
+    <div className="rich-text-editor-container">
       <style>
         {`
         .rich-text-editor-container {
-          font-family: 'Times New Roman', serif;
-        }
-
-        .multi-page-editor {
+          width: 100%;
+          height: 100%;
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 40px;
-          width: 100%;
-          max-width: none;
-          margin: 0 auto;
-          padding: 0 20px;
-          box-sizing: border-box;
+          padding: 20px;
+          background: #f5f5f5;
+          overflow-y: auto;
         }
 
-        .single-document-page {
-          width: 8.5in;
-          height: 1122px;
+        .editor-pages {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 24px;
+        }
+
+        .editor-page {
           background: white;
-          box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-          margin: 0 auto;
+          width: 8.5in;
+          min-height: 11in;
+          padding: 0;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+          border-radius: 8px;
           position: relative;
-          page-break-after: always;
-          print-color-adjust: exact;
+          overflow: hidden;
         }
 
-        .single-document-page .ql-editor {
+        .editor-page .ql-toolbar {
+          border-top: none;
+          border-left: none;
+          border-right: none;
+          border-bottom: 1px solid #ccc;
+        }
+
+        .editor-page .ql-container {
+          border: none;
+          font-family: 'Times New Roman', serif;
+        }
+
+        .editor-page .ql-editor {
           padding: 72px !important;
           line-height: 2.0 !important;
           font-family: 'Times New Roman', serif !important;
           font-size: 14pt !important;
           box-sizing: border-box !important;
-          height: 950px !important;
-          overflow: hidden !important;
+          height: ${PAGE_HEIGHT}px !important;
+          overflow-y: hidden !important;
+          min-height: ${PAGE_HEIGHT}px !important;
         }
 
-        .single-document-page .ql-editor:focus {
+        .editor-page .ql-editor:focus {
           outline: none !important;
         }
 
         .page-number {
           position: absolute;
           bottom: 20px;
-          right: 72px;
-          font-family: 'Times New Roman', serif;
-          font-size: 10pt;
-          color: #6b7280;
-        }
-
-        .ql-container {
-          border: none !important;
-          font-family: 'Times New Roman', serif !important;
-          background: transparent !important;
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          height: 1000px;
-          overflow: hidden;
-        }
-
-        .ql-editor {
-          border: none !important;
-          padding: 72px !important;
-          line-height: 2.0 !important;
-          font-family: 'Times New Roman', serif !important;
-          font-size: 14pt !important;
-          height: 950px !important;
-          overflow: hidden !important;
-          box-sizing: border-box !important;
-        }
-
-        .ql-editor p {
-          margin: 0 0 14pt 0 !important;
-          font-family: 'Times New Roman', serif !important;
-          font-size: 14pt !important;
-        }
-
-        @media print {
-          .single-document-page {
-            width: 8.5in !important;
-            height: 11in !important;
-            margin: 0 !important;
-            box-shadow: none !important;
-            page-break-after: always !important;
-          }
-          
-          .page-number {
-            color: #000 !important;
-          }
+          right: 30px;
+          font-size: 12px;
+          color: #666;
+          pointer-events: none;
         }
         `}
       </style>
-      
-      <div className="multi-page-editor">
-        {pages.map((pageContent, index) => (
-          <div key={index} className="single-document-page">
+
+      <div className="editor-pages">
+        {pages.map((content, index) => (
+          <div key={index} className="editor-page">
             <ReactQuill
-              ref={(el) => {
-                pageRefs.current[index] = el;
-                if (index === 0) {
-                  (quillRef as { current: ReactQuill | null }).current = el;
-                }
-              }}
-              value={pageContent}
-              onChange={createHandleChange(index)}
-              onChangeSelection={(range, oldRange, source) => handleTextSelection(range, oldRange, source, index)}
+              ref={(el) => (editorRefs.current[index] = el)}
+              theme="snow"
+              value={content}
+              onChange={(val) => handleChange(val, index)}
+              onBlur={checkAndAddPage}
+              readOnly={readOnly}
+              placeholder={index === 0 ? placeholder : ''}
               modules={modules}
               formats={formats}
-              readOnly={readOnly}
-              placeholder={index === 0 ? placeholder : "Continue writing..."}
-              theme="snow"
             />
-            
-            <div className="page-number">
-              {index + 1}
-            </div>
+            <div className="page-number">Page {index + 1}</div>
           </div>
         ))}
       </div>
@@ -292,5 +201,3 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
 });
 
 RichTextEditor.displayName = 'RichTextEditor';
-
-export default RichTextEditor;
