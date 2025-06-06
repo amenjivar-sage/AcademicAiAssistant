@@ -571,14 +571,17 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
         );
       }
 
-      // Add highlighted comment
+      // Add highlighted comment - use actual document text at this position, not stored highlightedText
+      const actualTextAtPosition = session.content.slice(comment.startIndex, comment.endIndex);
+      const highlightedCommentText = highlightPastedContent(actualTextAtPosition);
+      
       elements.push(
         <span
           key={comment.id}
           className="bg-yellow-200 hover:bg-yellow-300 cursor-pointer relative"
           onClick={() => setActiveComment(activeComment === comment.id ? null : comment.id)}
         >
-          {comment.highlightedText}
+          <span dangerouslySetInnerHTML={{ __html: highlightedCommentText }} />
           <MessageCircle className="inline h-3 w-3 ml-1 text-yellow-600" />
         </span>
       );
