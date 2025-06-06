@@ -17,24 +17,31 @@ import { Document, Packer, Paragraph, TextRun, Header, Footer, AlignmentType, He
 import { saveAs } from 'file-saver';
 
 interface DocumentExportDialogProps {
-  content: string;
-  studentName?: string;
-  assignmentTitle?: string;
-  submissionDate?: string;
+  session: {
+    title: string;
+    content: string;
+    submittedAt?: Date | null;
+  };
+  student?: {
+    firstName: string;
+    lastName: string;
+  };
   className?: string;
   variant?: 'default' | 'outline' | 'ghost';
   size?: 'default' | 'sm' | 'lg';
 }
 
 export function DocumentExportDialog({
-  content,
-  studentName = 'Student',
-  assignmentTitle = 'Assignment',
-  submissionDate,
+  session,
+  student,
   className,
   variant = 'outline',
   size = 'sm'
 }: DocumentExportDialogProps) {
+  const content = session.content;
+  const studentName = student ? `${student.firstName} ${student.lastName}` : 'Student';
+  const assignmentTitle = session.title;
+  const submissionDate = session.submittedAt ? new Date(session.submittedAt).toLocaleDateString() : undefined;
   const [isOpen, setIsOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [settings, setSettings] = useState({

@@ -62,26 +62,23 @@ export function DocumentReviewer({ sessionId }: DocumentReviewerProps) {
 
   const queryClient = useQueryClient();
 
-  const { data: session, isLoading: sessionLoading } = useQuery({
+  const { data: session, isLoading: sessionLoading } = useQuery<WritingSession>({
     queryKey: [`/api/writing-sessions/${sessionId}`],
     enabled: !!sessionId
   });
 
-  const { data: comments = [], isLoading: commentsLoading } = useQuery({
+  const { data: comments = [], isLoading: commentsLoading } = useQuery<Comment[]>({
     queryKey: [`/api/writing-sessions/${sessionId}/comments`],
     enabled: !!sessionId
   });
 
-  const { data: student } = useQuery({
+  const { data: student } = useQuery<User>({
     queryKey: [`/api/users/${session?.userId}`],
     enabled: !!session?.userId
   });
 
   const addCommentMutation = useMutation({
-    mutationFn: (commentData: any) => apiRequest(`/api/writing-sessions/${sessionId}/comments`, {
-      method: 'POST',
-      body: JSON.stringify(commentData)
-    }),
+    mutationFn: (commentData: any) => apiRequest('POST', `/api/writing-sessions/${sessionId}/comments`, commentData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/writing-sessions/${sessionId}/comments`] });
       setNewComment('');
@@ -91,9 +88,7 @@ export function DocumentReviewer({ sessionId }: DocumentReviewerProps) {
   });
 
   const deleteCommentMutation = useMutation({
-    mutationFn: (commentId: number) => apiRequest(`/api/writing-sessions/${sessionId}/comments/${commentId}`, {
-      method: 'DELETE'
-    }),
+    mutationFn: (commentId: number) => apiRequest('DELETE', `/api/writing-sessions/${sessionId}/comments/${commentId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/writing-sessions/${sessionId}/comments`] });
     }
@@ -393,3 +388,5 @@ export function DocumentReviewer({ sessionId }: DocumentReviewerProps) {
     </div>
   );
 }
+
+export default DocumentReviewer;
