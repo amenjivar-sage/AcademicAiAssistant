@@ -375,14 +375,14 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
       const editorElement = editor.root;
       const contentHeight = editorElement.scrollHeight;
       
-      console.log(`Enter pressed on page ${pageIndex + 1}: cursor at ${cursorPosition}/${textLength}, height: ${contentHeight}px`);
+      // Only navigate to next page if BOTH conditions are true:
+      // 1. At the very end of content (last character)
+      // 2. Page is significantly full (over 950px)
+      const atVeryEnd = cursorPosition >= textLength - 1;
+      const pageOverflowing = contentHeight > 950;
       
-      // Check if at end of content OR if page is getting full
-      const atEndOfContent = cursorPosition >= textLength - 1;
-      const pageIsFull = contentHeight > 900;
-      
-      if (atEndOfContent || pageIsFull) {
-        console.log(`Moving to next page: atEnd=${atEndOfContent}, isFull=${pageIsFull}`);
+      if (atVeryEnd && pageOverflowing) {
+        console.log(`Page overflow detected: moving to next page (height: ${contentHeight}px)`);
         
         // Create next page if needed
         if (pageIndex >= pages.length - 1) {
@@ -398,14 +398,11 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
               nextEditor.focus();
               nextEditor.setSelection(0, 0);
               console.log(`Successfully moved to page ${pageIndex + 2}`);
-            } else {
-              console.log(`No editor found for page ${pageIndex + 2}`);
             }
-          } else {
-            console.log(`No page ref found for page ${pageIndex + 2}`);
           }
         }, 150);
       }
+      // Otherwise, let Enter work normally for line breaks
     }
     
     if (e.key === 'Backspace') {
