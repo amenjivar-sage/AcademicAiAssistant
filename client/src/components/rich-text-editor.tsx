@@ -65,7 +65,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     'link', 'color', 'background'
   ];
 
-  // Smart overflow detection with content redistribution
+  // Simple overflow detection - just create new page without moving content
   const handleContentFlow = useCallback((pageIndex: number) => {
     const pageRef = pageRefs.current[pageIndex];
     if (!pageRef || pageIndex !== pages.length - 1) return;
@@ -75,44 +75,14 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     
     console.log(`Page ${pageIndex + 1} height: ${contentHeight}px (limit: 950px)`);
     
-    if (contentHeight > 950) {
-      console.log(`Redistributing content - overflow on page ${pageIndex + 1}`);
+    if (contentHeight > 950 && pages.length === 1) {
+      console.log(`Creating new page due to overflow on page ${pageIndex + 1}`);
       
-      // Get all content from the overflowing page
-      const pageContent = pages[pageIndex];
-      if (!pageContent.trim()) return;
-      
-      // Parse content into sentences for better breaks
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = pageContent;
-      const textContent = tempDiv.textContent || tempDiv.innerText || '';
-      
-      // Split into sentences
-      const sentences = textContent.split(/[.!?]+/).filter(s => s.trim().length > 0);
-      if (sentences.length <= 1) return;
-      
-      // Find a good break point (roughly 60% of content on first page)
-      const breakPoint = Math.floor(sentences.length * 0.6);
-      const firstPageSentences = sentences.slice(0, breakPoint);
-      const secondPageSentences = sentences.slice(breakPoint);
-      
-      // Reconstruct content with basic HTML formatting
-      const firstPageContent = `<p>${firstPageSentences.join('. ').trim()}.</p>`;
-      const secondPageContent = `<p>${secondPageSentences.join('. ').trim()}.</p>`;
-      
-      console.log(`Splitting: ${sentences.length} sentences -> ${firstPageSentences.length} | ${secondPageSentences.length}`);
-      console.log(`Creating 2 pages: Page 1 (${firstPageContent.length} chars), Page 2 (${secondPageContent.length} chars)`);
-      
-      // Update pages
-      setPages(prev => {
-        const newPages = [...prev];
-        newPages[pageIndex] = firstPageContent;
-        newPages.push(secondPageContent);
-        console.log(`Total pages after split: ${newPages.length}`);
-        return newPages;
-      });
+      // Simply add a new empty page for continued typing
+      setPages(prev => [...prev, '']);
+      console.log(`Total pages after creating new page: ${pages.length + 1}`);
     }
-  }, [pages]);
+  }, [pages.length]);
 
   // Simple content redistribution - only when significant deletion occurs
   const redistributeContentOnDelete = useCallback((pageIndex: number) => {
@@ -173,11 +143,20 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     setPages(newPages);
     onContentChange(combinedContent);
     
-    // Check for overflow and redistribute content on the last page
+    // Simple overflow check - create new page when needed
     if (pageIndex === pages.length - 1) {
       overflowCheckTimeout.current = setTimeout(() => {
-        handleContentFlow(pageIndex);
-      }, 800);
+        const pageRef = pageRefs.current[pageIndex];
+        if (pageRef) {
+          const editorElement = pageRef.getEditor().root;
+          const contentHeight = editorElement.scrollHeight;
+          
+          if (contentHeight > 950 && pages.length === 1) {
+            console.log(`Creating page 2 due to overflow (${contentHeight}px > 950px)`);
+            setPages(prev => [...prev, '']);
+          }
+        }
+      }, 1000);
     }
   };
 
@@ -289,12 +268,21 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
       // For now, put all content in first page and let overflow detection handle pagination
       setPages([content]);
       
-      // Check for overflow after content is loaded
+      // Simple overflow check after content loads
       setTimeout(() => {
-        handleContentFlow(0);
-      }, 300);
+        const pageRef = pageRefs.current[0];
+        if (pageRef) {
+          const editorElement = pageRef.getEditor().root;
+          const contentHeight = editorElement.scrollHeight;
+          
+          if (contentHeight > 950 && pages.length === 1) {
+            console.log(`Adding page 2 for existing content (${contentHeight}px > 950px)`);
+            setPages(prev => [...prev, '']);
+          }
+        }
+      }, 500);
     }
-  }, [content, handleContentFlow]);
+  }, [content]);
 
   // Initialize page refs array
   useEffect(() => {
