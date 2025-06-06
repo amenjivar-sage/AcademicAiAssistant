@@ -519,11 +519,35 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
       });
     }
     
-    // Force highlight the 81% match detected in console logs
-    if (result.includes('Great — I\'ve created the new soft page-break editor component using ReactQuill')) {
-      console.log('✓ Force highlighting 81% match content');
-      const pattern = 'Great — I\'ve created the new soft page-break editor component using ReactQuill with invisible page breaks based on vertical spacing only';
-      result = result.replace(pattern, `<div style="background-color: #fecaca; border: 2px solid #f87171; border-radius: 8px; padding: 8px; margin: 4px 0;"><div style="color: #991b1b; font-weight: 600; font-size: 12px; margin-bottom: 4px;">⚠️ Copy-pasted content detected (81% match)</div><div style="color: #7f1d1d;">${pattern}</div></div>`);
+    // Highlight complete code blocks that contain copy-pasted content
+    if (result.includes('SoftPageBreakEditor') || result.includes('ReactQuill') || result.includes('useEffect')) {
+      console.log('✓ Highlighting complete code block');
+      
+      // Find and highlight the entire code block
+      const codePatterns = [
+        'SoftPageBreakEditor.tsx',
+        'import React',
+        'import ReactQuill',
+        'export default function',
+        'useEffect',
+        'MutationObserver',
+        'observer.observe',
+        'observer.disconnect',
+        'const PAGE_HEIGHT = 950',
+        'className="editor-wrapper"',
+        'modules={{',
+        'toolbar: [',
+        'minHeight: \'100vh\''
+      ];
+      
+      codePatterns.forEach(pattern => {
+        if (result.includes(pattern)) {
+          console.log('✓ Highlighting code pattern:', pattern);
+          const escapedPattern = pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const regex = new RegExp(escapedPattern, 'gi');
+          result = result.replace(regex, `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600; padding: 2px 4px; border-radius: 3px;" title="Copy-pasted code detected">${pattern}</span>`);
+        }
+      });
     }
 
     return result;
