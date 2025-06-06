@@ -700,12 +700,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Final student assignment count: ${allAssignments.length}`);
       
-      // Get user's writing sessions to determine status
+      // Get user's writing sessions to determine status - ensure proper user isolation
       const sessions = await storage.getUserWritingSessions(currentUser.id);
+      console.log(`Found ${sessions.length} sessions for user ${currentUser.id}:`, sessions.map(s => ({ id: s.id, assignmentId: s.assignmentId, userId: s.userId })));
       
-      // Add status to each assignment based on writing sessions
+      // Add status to each assignment based on writing sessions - strict user matching
       const assignmentsWithStatus = allAssignments.map(assignment => {
-        const session = sessions.find(s => s.assignmentId === assignment.id);
+        // Find session that belongs to current user AND matches assignment
+        const session = sessions.find(s => 
+          s.assignmentId === assignment.id && 
+          s.userId === currentUser.id
+        );
         
         let status = 'not_started';
         if (session) {
@@ -715,6 +720,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             status = 'in_progress';
           }
         }
+        
+        console.log(`Assignment ${assignment.id} for user ${currentUser.id}: status=${status}, sessionId=${session?.id || 'none'}`);
         
         return {
           ...assignment,

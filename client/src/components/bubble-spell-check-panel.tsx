@@ -104,38 +104,54 @@ export default function BubbleSpellCheckPanel({
     if (!error) return;
 
     const replacement = suggestionText || (error.suggestions && error.suggestions[0]) || error.suggestion;
-    const newContent = applySpellCheckSuggestion(content, error, suggestionText);
     
-    // Track the change for undo functionality
-    setRecentChanges(prev => [...prev, {
+    console.log('🔧 Applying spell correction:', {
       original: error.word,
-      corrected: replacement || error.word,
-      timestamp: Date.now()
-    }]);
-
-    onContentChange(newContent);
+      replacement: replacement,
+      startIndex: error.startIndex,
+      endIndex: error.endIndex
+    });
     
-    // Show success message
-    setShowSuccessMessage(`"${error.word}" → "${replacement}"`);
-    setTimeout(() => setShowSuccessMessage(null), 2000);
-
-    // Remove the corrected error and move to next
-    const newErrors = [...spellErrors];
-    newErrors.splice(currentErrorIndex, 1);
-    setSpellErrors(newErrors);
-    onSpellErrorsChange?.(newErrors);
+    const newContent = applySpellCheckSuggestion(content, error, replacement);
     
-    if (newErrors.length === 0) {
-      onClose();
-    } else {
-      // Adjust current index
-      if (currentErrorIndex >= newErrors.length) {
-        const newIndex = Math.max(0, newErrors.length - 1);
-        setCurrentErrorIndex(newIndex);
-        onCurrentErrorChange?.(newIndex);
+    // Verify the correction was applied
+    if (newContent !== content) {
+      console.log('✅ Spell correction applied successfully');
+      
+      // Track the change for undo functionality
+      setRecentChanges(prev => [...prev, {
+        original: error.word,
+        corrected: replacement || error.word,
+        timestamp: Date.now()
+      }]);
+
+      // Apply the corrected content
+      onContentChange(newContent);
+      
+      // Show success message
+      setShowSuccessMessage(`"${error.word}" → "${replacement}"`);
+      setTimeout(() => setShowSuccessMessage(null), 2000);
+
+      // Remove the corrected error and move to next
+      const newErrors = [...spellErrors];
+      newErrors.splice(currentErrorIndex, 1);
+      setSpellErrors(newErrors);
+      onSpellErrorsChange?.(newErrors);
+      
+      if (newErrors.length === 0) {
+        onClose();
       } else {
-        onCurrentErrorChange?.(currentErrorIndex);
+        // Adjust current index
+        if (currentErrorIndex >= newErrors.length) {
+          const newIndex = Math.max(0, newErrors.length - 1);
+          setCurrentErrorIndex(newIndex);
+          onCurrentErrorChange?.(newIndex);
+        } else {
+          onCurrentErrorChange?.(currentErrorIndex);
+        }
       }
+    } else {
+      console.warn('❌ Spell correction failed - content unchanged');
     }
   };
 
