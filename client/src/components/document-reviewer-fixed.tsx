@@ -434,10 +434,10 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                     console.log('Match analysis for sentence:', docSentTrimmed, 
                                'Exact:', exactMatches, 'Close:', closeMatches, 'Percentage:', matchPercentage);
                     
-                    // More lenient criteria to ensure highlighting appears for legitimate copy-paste
-                    const meetsThreshold = matchPercentage >= 0.40; // 40% similarity required
-                    const hasEnoughExactMatches = exactMatches >= Math.max(1, Math.floor(pastedWords.length * 0.2)); // Require 20% exact matches
-                    const hasMinLength = pastedWords.length >= 4 && docWords.length >= 4; // Shorter minimum length
+                    // Stricter criteria to reduce false positives
+                    const meetsThreshold = matchPercentage >= 0.70; // Require 70% similarity
+                    const hasEnoughExactMatches = exactMatches >= Math.max(3, Math.floor(pastedWords.length * 0.5)); // Require 50% exact matches
+                    const hasMinLength = pastedWords.length >= 6 && docWords.length >= 6; // Longer minimum length
                     
                     console.log('Criteria check for:', docSentTrimmed);
                     console.log('- Meets threshold (40%):', meetsThreshold, matchPercentage);
@@ -452,22 +452,29 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                         const hasOriginalPatterns = /\b(sky|hello|how are you|doing|good morning|dear|sincerely)\b/i.test(docSentTrimmed);
                         
                         // Skip code snippets and technical documentation - these are often legitimate references
-                        const isCodeSnippet = /(\{|\}|function|const|let|var|import|export|return|if\s*\(|\.map\(|\.filter\(|className=|style=|<\/|&gt;|&lt;|useEffect|useState|ReactQuill|HTMLDivElement)/i.test(docSentTrimmed);
+                        const isCodeSnippet = /(\{|\}|function|const|let|var|import|export|return|if\s*\(|\.map\(|\.filter\(|className=|style=|<\/|&gt;|&lt;|useEffect|useState|ReactQuill|HTMLDivElement|<\/li>|<li>|<ul>|<\/ul>|<p>|<\/p>)/i.test(docSentTrimmed);
                         
                         // Skip content that looks like legitimate references or citations
                         const isReference = /(\(\d{4}\)|et al\.|pp\.|Vol\.|No\.|ISBN|DOI:|https?:\/\/)/i.test(docSentTrimmed);
                         
                         // Skip content that looks like random character strings (not real plagiarism)
                         const isRandomText = /^[a-z]{3,}[;:.,]{1,3}[a-z]{3,}[;:.,]{1,3}/.test(docSentTrimmed) || 
-                                            docSentTrimmed.split(';').length > 3;
+                                            docSentTrimmed.split(';').length > 3 ||
+                                            /^[a-z]+;[a-z]+;[a-z]+/.test(docSentTrimmed);
                         
                         console.log('- Has original patterns:', hasOriginalPatterns);
                         console.log('- Is code snippet:', isCodeSnippet);
                         console.log('- Is reference:', isReference);
                         console.log('- Is random text:', isRandomText);
                         
-                        // Highlight content based on exact word matches and similarity percentage
-                        if ((matchPercentage >= 0.4 && exactMatches >= 5) || (matchPercentage >= 0.6 && exactMatches >= 3)) {
+                        // Don't highlight if it's code, references, or random text
+                        if (isCodeSnippet || isReference || isRandomText) {
+                          console.log('✗ Skipped - code snippet, reference, or random text');
+                          return;
+                        }
+                        
+                        // Highlight content based on stricter exact word matches and similarity percentage
+                        if ((matchPercentage >= 0.8 && exactMatches >= 8) || (matchPercentage >= 0.9 && exactMatches >= 6)) {
                           console.log('✓ Highlighting detected copy-paste content:', docSentTrimmed.substring(0, 50));
                           const escapedSentence = docSentTrimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
                           const sentenceRegex = new RegExp(escapedSentence, 'gi');
