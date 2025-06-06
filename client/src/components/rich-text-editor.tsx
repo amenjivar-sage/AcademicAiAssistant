@@ -426,8 +426,62 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
 
   // Handle keyboard events for pagination
   const handleKeyDown = (e: React.KeyboardEvent, pageIndex: number) => {
+    if (e.key === 'Enter') {
+      const pageRef = pageRefs.current[pageIndex];
+      if (pageRef) {
+        const editor = pageRef.getEditor();
+        const range = editor.getSelection();
+        
+        if (range) {
+          const editorElement = editor.root;
+          const contentHeight = editorElement.scrollHeight;
+          
+          // Check if we're near the bottom of the page (within 100px of limit)
+          if (contentHeight > 850) {
+            const textLength = editor.getLength();
+            const cursorPosition = range.index;
+            
+            // If cursor is at the very end of the text and page is nearly full
+            if (cursorPosition >= textLength - 1) {
+              setTimeout(() => {
+                const updatedHeight = editorElement.scrollHeight;
+                
+                // If adding the new line would exceed the page limit
+                if (updatedHeight > 950) {
+                  console.log(`Moving to next page from page ${pageIndex + 1}`);
+                  
+                  // Remove the extra paragraph that was just added
+                  const currentContent = editor.root.innerHTML;
+                  const lines = currentContent.split('<p><br></p>');
+                  if (lines.length > 1 && lines[lines.length - 1] === '') {
+                    // Remove the last empty paragraph
+                    const cleanedContent = lines.slice(0, -1).join('<p><br></p>');
+                    editor.root.innerHTML = cleanedContent;
+                  }
+                  
+                  // Create next page if it doesn't exist
+                  if (pageIndex === pages.length - 1) {
+                    setPages(prev => [...prev, '<p><br></p>']);
+                  }
+                  
+                  // Move cursor to next page
+                  setTimeout(() => {
+                    const nextPageRef = pageRefs.current[pageIndex + 1];
+                    if (nextPageRef) {
+                      nextPageRef.focus();
+                      const nextEditor = nextPageRef.getEditor();
+                      nextEditor.setSelection(0, 0);
+                    }
+                  }, 200);
+                }
+              }, 50);
+            }
+          }
+        }
+      }
+    }
+    
     if (e.key === 'Backspace' || e.key === 'Delete') {
-      // Only trigger redistribution after significant deletion
       setTimeout(() => {
         redistributeContentOnDelete(pageIndex);
       }, 500);
