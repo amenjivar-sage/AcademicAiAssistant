@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
+import React, { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
@@ -15,7 +15,7 @@ export interface RichTextEditorHandle {
   getEditor: () => ReactQuill | null;
 }
 
-const PAGE_HEIGHT = 950; // pixels
+const PAGE_HEIGHT = 950; // ~11 inches at 96dpi
 
 export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
   content,
@@ -25,67 +25,72 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
   placeholder = "Start writing..."
 }, ref) => {
   
-  const [pages, setPages] = useState<string[]>(['']);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const editorRefs = useRef<(ReactQuill | null)[]>([]);
-
-  // Initialize content
-  useEffect(() => {
-    if (content && content !== pages.join('')) {
-      setPages([content]);
-    }
-  }, [content]);
+  const editorRef = useRef<HTMLDivElement>(null);
+  const quillRef = useRef<ReactQuill>(null);
 
   useEffect(() => {
-    redistributeContent();
-  }, [pages]);
+    const handleContentChange = () => {
+      const editor = editorRef.current;
+      if (!editor) return;
 
-  const redistributeContent = () => {
-    const updatedPages = [...pages];
-    for (let i = 0; i < editorRefs.current.length; i++) {
-      const editorDiv = editorRefs.current[i]?.getEditor()?.container;
-      if (editorDiv && editorDiv.scrollHeight > PAGE_HEIGHT + 10) {
-        const quill = editorRefs.current[i]?.getEditor();
-        if (!quill) continue;
+      const container = editor.querySelector('.ql-editor');
+      if (!container) return;
+
+      const children = Array.from(container.children);
+      let currentHeight = 0;
+      let pageNumber = 1;
+
+      // Remove existing page breaks
+      container.querySelectorAll('.page-break').forEach(el => el.remove());
+
+      children.forEach((el: Element, index) => {
+        const element = el as HTMLElement;
+        const elementHeight = element.offsetHeight;
         
-        const delta = quill.getContents();
-        const text = quill.getText();
+        // Check if this element would overflow the current page
+        if (currentHeight + elementHeight > PAGE_HEIGHT && currentHeight > 0) {
+          // Insert visual page break
+          const pageBreak = document.createElement('div');
+          pageBreak.className = 'page-break';
+          pageBreak.style.cssText = `
+            height: 30px;
+            border-top: 2px dashed #ccc;
+            margin: 20px 0;
+            position: relative;
+            page-break-before: always;
+          `;
+          pageBreak.innerHTML = `<span style="position: absolute; right: 0; top: -10px; background: white; padding: 0 10px; font-size: 12px; color: #666;">Page ${pageNumber + 1}</span>`;
+          
+          container.insertBefore(pageBreak, element);
+          currentHeight = 0;
+          pageNumber++;
+        }
+        
+        currentHeight += elementHeight;
+      });
+    };
 
-        const middle = Math.floor(text.length / 2);
-        let breakPoint = text.lastIndexOf(' ', middle);
-        if (breakPoint === -1) breakPoint = middle;
+    const editor = editorRef.current;
+    if (!editor) return;
 
-        const newDelta = delta.slice(breakPoint);
-        quill.deleteText(breakPoint, text.length);
-
-        updatedPages[i] = quill.root.innerHTML;
-        updatedPages.splice(i + 1, 0, '');
-        setPages(updatedPages);
-        break;
-      }
-    }
-  };
-
-  const handleChange = (value: string, index: number) => {
-    const newPages = [...pages];
-    newPages[index] = value;
-    setPages(newPages);
+    const observer = new MutationObserver(handleContentChange);
+    observer.observe(editor, { childList: true, subtree: true, characterData: true });
     
-    // Update parent with combined content
-    const combinedContent = newPages.join('');
-    onContentChange(combinedContent);
-  };
+    // Initial processing
+    setTimeout(handleContentChange, 100);
+    
+    return () => observer.disconnect();
+  }, []);
 
   // Expose methods through ref
   useImperativeHandle(ref, () => ({
     focus: () => {
-      const firstEditor = editorRefs.current[0];
-      if (firstEditor) {
-        firstEditor.focus();
+      if (quillRef.current) {
+        quillRef.current.focus();
       }
     },
     getEditor: () => {
-      return editorRefs.current[0] || null;
+      return quillRef.current || null;
     }
   }));
 
@@ -115,75 +120,79 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
   ];
 
   return (
-    <div ref={containerRef} className="p-4 bg-gray-200 min-h-screen">
+    <div className="editor-wrapper" ref={editorRef}>
       <style>
         {`
-        .editor-page {
-          background: white;
-          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-          margin: 0 auto 24px auto;
-          padding: 40px;
-          box-sizing: border-box;
-          position: relative;
-          width: 816px;
-          height: ${PAGE_HEIGHT}px;
+        .editor-wrapper {
+          width: 100%;
+          height: 100%;
+          background: #f5f5f5;
+          padding: 20px;
+          overflow-y: auto;
         }
 
-        .editor-page .ql-toolbar {
-          border-top: none;
-          border-left: none;
-          border-right: none;
-          border-bottom: 1px solid #ccc;
-        }
-
-        .editor-page .ql-container {
+        .editor-wrapper .ql-container {
           border: none;
           font-family: 'Times New Roman', serif;
-          height: calc(100% - 42px);
+          background: white;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+          border-radius: 8px;
+          max-width: 8.5in;
+          margin: 0 auto;
         }
 
-        .editor-page .ql-editor {
-          padding: 0 !important;
+        .editor-wrapper .ql-toolbar {
+          border: none;
+          border-bottom: 1px solid #ddd;
+          background: #f8f9fa;
+          border-radius: 8px 8px 0 0;
+        }
+
+        .editor-wrapper .ql-editor {
+          padding: 72px !important;
           line-height: 2.0 !important;
           font-family: 'Times New Roman', serif !important;
           font-size: 14pt !important;
-          height: 100% !important;
-          overflow-y: hidden !important;
+          min-height: 100vh !important;
+          border-radius: 0 0 8px 8px;
         }
 
-        .editor-page .ql-editor:focus {
+        .editor-wrapper .ql-editor:focus {
           outline: none !important;
         }
 
-        .page-number {
-          position: absolute;
-          bottom: 8px;
-          right: 16px;
-          font-size: 12px;
-          color: #666;
+        /* Page break styling */
+        .page-break {
+          user-select: none;
           pointer-events: none;
+        }
+
+        .page-break span {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
+          font-size: 11px !important;
+          font-weight: 500;
+        }
+
+        /* Print styling */
+        @media print {
+          .page-break {
+            page-break-before: always !important;
+            visibility: hidden;
+          }
         }
         `}
       </style>
-
-      {pages.map((content, i) => (
-        <div key={i} className="editor-page">
-          <ReactQuill
-            ref={(el) => (editorRefs.current[i] = el)}
-            theme="snow"
-            value={content}
-            onChange={(value) => handleChange(value, i)}
-            readOnly={readOnly}
-            placeholder={i === 0 ? placeholder : ''}
-            modules={modules}
-            formats={formats}
-            className="h-full"
-          />
-          <div className="page-number">
-            Page {i + 1}
-          </div>
-        </div>
-      ))}
+      
+      <ReactQuill 
+        ref={quillRef}
+        value={content}
+        onChange={onContentChange}
+        readOnly={readOnly}
+        placeholder={placeholder}
+        modules={modules}
+        formats={formats}
+        style={{ minHeight: '100vh' }}
+      />
     </div>
   );
 });
