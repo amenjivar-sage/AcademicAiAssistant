@@ -451,33 +451,49 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
           console.log(`Attempting to focus page ${currentPageIndex + 2} after creation`);
           const nextPageRef = pageRefs.current[currentPageIndex + 1];
           if (nextPageRef) {
-            nextPageRef.focus();
             const nextEditor = nextPageRef.getEditor();
-            nextEditor.setSelection(0, 0);
-            console.log(`Successfully focused page ${currentPageIndex + 2}`);
+            if (nextEditor) {
+              // Force focus on the editor container first
+              nextEditor.root.focus();
+              
+              // Set selection with a slight delay to ensure focus is established
+              setTimeout(() => {
+                nextEditor.setSelection(0, 0);
+                // Ensure cursor is visible
+                nextEditor.blur();
+                nextEditor.focus();
+                console.log(`Successfully focused page ${currentPageIndex + 2}`);
+              }, 50);
+            }
           } else {
             console.log(`Failed to find ref for new page ${currentPageIndex + 2}`);
           }
           setIsNavigating(false);
-        }, 200);
+        }, 300);
       } else {
         // Focus existing next page
         setTimeout(() => {
           console.log(`Focusing existing page ${currentPageIndex + 2}`);
           const nextPageRef = pageRefs.current[currentPageIndex + 1];
           if (nextPageRef) {
-            nextPageRef.focus();
             const nextEditor = nextPageRef.getEditor();
-            
-            if (isOverflow) {
-              const existingContent = nextEditor.root.innerHTML;
-              if (existingContent === '<p><br></p>') {
-                nextEditor.root.innerHTML = '<p><br></p>';
+            if (nextEditor) {
+              if (isOverflow) {
+                const existingContent = nextEditor.root.innerHTML;
+                if (existingContent === '<p><br></p>') {
+                  nextEditor.root.innerHTML = '<p><br></p>';
+                }
               }
+              
+              // Ensure proper focus and cursor visibility
+              nextEditor.root.focus();
+              setTimeout(() => {
+                nextEditor.setSelection(0, 0);
+                nextEditor.blur();
+                nextEditor.focus();
+                console.log(`Successfully focused existing page ${currentPageIndex + 2}`);
+              }, 50);
             }
-            
-            nextEditor.setSelection(0, 0);
-            console.log(`Successfully focused existing page ${currentPageIndex + 2}`);
           } else {
             console.log(`Failed to find ref for existing page ${currentPageIndex + 2}`);
           }
@@ -490,10 +506,19 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
       const prevPageRef = pageRefs.current[currentPageIndex - 1];
       if (prevPageRef) {
         console.log(`Moving back to page ${currentPageIndex}`);
-        prevPageRef.focus();
         const prevEditor = prevPageRef.getEditor();
-        const prevLength = prevEditor.getLength();
-        prevEditor.setSelection(Math.max(0, prevLength - 1), 0);
+        if (prevEditor) {
+          const prevLength = prevEditor.getLength();
+          
+          // Ensure proper focus and cursor positioning
+          prevEditor.root.focus();
+          setTimeout(() => {
+            prevEditor.setSelection(Math.max(0, prevLength - 1), 0);
+            prevEditor.blur();
+            prevEditor.focus();
+            console.log(`Successfully moved back to page ${currentPageIndex}`);
+          }, 50);
+        }
       }
       
       setTimeout(() => setIsNavigating(false), 300);
