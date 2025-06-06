@@ -88,9 +88,20 @@ export default function DocumentExportDialog({
         });
       });
 
-      // Create header content
+      // Create header content - prioritize custom header text
       const headerParagraphs = [];
-      if (settings.includeStudentName || settings.headerText || settings.includeAssignmentTitle) {
+      
+      // If custom header text is provided, use only that
+      if (settings.headerText && settings.headerText.trim()) {
+        headerParagraphs.push(
+          new Paragraph({
+            children: [new TextRun({ text: settings.headerText, size: 20 })],
+            alignment: AlignmentType.LEFT
+          })
+        );
+      } 
+      // Otherwise, build header from selected components
+      else if (settings.includeStudentName || settings.includeAssignmentTitle || settings.includeDate) {
         const headerElements = [];
         
         if (settings.includeStudentName) {
@@ -102,22 +113,19 @@ export default function DocumentExportDialog({
           headerElements.push(new TextRun({ text: assignmentTitle, size: 20 }));
         }
         
-        if (settings.headerText) {
-          if (headerElements.length > 0) headerElements.push(new TextRun({ text: ' - ', size: 20 }));
-          headerElements.push(new TextRun({ text: settings.headerText, size: 20 }));
-        }
-        
         if (settings.includeDate && submissionDate) {
           if (headerElements.length > 0) headerElements.push(new TextRun({ text: ' - ', size: 20 }));
           headerElements.push(new TextRun({ text: submissionDate, size: 20 }));
         }
 
-        headerParagraphs.push(
-          new Paragraph({
-            children: headerElements,
-            alignment: AlignmentType.LEFT
-          })
-        );
+        if (headerElements.length > 0) {
+          headerParagraphs.push(
+            new Paragraph({
+              children: headerElements,
+              alignment: AlignmentType.LEFT
+            })
+          );
+        }
       }
 
       // Create footer content with page numbers
@@ -270,10 +278,13 @@ export default function DocumentExportDialog({
               <Label htmlFor="headerText">Custom header text</Label>
               <Input
                 id="headerText"
-                placeholder="Enter custom header text..."
+                placeholder="Enter your custom header text (will override other header options)"
                 value={settings.headerText}
                 onChange={(e) => setSettings(prev => ({ ...prev, headerText: e.target.value }))}
               />
+              <p className="text-xs text-gray-500">
+                If you enter custom text, it will be used as the header instead of student name/assignment title
+              </p>
             </div>
           </div>
 
