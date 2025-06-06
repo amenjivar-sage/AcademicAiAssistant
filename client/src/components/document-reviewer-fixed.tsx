@@ -246,11 +246,21 @@ export function DocumentReviewer({ sessionId }: DocumentReviewerProps) {
 
   const handleTextSelection = () => {
     const selection = window.getSelection();
-    if (selection && selection.toString().trim()) {
-      setSelectedText(selection.toString());
-      setSelectionStart(selection.anchorOffset);
-      setSelectionEnd(selection.focusOffset);
+    if (selection && selection.toString().trim() && selection.rangeCount > 0) {
+      const selectedText = selection.toString().trim();
+      const range = selection.getRangeAt(0);
+      
+      // Get the text content without HTML tags for position calculation
+      const container = range.commonAncestorContainer;
+      const textContent = container.textContent || '';
+      
+      setSelectedText(selectedText);
+      setSelectionStart(range.startOffset);
+      setSelectionEnd(range.endOffset);
       setIsCommentDialogOpen(true);
+      
+      // Clear selection to avoid confusion
+      selection.removeAllRanges();
     }
   };
 
@@ -265,12 +275,24 @@ export function DocumentReviewer({ sessionId }: DocumentReviewerProps) {
     }
   };
 
-  const renderContentWithComments = (content: string) => {
-    let result = content;
+  const renderContentWithComments = (originalContent: string, highlightedContent: string) => {
+    if (!comments || comments.length === 0) {
+      return highlightedContent;
+    }
+
+    let result = highlightedContent;
     
+    // Apply comments on top of highlighted content
     comments.forEach((comment: Comment) => {
-      const commentSpan = `<span class="bg-yellow-200 cursor-pointer relative" data-comment-id="${comment.id}" title="${comment.comment}">${comment.selectedText}</span>`;
-      result = result.replace(comment.selectedText, commentSpan);
+      if (comment.selectedText && comment.selectedText.trim()) {
+        // Create a more robust comment span
+        const commentSpan = `<span class="bg-yellow-200 border-b-2 border-yellow-400 cursor-pointer relative comment-highlight" data-comment-id="${comment.id}" title="Comment: ${comment.comment.replace(/"/g, '&quot;')}">${comment.selectedText}</span>`;
+        
+        // Use a more precise replacement that handles HTML content
+        const escapedText = comment.selectedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(escapedText, 'g');
+        result = result.replace(regex, commentSpan);
+      }
     });
     
     return result;
@@ -284,7 +306,7 @@ export function DocumentReviewer({ sessionId }: DocumentReviewerProps) {
     return <div className="p-4">Document not found</div>;
   }
 
-  const finalContent = renderContentWithComments(highlightedContent);
+  const finalContent = renderContentWithComments(session.content, highlightedContent);
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">
@@ -320,6 +342,15 @@ export function DocumentReviewer({ sessionId }: DocumentReviewerProps) {
                 className="prose prose-sm max-w-full min-h-[400px] p-6 border rounded-lg bg-white overflow-y-auto whitespace-pre-wrap break-words"
                 style={{ maxWidth: '100%', wordWrap: 'break-word', overflowWrap: 'break-word' }}
                 onMouseUp={handleTextSelection}
+                onClick={(e) => {
+                  const target = e.target as HTMLElement;
+                  if (target.classList.contains('comment-highlight')) {
+                    const commentId = target.getAttribute('data-comment-id');
+                    if (commentId) {
+                      setActiveComment(parseInt(commentId));
+                    }
+                  }
+                }}
                 dangerouslySetInnerHTML={{ __html: finalContent }}
               />
             </CardContent>
