@@ -360,103 +360,124 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     }
   }, [pages]);
 
-  // Simplified page navigation system
-  const handleKeyDown = (e: React.KeyboardEvent, pageIndex: number) => {
-    const pageRef = pageRefs.current[pageIndex];
-    if (!pageRef) return;
-    
-    const editor = pageRef.getEditor();
-    const range = editor.getSelection();
-    if (!range) return;
-    
-    if (e.key === 'Enter') {
-      const textLength = editor.getLength();
-      const cursorPosition = range.index;
-      const editorElement = editor.root;
-      const contentHeight = editorElement.scrollHeight;
-      
-      const atVeryEnd = cursorPosition >= textLength - 1;
-      const pageOverflowing = contentHeight > 950;
-      
-      console.log(`Enter debug: cursor ${cursorPosition}/${textLength}, height ${contentHeight}px, atEnd: ${atVeryEnd}, overflow: ${pageOverflowing}`);
-      
-      // Case 1: Automatic overflow when page is full
-      if (atVeryEnd && pageOverflowing) {
-        e.preventDefault();
-        console.log(`Auto-overflow: moving to next page`);
+  // Store keyboard handlers for cleanup
+  const keyboardHandlers = useRef<Map<HTMLElement, EventListener>>(new Map());
+
+  // Add keyboard event listeners to Quill editors
+  const attachKeyboardListeners = useCallback(() => {
+    pageRefs.current.forEach((pageRef, pageIndex) => {
+      if (pageRef) {
+        const editor = pageRef.getEditor();
+        const editorElement = editor.root as HTMLElement;
         
-        // Create next page if needed
-        if (pageIndex >= pages.length - 1) {
-          setPages(prev => [...prev, '<p><br></p>']);
+        // Remove existing listener if any
+        const existingHandler = keyboardHandlers.current.get(editorElement);
+        if (existingHandler) {
+          editorElement.removeEventListener('keydown', existingHandler);
+          keyboardHandlers.current.delete(editorElement);
         }
         
-        // Move to next page
-        setTimeout(() => {
-          const nextPageRef = pageRefs.current[pageIndex + 1];
-          if (nextPageRef) {
-            const nextEditor = nextPageRef.getEditor();
-            if (nextEditor) {
-              nextEditor.focus();
-              nextEditor.setSelection(0, 0);
-              console.log(`Auto-moved to page ${pageIndex + 2}`);
+        // Create new handler
+        const keydownHandler = (e: KeyboardEvent) => {
+          const range = editor.getSelection();
+          if (!range) return;
+          
+          if (e.key === 'Enter') {
+            const textLength = editor.getLength();
+            const cursorPosition = range.index;
+            const contentHeight = editorElement.scrollHeight;
+            
+            const atVeryEnd = cursorPosition >= textLength - 1;
+            const pageOverflowing = contentHeight > 950;
+            
+            console.log(`Enter debug page ${pageIndex + 1}: cursor ${cursorPosition}/${textLength}, height ${contentHeight}px, atEnd: ${atVeryEnd}, overflow: ${pageOverflowing}`);
+            
+            // Automatic overflow when page is full
+            if (atVeryEnd && pageOverflowing) {
+              e.preventDefault();
+              console.log(`Auto-overflow: moving to next page`);
+              
+              // Create next page if needed
+              if (pageIndex >= pages.length - 1) {
+                setPages(prev => [...prev, '<p><br></p>']);
+              }
+              
+              // Move to next page
+              setTimeout(() => {
+                const nextPageRef = pageRefs.current[pageIndex + 1];
+                if (nextPageRef) {
+                  const nextEditor = nextPageRef.getEditor();
+                  if (nextEditor) {
+                    nextEditor.focus();
+                    nextEditor.setSelection(0, 0);
+                    console.log(`Auto-moved to page ${pageIndex + 2}`);
+                  }
+                }
+              }, 200);
             }
-          }
-        }, 200);
-      }
-      
-      // Case 2: Manual page break - multiple enters at end
-      else if (atVeryEnd && contentHeight > 600) {
-        // Check if last few characters are line breaks
-        const content = editor.getText();
-        const lastChars = content.slice(-5);
-        const consecutiveBreaks = (lastChars.match(/\n/g) || []).length;
-        
-        if (consecutiveBreaks >= 3) {
-          e.preventDefault();
-          console.log(`Manual page break detected (${consecutiveBreaks} breaks)`);
-          
-          // Create next page if needed
-          if (pageIndex >= pages.length - 1) {
-            setPages(prev => [...prev, '<p><br></p>']);
-          }
-          
-          // Move to next page
-          setTimeout(() => {
-            const nextPageRef = pageRefs.current[pageIndex + 1];
-            if (nextPageRef) {
-              const nextEditor = nextPageRef.getEditor();
-              if (nextEditor) {
-                nextEditor.focus();
-                nextEditor.setSelection(0, 0);
-                console.log(`Manual-moved to page ${pageIndex + 2}`);
+            
+            // Manual page break - multiple enters at end
+            else if (atVeryEnd && contentHeight > 600) {
+              const content = editor.getText();
+              const lastChars = content.slice(-5);
+              const consecutiveBreaks = (lastChars.match(/\n/g) || []).length;
+              
+              if (consecutiveBreaks >= 3) {
+                e.preventDefault();
+                console.log(`Manual page break detected (${consecutiveBreaks} breaks)`);
+                
+                if (pageIndex >= pages.length - 1) {
+                  setPages(prev => [...prev, '<p><br></p>']);
+                }
+                
+                setTimeout(() => {
+                  const nextPageRef = pageRefs.current[pageIndex + 1];
+                  if (nextPageRef) {
+                    const nextEditor = nextPageRef.getEditor();
+                    if (nextEditor) {
+                      nextEditor.focus();
+                      nextEditor.setSelection(0, 0);
+                      console.log(`Manual-moved to page ${pageIndex + 2}`);
+                    }
+                  }
+                }, 200);
               }
             }
-          }, 200);
-        }
-      }
-      // Otherwise, let Enter work normally for line breaks
-    }
-    
-    if (e.key === 'Backspace') {
-      const cursorPosition = range.index;
-      
-      // Move to previous page when at beginning
-      if (cursorPosition === 0 && pageIndex > 0) {
-        e.preventDefault();
-        
-        const prevPageRef = pageRefs.current[pageIndex - 1];
-        if (prevPageRef) {
-          const prevEditor = prevPageRef.getEditor();
-          if (prevEditor) {
-            const prevLength = prevEditor.getLength();
-            prevEditor.focus();
-            prevEditor.setSelection(Math.max(0, prevLength - 1), 0);
-            console.log(`Moved back to page ${pageIndex}`);
           }
-        }
+          
+          if (e.key === 'Backspace') {
+            const cursorPosition = range.index;
+            
+            if (cursorPosition === 0 && pageIndex > 0) {
+              e.preventDefault();
+              
+              const prevPageRef = pageRefs.current[pageIndex - 1];
+              if (prevPageRef) {
+                const prevEditor = prevPageRef.getEditor();
+                if (prevEditor) {
+                  const prevLength = prevEditor.getLength();
+                  prevEditor.focus();
+                  prevEditor.setSelection(Math.max(0, prevLength - 1), 0);
+                  console.log(`Moved back to page ${pageIndex}`);
+                }
+              }
+            }
+          }
+        };
+        
+        // Store handler reference and attach
+        keyboardHandlers.current.set(editorElement, keydownHandler);
+        editorElement.addEventListener('keydown', keydownHandler);
       }
-    }
-  };
+    });
+  }, [pages.length]);
+
+  // Attach keyboard listeners when pages change
+  useEffect(() => {
+    setTimeout(() => {
+      attachKeyboardListeners();
+    }, 100);
+  }, [pages.length, attachKeyboardListeners]);
 
   // Handle page navigation with content management
   const handlePageNavigation = (currentPageIndex: number, direction: 'next' | 'prev', isOverflow: boolean) => {
@@ -758,7 +779,6 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
               }}
               value={pageContent}
               onChange={createHandleChange(index)}
-              onKeyDown={(e) => handleKeyDown(e, index)}
               modules={modules}
               formats={formats}
               readOnly={readOnly}
