@@ -65,54 +65,33 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     'link', 'color', 'background'
   ];
 
-  // Simple overflow check - only create new pages when necessary
-  const checkAndHandleOverflow = useCallback((pageIndex: number) => {
-    const currentRef = pageRefs.current[pageIndex];
-    if (!currentRef) return;
-
-    const editorElement = currentRef.getEditor().root;
-    const scrollHeight = editorElement.scrollHeight;
-
-    if (scrollHeight > 950) {
-      console.log(`Page ${pageIndex + 1} overflow: ${scrollHeight}px > 950px`);
+  // Clean overflow detection with automatic page creation
+  const checkAndAddPage = useCallback(() => {
+    const lastIndex = pages.length - 1;
+    const lastRef = pageRefs.current[lastIndex];
+    
+    if (!lastRef) return;
+    
+    const editorElement = lastRef.getEditor().root;
+    const contentHeight = editorElement.scrollHeight;
+    const visibleHeight = 950; // Fixed page height
+    
+    console.log(`Last page (${lastIndex + 1}) height: ${contentHeight}px vs ${visibleHeight}px`);
+    
+    if (contentHeight > visibleHeight + 5) {
+      console.log(`Creating new page - content overflow detected`);
       
-      const editor = currentRef.getEditor();
-      const fullText = editor.getText().trim();
+      setPages(prev => [...prev, '']);
       
-      if (fullText.length > 50) {
-        // Simple word-based split at 60% to ensure first page fits
-        const words = fullText.split(/\s+/);
-        const splitPoint = Math.floor(words.length * 0.6);
-        
-        const firstPageText = words.slice(0, splitPoint).join(' ');
-        const secondPageText = words.slice(splitPoint).join(' ');
-        
-        console.log(`Creating new page: splitting ${words.length} words at ${splitPoint}`);
-        
-        setPages(prev => {
-          const newPages = [...prev];
-          newPages[pageIndex] = `<p>${firstPageText}</p>`;
-          
-          if (pageIndex + 1 < newPages.length) {
-            newPages[pageIndex + 1] = `<p>${secondPageText}</p>` + newPages[pageIndex + 1];
-          } else {
-            newPages.push(`<p>${secondPageText}</p>`);
-          }
-          
-          return newPages;
-        });
-        
-        // Move cursor to next page
-        setTimeout(() => {
-          const nextRef = pageRefs.current[pageIndex + 1];
-          if (nextRef) {
-            nextRef.focus();
-            nextRef.getEditor().setSelection(0, 0);
-          }
-        }, 100);
-      }
+      // Focus on new page after creation
+      setTimeout(() => {
+        const newPageRef = pageRefs.current[lastIndex + 1];
+        if (newPageRef) {
+          newPageRef.focus();
+        }
+      }, 100);
     }
-  }, []);
+  }, [pages.length]);
 
   // Simple content redistribution - only when significant deletion occurs
   const redistributeContentOnDelete = useCallback((pageIndex: number) => {
@@ -157,19 +136,6 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
       return;
     }
     
-    // Preserve current selection and formatting
-    const currentRef = pageRefs.current[pageIndex];
-    let currentSelection = null;
-    let currentFormat = null;
-    
-    if (currentRef) {
-      const quillEditor = currentRef.getEditor();
-      currentSelection = quillEditor.getSelection();
-      if (currentSelection) {
-        currentFormat = quillEditor.getFormat(currentSelection);
-      }
-    }
-    
     // Update page content
     const newPages = [...pages];
     newPages[pageIndex] = value;
@@ -179,46 +145,15 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     const combinedContent = newPages.join('');
     onContentChange(combinedContent);
     
-    // Restore selection and formatting
-    if (currentRef && currentSelection && currentFormat) {
-      setTimeout(() => {
-        try {
-          const quillEditor = currentRef.getEditor();
-          quillEditor.setSelection(currentSelection);
-          Object.keys(currentFormat).forEach(format => {
-            if (currentFormat[format]) {
-              quillEditor.format(format, currentFormat[format]);
-            }
-          });
-        } catch (e) {
-          console.log('Could not restore selection/formatting:', e);
-        }
-      }, 0);
-    }
-    
     // Clear existing timeout
     if (overflowCheckTimeout.current) {
       clearTimeout(overflowCheckTimeout.current);
     }
     
-    // Check overflow with delay to allow DOM update
+    // Check for page creation after content change
     overflowCheckTimeout.current = setTimeout(() => {
-      const currentRef = pageRefs.current[pageIndex];
-      if (currentRef) {
-        const editorElement = currentRef.getEditor().root;
-        const scrollHeight = editorElement.scrollHeight;
-        
-        console.log(`Page ${pageIndex + 1} height after change: ${scrollHeight}px`);
-        
-        // Check for overflow - only when content exceeds page height
-        if (scrollHeight > 950) {
-          console.log(`Page overflow detected - triggering page creation`);
-          checkAndHandleOverflow(pageIndex);
-        }
-        
-        setContentOverflow(scrollHeight > 950);
-      }
-    }, 200);
+      checkAndAddPage();
+    }, 300);
   };
 
   // Handle text selection across pages
@@ -349,6 +284,11 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
   useEffect(() => {
     pageRefs.current = pageRefs.current.slice(0, pages.length);
   }, [pages.length]);
+
+  // Check for page creation when pages array changes
+  useEffect(() => {
+    checkAndAddPage();
+  }, [pages, checkAndAddPage]);
 
   // Clean up empty pages and consolidate content
   const consolidatePages = useCallback(() => {
