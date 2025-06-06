@@ -29,57 +29,36 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
   const quillRef = useRef<ReactQuill>(null);
 
   useEffect(() => {
-    const handleContentChange = () => {
+    // Simple approach - just add visual indicators without continuous monitoring
+    const addPageIndicators = () => {
       const editor = editorRef.current;
       if (!editor) return;
 
       const container = editor.querySelector('.ql-editor');
       if (!container) return;
 
-      const children = Array.from(container.children);
-      let currentHeight = 0;
-      let pageNumber = 1;
-
-      // Remove existing page breaks
-      container.querySelectorAll('.page-break').forEach(el => el.remove());
-
-      children.forEach((el: Element, index) => {
-        const element = el as HTMLElement;
-        const elementHeight = element.offsetHeight;
-        
-        // Check if this element would overflow the current page
-        if (currentHeight + elementHeight > PAGE_HEIGHT && currentHeight > 0) {
-          // Insert visual page break
-          const pageBreak = document.createElement('div');
-          pageBreak.className = 'page-break';
-          pageBreak.style.cssText = `
-            height: 30px;
-            border-top: 2px dashed #ccc;
-            margin: 20px 0;
-            position: relative;
-            page-break-before: always;
-          `;
-          pageBreak.innerHTML = `<span style="position: absolute; right: 0; top: -10px; background: white; padding: 0 10px; font-size: 12px; color: #666;">Page ${pageNumber + 1}</span>`;
-          
-          container.insertBefore(pageBreak, element);
-          currentHeight = 0;
-          pageNumber++;
+      // Add CSS for page boundaries
+      const style = document.createElement('style');
+      style.textContent = `
+        .ql-editor {
+          background: 
+            linear-gradient(transparent calc(${PAGE_HEIGHT}px - 1px), #ddd calc(${PAGE_HEIGHT}px), transparent calc(${PAGE_HEIGHT}px + 1px)),
+            linear-gradient(transparent calc(${PAGE_HEIGHT * 2}px - 1px), #ddd calc(${PAGE_HEIGHT * 2}px), transparent calc(${PAGE_HEIGHT * 2}px + 1px)),
+            linear-gradient(transparent calc(${PAGE_HEIGHT * 3}px - 1px), #ddd calc(${PAGE_HEIGHT * 3}px), transparent calc(${PAGE_HEIGHT * 3}px + 1px)),
+            linear-gradient(transparent calc(${PAGE_HEIGHT * 4}px - 1px), #ddd calc(${PAGE_HEIGHT * 4}px), transparent calc(${PAGE_HEIGHT * 4}px + 1px)),
+            linear-gradient(transparent calc(${PAGE_HEIGHT * 5}px - 1px), #ddd calc(${PAGE_HEIGHT * 5}px), transparent calc(${PAGE_HEIGHT * 5}px + 1px)),
+            white;
         }
-        
-        currentHeight += elementHeight;
-      });
+      `;
+      
+      if (!document.querySelector('#page-indicators')) {
+        style.id = 'page-indicators';
+        document.head.appendChild(style);
+      }
     };
 
-    const editor = editorRef.current;
-    if (!editor) return;
-
-    const observer = new MutationObserver(handleContentChange);
-    observer.observe(editor, { childList: true, subtree: true, characterData: true });
-    
-    // Initial processing
-    setTimeout(handleContentChange, 100);
-    
-    return () => observer.disconnect();
+    // Add indicators after editor is ready
+    setTimeout(addPageIndicators, 500);
   }, []);
 
   // Expose methods through ref
