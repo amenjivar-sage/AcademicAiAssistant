@@ -4,12 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { AlertTriangle, MessageSquare, X, FileText, Download } from 'lucide-react';
+import { AlertTriangle, MessageSquare, X, FileText, Download, Star } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { DocumentExportDialog } from './document-export-dialog';
 import AiChatViewer from './ai-chat-viewer';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 
 interface Comment {
   id: number;
@@ -60,6 +62,8 @@ export function DocumentReviewer({ sessionId }: DocumentReviewerProps) {
   const [isCommentDialogOpen, setIsCommentDialogOpen] = useState(false);
   const [activeComment, setActiveComment] = useState<number | null>(null);
   const [highlightedContent, setHighlightedContent] = useState('');
+  const [grade, setGrade] = useState<string>('');
+  const [feedback, setFeedback] = useState<string>('');
 
   const queryClient = useQueryClient();
 
@@ -92,6 +96,20 @@ export function DocumentReviewer({ sessionId }: DocumentReviewerProps) {
     mutationFn: (commentId: number) => apiRequest('DELETE', `/api/writing-sessions/${sessionId}/comments/${commentId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/writing-sessions/${sessionId}/comments`] });
+    }
+  });
+
+  const submitGradeMutation = useMutation({
+    mutationFn: (gradeData: { grade: string; feedback: string }) =>
+      apiRequest('POST', `/api/writing-sessions/${sessionId}/grade`, {
+        grade: gradeData.grade,
+        teacherFeedback: gradeData.feedback,
+        status: 'graded'
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/writing-sessions/${sessionId}`] });
+      setGrade('');
+      setFeedback('');
     }
   });
 
@@ -398,6 +416,76 @@ export function DocumentReviewer({ sessionId }: DocumentReviewerProps) {
                   )}
                 </div>
               </ScrollArea>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Star className="h-5 w-5" />
+                Grade Submission
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="grade">Grade</Label>
+                  <Select value={grade} onValueChange={setGrade}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select a grade" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="A+">A+ (97-100)</SelectItem>
+                      <SelectItem value="A">A (93-96)</SelectItem>
+                      <SelectItem value="A-">A- (90-92)</SelectItem>
+                      <SelectItem value="B+">B+ (87-89)</SelectItem>
+                      <SelectItem value="B">B (83-86)</SelectItem>
+                      <SelectItem value="B-">B- (80-82)</SelectItem>
+                      <SelectItem value="C+">C+ (77-79)</SelectItem>
+                      <SelectItem value="C">C (73-76)</SelectItem>
+                      <SelectItem value="C-">C- (70-72)</SelectItem>
+                      <SelectItem value="D+">D+ (67-69)</SelectItem>
+                      <SelectItem value="D">D (63-66)</SelectItem>
+                      <SelectItem value="D-">D- (60-62)</SelectItem>
+                      <SelectItem value="F">F (0-59)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label htmlFor="feedback">Overall Feedback</Label>
+                  <Textarea
+                    id="feedback"
+                    value={feedback}
+                    onChange={(e) => setFeedback(e.target.value)}
+                    placeholder="Provide overall feedback on the student's work..."
+                    className="min-h-[120px]"
+                  />
+                </div>
+
+                <Button
+                  onClick={() => submitGradeMutation.mutate({ grade, feedback })}
+                  disabled={!grade || !feedback.trim() || submitGradeMutation.isPending}
+                  className="w-full"
+                >
+                  {submitGradeMutation.isPending ? 'Submitting Grade...' : 'Submit Grade & Feedback'}
+                </Button>
+
+                {session?.grade && (
+                  <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Badge variant="default" className="bg-green-600">
+                        Current Grade: {session.grade}
+                      </Badge>
+                    </div>
+                    {session.teacherFeedback && (
+                      <p className="text-sm text-gray-700">
+                        <strong>Previous Feedback:</strong> {session.teacherFeedback}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
         </div>
