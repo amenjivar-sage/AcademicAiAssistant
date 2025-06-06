@@ -93,13 +93,22 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     const hasContent = content.trim().length > 0 || title.trim().length > 0;
     if (!hasContent) return;
 
-    // Remove formatting markup before counting words
-    const cleanContent = content.replace(/\*\*(.*?)\*\*/g, '$1');
+    // Enhanced word count calculation - remove HTML tags and count actual words
+    const cleanContent = content
+      .replace(/<[^>]*>/g, ' ') // Remove HTML tags
+      .replace(/&nbsp;/g, ' ') // Replace non-breaking spaces
+      .replace(/\s+/g, ' ') // Normalize whitespace
+      .trim();
+    
     const words = cleanContent.split(/\s+/).filter((word: string) => word.length > 0);
     const currentWordCount = words.length;
 
-    // Skip checking session changes for now - just save if content changed
-    if (!hasContent) return;
+    console.log('Word count calculation:', {
+      originalLength: content.length,
+      cleanedLength: cleanContent.length,
+      wordCount: currentWordCount,
+      contentPreview: cleanContent.substring(0, 100) + '...'
+    });
 
     try {
       setIsSaving(true);
@@ -113,7 +122,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
         console.log('Created new session with ID:', currentSessionId);
       }
       
-      console.log('Auto-saving session:', currentSessionId, 'with data:', ['title', 'content', 'pastedContent', 'wordCount']);
+      console.log('Auto-saving session:', currentSessionId, 'Words:', currentWordCount, 'Content length:', content.length);
       console.log('Copy-paste data being saved:', pastedContents.length, 'items:', pastedContents);
       
       const response = await fetch(`/api/writing-sessions/${currentSessionId}`, {
@@ -121,7 +130,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: title.trim(),
-          content: content,
+          content: content, // Save full content without truncation
           pastedContent: pastedContents,
           wordCount: currentWordCount
         })

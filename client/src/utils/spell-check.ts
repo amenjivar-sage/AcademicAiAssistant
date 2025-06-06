@@ -380,77 +380,70 @@ export function applySpellCheckSuggestion(text: string, result: SpellCheckResult
     textLength: text.length
   });
   
-  // For HTML content, we need to be more careful about replacements
-  // Strategy 1: HTML-aware word replacement
-  const htmlAwareReplace = (htmlText: string, word: string, newWord: string): string => {
-    const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // Enhanced replacement strategy that handles both plain text and HTML
+  const performReplacement = (content: string, originalWord: string, newWord: string): string => {
+    const escapedWord = originalWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     
-    // Find all matches and check if they're inside HTML tags
-    const originalRegex = new RegExp(`\\b${escapedWord}\\b`, 'gi');
-    let match;
-    let replacedText = htmlText;
-    let offset = 0;
-    
-    while ((match = originalRegex.exec(htmlText)) !== null) {
-      const matchStart = match.index;
-      const matchEnd = matchStart + match[0].length;
-      
-      // Check if this match is inside an HTML tag
-      const beforeMatch = htmlText.substring(0, matchStart);
-      const afterMatch = htmlText.substring(matchEnd);
-      
-      // Count open and close tags before the match
-      const openTags = (beforeMatch.match(/</g) || []).length;
-      const closeTags = (beforeMatch.match(/>/g) || []).length;
-      
-      // If we're not inside a tag (equal number of < and >), replace
-      if (openTags === closeTags) {
-        const adjustedStart = matchStart + offset;
-        const adjustedEnd = adjustedStart + match[0].length;
-        
-        const before = replacedText.substring(0, adjustedStart);
-        const after = replacedText.substring(adjustedEnd);
-        replacedText = before + newWord + after;
-        
-        // Adjust offset for next iteration
-        offset += newWord.length - match[0].length;
-        console.log('HTML-aware replacement:', word, '->', newWord, 'at position:', adjustedStart);
-        return replacedText; // Replace only the first occurrence
+    // Strategy 1: Direct position-based replacement if indices are valid
+    if (result.startIndex >= 0 && result.endIndex <= content.length) {
+      const wordAtPosition = content.substring(result.startIndex, result.endIndex);
+      if (wordAtPosition.toLowerCase() === originalWord.toLowerCase()) {
+        const before = content.substring(0, result.startIndex);
+        const after = content.substring(result.endIndex);
+        const replaced = before + newWord + after;
+        console.log('✓ Position-based replacement successful:', originalWord, '->', newWord);
+        return replaced;
       }
     }
     
-    return replacedText;
+    // Strategy 2: Find first occurrence with word boundaries, avoiding HTML tags
+    const wordRegex = new RegExp(`\\b${escapedWord}\\b`, 'gi');
+    let match;
+    let bestMatch = null;
+    
+    // Find all matches and select the best one
+    while ((match = wordRegex.exec(content)) !== null) {
+      const matchStart = match.index;
+      const matchEnd = matchStart + match[0].length;
+      
+      // Check if this match is inside HTML tags
+      const beforeMatch = content.substring(0, matchStart);
+      const openTags = (beforeMatch.match(/</g) || []).length;
+      const closeTags = (beforeMatch.match(/>/g) || []).length;
+      
+      // If not inside a tag, this is a valid match
+      if (openTags === closeTags) {
+        bestMatch = { start: matchStart, end: matchEnd, word: match[0] };
+        break; // Use first valid match
+      }
+    }
+    
+    if (bestMatch) {
+      const before = content.substring(0, bestMatch.start);
+      const after = content.substring(bestMatch.end);
+      const replaced = before + newWord + after;
+      console.log('✓ Word boundary replacement successful:', originalWord, '->', newWord);
+      return replaced;
+    }
+    
+    // Strategy 3: Case-insensitive search as last resort
+    const lowerContent = content.toLowerCase();
+    const lowerWord = originalWord.toLowerCase();
+    const index = lowerContent.indexOf(lowerWord);
+    
+    if (index !== -1) {
+      const before = content.substring(0, index);
+      const after = content.substring(index + originalWord.length);
+      const replaced = before + newWord + after;
+      console.log('✓ Case-insensitive replacement successful:', originalWord, '->', newWord);
+      return replaced;
+    }
+    
+    console.warn('Could not find word to replace:', originalWord);
+    return content;
   };
   
-  // Try HTML-aware replacement first
-  const htmlResult = htmlAwareReplace(text, result.word, replacement);
-  if (htmlResult !== text) {
-    return htmlResult;
-  }
-  
-  // Fallback: Simple word boundary replacement
-  const escapedWord = result.word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const wordRegex = new RegExp(`\\b${escapedWord}\\b`, 'i');
-  
-  if (wordRegex.test(text)) {
-    console.log('Using simple word boundary replacement');
-    return text.replace(wordRegex, replacement);
-  }
-  
-  // Last resort: case-insensitive replacement
-  const lowerText = text.toLowerCase();
-  const lowerWord = result.word.toLowerCase();
-  const findIndex = lowerText.indexOf(lowerWord);
-  
-  if (findIndex !== -1) {
-    const actualStartIndex = findIndex;
-    const actualEndIndex = actualStartIndex + result.word.length;
-    console.log('Using case-insensitive replacement at:', actualStartIndex, '-', actualEndIndex);
-    return text.substring(0, actualStartIndex) + replacement + text.substring(actualEndIndex);
-  }
-  
-  console.error('Could not find word to replace:', result.word, 'in text');
-  return text; // Don't replace if we can't find the word
+  return performReplacement(text, result.word, replacement);
 }
 
 // Auto-correct common typos without prompting
