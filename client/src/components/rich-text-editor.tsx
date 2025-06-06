@@ -360,7 +360,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     }
   }, [pages]);
 
-  // Comprehensive page navigation system
+  // Simplified page navigation system
   const handleKeyDown = (e: React.KeyboardEvent, pageIndex: number) => {
     const pageRef = pageRefs.current[pageIndex];
     if (!pageRef) return;
@@ -372,46 +372,48 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     if (e.key === 'Enter') {
       const textLength = editor.getLength();
       const cursorPosition = range.index;
-      const editorElement = editor.root;
-      const contentHeight = editorElement.scrollHeight;
       
-      // Case 1: Manual page navigation - at end of content
-      if (cursorPosition >= textLength - 1) {
-        // Case 1a: Page is getting full, move to next page
-        if (contentHeight > 900) {
-          setTimeout(() => {
-            const updatedHeight = editorElement.scrollHeight;
-            
-            if (updatedHeight > 950) {
-              console.log(`Moving to next page from page ${pageIndex + 1} due to overflow`);
-              handlePageNavigation(pageIndex, 'next', true);
+      // Simple rule: if at end of content and have some content, allow moving to next page
+      if (cursorPosition >= textLength - 1 && textLength > 5) {
+        console.log(`Enter pressed at end of page ${pageIndex + 1}, moving to next page`);
+        
+        // Create next page if needed
+        if (pageIndex >= pages.length - 1) {
+          setPages(prev => [...prev, '<p><br></p>']);
+        }
+        
+        // Simple focus to next page
+        setTimeout(() => {
+          const nextPageRef = pageRefs.current[pageIndex + 1];
+          if (nextPageRef) {
+            const nextEditor = nextPageRef.getEditor();
+            if (nextEditor) {
+              nextEditor.focus();
+              nextEditor.setSelection(0, 0);
+              console.log(`Moved to page ${pageIndex + 2}`);
             }
-          }, 50);
-        }
-        // Case 1b: Manual navigation even if page isn't full
-        else if (contentHeight > 400) { // Allow manual navigation when there's substantial content
-          setTimeout(() => {
-            const updatedHeight = editorElement.scrollHeight;
-            console.log(`Manual navigation to next page from page ${pageIndex + 1}`);
-            handlePageNavigation(pageIndex, 'next', false);
-          }, 50);
-        }
-      }
-      
-      // Case 2: Automatic overflow during typing (not at end)
-      else if (contentHeight > 950) {
-        console.log(`Auto-overflow detected on page ${pageIndex + 1}`);
-        handleContentOverflow(pageIndex);
+          }
+        }, 100);
       }
     }
     
     if (e.key === 'Backspace') {
       const cursorPosition = range.index;
       
-      // Navigate to previous page when at beginning
+      // Move to previous page when at beginning
       if (cursorPosition === 0 && pageIndex > 0) {
         e.preventDefault();
-        handlePageNavigation(pageIndex, 'prev', false);
+        
+        const prevPageRef = pageRefs.current[pageIndex - 1];
+        if (prevPageRef) {
+          const prevEditor = prevPageRef.getEditor();
+          if (prevEditor) {
+            const prevLength = prevEditor.getLength();
+            prevEditor.focus();
+            prevEditor.setSelection(Math.max(0, prevLength - 1), 0);
+            console.log(`Moved back to page ${pageIndex}`);
+          }
+        }
       }
     }
   };
