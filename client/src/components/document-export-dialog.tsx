@@ -121,17 +121,20 @@ export default function DocumentExportDialog({
       // Create footer content with page numbers
       const footerParagraphs = [];
       if (settings.footerText || settings.showPageNumbers) {
-        const footerElements = [];
+        const footerChildren = [];
         
         if (settings.footerText) {
-          footerElements.push(new TextRun({ text: settings.footerText, size: 20 }));
+          footerChildren.push(new TextRun({ text: settings.footerText, size: 20 }));
         }
         
         if (settings.showPageNumbers) {
-          if (footerElements.length > 0) footerElements.push(new TextRun({ text: ' - ', size: 20 }));
-          footerElements.push(new TextRun({ text: 'Page ', size: 20 }));
-          footerElements.push(new TextRun({
-            children: [PageNumber.CURRENT],
+          if (footerChildren.length > 0) {
+            footerChildren.push(new TextRun({ text: ' - Page ', size: 20 }));
+          } else {
+            footerChildren.push(new TextRun({ text: 'Page ', size: 20 }));
+          }
+          footerChildren.push(new TextRun({
+            text: '1', // Simple page number - docx will handle auto-numbering in Word
             size: 20
           }));
         }
@@ -144,7 +147,7 @@ export default function DocumentExportDialog({
 
         footerParagraphs.push(
           new Paragraph({
-            children: footerElements,
+            children: footerChildren,
             alignment: alignment
           })
         );

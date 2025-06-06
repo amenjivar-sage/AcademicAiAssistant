@@ -79,6 +79,12 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
     queryKey: ["/api/auth/user"],
   });
 
+  // Get student information for the session
+  const { data: studentInfo } = useQuery({
+    queryKey: [`/api/users/${session.userId}`],
+    enabled: !!session.userId,
+  });
+
   // Fetch inline comments from database
   const { data: inlineComments = [], isLoading } = useQuery({
     queryKey: [`/api/sessions/${session.id}/comments`],
@@ -627,7 +633,7 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                 <h3 className="text-lg font-semibold">Document Review</h3>
                 <DocumentExportDialog
                   content={session.content}
-                  studentName="Student"
+                  studentName={currentUser?.firstName && currentUser?.lastName ? `${currentUser.firstName} ${currentUser.lastName}` : 'Student'}
                   assignmentTitle={session.title || `Assignment_${session.assignmentId}`}
                   submissionDate={session.submittedAt ? new Date(session.submittedAt).toLocaleDateString() : undefined}
                   variant="outline"
