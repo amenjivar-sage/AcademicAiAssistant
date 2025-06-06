@@ -8,12 +8,6 @@ interface RichTextEditorProps {
   onTextSelection?: (selectedText: string) => void;
   readOnly?: boolean;
   placeholder?: string;
-  onFormatRef?: React.MutableRefObject<((command: string, value?: string) => void) | null>;
-  headerFooterSettings?: {
-    header: string;
-    footer: string;
-    pageNumbers: boolean;
-  };
 }
 
 export interface RichTextEditorHandle {
@@ -28,229 +22,44 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
   onContentChange,
   onTextSelection,
   readOnly = false,
-  placeholder = "Start writing...",
-  onFormatRef,
-  headerFooterSettings
+  placeholder = "Start writing..."
 }, ref) => {
   
   const editorRef = useRef<HTMLDivElement>(null);
   const quillRef = useRef<ReactQuill>(null);
 
   useEffect(() => {
-    let lastHeight = 0;
-    
-    const addPageBreaks = () => {
+    // Simple approach - just add visual indicators without continuous monitoring
+    const addPageIndicators = () => {
       const editor = editorRef.current;
       if (!editor) return;
 
-      const container = editor.querySelector('.ql-editor') as HTMLElement;
+      const container = editor.querySelector('.ql-editor');
       if (!container) return;
 
-      const currentHeight = container.scrollHeight;
-      
-      // Only update if height changed significantly
-      if (Math.abs(currentHeight - lastHeight) < 50) return;
-      lastHeight = currentHeight;
-
-      // Remove existing page breaks
-      const existingBreaks = container.querySelectorAll('.page-break-line');
-      existingBreaks.forEach(el => el.remove());
-
-      // Calculate number of pages needed
-      const numberOfPages = Math.ceil(currentHeight / PAGE_HEIGHT);
-      
-      // Add visual page break lines
-      for (let i = 1; i < numberOfPages; i++) {
-        const breakPosition = i * PAGE_HEIGHT;
-        
-        const pageBreak = document.createElement('div');
-        pageBreak.className = 'page-break-line';
-        pageBreak.style.cssText = `
-          position: absolute;
-          left: 0;
-          right: 0;
-          top: ${breakPosition}px;
-          height: 1px;
-          background: #ddd;
-          border-top: 1px dashed #999;
-          pointer-events: none;
-          z-index: 10;
-          margin: 0;
-        `;
-        
-        container.appendChild(pageBreak);
-      }
-      
-      console.log(`Page breaks: ${numberOfPages - 1} breaks for ${currentHeight}px content`);
-    };
-
-    const addEditorStyling = () => {
+      // Add CSS for page boundaries
       const style = document.createElement('style');
       style.textContent = `
         .ql-editor {
-          min-height: ${PAGE_HEIGHT}px;
-          padding: 72px;
-          background: white;
-          line-height: 1.6;
-          font-family: 'Times New Roman', serif;
-          font-size: 12pt;
-          position: relative;
-        }
-        
-        .ql-editor p {
-          margin-bottom: 12pt;
-        }
-        
-        .ql-editor h1, .ql-editor h2, .ql-editor h3 {
-          font-family: 'Times New Roman', serif;
-          font-weight: bold;
-          margin-top: 12pt;
-          margin-bottom: 6pt;
-        }
-        
-        .page-break-line {
-          box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+          background: 
+            linear-gradient(transparent calc(${PAGE_HEIGHT}px - 1px), #ddd calc(${PAGE_HEIGHT}px), transparent calc(${PAGE_HEIGHT}px + 1px)),
+            linear-gradient(transparent calc(${PAGE_HEIGHT * 2}px - 1px), #ddd calc(${PAGE_HEIGHT * 2}px), transparent calc(${PAGE_HEIGHT * 2}px + 1px)),
+            linear-gradient(transparent calc(${PAGE_HEIGHT * 3}px - 1px), #ddd calc(${PAGE_HEIGHT * 3}px), transparent calc(${PAGE_HEIGHT * 3}px + 1px)),
+            linear-gradient(transparent calc(${PAGE_HEIGHT * 4}px - 1px), #ddd calc(${PAGE_HEIGHT * 4}px), transparent calc(${PAGE_HEIGHT * 4}px + 1px)),
+            linear-gradient(transparent calc(${PAGE_HEIGHT * 5}px - 1px), #ddd calc(${PAGE_HEIGHT * 5}px), transparent calc(${PAGE_HEIGHT * 5}px + 1px)),
+            white;
         }
       `;
       
-      if (!document.querySelector('#editor-page-styling')) {
-        style.id = 'editor-page-styling';
+      if (!document.querySelector('#page-indicators')) {
+        style.id = 'page-indicators';
         document.head.appendChild(style);
       }
     };
 
-    addEditorStyling();
-    
-    // Initial page break calculation
-    setTimeout(() => {
-      addPageBreaks();
-      
-      // Set up observer for content changes
-      const observer = new MutationObserver((mutations) => {
-        let shouldUpdate = false;
-        mutations.forEach((mutation) => {
-          if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-            shouldUpdate = true;
-          }
-          if (mutation.type === 'characterData') {
-            shouldUpdate = true;
-          }
-        });
-        
-        if (shouldUpdate) {
-          setTimeout(addPageBreaks, 300);
-        }
-      });
-      
-      const container = editorRef.current?.querySelector('.ql-editor');
-      if (container) {
-        observer.observe(container, { 
-          childList: true, 
-          subtree: true, 
-          characterData: true 
-        });
-      }
-      
-      return () => observer.disconnect();
-    }, 1000);
-  }, [content]);
-
-  // Formatting function for toolbar commands
-  const handleFormat = (command: string, value?: string) => {
-    if (!quillRef.current) return;
-    
-    const quill = quillRef.current.getEditor();
-    const selection = quill.getSelection();
-
-    switch (command) {
-      case 'fontName':
-        if (selection) {
-          quill.format('font', value);
-        }
-        break;
-      case 'fontSize':
-        if (selection) {
-          quill.format('size', value);
-        }
-        break;
-      case 'bold':
-        if (selection) {
-          quill.format('bold', !quill.getFormat().bold);
-        }
-        break;
-      case 'italic':
-        if (selection) {
-          quill.format('italic', !quill.getFormat().italic);
-        }
-        break;
-      case 'underline':
-        if (selection) {
-          quill.format('underline', !quill.getFormat().underline);
-        }
-        break;
-      case 'foreColor':
-        if (selection) {
-          quill.format('color', value);
-        }
-        break;
-      case 'justifyLeft':
-        if (selection) {
-          quill.format('align', false);
-        }
-        break;
-      case 'justifyCenter':
-        if (selection) {
-          quill.format('align', 'center');
-        }
-        break;
-      case 'justifyRight':
-        if (selection) {
-          quill.format('align', 'right');
-        }
-        break;
-      case 'insertUnorderedList':
-        if (selection) {
-          quill.format('list', 'bullet');
-        }
-        break;
-      case 'insertOrderedList':
-        if (selection) {
-          quill.format('list', 'ordered');
-        }
-        break;
-      case 'undo':
-        try {
-          // Use Quill's undo if available
-          const history = (quill as any).history;
-          if (history && history.undo) {
-            history.undo();
-          }
-        } catch (e) {
-          console.log('Undo not available');
-        }
-        break;
-      case 'redo':
-        try {
-          // Use Quill's redo if available
-          const history = (quill as any).history;
-          if (history && history.redo) {
-            history.redo();
-          }
-        } catch (e) {
-          console.log('Redo not available');
-        }
-        break;
-      default:
-        console.log('Unhandled format command:', command, value);
-    }
-  };
-
-  // Connect formatting function to parent ref
-  useEffect(() => {
-    if (onFormatRef) {
-      onFormatRef.current = handleFormat;
-    }
-  }, [onFormatRef]);
+    // Add indicators after editor is ready
+    setTimeout(addPageIndicators, 500);
+  }, []);
 
   // Expose methods through ref
   useImperativeHandle(ref, () => ({
@@ -265,7 +74,18 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
   }));
 
   const modules = {
-    toolbar: false, // Disable default toolbar since we're using EnhancedToolbar
+    toolbar: [
+      [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ 'color': [] }, { 'background': [] }],
+      [{ 'font': [] }],
+      [{ 'align': [] }],
+      ['blockquote', 'code-block'],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      [{ 'indent': '-1'}, { 'indent': '+1' }],
+      ['link', 'image'],
+      ['clean']
+    ],
     clipboard: {
       matchVisual: false
     }
@@ -274,7 +94,7 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
   const formats = [
     'header', 'font', 'size',
     'bold', 'italic', 'underline', 'strike', 'blockquote',
-    'list', 'bullet', 'indent', 'align',
+    'list', 'bullet', 'indent',
     'link', 'color', 'background'
   ];
 
@@ -290,43 +110,21 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
           overflow-y: auto;
         }
 
-        .document-container {
-          max-width: 8.5in;
-          margin: 0 auto;
-          background: white;
-          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-          border-radius: 8px;
-          position: relative;
-        }
-
-        .document-header {
-          padding: 20px 72px 10px 72px;
-          border-bottom: 1px solid #eee;
-          font-family: 'Times New Roman', serif;
-          font-size: 12pt;
-          text-align: center;
-          background: #fafafa;
-          border-radius: 8px 8px 0 0;
-        }
-
-        .document-footer {
-          padding: 10px 72px 20px 72px;
-          border-top: 1px solid #eee;
-          font-family: 'Times New Roman', serif;
-          font-size: 12pt;
-          text-align: center;
-          background: #fafafa;
-          border-radius: 0 0 8px 8px;
-        }
-
         .editor-wrapper .ql-container {
           border: none;
           font-family: 'Times New Roman', serif;
           background: white;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+          border-radius: 8px;
+          max-width: 8.5in;
+          margin: 0 auto;
         }
 
         .editor-wrapper .ql-toolbar {
-          display: none; /* Hidden since we use EnhancedToolbar */
+          border: none;
+          border-bottom: 1px solid #ddd;
+          background: #f8f9fa;
+          border-radius: 8px 8px 0 0;
         }
 
         .editor-wrapper .ql-editor {
@@ -335,15 +133,11 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
           font-family: 'Times New Roman', serif !important;
           font-size: 14pt !important;
           min-height: 100vh !important;
+          border-radius: 0 0 8px 8px;
         }
 
         .editor-wrapper .ql-editor:focus {
           outline: none !important;
-        }
-
-        /* Times New Roman font support */
-        .ql-font-times {
-          font-family: 'Times New Roman', serif !important;
         }
 
         /* Page break styling */
@@ -368,43 +162,16 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
         `}
       </style>
       
-      <div className="document-container">
-        {/* Header */}
-        {headerFooterSettings && (headerFooterSettings.header || headerFooterSettings.pageNumbers) && (
-          <div className="document-header">
-            {headerFooterSettings.header && (
-              <div>{headerFooterSettings.header}</div>
-            )}
-            {headerFooterSettings.pageNumbers && (
-              <div style={{ fontSize: '10pt', marginTop: '5px' }}>Page 1</div>
-            )}
-          </div>
-        )}
-
-        {/* Main Editor */}
-        <ReactQuill 
-          ref={quillRef}
-          value={content}
-          onChange={onContentChange}
-          readOnly={readOnly}
-          placeholder={placeholder}
-          modules={modules}
-          formats={formats}
-          style={{ minHeight: '100vh' }}
-        />
-
-        {/* Footer */}
-        {headerFooterSettings && (headerFooterSettings.footer || headerFooterSettings.pageNumbers) && (
-          <div className="document-footer">
-            {headerFooterSettings.footer && (
-              <div>{headerFooterSettings.footer}</div>
-            )}
-            {headerFooterSettings.pageNumbers && !headerFooterSettings.header && (
-              <div style={{ fontSize: '10pt' }}>Page 1</div>
-            )}
-          </div>
-        )}
-      </div>
+      <ReactQuill 
+        ref={quillRef}
+        value={content}
+        onChange={onContentChange}
+        readOnly={readOnly}
+        placeholder={placeholder}
+        modules={modules}
+        formats={formats}
+        style={{ minHeight: '100vh' }}
+      />
     </div>
   );
 });

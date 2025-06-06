@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Send, AlertTriangle, Shield, FileText, MessageSquare, Download, Save, GraduationCap, Trophy } from 'lucide-react';
+import { ArrowLeft, Settings, Send, AlertTriangle, Shield, FileText, MessageSquare, Download, Save, GraduationCap, Trophy, Type, Bold, Italic, Underline, ChevronDown, ChevronUp, SpellCheck } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import CopyPasteDetector from './copy-paste-detector';
 import { RichTextEditor, RichTextEditorHandle } from './rich-text-editor-simple';
@@ -19,7 +19,6 @@ import DocumentDownload from './document-download';
 import AiAssistant from './ai-assistant';
 import { PDFExport } from './pdf-export';
 import BubbleSpellCheckPanel from './bubble-spell-check-panel';
-import EnhancedToolbar from './enhanced-toolbar';
 
 interface PastedContent {
   text: string;
@@ -51,7 +50,10 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     footer: "",
     pageNumbers: false
   });
+  const [showFormattingToolbox, setShowFormattingToolbox] = useState(false);
+  const [isFormattingMinimized, setIsFormattingMinimized] = useState(false);
   const [selectedText, setSelectedText] = useState('');
+  const [isSpellCheckActive, setIsSpellCheckActive] = useState(false);
   const [spellErrors, setSpellErrors] = useState<any[]>([]);
 
   const contentRef = useRef<RichTextEditorHandle>(null);
@@ -378,9 +380,220 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
               </div>
             )}
             
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Settings className="h-4 w-4" />
+                  Settings
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Document Settings</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="header">Header Text</Label>
+                    <Input
+                      id="header"
+                      value={headerFooterSettings.header}
+                      onChange={(e) => setHeaderFooterSettings(prev => ({ ...prev, header: e.target.value }))}
+                      placeholder="Enter header text..."
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="footer">Footer Text</Label>
+                    <Input
+                      id="footer"
+                      value={headerFooterSettings.footer}
+                      onChange={(e) => setHeaderFooterSettings(prev => ({ ...prev, footer: e.target.value }))}
+                      placeholder="Enter footer text..."
+                    />
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="pageNumbers"
+                      checked={headerFooterSettings.pageNumbers}
+                      onCheckedChange={(checked) => setHeaderFooterSettings(prev => ({ ...prev, pageNumbers: checked }))}
+                    />
+                    <Label htmlFor="pageNumbers">Show page numbers</Label>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
 
-
-
+            {/* Formatting Toolbox */}
+            {!showFormattingToolbox ? (
+              <Button
+                onClick={() => setShowFormattingToolbox(true)}
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                title="Open Formatting Tools"
+              >
+                <Type className="h-4 w-4" />
+              </Button>
+            ) : (
+              <div className="relative">
+                <Card className="absolute right-0 top-full mt-2 w-64 shadow-lg border-gray-300 z-50">
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-sm font-medium flex items-center">
+                        <Type className="h-4 w-4 mr-2" />
+                        {isFormattingMinimized ? "Format" : "Formatting Tools"}
+                      </CardTitle>
+                      <div className="flex items-center space-x-1">
+                        <Button
+                          onClick={() => setIsFormattingMinimized(!isFormattingMinimized)}
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 w-6 p-0"
+                          title={isFormattingMinimized ? "Expand" : "Minimize"}
+                        >
+                          {isFormattingMinimized ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
+                        </Button>
+                        <Button
+                          onClick={() => setShowFormattingToolbox(false)}
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 w-6 p-0"
+                          title="Close"
+                        >
+                          ×
+                        </Button>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  
+                  {!isFormattingMinimized && (
+                    <CardContent className="pt-0">
+                      <div className="space-y-3">
+                        {/* Text Formatting Section */}
+                        <div>
+                          <div className="text-xs font-medium text-gray-500 mb-2">Text Formatting</div>
+                          <div className="flex flex-wrap gap-1">
+                            <Button
+                              onClick={() => {
+                                if (contentRef.current) {
+                                  const editor = contentRef.current.getEditor();
+                                  if (editor) {
+                                    const quillEditor = editor.getEditor();
+                                    const selection = quillEditor.getSelection();
+                                    if (selection && selection.length > 0) {
+                                      // Apply formatting to selected text
+                                      const currentFormat = quillEditor.getFormat(selection);
+                                      quillEditor.formatText(selection.index, selection.length, 'bold', !currentFormat.bold);
+                                    } else if (selection) {
+                                      // Set formatting for cursor position (next typing)
+                                      const currentFormat = quillEditor.getFormat(selection);
+                                      quillEditor.format('bold', !currentFormat.bold);
+                                    }
+                                    // Refocus editor to maintain cursor position
+                                    setTimeout(() => quillEditor.focus(), 0);
+                                  }
+                                }
+                              }}
+                              size="sm"
+                              variant="outline"
+                              className="h-8 w-8 p-0 hover:bg-blue-50"
+                              disabled={false}
+                              title="Bold (Ctrl+B)"
+                            >
+                              <Bold className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              onClick={() => {
+                                if (contentRef.current) {
+                                  const editor = contentRef.current.getEditor();
+                                  if (editor) {
+                                    const quillEditor = editor.getEditor();
+                                    const selection = quillEditor.getSelection();
+                                    if (selection && selection.length > 0) {
+                                      // Apply formatting to selected text
+                                      const currentFormat = quillEditor.getFormat(selection);
+                                      quillEditor.formatText(selection.index, selection.length, 'italic', !currentFormat.italic);
+                                    } else if (selection) {
+                                      // Set formatting for cursor position (next typing)
+                                      const currentFormat = quillEditor.getFormat(selection);
+                                      quillEditor.format('italic', !currentFormat.italic);
+                                    }
+                                    // Refocus editor to maintain cursor position
+                                    setTimeout(() => quillEditor.focus(), 0);
+                                  }
+                                }
+                              }}
+                              size="sm"
+                              variant="outline"
+                              className="h-8 w-8 p-0 hover:bg-blue-50"
+                              disabled={false}
+                              title="Italic (Ctrl+I)"
+                            >
+                              <Italic className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              onClick={() => {
+                                if (contentRef.current) {
+                                  const editor = contentRef.current.getEditor();
+                                  if (editor) {
+                                    const quillEditor = editor.getEditor();
+                                    const selection = quillEditor.getSelection();
+                                    if (selection && selection.length > 0) {
+                                      // Apply formatting to selected text
+                                      const currentFormat = quillEditor.getFormat(selection);
+                                      quillEditor.formatText(selection.index, selection.length, 'underline', !currentFormat.underline);
+                                    } else if (selection) {
+                                      // Set formatting for cursor position (next typing)
+                                      const currentFormat = quillEditor.getFormat(selection);
+                                      quillEditor.format('underline', !currentFormat.underline);
+                                    }
+                                    // Refocus editor to maintain cursor position
+                                    setTimeout(() => quillEditor.focus(), 0);
+                                  }
+                                }
+                              }}
+                              size="sm"
+                              variant="outline"
+                              className="h-8 w-8 p-0 hover:bg-blue-50"
+                              disabled={false}
+                              title="Underline (Ctrl+U)"
+                            >
+                              <Underline className="h-4 w-4" />
+                            </Button>
+                            
+                            {/* Separator */}
+                            <div className="w-px h-6 bg-gray-200"></div>
+                            
+                            {/* Spell Check Button */}
+                            <Button
+                              onClick={() => setIsSpellCheckActive(!isSpellCheckActive)}
+                              size="sm"
+                              variant={isSpellCheckActive ? "default" : "outline"}
+                              className="h-8 w-8 p-0 hover:bg-blue-50"
+                              title="Check spelling"
+                            >
+                              <SpellCheck className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        {/* Status */}
+                        <div className="text-xs text-gray-400 border-t pt-2">
+                          {selectedText ? (
+                            <span className="text-blue-600">
+                              {selectedText.length} characters selected
+                            </span>
+                          ) : (
+                            "Select text to format"
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  )}
+                </Card>
+              </div>
+            )}
 
             {/* PDF Export */}
             <PDFExport 
@@ -440,25 +653,6 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
             </div>
           )}
           
-          {/* Enhanced Toolbar - Sticky */}
-          <div className="sticky top-0 z-50 border-b bg-white shadow-sm">
-            <EnhancedToolbar
-              onFormatting={(command, value) => {
-                console.log('Toolbar formatting called:', command, value);
-                if (formatRef.current) {
-                  console.log('Calling formatRef.current with:', command, value);
-                  formatRef.current(command, value);
-                } else {
-                  console.log('formatRef.current is null');
-                }
-              }}
-              onSave={() => saveSession()}
-              isSaving={isSaving}
-              onSpellCheck={() => setShowSpellCheck(true)}
-              onHeaderFooterChange={setHeaderFooterSettings}
-            />
-          </div>
-
           <CopyPasteDetector
             allowCopyPaste={allowCopyPaste}
             onPasteDetected={handlePasteDetected}
@@ -474,8 +668,6 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
               onTextSelection={setSelectedText}
               readOnly={session?.status === 'graded'}
               placeholder="Start writing your assignment..."
-              onFormatRef={formatRef}
-              headerFooterSettings={headerFooterSettings}
             />
           </CopyPasteDetector>
         </div>
@@ -612,7 +804,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       </div>
 
       {/* Spell Check Panel */}
-      {showSpellCheck && (
+      {isSpellCheckActive && (
         <div className="fixed bottom-8 right-8 z-50">
           <BubbleSpellCheckPanel
             content={content}
@@ -639,8 +831,8 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                 }
               }, 10);
             }}
-            isOpen={showSpellCheck}
-            onClose={() => setShowSpellCheck(false)}
+            isOpen={isSpellCheckActive}
+            onClose={() => setIsSpellCheckActive(false)}
             onSpellErrorsChange={(errors) => setSpellErrors(errors)}
           />
         </div>
