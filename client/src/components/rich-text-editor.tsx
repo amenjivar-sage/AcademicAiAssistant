@@ -149,27 +149,33 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
         document.body.appendChild(tempDiv);
         
         try {
-          // Start with more content on the first page - try 90% first
-          let splitIndex = Math.floor(paragraphs.length * 0.9);
-          let firstPageContent = paragraphs.slice(0, splitIndex).join('');
+          // Use binary search approach to find optimal split point
+          let low = Math.floor(paragraphs.length * 0.6); // Start at 60%
+          let high = paragraphs.length - 1;
+          let bestSplitIndex = low;
           
-          tempDiv.innerHTML = firstPageContent;
-          
-          // Gradually reduce content until it fits, but don't go below half the content
-          const minSplitIndex = Math.max(1, Math.floor(paragraphs.length * 0.5));
-          
-          while (tempDiv.scrollHeight > 950 && splitIndex > minSplitIndex) {
-            splitIndex--;
-            firstPageContent = paragraphs.slice(0, splitIndex).join('');
-            tempDiv.innerHTML = firstPageContent;
+          while (low <= high) {
+            const mid = Math.floor((low + high) / 2);
+            const testContent = paragraphs.slice(0, mid).join('');
+            tempDiv.innerHTML = testContent;
+            
+            if (tempDiv.scrollHeight <= 950) {
+              // Content fits, try to include more
+              bestSplitIndex = mid;
+              low = mid + 1;
+            } else {
+              // Content too tall, reduce
+              high = mid - 1;
+            }
           }
           
-          const overflowContent = paragraphs.slice(splitIndex).join('');
+          const firstPageContent = paragraphs.slice(0, bestSplitIndex).join('');
+          const overflowContent = paragraphs.slice(bestSplitIndex).join('');
           
-          if (overflowContent && splitIndex < paragraphs.length) {
-            console.log(`Splitting content: keeping ${splitIndex} paragraphs on page ${pageIndex + 1}, moving ${paragraphs.length - splitIndex} paragraphs to next page`);
+          if (overflowContent && bestSplitIndex < paragraphs.length) {
+            console.log(`Optimal split: keeping ${bestSplitIndex} paragraphs on page ${pageIndex + 1}, moving ${paragraphs.length - bestSplitIndex} paragraphs to next page`);
             
-            // Update current page with trimmed content
+            // Update current page with optimally sized content
             setPages(prev => {
               const newPages = [...prev];
               newPages[pageIndex] = firstPageContent || '<p><br></p>';
@@ -473,7 +479,8 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
           font-family: 'Times New Roman', serif !important;
           font-size: 14pt !important;
           box-sizing: border-box !important;
-          height: 950px !important;
+          min-height: 950px !important;
+          max-height: 950px !important;
           overflow: hidden !important;
         }
 
