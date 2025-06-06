@@ -37,7 +37,53 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
   const quillRef = useRef<ReactQuill>(null);
 
   useEffect(() => {
-    // Simple CSS-based page break approach to prevent performance issues
+    let lastHeight = 0;
+    
+    const addPageBreaks = () => {
+      const editor = editorRef.current;
+      if (!editor) return;
+
+      const container = editor.querySelector('.ql-editor') as HTMLElement;
+      if (!container) return;
+
+      const currentHeight = container.scrollHeight;
+      
+      // Only update if height changed significantly
+      if (Math.abs(currentHeight - lastHeight) < 50) return;
+      lastHeight = currentHeight;
+
+      // Remove existing page breaks
+      const existingBreaks = container.querySelectorAll('.page-break-line');
+      existingBreaks.forEach(el => el.remove());
+
+      // Calculate number of pages needed
+      const numberOfPages = Math.ceil(currentHeight / PAGE_HEIGHT);
+      
+      // Add visual page break lines
+      for (let i = 1; i < numberOfPages; i++) {
+        const breakPosition = i * PAGE_HEIGHT;
+        
+        const pageBreak = document.createElement('div');
+        pageBreak.className = 'page-break-line';
+        pageBreak.style.cssText = `
+          position: absolute;
+          left: 0;
+          right: 0;
+          top: ${breakPosition}px;
+          height: 1px;
+          background: #ddd;
+          border-top: 1px dashed #999;
+          pointer-events: none;
+          z-index: 10;
+          margin: 0;
+        `;
+        
+        container.appendChild(pageBreak);
+      }
+      
+      console.log(`Page breaks: ${numberOfPages - 1} breaks for ${currentHeight}px content`);
+    };
+
     const addEditorStyling = () => {
       const style = document.createElement('style');
       style.textContent = `
@@ -49,20 +95,6 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
           font-family: 'Times New Roman', serif;
           font-size: 12pt;
           position: relative;
-          /* Add subtle page break indicators using background gradients */
-          background-image: 
-            linear-gradient(transparent ${PAGE_HEIGHT - 1}px, #e0e0e0 ${PAGE_HEIGHT}px, transparent ${PAGE_HEIGHT + 1}px),
-            linear-gradient(transparent ${PAGE_HEIGHT * 2 - 1}px, #e0e0e0 ${PAGE_HEIGHT * 2}px, transparent ${PAGE_HEIGHT * 2 + 1}px),
-            linear-gradient(transparent ${PAGE_HEIGHT * 3 - 1}px, #e0e0e0 ${PAGE_HEIGHT * 3}px, transparent ${PAGE_HEIGHT * 3 + 1}px),
-            linear-gradient(transparent ${PAGE_HEIGHT * 4 - 1}px, #e0e0e0 ${PAGE_HEIGHT * 4}px, transparent ${PAGE_HEIGHT * 4 + 1}px),
-            linear-gradient(transparent ${PAGE_HEIGHT * 5 - 1}px, #e0e0e0 ${PAGE_HEIGHT * 5}px, transparent ${PAGE_HEIGHT * 5 + 1}px),
-            linear-gradient(transparent ${PAGE_HEIGHT * 6 - 1}px, #e0e0e0 ${PAGE_HEIGHT * 6}px, transparent ${PAGE_HEIGHT * 6 + 1}px),
-            linear-gradient(transparent ${PAGE_HEIGHT * 7 - 1}px, #e0e0e0 ${PAGE_HEIGHT * 7}px, transparent ${PAGE_HEIGHT * 7 + 1}px),
-            linear-gradient(transparent ${PAGE_HEIGHT * 8 - 1}px, #e0e0e0 ${PAGE_HEIGHT * 8}px, transparent ${PAGE_HEIGHT * 8 + 1}px),
-            linear-gradient(transparent ${PAGE_HEIGHT * 9 - 1}px, #e0e0e0 ${PAGE_HEIGHT * 9}px, transparent ${PAGE_HEIGHT * 9 + 1}px),
-            linear-gradient(transparent ${PAGE_HEIGHT * 10 - 1}px, #e0e0e0 ${PAGE_HEIGHT * 10}px, transparent ${PAGE_HEIGHT * 10 + 1}px);
-          background-repeat: no-repeat;
-          background-size: 100% auto;
         }
         
         .ql-editor p {
@@ -75,6 +107,10 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
           margin-top: 12pt;
           margin-bottom: 6pt;
         }
+        
+        .page-break-line {
+          box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
       `;
       
       if (!document.querySelector('#editor-page-styling')) {
@@ -84,7 +120,40 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
     };
 
     addEditorStyling();
-  }, []);
+    
+    // Initial page break calculation
+    setTimeout(() => {
+      addPageBreaks();
+      
+      // Set up observer for content changes
+      const observer = new MutationObserver((mutations) => {
+        let shouldUpdate = false;
+        mutations.forEach((mutation) => {
+          if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+            shouldUpdate = true;
+          }
+          if (mutation.type === 'characterData') {
+            shouldUpdate = true;
+          }
+        });
+        
+        if (shouldUpdate) {
+          setTimeout(addPageBreaks, 300);
+        }
+      });
+      
+      const container = editorRef.current?.querySelector('.ql-editor');
+      if (container) {
+        observer.observe(container, { 
+          childList: true, 
+          subtree: true, 
+          characterData: true 
+        });
+      }
+      
+      return () => observer.disconnect();
+    }, 1000);
+  }, [content]);
 
   // Formatting function for toolbar commands
   const handleFormat = (command: string, value?: string) => {
