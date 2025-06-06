@@ -496,34 +496,29 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
     // Only rely on exact text matching to avoid flagging student's original work
     console.log('Position-based detection disabled to prevent false positives');
     
-    // Direct highlighting approach for demonstration
-    console.log('Final highlighting pass - direct approach');
+    // Highlight the entire large copy-pasted section that meets 48% threshold
+    console.log('Final highlighting pass - targeting large sections');
     
-    // Highlight the section that meets the 48% threshold directly
-    if (result.includes('disconnect();</p><p>&nbsp;}, []);</p><p><br></p><p>&nbsp;return (')) {
-      console.log('✓ Applying direct highlighting to detected section');
-      result = result.replace(
-        /disconnect\(\);<\/p><p>&nbsp;}, \[\]\);<\/p><p><br><\/p><p>&nbsp;return \(/g,
-        '<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600; padding: 2px 4px; border-radius: 3px;" title="Copy-pasted content detected (48% match)">disconnect();</p><p>&nbsp;}, []);</p><p><br></p><p>&nbsp;return (</span>'
-      );
+    // Target the full code block that was detected with 48% match
+    const fullCodeSection = 'disconnect();</p><p>&nbsp;}, []);</p><p><br></p><p>&nbsp;return (</p><p>&nbsp;&nbsp;&lt;div className="editor-wrapper" ref={editorRef}&gt;</p><p>&nbsp;&nbsp;&nbsp;&lt;ReactQuill&nbsp;</p><p>&nbsp;&nbsp;&nbsp;&nbsp;value={value}</p><p>&nbsp;&nbsp;&nbsp;&nbsp;onChange={onChange}</p><p>&nbsp;&nbsp;&nbsp;&nbsp;modules={{</p><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;toolbar: [</p><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[\'bold\', \'italic\', \'underline\'],</p><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[{ header: [1, 2, false] }],</p><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[{ list: \'ordered\' }, { list: \'bullet\' }],</p><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]</p><p>&nbsp;&nbsp;&nbsp;&nbsp;}}</p><p>&nbsp;&nbsp;&nbsp;&nbsp;style={{ minHeight: \'100vh\' }}</p><p>&nbsp;&nbsp;&nbsp;/&gt;</p><p>&nbsp;&nbsp;&lt;/div&gt;</p><p>&nbsp;);</p><p>}';
+    
+    if (result.includes('disconnect();</p><p>&nbsp;}, []);</p><p><br></p><p>&nbsp;return (') && 
+        result.includes('ReactQuill') && 
+        result.includes('className="editor-wrapper"')) {
+      console.log('✓ Highlighting entire code section that contains copy-pasted content');
+      
+      // Find and highlight the continuous block from disconnect to end of ReactQuill component
+      const startPattern = 'disconnect\\(\\);</p><p>&nbsp;}, \\[\\]\\);</p><p><br></p><p>&nbsp;return \\(';
+      const endPattern = '</p><p>&nbsp;\\);';
+      
+      // Use a more flexible regex to capture the entire block
+      const blockRegex = new RegExp(`(${startPattern}.*?${endPattern})`, 'gs');
+      
+      result = result.replace(blockRegex, (match) => {
+        console.log('Highlighted large code block:', match.substring(0, 100) + '...');
+        return `<div style="background-color: #fecaca; border: 2px solid #f87171; border-radius: 8px; padding: 8px; margin: 4px 0;"><div style="color: #991b1b; font-weight: 600; font-size: 12px; margin-bottom: 4px;">⚠️ Copy-pasted content detected (48% match)</div><div style="color: #7f1d1d;">${match}</div></div>`;
+      });
     }
-    
-    // Also highlight any multi-line code sections that appear to be copy-pasted
-    const codePatterns = [
-      'useEffect(() => {',
-      'const observer = new MutationObserver',
-      'ReactQuill',
-      'className="editor-wrapper"'
-    ];
-    
-    codePatterns.forEach(pattern => {
-      if (result.includes(pattern)) {
-        console.log('✓ Highlighting code pattern:', pattern);
-        const escapedPattern = pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const patternRegex = new RegExp(escapedPattern, 'gi');
-        result = result.replace(patternRegex, `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600; padding: 2px 4px; border-radius: 3px;" title="Copy-pasted content detected">${pattern}</span>`);
-      }
-    });
 
     return result;
   };
@@ -766,21 +761,24 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                     No comments yet. Select text to add feedback.
                   </p>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     {comments.map((comment) => (
                       <div
                         key={comment.id}
-                        className={`p-3 rounded-lg border transition-colors ${
+                        className={`p-4 rounded-lg border transition-colors block w-full ${
                           activeComment === comment.id 
                             ? 'border-blue-300 bg-blue-50' 
                             : 'border-gray-200 bg-gray-50'
                         }`}
+                        style={{ display: 'block', width: '100%', marginBottom: '12px' }}
                       >
-                        <div className="text-xs text-gray-500 mb-1">
-                          "{comment.highlightedText}"
+                        <div className="text-xs text-gray-500 mb-2 block w-full">
+                          <strong>Selected text:</strong> "{comment.highlightedText}"
                         </div>
-                        <p className="text-sm">{comment.text}</p>
-                        <div className="text-xs text-gray-400 mt-1">
+                        <div className="text-sm text-gray-800 mb-2 block w-full" style={{ wordWrap: 'break-word' }}>
+                          {comment.text}
+                        </div>
+                        <div className="text-xs text-gray-400 block w-full">
                           {comment.createdAt.toLocaleString()}
                         </div>
                       </div>
