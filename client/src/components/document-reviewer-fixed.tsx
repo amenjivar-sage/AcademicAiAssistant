@@ -602,9 +602,17 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                   <div className="relative">
                     <div
                       ref={contentRef}
-                      className="bg-gray-50 p-4 rounded-lg min-h-96 cursor-text"
+                      className="bg-white border border-gray-200 rounded-lg shadow-sm min-h-96 cursor-text mx-auto"
                       onMouseUp={handleTextSelection}
-                      style={{ userSelect: 'text' }}
+                      style={{ 
+                        userSelect: 'text',
+                        maxWidth: '8.5in',
+                        width: '100%',
+                        padding: '1in',
+                        lineHeight: '1.6',
+                        fontSize: '12pt',
+                        fontFamily: 'Times, "Times New Roman", serif'
+                      }}
                     >
                       {renderContentWithHighlights()}
                     </div>
