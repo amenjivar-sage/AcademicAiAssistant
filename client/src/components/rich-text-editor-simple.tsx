@@ -8,6 +8,12 @@ interface RichTextEditorProps {
   onTextSelection?: (selectedText: string) => void;
   readOnly?: boolean;
   placeholder?: string;
+  onFormatRef?: React.MutableRefObject<((command: string, value?: string) => void) | null>;
+  headerFooterSettings?: {
+    header: string;
+    footer: string;
+    pageNumbers: boolean;
+  };
 }
 
 export interface RichTextEditorHandle {
@@ -22,7 +28,9 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
   onContentChange,
   onTextSelection,
   readOnly = false,
-  placeholder = "Start writing..."
+  placeholder = "Start writing...",
+  onFormatRef,
+  headerFooterSettings
 }, ref) => {
   
   const editorRef = useRef<HTMLDivElement>(null);
@@ -61,6 +69,103 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
     setTimeout(addPageIndicators, 500);
   }, []);
 
+  // Formatting function for toolbar commands
+  const handleFormat = (command: string, value?: string) => {
+    if (!quillRef.current) return;
+    
+    const quill = quillRef.current.getEditor();
+    const selection = quill.getSelection();
+
+    switch (command) {
+      case 'fontName':
+        if (selection) {
+          quill.format('font', value);
+        }
+        break;
+      case 'fontSize':
+        if (selection) {
+          quill.format('size', value);
+        }
+        break;
+      case 'bold':
+        if (selection) {
+          quill.format('bold', !quill.getFormat().bold);
+        }
+        break;
+      case 'italic':
+        if (selection) {
+          quill.format('italic', !quill.getFormat().italic);
+        }
+        break;
+      case 'underline':
+        if (selection) {
+          quill.format('underline', !quill.getFormat().underline);
+        }
+        break;
+      case 'foreColor':
+        if (selection) {
+          quill.format('color', value);
+        }
+        break;
+      case 'justifyLeft':
+        if (selection) {
+          quill.format('align', false);
+        }
+        break;
+      case 'justifyCenter':
+        if (selection) {
+          quill.format('align', 'center');
+        }
+        break;
+      case 'justifyRight':
+        if (selection) {
+          quill.format('align', 'right');
+        }
+        break;
+      case 'insertUnorderedList':
+        if (selection) {
+          quill.format('list', 'bullet');
+        }
+        break;
+      case 'insertOrderedList':
+        if (selection) {
+          quill.format('list', 'ordered');
+        }
+        break;
+      case 'undo':
+        try {
+          // Use Quill's undo if available
+          const history = (quill as any).history;
+          if (history && history.undo) {
+            history.undo();
+          }
+        } catch (e) {
+          console.log('Undo not available');
+        }
+        break;
+      case 'redo':
+        try {
+          // Use Quill's redo if available
+          const history = (quill as any).history;
+          if (history && history.redo) {
+            history.redo();
+          }
+        } catch (e) {
+          console.log('Redo not available');
+        }
+        break;
+      default:
+        console.log('Unhandled format command:', command, value);
+    }
+  };
+
+  // Connect formatting function to parent ref
+  useEffect(() => {
+    if (onFormatRef) {
+      onFormatRef.current = handleFormat;
+    }
+  }, [onFormatRef]);
+
   // Expose methods through ref
   useImperativeHandle(ref, () => ({
     focus: () => {
@@ -74,18 +179,7 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
   }));
 
   const modules = {
-    toolbar: [
-      [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-      ['bold', 'italic', 'underline', 'strike'],
-      [{ 'color': [] }, { 'background': [] }],
-      [{ 'font': [] }],
-      [{ 'align': [] }],
-      ['blockquote', 'code-block'],
-      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-      [{ 'indent': '-1'}, { 'indent': '+1' }],
-      ['link', 'image'],
-      ['clean']
-    ],
+    toolbar: false, // Disable default toolbar since we're using EnhancedToolbar
     clipboard: {
       matchVisual: false
     }
@@ -94,7 +188,7 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
   const formats = [
     'header', 'font', 'size',
     'bold', 'italic', 'underline', 'strike', 'blockquote',
-    'list', 'bullet', 'indent',
+    'list', 'bullet', 'indent', 'align',
     'link', 'color', 'background'
   ];
 

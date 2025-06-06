@@ -654,6 +654,25 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
             </div>
           )}
           
+          {/* Enhanced Toolbar */}
+          <div className="border-b bg-white">
+            <EnhancedToolbar
+              onFormatting={(command, value) => {
+                console.log('Toolbar formatting called:', command, value);
+                if (formatRef.current) {
+                  console.log('Calling formatRef.current with:', command, value);
+                  formatRef.current(command, value);
+                } else {
+                  console.log('formatRef.current is null');
+                }
+              }}
+              onSave={() => saveSession()}
+              isSaving={isSaving}
+              onSpellCheck={() => setShowSpellCheck(true)}
+              onHeaderFooterChange={setHeaderFooterSettings}
+            />
+          </div>
+
           <CopyPasteDetector
             allowCopyPaste={allowCopyPaste}
             onPasteDetected={handlePasteDetected}
@@ -669,6 +688,8 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
               onTextSelection={setSelectedText}
               readOnly={session?.status === 'graded'}
               placeholder="Start writing your assignment..."
+              onFormatRef={formatRef}
+              headerFooterSettings={headerFooterSettings}
             />
           </CopyPasteDetector>
         </div>
