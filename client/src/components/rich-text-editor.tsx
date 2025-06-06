@@ -326,70 +326,8 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     if (content && content !== pages.join('')) {
       console.log('External content change detected, syncing with editor:', content.length, 'chars');
       
-      // For now, put all content in first page and let overflow detection handle pagination
+      // Simply put all content in first page - no automatic redistribution
       setPages([content]);
-      
-      // Check for overflow and redistribute existing content
-      setTimeout(() => {
-        const pageRef = pageRefs.current[0];
-        if (pageRef) {
-          const editorElement = pageRef.getEditor().root;
-          const contentHeight = editorElement.scrollHeight;
-          
-          console.log(`Initial content height: ${contentHeight}px`);
-          
-          if (contentHeight > 950 && pages.length === 1) {
-            console.log(`Redistributing existing content (${contentHeight}px > 950px)`);
-            
-            const pageContent = pages[0];
-            if (pageContent && pageContent.trim()) {
-              // Use same logic as real-time overflow detection
-              const tempDiv = document.createElement('div');
-              tempDiv.style.cssText = `
-                position: absolute;
-                visibility: hidden;
-                width: calc(8.5in - 144px);
-                font-family: 'Times New Roman', serif;
-                font-size: 14pt;
-                line-height: 2.0;
-                padding: 72px;
-                top: -9999px;
-              `;
-              document.body.appendChild(tempDiv);
-              
-              try {
-                tempDiv.innerHTML = pageContent;
-                const paragraphs = Array.from(tempDiv.querySelectorAll('p'));
-                
-                if (paragraphs.length > 1) {
-                  let splitIndex = Math.floor(paragraphs.length * 0.7);
-                  let testContent = paragraphs.slice(0, splitIndex).map(p => p.outerHTML).join('');
-                  
-                  tempDiv.innerHTML = testContent;
-                  
-                  while (tempDiv.scrollHeight > 950 && splitIndex > 1) {
-                    splitIndex--;
-                    testContent = paragraphs.slice(0, splitIndex).map(p => p.outerHTML).join('');
-                    tempDiv.innerHTML = testContent;
-                  }
-                  
-                  const firstPageContent = testContent;
-                  const secondPageContent = paragraphs.slice(splitIndex).map(p => p.outerHTML).join('');
-                  
-                  console.log(`Initial split: ${paragraphs.length} paragraphs -> ${splitIndex} | ${paragraphs.length - splitIndex}`);
-                  
-                  setPages([
-                    firstPageContent || '<p><br></p>',
-                    secondPageContent || '<p><br></p>'
-                  ]);
-                }
-              } finally {
-                document.body.removeChild(tempDiv);
-              }
-            }
-          }
-        }
-      }, 800);
     }
   }, [content]);
 
@@ -400,31 +338,14 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
 
 
 
-  // Clean up empty pages and consolidate content
-  const consolidatePages = useCallback(() => {
-    const newPages: string[] = [];
-    let combinedContent = '';
-    
-    for (let i = 0; i < pages.length; i++) {
-      const pageContent = pages[i];
-      if (pageContent && pageContent.trim()) {
-        const cleanContent = pageContent.replace(/^<p>|<\/p>$/g, '').trim();
-        if (cleanContent) {
-          combinedContent += (combinedContent ? ' ' : '') + cleanContent;
-        }
-      }
+  // Simple page management - no automatic consolidation
+  const ensureMinimumPages = useCallback(() => {
+    if (pages.length === 0) {
+      setPages(['<p><br></p>']);
     }
-    
-    if (!combinedContent) {
-      setPages(['']);
-      return;
-    }
-    
-    newPages.push(`<p>${combinedContent}</p>`);
-    setPages(newPages);
   }, [pages]);
 
-  // Handle keyboard events for seamless page navigation
+  // Simple keyboard navigation between pages
   const handleKeyDown = (e: React.KeyboardEvent, pageIndex: number) => {
     const pageRef = pageRefs.current[pageIndex];
     if (!pageRef) return;
@@ -437,29 +358,36 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
       const textLength = editor.getLength();
       const cursorPosition = range.index;
       
-      // If cursor is at the end of this page's content
+      // Check if we're at the end of the page content
       if (cursorPosition >= textLength - 1) {
         const editorElement = editor.root;
         const contentHeight = editorElement.scrollHeight;
         
-        // If page is approaching or exceeding height limit
+        // If page is getting full (over 900px), prepare to move to next page
         if (contentHeight > 900) {
-          e.preventDefault();
-          
-          // Create next page if it doesn't exist
-          if (pageIndex === pages.length - 1) {
-            setPages(prev => [...prev, '<p><br></p>']);
-          }
-          
-          // Move cursor to next page
           setTimeout(() => {
-            const nextPageRef = pageRefs.current[pageIndex + 1];
-            if (nextPageRef) {
-              nextPageRef.focus();
-              const nextEditor = nextPageRef.getEditor();
-              nextEditor.setSelection(0, 0);
+            const updatedHeight = editorElement.scrollHeight;
+            
+            // If the Enter push us over the limit, move to next page
+            if (updatedHeight > 950) {
+              console.log(`Moving to next page from page ${pageIndex + 1}`);
+              
+              // Ensure next page exists
+              if (pageIndex >= pages.length - 1) {
+                setPages(prev => [...prev, '<p><br></p>']);
+              }
+              
+              // Focus next page
+              setTimeout(() => {
+                const nextPageRef = pageRefs.current[pageIndex + 1];
+                if (nextPageRef) {
+                  nextPageRef.focus();
+                  const nextEditor = nextPageRef.getEditor();
+                  nextEditor.setSelection(0, 0);
+                }
+              }, 100);
             }
-          }, 100);
+          }, 50);
         }
       }
     }
@@ -467,45 +395,18 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     if (e.key === 'Backspace') {
       const cursorPosition = range.index;
       
-      // If cursor is at the very beginning of this page and it's not the first page
+      // If at beginning of page and not first page, move to previous page
       if (cursorPosition === 0 && pageIndex > 0) {
         e.preventDefault();
         
-        // Move cursor to end of previous page
         const prevPageRef = pageRefs.current[pageIndex - 1];
         if (prevPageRef) {
+          prevPageRef.focus();
           const prevEditor = prevPageRef.getEditor();
           const prevLength = prevEditor.getLength();
-          
-          prevPageRef.focus();
-          prevEditor.setSelection(prevLength - 1, 0);
+          prevEditor.setSelection(Math.max(0, prevLength - 1), 0);
         }
       }
-    }
-    
-    // Clean up empty pages when deleting content
-    if (e.key === 'Backspace' || e.key === 'Delete') {
-      setTimeout(() => {
-        const currentContent = editor.getText().trim();
-        
-        // If this page is empty and it's not the first page
-        if (currentContent.length <= 1 && pageIndex > 0 && pages.length > 1) {
-          console.log(`Removing empty page ${pageIndex + 1}`);
-          setPages(prev => {
-            const newPages = [...prev];
-            newPages.splice(pageIndex, 1);
-            return newPages;
-          });
-          
-          // Move focus to previous page
-          setTimeout(() => {
-            const prevPageRef = pageRefs.current[pageIndex - 1];
-            if (prevPageRef) {
-              prevPageRef.focus();
-            }
-          }, 100);
-        }
-      }, 300);
     }
   };
 
