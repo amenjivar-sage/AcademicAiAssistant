@@ -325,7 +325,13 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
                 if (nextEditor) {
                   nextEditor.focus();
                   nextEditor.setSelection(0, 0);
-                  console.log(`Navigated to page ${activePageIndex + 2}`);
+                  console.log(`Navigated to page ${activePageIndex + 2}, cursor at start`);
+                  
+                  // Ensure the editor is properly focused
+                  setTimeout(() => {
+                    nextEditor.blur();
+                    nextEditor.focus();
+                  }, 10);
                 }
               }
             }, 50);
@@ -343,9 +349,17 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
                 const prevEditor = prevPageRef.getEditor();
                 if (prevEditor) {
                   const prevLength = prevEditor.getLength();
+                  // Position cursor at the very end of the content (before the final newline)
+                  const cursorPosition = Math.max(0, prevLength - 1);
                   prevEditor.focus();
-                  prevEditor.setSelection(Math.max(0, prevLength - 1), 0);
-                  console.log(`Navigated to page ${activePageIndex}`);
+                  prevEditor.setSelection(cursorPosition, 0);
+                  console.log(`Navigated to page ${activePageIndex}, cursor at position ${cursorPosition}/${prevLength}`);
+                  
+                  // Ensure the editor is properly focused
+                  setTimeout(() => {
+                    prevEditor.blur();
+                    prevEditor.focus();
+                  }, 10);
                 }
               }
             }, 50);
