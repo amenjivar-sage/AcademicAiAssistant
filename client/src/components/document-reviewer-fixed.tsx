@@ -439,6 +439,8 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                     console.log('- Has min length:', hasMinLength, 'pasted:', pastedWords.length, 'doc:', docWords.length);
                     
                     if (meetsThreshold && hasEnoughExactMatches && hasMinLength) {
+                      console.log('✓ All criteria met, proceeding with highlighting checks for:', docSentTrimmed.substring(0, 100));
+                      
                       // Enhanced check: avoid highlighting legitimate content patterns
                       const hasOriginalPatterns = /\b(sky|hello|how are you|doing|good morning|dear|sincerely)\b/i.test(docSentTrimmed);
                       
@@ -458,21 +460,20 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                       console.log('- Is random text:', isRandomText);
                       
                       if (!hasOriginalPatterns && !isCodeSnippet && !isReference && !isRandomText) {
-                        console.log('✓ Highlighting copy-pasted content:', docSentTrimmed);
+                        console.log('✓ Highlighting copy-pasted content:', docSentTrimmed.substring(0, 50));
                         const escapedSentence = docSentTrimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
                         const sentenceRegex = new RegExp(escapedSentence, 'gi');
                         
                         result = result.replace(sentenceRegex, (match) => {
                           if (!match.includes('style="background-color: #fecaca')) {
-                            console.log('Applied red highlighting to:', match);
+                            console.log('Applied red highlighting to:', match.substring(0, 50));
                             const highlightedHTML = `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600; padding: 2px 4px; border-radius: 3px;" title="Copy-pasted content detected (${Math.round(matchPercentage * 100)}% match)">${match}</span>`;
-                            console.log('Generated HTML:', highlightedHTML);
                             return highlightedHTML;
                           }
                           return match;
                         });
                       } else {
-                        console.log('✗ Skipped original content');
+                        console.log('✗ Skipped due to filters - Code:', isCodeSnippet, 'Reference:', isReference, 'Random:', isRandomText);
                       }
                     } else {
                       console.log('✗ Does not meet criteria');
@@ -489,6 +490,19 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
     // Position-based detection disabled to prevent false positives on original content
     // Only rely on exact text matching to avoid flagging student's original work
     console.log('Position-based detection disabled to prevent false positives');
+    
+    // Simple test: highlight any exact matches for demonstration
+    pastedTexts.forEach((pastedText: string) => {
+      if (pastedText && pastedText.length > 20) {
+        const testWords = pastedText.split(/\s+/).slice(0, 5).join(' '); // First 5 words
+        if (result.includes(testWords)) {
+          console.log('✓ Found exact match for test highlighting:', testWords);
+          const escapedTest = testWords.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const testRegex = new RegExp(escapedTest, 'gi');
+          result = result.replace(testRegex, `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected">${testWords}</span>`);
+        }
+      }
+    });
 
     return result;
   };
@@ -595,14 +609,19 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                         </div>
                         <div className="text-sm text-red-600 font-semibold">
                           {(() => {
-                            const totalWords = session.content ? session.content.replace(/<[^>]*>/g, '').split(/\s+/).filter(w => w.trim()).length : 0;
-                            const originalPastedWords = session.pastedContent.reduce((total: number, item: any) => {
-                              const text = item.text || item.content || item.value || '';
-                              return total + (text ? text.split(/\s+/).filter((w: string) => w.trim()).length : 0);
-                            }, 0);
+                            const cleanContent = session.content ? session.content.replace(/<[^>]*>/g, '') : '';
+                            const highlightedSpans = (cleanContent.match(/<span[^>]*style="background-color: #fecaca[^>]*>/g) || []).length;
+                            const totalWords = cleanContent.split(/\s+/).filter(w => w.trim()).length;
                             
-                            const percentage = totalWords > 0 ? Math.round((originalPastedWords / totalWords) * 100) : 0;
-                            return `${Math.min(percentage, 100)}% detected content`;
+                            // Calculate percentage based on actually highlighted content
+                            if (highlightedSpans > 0) {
+                              // Estimate highlighted words (rough approximation)
+                              const estimatedHighlightedWords = highlightedSpans * 15; // Average words per highlighted span
+                              const percentage = totalWords > 0 ? Math.round((estimatedHighlightedWords / totalWords) * 100) : 0;
+                              return `~${Math.min(percentage, 100)}% highlighted content`;
+                            } else {
+                              return `${session.pastedContent.length} copy-paste instances detected`;
+                            }
                           })()}
                         </div>
                       </div>
