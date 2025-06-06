@@ -144,14 +144,16 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
         document.body.appendChild(tempDiv);
         
         try {
-          // Find the split point where content fits on the page
-          let splitIndex = Math.floor(paragraphs.length * 0.8);
+          // Start with more content on the first page - try 90% first
+          let splitIndex = Math.floor(paragraphs.length * 0.9);
           let firstPageContent = paragraphs.slice(0, splitIndex).join('');
           
           tempDiv.innerHTML = firstPageContent;
           
-          // Adjust split point if still too tall
-          while (tempDiv.scrollHeight > 950 && splitIndex > 1) {
+          // Gradually reduce content until it fits, but don't go below half the content
+          const minSplitIndex = Math.max(1, Math.floor(paragraphs.length * 0.5));
+          
+          while (tempDiv.scrollHeight > 950 && splitIndex > minSplitIndex) {
             splitIndex--;
             firstPageContent = paragraphs.slice(0, splitIndex).join('');
             tempDiv.innerHTML = firstPageContent;
@@ -160,7 +162,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
           const overflowContent = paragraphs.slice(splitIndex).join('');
           
           if (overflowContent && splitIndex < paragraphs.length) {
-            console.log(`Moving ${paragraphs.length - splitIndex} paragraphs to next page`);
+            console.log(`Splitting content: keeping ${splitIndex} paragraphs on page ${pageIndex + 1}, moving ${paragraphs.length - splitIndex} paragraphs to next page`);
             
             // Update current page with trimmed content
             setPages(prev => {
@@ -375,8 +377,14 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
                   
                   // Check if merged content overflows and needs to be split again
                   setTimeout(() => {
-                    handleContentFlow(activePageIndex - 1, mergedContent);
-                  }, 100);
+                    const editorElement = prevEditor.root;
+                    const contentHeight = editorElement.scrollHeight;
+                    
+                    // Only split if significantly overflowing (more than 20% over limit)
+                    if (contentHeight > 1140) { // 950 + 20% = 1140
+                      handleContentFlow(activePageIndex - 1, mergedContent);
+                    }
+                  }, 200);
                 }
               }
             }, 100);
