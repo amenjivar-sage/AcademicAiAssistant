@@ -589,29 +589,7 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                           </p>
                         </div>
                         <div className="text-sm text-red-600 font-semibold">
-                          {(() => {
-                            // Calculate based on how much content is actually highlighted as suspicious
-                            const cleanContent = session.content ? session.content.replace(/<[^>]*>/g, '') : '';
-                            const totalWords = cleanContent.split(/\s+/).filter(w => w.trim()).length;
-                            
-                            // Check if there are highlighted sections in the content
-                            const contentHTML = detectCopyPastedContent(session.content || '', session.pastedContent ? Array.isArray(session.pastedContent) ? session.pastedContent : [] : []);
-                            const hasHighlights = contentHTML.includes('background-color: #fecaca');
-                            
-                            if (!hasHighlights) {
-                              return 'Content tracked, no issues detected';
-                            }
-                            
-                            // Count only what was actually flagged as problematic
-                            const highlightMatches = contentHTML.match(/<span[^>]*background-color: #fecaca[^>]*>([^<]*)<\/span>/gi) || [];
-                            const flaggedWords = highlightMatches.reduce((total: number, match: string) => {
-                              const text = match.replace(/<[^>]*>/g, '');
-                              return total + text.split(/\s+/).filter((w: string) => w.trim()).length;
-                            }, 0);
-                            
-                            const percentage = totalWords > 0 ? Math.round((flaggedWords / totalWords) * 100) : 0;
-                            return `${Math.min(percentage, 100)}% flagged content`;
-                          })()}
+                          Content tracked for analysis
                         </div>
                       </div>
                     </div>
