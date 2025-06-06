@@ -65,22 +65,54 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     'link', 'color', 'background'
   ];
 
-  // Simple overflow detection without complex redistribution
-  const checkPageOverflow = useCallback((pageIndex: number) => {
+  // Smart overflow detection with content redistribution
+  const handleContentFlow = useCallback((pageIndex: number) => {
     const pageRef = pageRefs.current[pageIndex];
-    if (!pageRef) return;
+    if (!pageRef || pageIndex !== pages.length - 1) return;
     
     const editorElement = pageRef.getEditor().root;
     const contentHeight = editorElement.scrollHeight;
     
     console.log(`Page ${pageIndex + 1} height: ${contentHeight}px (limit: 950px)`);
     
-    // Only create new page if this is the last page and content overflows
-    if (pageIndex === pages.length - 1 && contentHeight > 950) {
-      console.log(`Creating new page - overflow on page ${pageIndex + 1}`);
-      setPages(prev => [...prev, '']);
+    if (contentHeight > 950) {
+      console.log(`Redistributing content - overflow on page ${pageIndex + 1}`);
+      
+      // Get all content from the overflowing page
+      const pageContent = pages[pageIndex];
+      if (!pageContent.trim()) return;
+      
+      // Parse content into sentences for better breaks
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = pageContent;
+      const textContent = tempDiv.textContent || tempDiv.innerText || '';
+      
+      // Split into sentences
+      const sentences = textContent.split(/[.!?]+/).filter(s => s.trim().length > 0);
+      if (sentences.length <= 1) return;
+      
+      // Find a good break point (roughly 60% of content on first page)
+      const breakPoint = Math.floor(sentences.length * 0.6);
+      const firstPageSentences = sentences.slice(0, breakPoint);
+      const secondPageSentences = sentences.slice(breakPoint);
+      
+      // Reconstruct content with basic HTML formatting
+      const firstPageContent = `<p>${firstPageSentences.join('. ').trim()}.</p>`;
+      const secondPageContent = `<p>${secondPageSentences.join('. ').trim()}.</p>`;
+      
+      console.log(`Splitting: ${sentences.length} sentences -> ${firstPageSentences.length} | ${secondPageSentences.length}`);
+      console.log(`Creating 2 pages: Page 1 (${firstPageContent.length} chars), Page 2 (${secondPageContent.length} chars)`);
+      
+      // Update pages
+      setPages(prev => {
+        const newPages = [...prev];
+        newPages[pageIndex] = firstPageContent;
+        newPages.push(secondPageContent);
+        console.log(`Total pages after split: ${newPages.length}`);
+        return newPages;
+      });
     }
-  }, [pages.length]);
+  }, [pages]);
 
   // Simple content redistribution - only when significant deletion occurs
   const redistributeContentOnDelete = useCallback((pageIndex: number) => {
@@ -141,11 +173,11 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     setPages(newPages);
     onContentChange(combinedContent);
     
-    // Check for overflow only on the last page after typing
+    // Check for overflow and redistribute content on the last page
     if (pageIndex === pages.length - 1) {
       overflowCheckTimeout.current = setTimeout(() => {
-        checkPageOverflow(pageIndex);
-      }, 600);
+        handleContentFlow(pageIndex);
+      }, 800);
     }
   };
 
@@ -259,10 +291,10 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
       
       // Check for overflow after content is loaded
       setTimeout(() => {
-        checkPageOverflow(0);
+        handleContentFlow(0);
       }, 300);
     }
-  }, [content, checkPageOverflow]);
+  }, [content, handleContentFlow]);
 
   // Initialize page refs array
   useEffect(() => {
