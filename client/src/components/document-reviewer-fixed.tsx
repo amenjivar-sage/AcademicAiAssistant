@@ -292,6 +292,12 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
 
     console.log('Extracted pasted texts:', pastedTexts);
 
+    // Track overall document statistics for comprehensive detection
+    let totalSentencesAnalyzed = 0;
+    let totalSentencesWithMatches = 0;
+    let totalWordsInDocument = 0;
+    let totalMatchedWords = 0;
+
     pastedTexts.forEach((pastedText: string) => {
       if (pastedText) {
         console.log('Processing pasted text:', pastedText);
@@ -434,15 +440,24 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                     console.log('Match analysis for sentence:', docSentTrimmed, 
                                'Exact:', exactMatches, 'Close:', closeMatches, 'Percentage:', matchPercentage);
                     
-                    // Stricter criteria to reduce false positives
-                    const meetsThreshold = matchPercentage >= 0.70; // Require 70% similarity
-                    const hasEnoughExactMatches = exactMatches >= Math.max(3, Math.floor(pastedWords.length * 0.5)); // Require 50% exact matches
-                    const hasMinLength = pastedWords.length >= 6 && docWords.length >= 6; // Longer minimum length
+                    // More balanced criteria to catch large-scale copying while reducing false positives
+                    const meetsThreshold = matchPercentage >= 0.60; // Require 60% similarity (lowered for better detection)
+                    const hasEnoughExactMatches = exactMatches >= Math.max(2, Math.floor(pastedWords.length * 0.40)); // Require 40% exact matches
+                    const hasMinLength = pastedWords.length >= 4 && docWords.length >= 4; // Shorter minimum length
                     
                     console.log('Criteria check for:', docSentTrimmed);
-                    console.log('- Meets threshold (40%):', meetsThreshold, matchPercentage);
-                    console.log('- Has enough exact matches (20%):', hasEnoughExactMatches, exactMatches, 'needed:', Math.floor(pastedWords.length * 0.2));
+                    console.log('- Meets threshold (60%):', meetsThreshold, matchPercentage);
+                    console.log('- Has enough exact matches (40%):', hasEnoughExactMatches, exactMatches, 'needed:', Math.floor(pastedWords.length * 0.4));
                     console.log('- Has min length:', hasMinLength, 'pasted:', pastedWords.length, 'doc:', docWords.length);
+                    
+                    // Track statistics for aggregate analysis
+                    totalSentencesAnalyzed++;
+                    totalWordsInDocument += docWords.length;
+                    
+                    if (matchPercentage >= 0.30) { // Count any significant matches
+                      totalSentencesWithMatches++;
+                      totalMatchedWords += exactMatches + (closeMatches * 0.5);
+                    }
                     
                     if (meetsThreshold && hasEnoughExactMatches && hasMinLength) {
                       console.log('✓ All criteria met, proceeding with highlighting checks for:', docSentTrimmed.substring(0, 100));
@@ -504,6 +519,40 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
         }
       }
     });
+
+    // Comprehensive document-level analysis for large-scale copying
+    console.log('=== AGGREGATE ANALYSIS ===');
+    console.log('Total sentences analyzed:', totalSentencesAnalyzed);
+    console.log('Sentences with matches:', totalSentencesWithMatches);
+    console.log('Total words in document:', totalWordsInDocument);
+    console.log('Total matched words:', totalMatchedWords);
+    
+    if (totalSentencesAnalyzed > 0) {
+      const sentenceMatchPercentage = totalSentencesWithMatches / totalSentencesAnalyzed;
+      const wordMatchPercentage = totalMatchedWords / totalWordsInDocument;
+      
+      console.log('Sentence match percentage:', sentenceMatchPercentage);
+      console.log('Word match percentage:', wordMatchPercentage);
+      
+      // Detect large-scale document copying
+      const isLargeScaleCopying = (
+        (sentenceMatchPercentage >= 0.50 && totalSentencesAnalyzed >= 5) || // 50% of sentences have matches
+        (wordMatchPercentage >= 0.30 && totalWordsInDocument >= 50) || // 30% of words are matched
+        (totalMatchedWords >= 80 && wordMatchPercentage >= 0.25) // High word count with significant matches
+      );
+      
+      if (isLargeScaleCopying) {
+        console.log('🚨 LARGE-SCALE COPYING DETECTED - Adding warning banner');
+        
+        // Add a prominent warning banner to the document
+        const warningBanner = `<div style="background-color: #fef2f2; border: 2px solid #f87171; border-radius: 8px; padding: 16px; margin: 16px 0; color: #991b1b;">
+          <h3 style="margin: 0 0 8px 0; font-weight: bold;">⚠️ Significant Copy-Paste Activity Detected</h3>
+          <p style="margin: 0; font-size: 14px;">This document shows extensive similarities to pasted content (${Math.round(sentenceMatchPercentage * 100)}% of sentences, ${Math.round(wordMatchPercentage * 100)}% of words match). Please review for academic integrity.</p>
+        </div>`;
+        
+        result = warningBanner + result;
+      }
+    }
 
     // Position-based detection disabled to prevent false positives on original content
     // Only rely on exact text matching to avoid flagging student's original work
