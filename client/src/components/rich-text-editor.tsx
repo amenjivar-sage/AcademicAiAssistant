@@ -424,67 +424,88 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     setPages(newPages);
   }, [pages]);
 
-  // Handle keyboard events for pagination
+  // Handle keyboard events for seamless page navigation
   const handleKeyDown = (e: React.KeyboardEvent, pageIndex: number) => {
+    const pageRef = pageRefs.current[pageIndex];
+    if (!pageRef) return;
+    
+    const editor = pageRef.getEditor();
+    const range = editor.getSelection();
+    if (!range) return;
+    
     if (e.key === 'Enter') {
-      const pageRef = pageRefs.current[pageIndex];
-      if (pageRef) {
-        const editor = pageRef.getEditor();
-        const range = editor.getSelection();
+      const textLength = editor.getLength();
+      const cursorPosition = range.index;
+      
+      // If cursor is at the end of this page's content
+      if (cursorPosition >= textLength - 1) {
+        const editorElement = editor.root;
+        const contentHeight = editorElement.scrollHeight;
         
-        if (range) {
-          const editorElement = editor.root;
-          const contentHeight = editorElement.scrollHeight;
+        // If page is approaching or exceeding height limit
+        if (contentHeight > 900) {
+          e.preventDefault();
           
-          // Check if we're near the bottom of the page (within 100px of limit)
-          if (contentHeight > 850) {
-            const textLength = editor.getLength();
-            const cursorPosition = range.index;
-            
-            // If cursor is at the very end of the text and page is nearly full
-            if (cursorPosition >= textLength - 1) {
-              setTimeout(() => {
-                const updatedHeight = editorElement.scrollHeight;
-                
-                // If adding the new line would exceed the page limit
-                if (updatedHeight > 950) {
-                  console.log(`Moving to next page from page ${pageIndex + 1}`);
-                  
-                  // Remove the extra paragraph that was just added
-                  const currentContent = editor.root.innerHTML;
-                  const lines = currentContent.split('<p><br></p>');
-                  if (lines.length > 1 && lines[lines.length - 1] === '') {
-                    // Remove the last empty paragraph
-                    const cleanedContent = lines.slice(0, -1).join('<p><br></p>');
-                    editor.root.innerHTML = cleanedContent;
-                  }
-                  
-                  // Create next page if it doesn't exist
-                  if (pageIndex === pages.length - 1) {
-                    setPages(prev => [...prev, '<p><br></p>']);
-                  }
-                  
-                  // Move cursor to next page
-                  setTimeout(() => {
-                    const nextPageRef = pageRefs.current[pageIndex + 1];
-                    if (nextPageRef) {
-                      nextPageRef.focus();
-                      const nextEditor = nextPageRef.getEditor();
-                      nextEditor.setSelection(0, 0);
-                    }
-                  }, 200);
-                }
-              }, 50);
-            }
+          // Create next page if it doesn't exist
+          if (pageIndex === pages.length - 1) {
+            setPages(prev => [...prev, '<p><br></p>']);
           }
+          
+          // Move cursor to next page
+          setTimeout(() => {
+            const nextPageRef = pageRefs.current[pageIndex + 1];
+            if (nextPageRef) {
+              nextPageRef.focus();
+              const nextEditor = nextPageRef.getEditor();
+              nextEditor.setSelection(0, 0);
+            }
+          }, 100);
         }
       }
     }
     
+    if (e.key === 'Backspace') {
+      const cursorPosition = range.index;
+      
+      // If cursor is at the very beginning of this page and it's not the first page
+      if (cursorPosition === 0 && pageIndex > 0) {
+        e.preventDefault();
+        
+        // Move cursor to end of previous page
+        const prevPageRef = pageRefs.current[pageIndex - 1];
+        if (prevPageRef) {
+          const prevEditor = prevPageRef.getEditor();
+          const prevLength = prevEditor.getLength();
+          
+          prevPageRef.focus();
+          prevEditor.setSelection(prevLength - 1, 0);
+        }
+      }
+    }
+    
+    // Clean up empty pages when deleting content
     if (e.key === 'Backspace' || e.key === 'Delete') {
       setTimeout(() => {
-        redistributeContentOnDelete(pageIndex);
-      }, 500);
+        const currentContent = editor.getText().trim();
+        
+        // If this page is empty and it's not the first page
+        if (currentContent.length <= 1 && pageIndex > 0 && pages.length > 1) {
+          console.log(`Removing empty page ${pageIndex + 1}`);
+          setPages(prev => {
+            const newPages = [...prev];
+            newPages.splice(pageIndex, 1);
+            return newPages;
+          });
+          
+          // Move focus to previous page
+          setTimeout(() => {
+            const prevPageRef = pageRefs.current[pageIndex - 1];
+            if (prevPageRef) {
+              prevPageRef.focus();
+            }
+          }, 100);
+        }
+      }, 300);
     }
   };
 
