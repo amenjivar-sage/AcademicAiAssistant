@@ -107,7 +107,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
       `;
       document.body.appendChild(measurementDiv);
 
-      // Split HTML into complete paragraph blocks for proper boundary detection
+      // First try splitting by paragraphs for clean breaks
       const paragraphs = fullHTML.split('</p>').filter(p => p.trim());
       let bestBreakHTML = '';
       let remainingHTML = fullHTML;
@@ -131,16 +131,60 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
         }
       }
 
+      // If paragraph splitting failed (single long paragraph), split by words
+      if (!bestBreakHTML || bestBreakHTML === fullHTML) {
+        console.log('Paragraph splitting failed, trying word-level splitting');
+        
+        // Extract text content and split by words
+        const textContent = quillEditor.getText();
+        const words = textContent.split(/\s+/);
+        
+        console.log(`Total words: ${words.length}`);
+        
+        // Binary search for optimal word break point
+        let low = 0;
+        let high = words.length;
+        let bestWordCount = 0;
+        
+        while (low <= high) {
+          const mid = Math.floor((low + high) / 2);
+          const testText = words.slice(0, mid).join(' ');
+          const testHTML = `<p>${testText}</p>`;
+          
+          measurementDiv.innerHTML = testHTML;
+          const testHeight = measurementDiv.scrollHeight;
+          
+          console.log(`Testing ${mid} words: height ${testHeight}px`);
+          
+          if (testHeight <= maxHeight) {
+            bestWordCount = mid;
+            low = mid + 1;
+          } else {
+            high = mid - 1;
+          }
+        }
+        
+        if (bestWordCount > 0) {
+          const firstPageText = words.slice(0, bestWordCount).join(' ');
+          const remainingText = words.slice(bestWordCount).join(' ');
+          
+          bestBreakHTML = `<p>${firstPageText}</p>`;
+          remainingHTML = `<p>${remainingText}</p>`;
+          
+          console.log(`Word-level split: ${bestWordCount} words on first page`);
+        }
+      } else {
+        // Calculate remaining HTML after paragraph break
+        remainingHTML = fullHTML.substring(bestBreakHTML.length);
+      }
+
       document.body.removeChild(measurementDiv);
 
       // Ensure we have valid HTML to split
       if (!bestBreakHTML || bestBreakHTML === fullHTML) {
-        console.log('No valid break point found or content fits on page');
+        console.log('No valid break point found');
         return;
       }
-
-      // Calculate remaining HTML after break point
-      remainingHTML = fullHTML.substring(bestBreakHTML.length);
       
       // Clean up HTML boundaries to prevent corruption
       if (!bestBreakHTML.endsWith('</p>')) {
@@ -345,14 +389,15 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
         
         console.log(`Page ${pageIndex + 1} height after change: ${scrollHeight}px`);
         
-        // Check for overflow with minimal buffer to maximize page usage
-        if (scrollHeight > 953) { // 950px + 3px buffer
+        // Check for overflow - trigger when content exceeds page height
+        if (scrollHeight > 950) {
+          console.log(`Triggering overflow check for page ${pageIndex + 1}`);
           checkAndHandleOverflow(pageIndex, newPages);
         }
         
         setContentOverflow(scrollHeight > 950);
       }
-    }, 300);
+    }, 200);
   };
 
   // Handle text selection across pages
