@@ -30,6 +30,52 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
   const [isNavigating, setIsNavigating] = useState(false);
   const overflowCheckTimeout = useRef<NodeJS.Timeout | null>(null);
 
+  // Helper function to determine which page an editor belongs to
+  const getCurrentPageIndex = useCallback((editor: any) => {
+    for (let i = 0; i < pageRefs.current.length; i++) {
+      if (pageRefs.current[i]?.getEditor() === editor) {
+        return i;
+      }
+    }
+    return -1;
+  }, []);
+
+  // Navigation functions for keyboard bindings
+  const navigateToNextPage = useCallback((currentEditor: any) => {
+    const pageIndex = getCurrentPageIndex(currentEditor);
+    if (pageIndex !== -1 && pageIndex < pages.length - 1) {
+      const nextPageRef = pageRefs.current[pageIndex + 1];
+      if (nextPageRef) {
+        const nextEditor = nextPageRef.getEditor();
+        if (nextEditor) {
+          nextEditor.focus();
+          nextEditor.setSelection(0, 0);
+          console.log(`Moved to page ${pageIndex + 2} via Enter key`);
+          return true;
+        }
+      }
+    }
+    return false;
+  }, [pages.length, getCurrentPageIndex]);
+
+  const navigateToPrevPage = useCallback((currentEditor: any) => {
+    const pageIndex = getCurrentPageIndex(currentEditor);
+    if (pageIndex > 0) {
+      const prevPageRef = pageRefs.current[pageIndex - 1];
+      if (prevPageRef) {
+        const prevEditor = prevPageRef.getEditor();
+        if (prevEditor) {
+          const prevLength = prevEditor.getLength();
+          prevEditor.focus();
+          prevEditor.setSelection(Math.max(0, prevLength - 1), 0);
+          console.log(`Moved to page ${pageIndex} via Backspace key`);
+          return true;
+        }
+      }
+    }
+    return false;
+  }, [getCurrentPageIndex]);
+
   useImperativeHandle(ref, () => ({
     focus: () => {
       const activeRef = pageRefs.current[activePage] || pageRefs.current[0];
@@ -235,6 +281,84 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
       setPages(['<p><br></p>']);
     }
   }, [pages]);
+
+  // Add keyboard navigation event listeners
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Enter' || event.key === 'Backspace') {
+        const activeElement = document.activeElement;
+        if (!activeElement) return;
+
+        // Find which page editor is active
+        let activePageIndex = -1;
+        for (let i = 0; i < pageRefs.current.length; i++) {
+          const pageRef = pageRefs.current[i];
+          if (pageRef) {
+            const editorElement = pageRef.getEditor()?.root;
+            if (editorElement && (editorElement === activeElement || editorElement.contains(activeElement))) {
+              activePageIndex = i;
+              break;
+            }
+          }
+        }
+
+        if (activePageIndex === -1) return;
+
+        const editor = pageRefs.current[activePageIndex]?.getEditor();
+        if (!editor) return;
+
+        const selection = editor.getSelection();
+        if (!selection) return;
+
+        if (event.key === 'Enter') {
+          const textLength = editor.getLength();
+          const atEnd = selection.index >= textLength - 1;
+          
+          console.log(`Enter key - Page ${activePageIndex + 1}, at end: ${atEnd}, cursor: ${selection.index}/${textLength}`);
+          
+          if (atEnd && activePageIndex < pages.length - 1) {
+            event.preventDefault();
+            setTimeout(() => {
+              const nextPageRef = pageRefs.current[activePageIndex + 1];
+              if (nextPageRef) {
+                const nextEditor = nextPageRef.getEditor();
+                if (nextEditor) {
+                  nextEditor.focus();
+                  nextEditor.setSelection(0, 0);
+                  console.log(`Navigated to page ${activePageIndex + 2}`);
+                }
+              }
+            }, 50);
+          }
+        } else if (event.key === 'Backspace') {
+          const atStart = selection.index === 0 && selection.length === 0;
+          
+          console.log(`Backspace key - Page ${activePageIndex + 1}, at start: ${atStart}, cursor: ${selection.index}`);
+          
+          if (atStart && activePageIndex > 0) {
+            event.preventDefault();
+            setTimeout(() => {
+              const prevPageRef = pageRefs.current[activePageIndex - 1];
+              if (prevPageRef) {
+                const prevEditor = prevPageRef.getEditor();
+                if (prevEditor) {
+                  const prevLength = prevEditor.getLength();
+                  prevEditor.focus();
+                  prevEditor.setSelection(Math.max(0, prevLength - 1), 0);
+                  console.log(`Navigated to page ${activePageIndex}`);
+                }
+              }
+            }, 50);
+          }
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [pages.length]);
 
   return (
     <div ref={containerRef} className="rich-text-editor-container">
