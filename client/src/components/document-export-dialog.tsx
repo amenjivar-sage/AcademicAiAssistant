@@ -1,0 +1,347 @@
+import { useState } from 'react';
+import { Download, Settings } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Document, Packer, Paragraph, TextRun, Header, Footer, AlignmentType, HeadingLevel } from 'docx';
+import { saveAs } from 'file-saver';
+
+interface DocumentExportDialogProps {
+  content: string;
+  studentName?: string;
+  assignmentTitle?: string;
+  submissionDate?: string;
+  className?: string;
+  variant?: 'default' | 'outline' | 'ghost';
+  size?: 'default' | 'sm' | 'lg';
+}
+
+export default function DocumentExportDialog({
+  content,
+  studentName = 'Student',
+  assignmentTitle = 'Assignment',
+  submissionDate,
+  className,
+  variant = 'outline',
+  size = 'sm'
+}: DocumentExportDialogProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [settings, setSettings] = useState({
+    headerText: '',
+    footerText: '',
+    showPageNumbers: true,
+    pageNumberPosition: 'center' as 'left' | 'center' | 'right',
+    includeStudentName: true,
+    includeDate: false,
+    includeAssignmentTitle: false
+  });
+
+  const generateWordDocument = async () => {
+    setIsExporting(true);
+    try {
+      // Clean and parse HTML content
+      const cleanText = content
+        .replace(/<[^>]*>/g, '') // Remove HTML tags
+        .replace(/&nbsp;/g, ' ') // Replace &nbsp; with spaces
+        .replace(/&amp;/g, '&') // Replace &amp; with &
+        .replace(/&lt;/g, '<') // Replace &lt; with <
+        .replace(/&gt;/g, '>') // Replace &gt; with >
+        .trim();
+
+      // Split into paragraphs and create document paragraphs
+      const paragraphs = cleanText.split('\n').map(paragraph => {
+        if (paragraph.trim() === '') {
+          return new Paragraph({
+            children: [new TextRun({ text: '' })],
+            spacing: { after: 200 }
+          });
+        }
+
+        return new Paragraph({
+          children: [
+            new TextRun({
+              text: paragraph.trim(),
+              size: 24, // 12pt in half-points
+              font: 'Times New Roman'
+            })
+          ],
+          spacing: { 
+            line: 480, // Double spacing
+            after: 0
+          },
+          indent: {
+            firstLine: 720 // First line indent (0.5 inch)
+          }
+        });
+      });
+
+      // Create header content
+      const headerParagraphs = [];
+      if (settings.includeStudentName || settings.headerText || settings.includeAssignmentTitle) {
+        const headerElements = [];
+        
+        if (settings.includeStudentName) {
+          headerElements.push(new TextRun({ text: studentName, size: 20 }));
+        }
+        
+        if (settings.includeAssignmentTitle && assignmentTitle) {
+          if (headerElements.length > 0) headerElements.push(new TextRun({ text: ' - ', size: 20 }));
+          headerElements.push(new TextRun({ text: assignmentTitle, size: 20 }));
+        }
+        
+        if (settings.headerText) {
+          if (headerElements.length > 0) headerElements.push(new TextRun({ text: ' - ', size: 20 }));
+          headerElements.push(new TextRun({ text: settings.headerText, size: 20 }));
+        }
+        
+        if (settings.includeDate && submissionDate) {
+          if (headerElements.length > 0) headerElements.push(new TextRun({ text: ' - ', size: 20 }));
+          headerElements.push(new TextRun({ text: submissionDate, size: 20 }));
+        }
+
+        headerParagraphs.push(
+          new Paragraph({
+            children: headerElements,
+            alignment: AlignmentType.LEFT
+          })
+        );
+      }
+
+      // Create footer content with page numbers
+      const footerParagraphs = [];
+      if (settings.footerText || settings.showPageNumbers) {
+        const footerElements = [];
+        
+        if (settings.footerText) {
+          footerElements.push(new TextRun({ text: settings.footerText, size: 20 }));
+        }
+        
+        if (settings.showPageNumbers) {
+          if (footerElements.length > 0) footerElements.push(new TextRun({ text: ' - ', size: 20 }));
+          footerElements.push(new TextRun({ text: 'Page ', size: 20 }));
+          footerElements.push(new TextRun({
+            children: [PageNumber.CURRENT],
+            size: 20
+          }));
+        }
+
+        const alignment = settings.pageNumberPosition === 'left' 
+          ? AlignmentType.LEFT 
+          : settings.pageNumberPosition === 'right' 
+          ? AlignmentType.RIGHT 
+          : AlignmentType.CENTER;
+
+        footerParagraphs.push(
+          new Paragraph({
+            children: footerElements,
+            alignment: alignment
+          })
+        );
+      }
+
+      // Create the document
+      const doc = new Document({
+        sections: [{
+          properties: {
+            page: {
+              margin: {
+                top: 1440,    // 1 inch
+                right: 1440,  // 1 inch
+                bottom: 1440, // 1 inch
+                left: 1440    // 1 inch
+              }
+            }
+          },
+          headers: headerParagraphs.length > 0 ? {
+            default: new Header({
+              children: headerParagraphs
+            })
+          } : undefined,
+          footers: footerParagraphs.length > 0 ? {
+            default: new Footer({
+              children: footerParagraphs
+            })
+          } : undefined,
+          children: paragraphs
+        }]
+      });
+
+      // Generate and save the document
+      const blob = await Packer.toBlob(doc);
+      const fileName = `${studentName.replace(/[^a-zA-Z0-9]/g, '_')}_${assignmentTitle.replace(/[^a-zA-Z0-9]/g, '_')}.docx`;
+      saveAs(blob, fileName);
+      
+      setIsOpen(false);
+
+    } catch (error) {
+      console.error('Error generating Word document:', error);
+      alert('Failed to generate Word document. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  // Don't show download button if there's no content
+  if (!content || content.trim().length === 0) {
+    return null;
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button
+          variant={variant}
+          size={size}
+          className={className}
+        >
+          <Download className="h-4 w-4 mr-2" />
+          Download Word Doc
+        </Button>
+      </DialogTrigger>
+      
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Settings className="h-5 w-5" />
+            Document Export Settings
+          </DialogTitle>
+          <DialogDescription>
+            Customize the header, footer, and page numbering for your Word document.
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="space-y-6">
+          {/* Header Settings */}
+          <div className="space-y-4">
+            <h4 className="font-medium">Header Options</h4>
+            
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="includeStudentName"
+                checked={settings.includeStudentName}
+                onCheckedChange={(checked) => 
+                  setSettings(prev => ({ ...prev, includeStudentName: !!checked }))
+                }
+              />
+              <Label htmlFor="includeStudentName">Include student name ({studentName})</Label>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="includeAssignmentTitle"
+                checked={settings.includeAssignmentTitle}
+                onCheckedChange={(checked) => 
+                  setSettings(prev => ({ ...prev, includeAssignmentTitle: !!checked }))
+                }
+              />
+              <Label htmlFor="includeAssignmentTitle">Include assignment title</Label>
+            </div>
+            
+            {submissionDate && (
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="includeDate"
+                  checked={settings.includeDate}
+                  onCheckedChange={(checked) => 
+                    setSettings(prev => ({ ...prev, includeDate: !!checked }))
+                  }
+                />
+                <Label htmlFor="includeDate">Include submission date ({submissionDate})</Label>
+              </div>
+            )}
+            
+            <div className="space-y-2">
+              <Label htmlFor="headerText">Custom header text</Label>
+              <Input
+                id="headerText"
+                placeholder="Enter custom header text..."
+                value={settings.headerText}
+                onChange={(e) => setSettings(prev => ({ ...prev, headerText: e.target.value }))}
+              />
+            </div>
+          </div>
+
+          {/* Footer Settings */}
+          <div className="space-y-4">
+            <h4 className="font-medium">Footer Options</h4>
+            
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="showPageNumbers"
+                checked={settings.showPageNumbers}
+                onCheckedChange={(checked) => 
+                  setSettings(prev => ({ ...prev, showPageNumbers: !!checked }))
+                }
+              />
+              <Label htmlFor="showPageNumbers">Show page numbers</Label>
+            </div>
+            
+            {settings.showPageNumbers && (
+              <div className="space-y-2">
+                <Label>Page number position</Label>
+                <RadioGroup
+                  value={settings.pageNumberPosition}
+                  onValueChange={(value: 'left' | 'center' | 'right') => 
+                    setSettings(prev => ({ ...prev, pageNumberPosition: value }))
+                  }
+                  className="flex space-x-4"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="left" id="left" />
+                    <Label htmlFor="left">Left</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="center" id="center" />
+                    <Label htmlFor="center">Center</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="right" id="right" />
+                    <Label htmlFor="right">Right</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+            )}
+            
+            <div className="space-y-2">
+              <Label htmlFor="footerText">Custom footer text</Label>
+              <Input
+                id="footerText"
+                placeholder="Enter custom footer text..."
+                value={settings.footerText}
+                onChange={(e) => setSettings(prev => ({ ...prev, footerText: e.target.value }))}
+              />
+            </div>
+          </div>
+
+          {/* Export Button */}
+          <div className="flex justify-end space-x-2 pt-4 border-t">
+            <Button variant="outline" onClick={() => setIsOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={generateWordDocument} disabled={isExporting}>
+              {isExporting ? (
+                <>Generating...</>
+              ) : (
+                <>
+                  <Download className="h-4 w-4 mr-2" />
+                  Export Document
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}

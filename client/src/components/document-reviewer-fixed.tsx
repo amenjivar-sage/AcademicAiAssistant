@@ -22,7 +22,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MessageCircle, X, Plus, Edit3, Bot } from "lucide-react";
 import AiChatViewer from "./ai-chat-viewer";
-import DocumentDownload from "./document-download";
+import DocumentExportDialog from "./document-export-dialog";
 import type { WritingSession } from "@shared/schema";
 
 interface Comment {
@@ -625,10 +625,10 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
             <CardHeader>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold">Document Review</h3>
-                <DocumentDownload
+                <DocumentExportDialog
                   content={session.content}
-                  studentName={session.student?.username || 'Student'}
-                  assignmentTitle={`Assignment_${session.assignmentId}`}
+                  studentName="Student"
+                  assignmentTitle={session.title || `Assignment_${session.assignmentId}`}
                   submissionDate={session.submittedAt ? new Date(session.submittedAt).toLocaleDateString() : undefined}
                   variant="outline"
                   size="sm"
