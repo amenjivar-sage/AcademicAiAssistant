@@ -428,14 +428,14 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                     console.log('Match analysis for sentence:', docSentTrimmed, 
                                'Exact:', exactMatches, 'Close:', closeMatches, 'Percentage:', matchPercentage);
                     
-                    // Balanced criteria to catch real plagiarism while avoiding false positives
-                    const meetsThreshold = matchPercentage >= 0.60; // 60% similarity required
-                    const hasEnoughExactMatches = exactMatches >= Math.max(2, Math.floor(pastedWords.length * 0.3)); // Require 30% exact matches
-                    const hasMinLength = pastedWords.length >= 5 && docWords.length >= 5; // Reasonable minimum length
+                    // More lenient criteria to ensure highlighting appears for legitimate copy-paste
+                    const meetsThreshold = matchPercentage >= 0.40; // 40% similarity required
+                    const hasEnoughExactMatches = exactMatches >= Math.max(1, Math.floor(pastedWords.length * 0.2)); // Require 20% exact matches
+                    const hasMinLength = pastedWords.length >= 4 && docWords.length >= 4; // Shorter minimum length
                     
                     console.log('Criteria check for:', docSentTrimmed);
-                    console.log('- Meets threshold (60%):', meetsThreshold, matchPercentage);
-                    console.log('- Has enough exact matches (30%):', hasEnoughExactMatches, exactMatches, 'needed:', Math.floor(pastedWords.length * 0.3));
+                    console.log('- Meets threshold (40%):', meetsThreshold, matchPercentage);
+                    console.log('- Has enough exact matches (20%):', hasEnoughExactMatches, exactMatches, 'needed:', Math.floor(pastedWords.length * 0.2));
                     console.log('- Has min length:', hasMinLength, 'pasted:', pastedWords.length, 'doc:', docWords.length);
                     
                     if (meetsThreshold && hasEnoughExactMatches && hasMinLength) {
@@ -443,16 +443,21 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                       const hasOriginalPatterns = /\b(sky|hello|how are you|doing|good morning|dear|sincerely)\b/i.test(docSentTrimmed);
                       
                       // Skip code snippets and technical documentation - these are often legitimate references
-                      const isCodeSnippet = /(\{|\}|function|const|let|var|import|export|return|if\s*\(|\.map\(|\.filter\(|className=|style=|<\/|&gt;|&lt;)/i.test(docSentTrimmed);
+                      const isCodeSnippet = /(\{|\}|function|const|let|var|import|export|return|if\s*\(|\.map\(|\.filter\(|className=|style=|<\/|&gt;|&lt;|useEffect|useState|ReactQuill|HTMLDivElement)/i.test(docSentTrimmed);
                       
                       // Skip content that looks like legitimate references or citations
                       const isReference = /(\(\d{4}\)|et al\.|pp\.|Vol\.|No\.|ISBN|DOI:|https?:\/\/)/i.test(docSentTrimmed);
                       
+                      // Skip content that looks like random character strings (not real plagiarism)
+                      const isRandomText = /^[a-z]{3,}[;:.,]{1,3}[a-z]{3,}[;:.,]{1,3}/.test(docSentTrimmed) || 
+                                          docSentTrimmed.split(';').length > 3;
+                      
                       console.log('- Has original patterns:', hasOriginalPatterns);
                       console.log('- Is code snippet:', isCodeSnippet);
                       console.log('- Is reference:', isReference);
+                      console.log('- Is random text:', isRandomText);
                       
-                      if (!hasOriginalPatterns && !isCodeSnippet && !isReference) {
+                      if (!hasOriginalPatterns && !isCodeSnippet && !isReference && !isRandomText) {
                         console.log('✓ Highlighting copy-pasted content:', docSentTrimmed);
                         const escapedSentence = docSentTrimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
                         const sentenceRegex = new RegExp(escapedSentence, 'gi');
@@ -589,7 +594,16 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                           </p>
                         </div>
                         <div className="text-sm text-red-600 font-semibold">
-                          Content tracked for analysis
+                          {(() => {
+                            const totalWords = session.content ? session.content.replace(/<[^>]*>/g, '').split(/\s+/).filter(w => w.trim()).length : 0;
+                            const originalPastedWords = session.pastedContent.reduce((total: number, item: any) => {
+                              const text = item.text || item.content || item.value || '';
+                              return total + (text ? text.split(/\s+/).filter((w: string) => w.trim()).length : 0);
+                            }, 0);
+                            
+                            const percentage = totalWords > 0 ? Math.round((originalPastedWords / totalWords) * 100) : 0;
+                            return `${Math.min(percentage, 100)}% detected content`;
+                          })()}
                         </div>
                       </div>
                     </div>
