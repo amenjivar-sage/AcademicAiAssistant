@@ -323,29 +323,155 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     }
   };
 
+  // Smart page splitting for restored content
+  const splitContentIntoPages = useCallback((fullContent: string): string[] => {
+    if (!fullContent || fullContent.trim() === '') {
+      return [''];
+    }
+
+    console.log('Splitting content into pages:', fullContent.length, 'characters');
+    
+    // Create a temporary container to measure content height
+    const tempContainer = document.createElement('div');
+    tempContainer.style.cssText = `
+      position: absolute;
+      left: -9999px;
+      width: calc(8.5in - 144px);
+      font-family: 'Times New Roman', serif;
+      font-size: 14pt;
+      line-height: 2.0;
+      padding: 70px 72px;
+      box-sizing: border-box;
+      height: auto;
+      visibility: hidden;
+    `;
+    document.body.appendChild(tempContainer);
+
+    const maxPageHeight = 950; // 950px page height constraint
+    const pages: string[] = [];
+    
+    try {
+      // Put all content in temp container to measure
+      tempContainer.innerHTML = fullContent;
+      const totalHeight = tempContainer.scrollHeight;
+      
+      console.log('Total content height:', totalHeight, 'px');
+      
+      if (totalHeight <= maxPageHeight) {
+        // Content fits on one page
+        pages.push(fullContent);
+      } else {
+        // Need to split content across multiple pages
+        const estimatedPages = Math.ceil(totalHeight / maxPageHeight);
+        console.log('Estimated pages needed:', estimatedPages);
+        
+        // Split content by attempting to fit chunks into page height
+        const tempDiv = document.createElement('div');
+        tempDiv.style.cssText = tempContainer.style.cssText;
+        tempDiv.style.height = maxPageHeight + 'px';
+        tempDiv.style.overflow = 'hidden';
+        document.body.appendChild(tempDiv);
+        
+        let remainingContent = fullContent;
+        let pageIndex = 0;
+        
+        while (remainingContent.trim() && pageIndex < 20) { // Safety limit
+          // Binary search to find optimal content length for this page
+          let low = 0;
+          let high = remainingContent.length;
+          let bestFit = Math.floor(remainingContent.length / estimatedPages);
+          
+          // Try different content lengths to find what fits
+          for (let attempts = 0; attempts < 10; attempts++) {
+            const testLength = Math.floor((low + high) / 2);
+            const testContent = remainingContent.substring(0, testLength);
+            
+            // Don't break in the middle of HTML tags
+            let adjustedContent = testContent;
+            if (testContent.includes('<') && !testContent.includes('>')) {
+              const lastComplete = testContent.lastIndexOf('<');
+              if (lastComplete > 0) {
+                adjustedContent = testContent.substring(0, lastComplete);
+              }
+            }
+            
+            tempDiv.innerHTML = adjustedContent;
+            const testHeight = tempDiv.scrollHeight;
+            
+            if (testHeight <= maxPageHeight) {
+              bestFit = adjustedContent.length;
+              low = testLength;
+            } else {
+              high = testLength;
+            }
+            
+            if (high - low < 50) break; // Close enough
+          }
+          
+          // Extract content for this page
+          let pageContent = remainingContent.substring(0, bestFit);
+          
+          // Try to break at word boundaries
+          if (bestFit < remainingContent.length) {
+            const lastSpace = pageContent.lastIndexOf(' ');
+            const lastTag = pageContent.lastIndexOf('>');
+            if (lastSpace > lastTag && lastSpace > pageContent.length - 100) {
+              pageContent = pageContent.substring(0, lastSpace);
+              bestFit = lastSpace;
+            }
+          }
+          
+          if (pageContent.trim()) {
+            pages.push(pageContent);
+            console.log(`Page ${pageIndex + 1}: ${pageContent.length} chars`);
+          }
+          
+          remainingContent = remainingContent.substring(bestFit).trim();
+          pageIndex++;
+        }
+        
+        document.body.removeChild(tempDiv);
+        
+        // If there's still content left, add it to the last page
+        if (remainingContent.trim()) {
+          pages.push(remainingContent);
+        }
+      }
+    } catch (error) {
+      console.error('Error splitting content:', error);
+      pages.push(fullContent); // Fallback to single page
+    } finally {
+      document.body.removeChild(tempContainer);
+    }
+    
+    console.log('Content split into', pages.length, 'pages');
+    return pages.length > 0 ? pages : [''];
+  }, []);
+
   // Initialize pages when content is loaded
   useEffect(() => {
     if (content && content !== pages.join('')) {
       console.log('External content change detected, syncing with editor:', content.length, 'chars');
       
-      // Update pages array with new content
-      setPages([content]);
+      // Split content into appropriate pages
+      const newPages = splitContentIntoPages(content);
+      setPages(newPages);
       
-      // Force ReactQuill to update its internal state
+      // Force ReactQuill editors to update their content
       setTimeout(() => {
-        const currentRef = pageRefs.current[0];
-        if (currentRef) {
-          const quillEditor = currentRef.getEditor();
-          if (quillEditor && quillEditor.root.innerHTML !== content) {
-            console.log('Forcing ReactQuill content update');
-            quillEditor.root.innerHTML = content;
-            // Trigger change event to update internal state
-            quillEditor.setSelection(quillEditor.getLength(), 0);
+        newPages.forEach((pageContent, index) => {
+          const pageRef = pageRefs.current[index];
+          if (pageRef) {
+            const quillEditor = pageRef.getEditor();
+            if (quillEditor) {
+              quillEditor.root.innerHTML = pageContent;
+              console.log(`Updated page ${index + 1} with ${pageContent.length} chars`);
+            }
           }
-        }
-      }, 0);
+        });
+      }, 100);
     }
-  }, [content]);
+  }, [content, splitContentIntoPages]);
 
   // Initialize page refs array
   useEffect(() => {
