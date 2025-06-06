@@ -460,19 +460,26 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                         console.log('- Is reference:', isReference);
                         console.log('- Is random text:', isRandomText);
                         
-                        // Apply highlighting to all copy-pasted content regardless of filters
-                        console.log('✓ Highlighting copy-pasted content:', docSentTrimmed.substring(0, 50));
-                        const escapedSentence = docSentTrimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                        const sentenceRegex = new RegExp(escapedSentence, 'gi');
+                        // Filter out obvious student original content to prevent false positives
+                        const isOriginalStudentContent = /\b(hey|hi|hello|how are you|doing|good|today|better)\b/i.test(docSentTrimmed);
                         
-                        result = result.replace(sentenceRegex, (match) => {
-                          if (!match.includes('style="background-color: #fecaca')) {
-                            console.log('Applied red highlighting to:', match.substring(0, 50));
-                            const highlightedHTML = `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600; padding: 2px 4px; border-radius: 3px;" title="Copy-pasted content detected (${Math.round(matchPercentage * 100)}% match)">${match}</span>`;
-                            return highlightedHTML;
-                          }
-                          return match;
-                        });
+                        // Only highlight content with high similarity, sufficient length, and that isn't original student writing
+                        if (matchPercentage >= 0.7 && docSentTrimmed.length > 50 && !isOriginalStudentContent) {
+                          console.log('✓ Highlighting high-confidence copy-pasted content:', docSentTrimmed.substring(0, 50));
+                          const escapedSentence = docSentTrimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                          const sentenceRegex = new RegExp(escapedSentence, 'gi');
+                          
+                          result = result.replace(sentenceRegex, (match) => {
+                            if (!match.includes('style="background-color: #fecaca')) {
+                              console.log('Applied red highlighting to:', match.substring(0, 50));
+                              const highlightedHTML = `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600; padding: 2px 4px; border-radius: 3px;" title="Copy-pasted content detected (${Math.round(matchPercentage * 100)}% match)">${match}</span>`;
+                              return highlightedHTML;
+                            }
+                            return match;
+                          });
+                        } else {
+                          console.log('✗ Skipped to avoid false positive:', matchPercentage, docSentTrimmed.length, 'isOriginal:', isOriginalStudentContent);
+                        }
                       } catch (error) {
                         console.error('Error in highlighting logic:', error);
                       }
