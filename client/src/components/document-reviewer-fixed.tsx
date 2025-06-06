@@ -434,10 +434,10 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                     console.log('Match analysis for sentence:', docSentTrimmed, 
                                'Exact:', exactMatches, 'Close:', closeMatches, 'Percentage:', matchPercentage);
                     
-                    // Stricter criteria to reduce false positives
-                    const meetsThreshold = matchPercentage >= 0.70; // Require 70% similarity
-                    const hasEnoughExactMatches = exactMatches >= Math.max(3, Math.floor(pastedWords.length * 0.5)); // Require 50% exact matches
-                    const hasMinLength = pastedWords.length >= 6 && docWords.length >= 6; // Longer minimum length
+                    // Balanced criteria to catch real plagiarism while avoiding false positives
+                    const meetsThreshold = matchPercentage >= 0.60; // Require 60% similarity
+                    const hasEnoughExactMatches = exactMatches >= Math.max(2, Math.floor(pastedWords.length * 0.3)); // Require 30% exact matches
+                    const hasMinLength = pastedWords.length >= 5 && docWords.length >= 5; // Moderate minimum length
                     
                     console.log('Criteria check for:', docSentTrimmed);
                     console.log('- Meets threshold (40%):', meetsThreshold, matchPercentage);
@@ -451,16 +451,15 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                         // Enhanced check: avoid highlighting legitimate content patterns
                         const hasOriginalPatterns = /\b(sky|hello|how are you|doing|good morning|dear|sincerely)\b/i.test(docSentTrimmed);
                         
-                        // Skip code snippets and technical documentation - these are often legitimate references
-                        const isCodeSnippet = /(\{|\}|function|const|let|var|import|export|return|if\s*\(|\.map\(|\.filter\(|className=|style=|<\/|&gt;|&lt;|useEffect|useState|ReactQuill|HTMLDivElement|<\/li>|<li>|<ul>|<\/ul>|<p>|<\/p>)/i.test(docSentTrimmed);
+                        // Skip actual code snippets but allow technical content that could be plagiarized
+                        const isCodeSnippet = /(\{[^}]*\}|function\s+\w+|const\s+\w+\s*=|let\s+\w+\s*=|import\s+.*from|export\s+.*\{|className=|style=|useEffect|useState|ReactQuill|HTMLDivElement)/i.test(docSentTrimmed);
                         
                         // Skip content that looks like legitimate references or citations
                         const isReference = /(\(\d{4}\)|et al\.|pp\.|Vol\.|No\.|ISBN|DOI:|https?:\/\/)/i.test(docSentTrimmed);
                         
                         // Skip content that looks like random character strings (not real plagiarism)
-                        const isRandomText = /^[a-z]{3,}[;:.,]{1,3}[a-z]{3,}[;:.,]{1,3}/.test(docSentTrimmed) || 
-                                            docSentTrimmed.split(';').length > 3 ||
-                                            /^[a-z]+;[a-z]+;[a-z]+/.test(docSentTrimmed);
+                        const isRandomText = /^[a-z]{3,};[a-z]{3,};[a-z]{3,};[a-z]{3,}/.test(docSentTrimmed) || 
+                                            (docSentTrimmed.split(';').length > 5 && docSentTrimmed.length > 200);
                         
                         console.log('- Has original patterns:', hasOriginalPatterns);
                         console.log('- Is code snippet:', isCodeSnippet);
