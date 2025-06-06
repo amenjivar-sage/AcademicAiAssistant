@@ -114,7 +114,12 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     
     const editor = pageRef.getEditor();
     const editorElement = editor.root;
+    
+    // Force a reflow to get accurate height measurement
+    editorElement.style.height = 'auto';
     const contentHeight = editorElement.scrollHeight;
+    editorElement.style.height = '950px';
+    
     const selection = editor.getSelection();
     
     console.log(`Page ${pageIndex + 1} height: ${contentHeight}px (limit: 950px), cursor: ${selection?.index}`);
@@ -239,7 +244,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     // Check for overflow and move content to next page
     overflowCheckTimeout.current = setTimeout(() => {
       handleContentFlow(pageIndex, value);
-    }, 500);
+    }, 300);
   };
 
   // Handle text selection across pages
