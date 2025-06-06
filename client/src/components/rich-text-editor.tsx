@@ -89,14 +89,6 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
   // Custom toolbar configuration
   const modules = {
     toolbar: false,
-    clipboard: {
-      matchVisual: true,
-      matchers: [
-        ['STRONG', 'bold'],
-        ['EM', 'italic'],
-        ['U', 'underline']
-      ]
-    },
     history: {
       delay: 1000,
       maxStack: 100,
