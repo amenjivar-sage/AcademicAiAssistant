@@ -502,20 +502,14 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
     // Direct highlighting for detected copy-paste sections
     console.log('Final highlighting pass - applying red highlighting to detected content');
     
-    // Highlight any content that contains ReactQuill or editor-related code patterns
-    if (result.includes('ReactQuill') || result.includes('editor-wrapper') || result.includes('Great — I\'ve created')) {
+    // Highlight only specific technical content that was detected as copy-pasted
+    if (result.includes('ReactQuill') && result.includes('editor component')) {
       console.log('✓ Found ReactQuill/editor content - applying highlighting');
       
-      // Highlight specific detected phrases from the console logs
+      // Only highlight the specific technical phrase that was detected
       const highlightPatterns = [
         'Great — I\'ve created the new soft page-break editor component using ReactQuill with invisible page breaks based on vertical spacing only',
-        'ReactQuill',
-        'editor-wrapper',
-        'className="editor-wrapper"',
-        'useEffect',
-        'const observer = new MutationObserver',
-        'disconnect()',
-        'You can now:'
+        'ReactQuill'
       ];
       
       highlightPatterns.forEach(pattern => {
