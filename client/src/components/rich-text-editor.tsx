@@ -321,15 +321,23 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     return pages.length > 0 ? pages : [''];
   }, []);
 
-  // Initialize pages when content is loaded
+  // Track if we're in the middle of user navigation to prevent resets
+  const [isNavigating, setIsNavigating] = useState(false);
+  
+  // Initialize pages when content is loaded - preserve existing page structure
   useEffect(() => {
-    if (content && content !== pages.join('')) {
+    if (content && content !== pages.join('') && !isNavigating) {
       console.log('External content change detected, syncing with editor:', content.length, 'chars');
       
-      // Simply put all content in first page - no automatic redistribution
-      setPages([content]);
+      // Only reset pages on initial load or when starting completely fresh
+      if (pages.length === 0 || (pages.length === 1 && (!pages[0] || pages[0] === '<p><br></p>'))) {
+        setPages([content || '<p><br></p>']);
+      } else {
+        // Keep existing page structure - user has multiple pages
+        console.log('Preserving existing page structure with', pages.length, 'pages');
+      }
     }
-  }, [content]);
+  }, [content, isNavigating]);
 
   // Initialize page refs array
   useEffect(() => {
@@ -372,6 +380,9 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
             if (updatedHeight > 950) {
               console.log(`Moving to next page from page ${pageIndex + 1}`);
               
+              // Set navigation flag to prevent content resets
+              setIsNavigating(true);
+              
               // Ensure next page exists
               if (pageIndex >= pages.length - 1) {
                 setPages(prev => [...prev, '<p><br></p>']);
@@ -385,6 +396,9 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
                   const nextEditor = nextPageRef.getEditor();
                   nextEditor.setSelection(0, 0);
                 }
+                
+                // Clear navigation flag after navigation complete
+                setTimeout(() => setIsNavigating(false), 500);
               }, 100);
             }
           }, 50);
@@ -399,6 +413,8 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
       if (cursorPosition === 0 && pageIndex > 0) {
         e.preventDefault();
         
+        setIsNavigating(true);
+        
         const prevPageRef = pageRefs.current[pageIndex - 1];
         if (prevPageRef) {
           prevPageRef.focus();
@@ -406,6 +422,8 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
           const prevLength = prevEditor.getLength();
           prevEditor.setSelection(Math.max(0, prevLength - 1), 0);
         }
+        
+        setTimeout(() => setIsNavigating(false), 500);
       }
     }
   };
