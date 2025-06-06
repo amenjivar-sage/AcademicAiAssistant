@@ -52,6 +52,9 @@ export default function DocumentExportDialog({
     try {
       console.log('Export Debug - Student Name:', studentName);
       console.log('Export Debug - Settings:', settings);
+      console.log('Export Debug - Custom Header Text Length:', settings.headerText?.length);
+      console.log('Export Debug - Custom Header Text Value:', `"${settings.headerText}"`);
+      console.log('Export Debug - Will use custom header:', !!(settings.headerText && settings.headerText.trim()));
       // Clean and parse HTML content more thoroughly
       let cleanText = content;
       
@@ -316,7 +319,10 @@ export default function DocumentExportDialog({
                 id="headerText"
                 placeholder="Enter your custom header text (will override other header options)"
                 value={settings.headerText}
-                onChange={(e) => setSettings(prev => ({ ...prev, headerText: e.target.value }))}
+                onChange={(e) => {
+                  console.log('Header input changed to:', e.target.value);
+                  setSettings(prev => ({ ...prev, headerText: e.target.value }));
+                }}
               />
               <p className="text-xs text-gray-500">
                 If you enter custom text, it will be used as the header instead of student name/assignment title
