@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import html2pdf from 'html2pdf.js';
 import { Button } from '@/components/ui/button';
 import { Download, FileText } from 'lucide-react';
@@ -10,6 +10,13 @@ interface PDFExportProps {
 
 export function PDFExport({ content, title = "Document" }: PDFExportProps) {
   const [isExporting, setIsExporting] = useState(false);
+
+  // Debug logging for content received
+  console.log('PDFExport render - Content prop:', {
+    length: content?.length || 0,
+    preview: content?.substring(0, 100),
+    hasContent: Boolean(content && content.trim())
+  });
 
   const splitContentIntoPages = (htmlContent: string) => {
     // Create a temporary div to measure content height
