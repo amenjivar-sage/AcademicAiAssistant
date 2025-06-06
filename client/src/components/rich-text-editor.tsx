@@ -375,14 +375,15 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
       const editorElement = editor.root;
       const contentHeight = editorElement.scrollHeight;
       
-      // Only navigate to next page if BOTH conditions are true:
-      // 1. At the very end of content (last character)
-      // 2. Page is significantly full (over 950px)
       const atVeryEnd = cursorPosition >= textLength - 1;
       const pageOverflowing = contentHeight > 950;
       
+      console.log(`Enter debug: cursor ${cursorPosition}/${textLength}, height ${contentHeight}px, atEnd: ${atVeryEnd}, overflow: ${pageOverflowing}`);
+      
+      // Case 1: Automatic overflow when page is full
       if (atVeryEnd && pageOverflowing) {
-        console.log(`Page overflow detected: moving to next page (height: ${contentHeight}px)`);
+        e.preventDefault();
+        console.log(`Auto-overflow: moving to next page`);
         
         // Create next page if needed
         if (pageIndex >= pages.length - 1) {
@@ -397,10 +398,41 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
             if (nextEditor) {
               nextEditor.focus();
               nextEditor.setSelection(0, 0);
-              console.log(`Successfully moved to page ${pageIndex + 2}`);
+              console.log(`Auto-moved to page ${pageIndex + 2}`);
             }
           }
-        }, 150);
+        }, 200);
+      }
+      
+      // Case 2: Manual page break - multiple enters at end
+      else if (atVeryEnd && contentHeight > 600) {
+        // Check if last few characters are line breaks
+        const content = editor.getText();
+        const lastChars = content.slice(-5);
+        const consecutiveBreaks = (lastChars.match(/\n/g) || []).length;
+        
+        if (consecutiveBreaks >= 3) {
+          e.preventDefault();
+          console.log(`Manual page break detected (${consecutiveBreaks} breaks)`);
+          
+          // Create next page if needed
+          if (pageIndex >= pages.length - 1) {
+            setPages(prev => [...prev, '<p><br></p>']);
+          }
+          
+          // Move to next page
+          setTimeout(() => {
+            const nextPageRef = pageRefs.current[pageIndex + 1];
+            if (nextPageRef) {
+              const nextEditor = nextPageRef.getEditor();
+              if (nextEditor) {
+                nextEditor.focus();
+                nextEditor.setSelection(0, 0);
+                console.log(`Manual-moved to page ${pageIndex + 2}`);
+              }
+            }
+          }, 200);
+        }
       }
       // Otherwise, let Enter work normally for line breaks
     }
