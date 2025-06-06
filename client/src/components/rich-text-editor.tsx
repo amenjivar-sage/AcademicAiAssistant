@@ -361,7 +361,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
   }, [pages]);
 
   // Store keyboard handlers for cleanup
-  const keyboardHandlers = useRef<Map<HTMLElement, EventListener>>(new Map());
+  const keyboardHandlers = useRef<Map<HTMLElement, (e: KeyboardEvent) => void>>(new Map());
 
   // Add keyboard event listeners to Quill editors
   const attachKeyboardListeners = useCallback(() => {
@@ -474,10 +474,29 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
 
   // Attach keyboard listeners when pages change
   useEffect(() => {
-    setTimeout(() => {
+    const timer = setTimeout(() => {
+      console.log('Attempting to attach keyboard listeners to', pageRefs.current.length, 'pages');
       attachKeyboardListeners();
-    }, 100);
+    }, 500); // Increased delay to ensure ReactQuill is fully initialized
+    
+    return () => clearTimeout(timer);
   }, [pages.length, attachKeyboardListeners]);
+
+  // Also attach listeners when refs are updated
+  useEffect(() => {
+    const checkAndAttach = () => {
+      const validRefs = pageRefs.current.filter(ref => ref && ref.getEditor());
+      if (validRefs.length > 0) {
+        console.log('ReactQuill editors ready, attaching keyboard listeners');
+        attachKeyboardListeners();
+      } else {
+        console.log('ReactQuill editors not ready yet, retrying...');
+        setTimeout(checkAndAttach, 200);
+      }
+    };
+    
+    checkAndAttach();
+  }, [pages]);
 
   // Handle page navigation with content management
   const handlePageNavigation = (currentPageIndex: number, direction: 'next' | 'prev', isOverflow: boolean) => {
