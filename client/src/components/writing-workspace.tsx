@@ -472,10 +472,17 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                                   if (editor) {
                                     const quillEditor = editor.getEditor();
                                     const selection = quillEditor.getSelection();
-                                    if (selection) {
+                                    if (selection && selection.length > 0) {
+                                      // Apply formatting to selected text
+                                      const currentFormat = quillEditor.getFormat(selection);
+                                      quillEditor.formatText(selection.index, selection.length, 'bold', !currentFormat.bold);
+                                    } else if (selection) {
+                                      // Set formatting for cursor position (next typing)
                                       const currentFormat = quillEditor.getFormat(selection);
                                       quillEditor.format('bold', !currentFormat.bold);
                                     }
+                                    // Refocus editor to maintain cursor position
+                                    setTimeout(() => quillEditor.focus(), 0);
                                   }
                                 }
                               }}
@@ -494,10 +501,17 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                                   if (editor) {
                                     const quillEditor = editor.getEditor();
                                     const selection = quillEditor.getSelection();
-                                    if (selection) {
+                                    if (selection && selection.length > 0) {
+                                      // Apply formatting to selected text
+                                      const currentFormat = quillEditor.getFormat(selection);
+                                      quillEditor.formatText(selection.index, selection.length, 'italic', !currentFormat.italic);
+                                    } else if (selection) {
+                                      // Set formatting for cursor position (next typing)
                                       const currentFormat = quillEditor.getFormat(selection);
                                       quillEditor.format('italic', !currentFormat.italic);
                                     }
+                                    // Refocus editor to maintain cursor position
+                                    setTimeout(() => quillEditor.focus(), 0);
                                   }
                                 }
                               }}
@@ -516,10 +530,17 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                                   if (editor) {
                                     const quillEditor = editor.getEditor();
                                     const selection = quillEditor.getSelection();
-                                    if (selection) {
+                                    if (selection && selection.length > 0) {
+                                      // Apply formatting to selected text
+                                      const currentFormat = quillEditor.getFormat(selection);
+                                      quillEditor.formatText(selection.index, selection.length, 'underline', !currentFormat.underline);
+                                    } else if (selection) {
+                                      // Set formatting for cursor position (next typing)
                                       const currentFormat = quillEditor.getFormat(selection);
                                       quillEditor.format('underline', !currentFormat.underline);
                                     }
+                                    // Refocus editor to maintain cursor position
+                                    setTimeout(() => quillEditor.focus(), 0);
                                   }
                                 }
                               }}

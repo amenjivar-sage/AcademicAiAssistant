@@ -45,10 +45,17 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     toolbar: false, // We'll use custom formatting buttons
     clipboard: {
       matchVisual: true,
-      matchers: [],
+      matchers: [
+        // Preserve HTML formatting when pasting
+        ['STRONG', 'bold'],
+        ['B', 'bold'],
+        ['EM', 'italic'],
+        ['I', 'italic'],
+        ['U', 'underline'],
+      ],
     },
     history: {
-      delay: 2000,
+      delay: 1000,
       maxStack: 500,
       userOnly: true
     },
@@ -218,6 +225,19 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
       return;
     }
     
+    // Preserve current selection and formatting when updating content
+    const currentRef = pageRefs.current[pageIndex];
+    let currentSelection = null;
+    let currentFormat = null;
+    
+    if (currentRef) {
+      const quillEditor = currentRef.getEditor();
+      currentSelection = quillEditor.getSelection();
+      if (currentSelection) {
+        currentFormat = quillEditor.getFormat(currentSelection);
+      }
+    }
+    
     // Update the specific page content without affecting other pages
     const newPages = [...pages];
     newPages[pageIndex] = value;
@@ -226,6 +246,24 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     // Combine all pages for parent callback
     const combinedContent = newPages.join('');
     onContentChange(combinedContent);
+    
+    // Restore selection and formatting after update
+    if (currentRef && currentSelection && currentFormat) {
+      setTimeout(() => {
+        try {
+          const quillEditor = currentRef.getEditor();
+          quillEditor.setSelection(currentSelection);
+          // Ensure formatting is maintained for the next input
+          Object.keys(currentFormat).forEach(format => {
+            if (currentFormat[format]) {
+              quillEditor.format(format, currentFormat[format]);
+            }
+          });
+        } catch (e) {
+          console.log('Could not restore selection/formatting:', e);
+        }
+      }, 0);
+    }
     
     // Overflow check for user input only
     console.log(`User content change detected on page ${pageIndex + 1}, preserving formatting`);
