@@ -89,8 +89,21 @@ export function PDFExport({ content, title = "Document" }: PDFExportProps) {
     setIsExporting(true);
     
     try {
+      // Debug logging
+      console.log('PDF Export - Content received:', content);
+      console.log('PDF Export - Content length:', content?.length || 0);
+      console.log('PDF Export - Content preview:', content?.substring(0, 100));
+      
+      if (!content || !content.trim()) {
+        alert('No content to export. Please write some content first.');
+        setIsExporting(false);
+        return;
+      }
+      
       // Split content into pages
       const pages = splitContentIntoPages(content);
+      console.log('PDF Export - Pages generated:', pages.length);
+      console.log('PDF Export - First page preview:', pages[0]?.substring(0, 100));
       
       // Generate PDF-ready HTML
       const pdfContent = generatePDFContent(pages);
