@@ -378,14 +378,31 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
             
             // If the Enter push us over the limit, move to next page
             if (updatedHeight > 950) {
-              console.log(`Moving to next page from page ${pageIndex + 1}`);
+              console.log(`Page ${pageIndex + 1} overflow detected, moving cursor to next page`);
               
               // Set navigation flag to prevent content resets
               setIsNavigating(true);
               
-              // Ensure next page exists
+              // Remove the last line break that caused overflow
+              const currentContent = editor.root.innerHTML;
+              const lastBreakIndex = currentContent.lastIndexOf('<p><br></p>');
+              if (lastBreakIndex > -1) {
+                const trimmedContent = currentContent.substring(0, lastBreakIndex);
+                editor.root.innerHTML = trimmedContent;
+              }
+              
+              // Ensure next page exists and add the line break there
               if (pageIndex >= pages.length - 1) {
                 setPages(prev => [...prev, '<p><br></p>']);
+              } else {
+                // Add line break to existing next page
+                setPages(prev => {
+                  const newPages = [...prev];
+                  if (newPages[pageIndex + 1] === '<p><br></p>') {
+                    newPages[pageIndex + 1] = '<p><br></p><p><br></p>';
+                  }
+                  return newPages;
+                });
               }
               
               // Focus next page
@@ -399,7 +416,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
                 
                 // Clear navigation flag after navigation complete
                 setTimeout(() => setIsNavigating(false), 500);
-              }, 100);
+              }, 150);
             }
           }, 50);
         }
