@@ -65,90 +65,22 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     'link', 'color', 'background'
   ];
 
-  // Smart pagination with content flow
-  const handleContentFlow = useCallback(() => {
-    const allContent = pages.join('');
-    console.log('handleContentFlow called with content length:', allContent.length);
+  // Simple overflow detection without complex redistribution
+  const checkPageOverflow = useCallback((pageIndex: number) => {
+    const pageRef = pageRefs.current[pageIndex];
+    if (!pageRef) return;
     
-    if (!allContent.trim()) {
-      console.log('No content to paginate');
-      return;
+    const editorElement = pageRef.getEditor().root;
+    const contentHeight = editorElement.scrollHeight;
+    
+    console.log(`Page ${pageIndex + 1} height: ${contentHeight}px (limit: 950px)`);
+    
+    // Only create new page if this is the last page and content overflows
+    if (pageIndex === pages.length - 1 && contentHeight > 950) {
+      console.log(`Creating new page - overflow on page ${pageIndex + 1}`);
+      setPages(prev => [...prev, '']);
     }
-    
-    // Create a temporary container for measuring
-    const tempContainer = document.createElement('div');
-    tempContainer.style.cssText = `
-      position: absolute;
-      visibility: hidden;
-      width: calc(8.5in - 144px);
-      font-family: 'Times New Roman', serif;
-      font-size: 14pt;
-      line-height: 2.0;
-      padding: 72px;
-      box-sizing: border-box;
-      top: -9999px;
-    `;
-    
-    document.body.appendChild(tempContainer);
-    
-    try {
-      // Parse content into paragraphs
-      tempContainer.innerHTML = allContent;
-      const paragraphs = Array.from(tempContainer.querySelectorAll('p'));
-      
-      console.log('Found paragraphs:', paragraphs.length);
-      
-      if (paragraphs.length === 0) {
-        // Try to treat entire content as single paragraph
-        tempContainer.innerHTML = `<p>${allContent}</p>`;
-        const singleParagraph = tempContainer.querySelector('p');
-        if (singleParagraph) {
-          paragraphs.push(singleParagraph);
-        } else {
-          document.body.removeChild(tempContainer);
-          return;
-        }
-      }
-      
-      const newPages: string[] = [];
-      let currentPageContent = '';
-      
-      for (const paragraph of paragraphs) {
-        const testContent = currentPageContent + paragraph.outerHTML;
-        tempContainer.innerHTML = testContent;
-        
-        console.log(`Testing paragraph, height: ${tempContainer.scrollHeight}px`);
-        
-        if (tempContainer.scrollHeight > 950 && currentPageContent) {
-          // Current page is full, save it and start new page
-          console.log('Page full, creating new page');
-          newPages.push(currentPageContent);
-          currentPageContent = paragraph.outerHTML;
-        } else {
-          // Paragraph fits, add to current page
-          currentPageContent = testContent;
-        }
-      }
-      
-      // Add remaining content as last page
-      if (currentPageContent) {
-        newPages.push(currentPageContent);
-      }
-      
-      console.log(`Content redistributed into ${newPages.length} pages`);
-      
-      // Always update to trigger re-render and proper pagination
-      if (newPages.length > 1 || newPages.length !== pages.length) {
-        console.log('Updating pages array');
-        setPages(newPages);
-      }
-      
-    } catch (error) {
-      console.error('Error in content flow:', error);
-    } finally {
-      document.body.removeChild(tempContainer);
-    }
-  }, [pages]);
+  }, [pages.length]);
 
   // Simple content redistribution - only when significant deletion occurs
   const redistributeContentOnDelete = useCallback((pageIndex: number) => {
@@ -209,10 +141,12 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     setPages(newPages);
     onContentChange(combinedContent);
     
-    // Debounced content flow redistribution
-    overflowCheckTimeout.current = setTimeout(() => {
-      handleContentFlow();
-    }, 800); // Longer delay to avoid constant recalculation
+    // Check for overflow only on the last page after typing
+    if (pageIndex === pages.length - 1) {
+      overflowCheckTimeout.current = setTimeout(() => {
+        checkPageOverflow(pageIndex);
+      }, 600);
+    }
   };
 
   // Handle text selection across pages
@@ -323,12 +257,12 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
       // For now, put all content in first page and let overflow detection handle pagination
       setPages([content]);
       
-      // Trigger content flow after content is loaded
+      // Check for overflow after content is loaded
       setTimeout(() => {
-        handleContentFlow();
+        checkPageOverflow(0);
       }, 300);
     }
-  }, [content, handleContentFlow]);
+  }, [content, checkPageOverflow]);
 
   // Initialize page refs array
   useEffect(() => {
