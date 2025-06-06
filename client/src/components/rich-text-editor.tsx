@@ -65,34 +65,90 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     'link', 'color', 'background'
   ];
 
-  // Simple height-based pagination
-  const checkForOverflow = useCallback((pageIndex: number) => {
-    const pageRef = pageRefs.current[pageIndex];
-    if (!pageRef) return;
+  // Smart pagination with content flow
+  const handleContentFlow = useCallback(() => {
+    const allContent = pages.join('');
+    console.log('handleContentFlow called with content length:', allContent.length);
     
-    const editorElement = pageRef.getEditor().root;
-    const contentHeight = editorElement.scrollHeight;
-    const maxHeight = 950;
-    
-    console.log(`Page ${pageIndex + 1} height check: ${contentHeight}px vs ${maxHeight}px`);
-    
-    if (contentHeight > maxHeight + 10) {
-      console.log(`Page ${pageIndex + 1} overflow detected - creating new page`);
-      
-      // Add empty page if this is the last page
-      if (pageIndex === pages.length - 1) {
-        setPages(prev => [...prev, '']);
-        
-        // Focus new page after creation
-        setTimeout(() => {
-          const newPageRef = pageRefs.current[pageIndex + 1];
-          if (newPageRef) {
-            newPageRef.focus();
-          }
-        }, 100);
-      }
+    if (!allContent.trim()) {
+      console.log('No content to paginate');
+      return;
     }
-  }, [pages.length]);
+    
+    // Create a temporary container for measuring
+    const tempContainer = document.createElement('div');
+    tempContainer.style.cssText = `
+      position: absolute;
+      visibility: hidden;
+      width: calc(8.5in - 144px);
+      font-family: 'Times New Roman', serif;
+      font-size: 14pt;
+      line-height: 2.0;
+      padding: 72px;
+      box-sizing: border-box;
+      top: -9999px;
+    `;
+    
+    document.body.appendChild(tempContainer);
+    
+    try {
+      // Parse content into paragraphs
+      tempContainer.innerHTML = allContent;
+      const paragraphs = Array.from(tempContainer.querySelectorAll('p'));
+      
+      console.log('Found paragraphs:', paragraphs.length);
+      
+      if (paragraphs.length === 0) {
+        // Try to treat entire content as single paragraph
+        tempContainer.innerHTML = `<p>${allContent}</p>`;
+        const singleParagraph = tempContainer.querySelector('p');
+        if (singleParagraph) {
+          paragraphs.push(singleParagraph);
+        } else {
+          document.body.removeChild(tempContainer);
+          return;
+        }
+      }
+      
+      const newPages: string[] = [];
+      let currentPageContent = '';
+      
+      for (const paragraph of paragraphs) {
+        const testContent = currentPageContent + paragraph.outerHTML;
+        tempContainer.innerHTML = testContent;
+        
+        console.log(`Testing paragraph, height: ${tempContainer.scrollHeight}px`);
+        
+        if (tempContainer.scrollHeight > 950 && currentPageContent) {
+          // Current page is full, save it and start new page
+          console.log('Page full, creating new page');
+          newPages.push(currentPageContent);
+          currentPageContent = paragraph.outerHTML;
+        } else {
+          // Paragraph fits, add to current page
+          currentPageContent = testContent;
+        }
+      }
+      
+      // Add remaining content as last page
+      if (currentPageContent) {
+        newPages.push(currentPageContent);
+      }
+      
+      console.log(`Content redistributed into ${newPages.length} pages`);
+      
+      // Always update to trigger re-render and proper pagination
+      if (newPages.length > 1 || newPages.length !== pages.length) {
+        console.log('Updating pages array');
+        setPages(newPages);
+      }
+      
+    } catch (error) {
+      console.error('Error in content flow:', error);
+    } finally {
+      document.body.removeChild(tempContainer);
+    }
+  }, [pages]);
 
   // Simple content redistribution - only when significant deletion occurs
   const redistributeContentOnDelete = useCallback((pageIndex: number) => {
@@ -147,16 +203,16 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
       clearTimeout(overflowCheckTimeout.current);
     }
     
-    // Update the current page immediately
+    // Update the current page immediately for responsive typing
     const newPages = [...pages];
     newPages[pageIndex] = value;
     setPages(newPages);
     onContentChange(combinedContent);
     
-    // Check for overflow after a brief delay
+    // Debounced content flow redistribution
     overflowCheckTimeout.current = setTimeout(() => {
-      checkForOverflow(pageIndex);
-    }, 400);
+      handleContentFlow();
+    }, 800); // Longer delay to avoid constant recalculation
   };
 
   // Handle text selection across pages
@@ -267,14 +323,12 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
       // For now, put all content in first page and let overflow detection handle pagination
       setPages([content]);
       
-      // Check for overflow after content is loaded
+      // Trigger content flow after content is loaded
       setTimeout(() => {
-        if (pageRefs.current[0]) {
-          checkForOverflow(0);
-        }
-      }, 200);
+        handleContentFlow();
+      }, 300);
     }
-  }, [content, checkForOverflow]);
+  }, [content, handleContentFlow]);
 
   // Initialize page refs array
   useEffect(() => {
