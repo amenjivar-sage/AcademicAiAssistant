@@ -56,6 +56,9 @@ export default function DocumentExportDialog({
       console.log('Export Debug - Custom Header Text Value:', `"${settings.headerText}"`);
       console.log('Export Debug - Will use custom header:', !!(settings.headerText && settings.headerText.trim()));
       // Clean and parse HTML content more thoroughly
+      console.log('Export Debug - Original content length:', content.length);
+      console.log('Export Debug - Original content sample:', content.substring(0, 200));
+      
       let cleanText = content;
       
       // First pass: Convert structural HTML to text breaks
@@ -94,6 +97,10 @@ export default function DocumentExportDialog({
         .replace(/\n\s*\n/g, '\n') // Remove multiple line breaks
         .replace(/^\s+|\s+$/g, '') // Trim whitespace from start and end
         .trim();
+
+      console.log('Export Debug - Cleaned text length:', cleanText.length);
+      console.log('Export Debug - Cleaned text sample:', cleanText.substring(0, 200));
+      console.log('Export Debug - Contains HTML tags:', /<[^>]*>/.test(cleanText));
 
       // Split into paragraphs and create document paragraphs
       const paragraphs = cleanText.split('\n').map(paragraph => {
@@ -182,7 +189,10 @@ export default function DocumentExportDialog({
           } else {
             footerChildren.push(new TextRun({ text: 'Page ', size: 20 }));
           }
-          footerChildren.push(new PageNumber());
+          footerChildren.push(new TextRun({
+            text: 'PAGE_NUMBER',
+            size: 20
+          }));
         }
 
         const alignment = settings.pageNumberPosition === 'left' 
