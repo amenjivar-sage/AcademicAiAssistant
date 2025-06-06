@@ -65,211 +65,86 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     'link', 'color', 'background'
   ];
 
-  // Simplified DOM-based pagination with reliable page creation
-  const checkAndHandleOverflow = useCallback((pageIndex: number, currentPages: string[]) => {
+  // Simple overflow check - only create new pages when necessary
+  const checkAndHandleOverflow = useCallback((pageIndex: number) => {
     const currentRef = pageRefs.current[pageIndex];
     if (!currentRef) return;
 
     const editorElement = currentRef.getEditor().root;
     const scrollHeight = editorElement.scrollHeight;
-    const maxHeight = 950;
 
-    console.log(`Page ${pageIndex + 1} height: ${scrollHeight}px`);
-
-    if (scrollHeight > maxHeight) {
-      console.log(`Creating new page - overflow detected`);
+    if (scrollHeight > 950) {
+      console.log(`Page ${pageIndex + 1} overflow: ${scrollHeight}px > 950px`);
       
-      const quillEditor = currentRef.getEditor();
-      const fullText = quillEditor.getText().trim();
+      const editor = currentRef.getEditor();
+      const fullText = editor.getText().trim();
       
-      if (!fullText) return;
-
-      // Create measurement container for accurate text height calculation
-      const measureContainer = document.createElement('div');
-      measureContainer.style.cssText = `
-        position: absolute;
-        left: -9999px;
-        width: calc(8.5in - 144px);
-        font-family: 'Times New Roman', serif;
-        font-size: 14pt;
-        line-height: 2.0;
-        padding: 72px;
-        box-sizing: border-box;
-        visibility: hidden;
-      `;
-      document.body.appendChild(measureContainer);
-
-      // Split text by words for precise fitting
-      const words = fullText.split(/\s+/);
-      let maxWords = Math.floor(words.length * 0.7); // Start with conservative estimate
-      
-      // Binary search to find optimal split point
-      let low = 0;
-      let high = words.length - 1;
-      
-      while (low < high) {
-        const mid = Math.floor((low + high + 1) / 2);
-        const testText = words.slice(0, mid).join(' ');
+      if (fullText.length > 50) {
+        // Simple word-based split at 60% to ensure first page fits
+        const words = fullText.split(/\s+/);
+        const splitPoint = Math.floor(words.length * 0.6);
         
-        measureContainer.innerHTML = `<p>${testText}</p>`;
-        const testHeight = measureContainer.scrollHeight;
+        const firstPageText = words.slice(0, splitPoint).join(' ');
+        const secondPageText = words.slice(splitPoint).join(' ');
         
-        if (testHeight <= maxHeight) {
-          low = mid;
-          maxWords = mid;
-        } else {
-          high = mid - 1;
-        }
-      }
-      
-      document.body.removeChild(measureContainer);
-      
-      if (maxWords > 0 && maxWords < words.length) {
-        // Split content at word boundary
-        const firstPageText = words.slice(0, maxWords).join(' ');
-        const remainingText = words.slice(maxWords).join(' ');
+        console.log(`Creating new page: splitting ${words.length} words at ${splitPoint}`);
         
-        const firstPageHTML = `<p>${firstPageText}</p>`;
-        const remainingHTML = `<p>${remainingText}</p>`;
+        setPages(prev => {
+          const newPages = [...prev];
+          newPages[pageIndex] = `<p>${firstPageText}</p>`;
+          
+          if (pageIndex + 1 < newPages.length) {
+            newPages[pageIndex + 1] = `<p>${secondPageText}</p>` + newPages[pageIndex + 1];
+          } else {
+            newPages.push(`<p>${secondPageText}</p>`);
+          }
+          
+          return newPages;
+        });
         
-        console.log(`Splitting at word ${maxWords}: "${firstPageText.substring(0, 50)}..." -> "${remainingText.substring(0, 50)}..."`);
-        
-        // Update pages
-        const updatedPages = [...currentPages];
-        updatedPages[pageIndex] = firstPageHTML;
-        
-        if (pageIndex + 1 < updatedPages.length) {
-          // Merge with existing next page
-          updatedPages[pageIndex + 1] = remainingHTML + (updatedPages[pageIndex + 1] !== '<p><br></p>' ? updatedPages[pageIndex + 1] : '');
-        } else {
-          // Create new page
-          updatedPages.push(remainingHTML);
-        }
-        
-        setPages(updatedPages);
-        
-        // Move cursor to appropriate page
+        // Move cursor to next page
         setTimeout(() => {
-          const selection = quillEditor.getSelection();
-          const cursorPos = selection ? selection.index : 0;
-          
-          if (cursorPos > firstPageText.length && pageIndex + 1 < updatedPages.length) {
-            const nextRef = pageRefs.current[pageIndex + 1];
-            if (nextRef) {
-              const newPos = Math.max(0, cursorPos - firstPageText.length);
-              nextRef.getEditor().setSelection(newPos, 0);
-              nextRef.focus();
-            }
+          const nextRef = pageRefs.current[pageIndex + 1];
+          if (nextRef) {
+            nextRef.focus();
+            nextRef.getEditor().setSelection(0, 0);
           }
-          
-          // Check for further overflow on next page
-          if (pageIndex + 1 < updatedPages.length) {
-            setTimeout(() => checkAndHandleOverflow(pageIndex + 1, updatedPages), 100);
-          }
-        }, 50);
+        }, 100);
       }
     }
   }, []);
 
-  // Aggressive content redistribution for filling gaps and backspace operations
-  const redistributeContentOnDelete = useCallback((pageIndex: number, currentPages: string[]) => {
-    console.log(`Checking redistribution for page ${pageIndex + 1}`);
+  // Simple content redistribution - only when significant deletion occurs
+  const redistributeContentOnDelete = useCallback((pageIndex: number) => {
+    if (pageIndex === 0 || pageIndex >= pages.length - 1) return;
     
-    // Always try to fill gaps from later pages, regardless of current page content
     const currentRef = pageRefs.current[pageIndex];
-    if (!currentRef) return;
+    const nextRef = pageRefs.current[pageIndex + 1];
     
-    const currentHTML = currentRef.getEditor().root.innerHTML;
-    const currentHeight = currentRef.getEditor().root.scrollHeight;
-    const maxHeight = 950;
-    const availableSpace = maxHeight - currentHeight;
+    if (!currentRef || !nextRef) return;
     
-    console.log(`Page ${pageIndex + 1} has ${availableSpace}px available space`);
+    const currentText = currentRef.getEditor().getText().trim();
+    const nextText = nextRef.getEditor().getText().trim();
     
-    // If current page has space and there are following pages, try to pull content back
-    if (availableSpace > 50 && pageIndex + 1 < currentPages.length) {
-      const nextRef = pageRefs.current[pageIndex + 1];
-      if (!nextRef) return;
+    // Only redistribute if current page is mostly empty (less than 30 words)
+    if (currentText.split(/\s+/).length < 30 && nextText) {
+      console.log(`Redistributing content from page ${pageIndex + 2} back to page ${pageIndex + 1}`);
       
-      const nextHTML = nextRef.getEditor().root.innerHTML;
-      const nextText = nextHTML.replace(/<[^>]*>/g, '').trim();
+      // Combine content and check if it fits
+      const combinedText = currentText + ' ' + nextText;
+      const combinedHTML = `<p>${combinedText}</p>`;
       
-      if (!nextText) {
-        // Next page is empty, remove it
-        console.log(`Removing empty page ${pageIndex + 2}`);
-        const updatedPages = [...currentPages];
-        updatedPages.splice(pageIndex + 1, 1);
-        setPages(updatedPages);
-        return;
-      }
-      
-      // Try to pull some content from next page
-      const measurementDiv = document.createElement('div');
-      measurementDiv.style.cssText = `
-        position: absolute;
-        left: -9999px;
-        width: calc(8.5in - 144px);
-        font-family: 'Times New Roman', serif;
-        font-size: 14pt;
-        line-height: 2.0;
-        padding: 72px;
-        box-sizing: border-box;
-        visibility: hidden;
-      `;
-      document.body.appendChild(measurementDiv);
-      
-      // Try different amounts of content from next page
-      const nextWords = nextText.split(/\s+/);
-      let wordsToMove = 0;
-      
-      for (let i = 1; i <= nextWords.length; i++) {
-        const wordsToTest = nextWords.slice(0, i).join(' ');
-        const testHTML = currentHTML.replace('</p>', ` ${wordsToTest}</p>`);
-        
-        measurementDiv.innerHTML = testHTML;
-        const testHeight = measurementDiv.scrollHeight;
-        
-        if (testHeight <= maxHeight) {
-          wordsToMove = i;
-        } else {
-          break;
-        }
-      }
-      
-      document.body.removeChild(measurementDiv);
-      
-      if (wordsToMove > 0) {
-        console.log(`Moving ${wordsToMove} words from page ${pageIndex + 2} to page ${pageIndex + 1}`);
-        
-        const wordsToMoveText = nextWords.slice(0, wordsToMove).join(' ');
-        const remainingWords = nextWords.slice(wordsToMove).join(' ');
-        
-        // Update current page with additional content
-        const updatedCurrentHTML = currentHTML.replace('</p>', ` ${wordsToMoveText}</p>`);
-        
-        // Update next page with remaining content
-        const updatedNextHTML = remainingWords ? `<p>${remainingWords}</p>` : '<p><br></p>';
-        
-        const updatedPages = [...currentPages];
-        updatedPages[pageIndex] = updatedCurrentHTML;
-        updatedPages[pageIndex + 1] = updatedNextHTML;
-        
-        // If next page becomes empty, remove it
-        if (!remainingWords.trim()) {
-          updatedPages.splice(pageIndex + 1, 1);
-        }
-        
-        setPages(updatedPages);
-        
-        // Continue redistributing from next page
-        setTimeout(() => {
-          if (pageIndex + 1 < updatedPages.length) {
-            redistributeContentOnDelete(pageIndex + 1, updatedPages);
-          }
-        }, 50);
+      // Simple check - if combined text is reasonable length, merge pages
+      if (combinedText.split(/\s+/).length < 250) {
+        setPages(prev => {
+          const newPages = [...prev];
+          newPages[pageIndex] = combinedHTML;
+          newPages.splice(pageIndex + 1, 1); // Remove next page
+          return newPages;
+        });
       }
     }
-  }, []);
+  }, [pages.length]);
 
   // Debounced overflow check
   const overflowCheckTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -335,39 +210,10 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
         
         console.log(`Page ${pageIndex + 1} height after change: ${scrollHeight}px`);
         
-        // Check for overflow - trigger when content exceeds page height
+        // Check for overflow - only when content exceeds page height
         if (scrollHeight > 950) {
-          console.log(`FORCING page creation - height: ${scrollHeight}px`);
-          
-          // Force page creation by directly splitting content
-          const currentContent = currentRef.getEditor().getText().trim();
-          if (currentContent && newPages.length === pageIndex + 1) {
-            // Only one page exists, force split
-            const words = currentContent.split(/\s+/);
-            const midPoint = Math.floor(words.length * 0.6); // Split at 60% to ensure first page fits
-            
-            const firstPageText = words.slice(0, midPoint).join(' ');
-            const secondPageText = words.slice(midPoint).join(' ');
-            
-            console.log(`FORCE SPLITTING: ${words.length} words -> ${midPoint} + ${words.length - midPoint}`);
-            
-            const updatedPages = [...newPages];
-            updatedPages[pageIndex] = `<p>${firstPageText}</p>`;
-            updatedPages.push(`<p>${secondPageText}</p>`);
-            
-            setPages(updatedPages);
-            
-            // Move cursor to second page
-            setTimeout(() => {
-              const nextRef = pageRefs.current[pageIndex + 1];
-              if (nextRef) {
-                nextRef.focus();
-                nextRef.getEditor().setSelection(0, 0);
-              }
-            }, 100);
-          } else {
-            checkAndHandleOverflow(pageIndex, newPages);
-          }
+          console.log(`Page overflow detected - triggering page creation`);
+          checkAndHandleOverflow(pageIndex);
         }
         
         setContentOverflow(scrollHeight > 950);
@@ -528,32 +374,13 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     setPages(newPages);
   }, [pages]);
 
-  // Handle keyboard events for pagination and redistribution
+  // Handle keyboard events for pagination
   const handleKeyDown = (e: React.KeyboardEvent, pageIndex: number) => {
-    const currentRef = pageRefs.current[pageIndex];
-    if (!currentRef) return;
-
-    if (e.key === 'Enter') {
-      console.log(`Enter key pressed on page ${pageIndex + 1}`);
-      
+    if (e.key === 'Backspace' || e.key === 'Delete') {
+      // Only trigger redistribution after significant deletion
       setTimeout(() => {
-        checkAndHandleOverflow(pageIndex, pages);
-      }, 100);
-      
-    } else if (e.key === 'Backspace' || e.key === 'Delete') {
-      setTimeout(() => {
-        // Check for content redistribution
-        redistributeContentOnDelete(pageIndex, pages);
-        
-        // Check for empty pages to consolidate
-        const hasEmptyPages = pages.some((page, index) => 
-          index > 0 && page.replace(/<\/?p>/g, '').trim() === ''
-        );
-        if (hasEmptyPages) {
-          console.log('Consolidating pages after deletion');
-          consolidatePages();
-        }
-      }, 100);
+        redistributeContentOnDelete(pageIndex);
+      }, 500);
     }
   };
 
