@@ -190,7 +190,15 @@ export default function GradingInterface({ assignmentId, children }: GradingInte
 
         {viewMode === "document" && selectedSubmission ? (
           <DocumentReviewer
-            sessionId={selectedSubmission.id}
+            session={selectedSubmission}
+            onGradeSubmit={(grade, feedback) => {
+              submitGradeMutation.mutate({
+                grade,
+                feedback,
+                sessionId: selectedSubmission.id,
+              });
+            }}
+            isSubmitting={submitGradeMutation.isPending}
           />
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
