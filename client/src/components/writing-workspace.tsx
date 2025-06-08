@@ -73,6 +73,36 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     
     return highlightedContent;
   };
+
+  // Function to highlight copy-pasted content in red for teachers
+  const highlightPastedContent = (content: string, pastedContents: PastedContent[]): string => {
+    if (!content || !pastedContents || pastedContents.length === 0) return content;
+    
+    let highlightedContent = content;
+    
+    // Sort pasted content by start index to avoid overlap issues
+    const sortedPastes = [...pastedContents].sort((a, b) => a.startIndex - b.startIndex);
+    
+    // Apply highlighting from end to beginning to preserve indices
+    for (let i = sortedPastes.length - 1; i >= 0; i--) {
+      const paste = sortedPastes[i];
+      if (paste.text && paste.text.trim()) {
+        // Clean the text and escape special regex characters
+        const cleanText = paste.text.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
+        const escapedText = cleanText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        
+        if (escapedText.length > 0) {
+          const regex = new RegExp(`(${escapedText})`, 'gi');
+          
+          highlightedContent = highlightedContent.replace(regex, (match) => {
+            return `<span style="background-color: #fee2e2; border: 2px solid #dc2626; padding: 2px 4px; border-radius: 3px; color: #991b1b;" title="Copy-pasted content detected on ${paste.timestamp.toLocaleString()}">${match}</span>`;
+          });
+        }
+      }
+    }
+    
+    return highlightedContent;
+  };
   const [headerFooterSettings, setHeaderFooterSettings] = useState({
     header: "",
     footer: "",
@@ -707,7 +737,21 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
             <div className="relative">
               <RichTextEditor
                 ref={contentRef}
-                content={session?.status === 'graded' ? highlightCommentedText(content, commentsArray) : content}
+                content={(() => {
+                  let displayContent = content;
+                  
+                  // Apply copy-paste highlighting first (red highlighting)
+                  if (pastedContents.length > 0) {
+                    displayContent = highlightPastedContent(displayContent, pastedContents);
+                  }
+                  
+                  // Apply teacher comment highlighting second (yellow highlighting)
+                  if (session?.status === 'graded' && commentsArray.length > 0) {
+                    displayContent = highlightCommentedText(displayContent, commentsArray);
+                  }
+                  
+                  return displayContent;
+                })()}
                 onContentChange={(newContent) => {
                   console.log('Content changed from rich editor:', newContent);
                   setContent(newContent);

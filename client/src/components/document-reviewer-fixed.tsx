@@ -615,9 +615,39 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
     return result;
   };
 
+  // Simple function to highlight pasted content in red
+  const highlightPastedContentSimple = (content: string): string => {
+    if (!session.pastedContent || !Array.isArray(session.pastedContent) || session.pastedContent.length === 0) {
+      return content;
+    }
+
+    let result = content;
+    
+    // Apply red highlighting to each pasted segment
+    session.pastedContent.forEach((paste: any) => {
+      if (paste.text && paste.text.trim()) {
+        // Clean and escape the pasted text for regex
+        const pastedText = paste.text.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
+        const escapedText = pastedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        
+        if (escapedText.length > 10) { // Only highlight substantial text
+          const regex = new RegExp(`(${escapedText})`, 'gi');
+          result = result.replace(regex, (match) => {
+            return `<span style="background-color: #fee2e2; border: 2px solid #dc2626; padding: 2px 4px; border-radius: 3px; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected on ${new Date(paste.timestamp).toLocaleString()}">${match}</span>`;
+          });
+        }
+      }
+    });
+
+    return result;
+  };
+
   // Render content with highlights
   const renderContentWithHighlights = () => {
     if (!session.content) return <p className="text-gray-500">No content available</p>;
+
+    // First apply red highlighting for copy-pasted content
+    let contentWithPasteHighlights = highlightPastedContentSimple(session.content);
 
     const sortedComments = [...comments].sort((a, b) => a.startIndex - b.startIndex);
     const elements = [];
@@ -626,16 +656,14 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
     sortedComments.forEach((comment, index) => {
       // Add text before the comment
       if (lastIndex < comment.startIndex) {
-        const textSegment = session.content.slice(lastIndex, comment.startIndex);
-        const highlightedText = highlightPastedContent(textSegment);
+        const textSegment = contentWithPasteHighlights.slice(lastIndex, comment.startIndex);
         elements.push(
-          <span key={`text-${index}`} dangerouslySetInnerHTML={{ __html: highlightedText }} />
+          <span key={`text-${index}`} dangerouslySetInnerHTML={{ __html: textSegment }} />
         );
       }
 
-      // Add highlighted comment - use actual document text at this position, not stored highlightedText
-      const actualTextAtPosition = session.content.slice(comment.startIndex, comment.endIndex);
-      const highlightedCommentText = highlightPastedContent(actualTextAtPosition);
+      // Add highlighted comment
+      const actualTextAtPosition = contentWithPasteHighlights.slice(comment.startIndex, comment.endIndex);
       
       elements.push(
         <span
@@ -643,7 +671,7 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
           className="bg-yellow-200 hover:bg-yellow-300 cursor-pointer relative"
           onClick={() => setActiveComment(activeComment === comment.id ? null : comment.id)}
         >
-          <span dangerouslySetInnerHTML={{ __html: highlightedCommentText }} />
+          <span dangerouslySetInnerHTML={{ __html: actualTextAtPosition }} />
           <MessageCircle className="inline h-3 w-3 ml-1 text-yellow-600" />
         </span>
       );
@@ -651,13 +679,17 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
       lastIndex = comment.endIndex;
     });
 
-    // Add remaining text
-    if (lastIndex < session.content.length) {
-      const textSegment = session.content.slice(lastIndex);
-      const highlightedText = highlightPastedContent(textSegment);
+    // Add remaining text after the last comment
+    if (lastIndex < contentWithPasteHighlights.length) {
+      const remainingText = contentWithPasteHighlights.slice(lastIndex);
       elements.push(
-        <span key="final-text" dangerouslySetInnerHTML={{ __html: highlightedText }} />
+        <span key="final-text" dangerouslySetInnerHTML={{ __html: remainingText }} />
       );
+    }
+
+    // If no comments exist, return the entire content with paste highlighting
+    if (comments.length === 0) {
+      return <div className="whitespace-pre-wrap leading-relaxed" dangerouslySetInnerHTML={{ __html: contentWithPasteHighlights }} />;
     }
 
     return <div className="whitespace-pre-wrap leading-relaxed">{elements}</div>;
