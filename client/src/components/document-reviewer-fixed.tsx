@@ -623,58 +623,44 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
 
     let result = content;
     
+    console.log('Highlighting pasted content. Session pasted content:', session.pastedContent);
+    console.log('Document content:', content);
+    
     // Apply red highlighting to each pasted segment
     session.pastedContent.forEach((paste: any) => {
       if (paste.text && paste.text.trim()) {
-        // Extract words from pasted text
-        const pastedWords = paste.text.toLowerCase()
-          .replace(/[^\w\s]/g, ' ')
-          .split(/\s+/)
-          .filter(word => word.length > 2);
+        console.log('Processing paste:', paste.text);
         
-        // For substantial pasted content (>5 words), highlight individual words
-        if (pastedWords.length > 5) {
-          pastedWords.forEach(word => {
-            if (word.length > 3) {
-              const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-              // Look for the word with word boundaries, case insensitive
-              const wordRegex = new RegExp(`\\b(${escapedWord})\\b`, 'gi');
-              
-              if (result.toLowerCase().includes(word)) {
-                result = result.replace(wordRegex, (match) => {
-                  // Don't re-highlight already highlighted content
-                  if (!result.includes(`style="background-color: #fee2e2`)) {
-                    return `<span style="background-color: #fee2e2; border: 1px solid #dc2626; padding: 1px 2px; border-radius: 2px; color: #991b1b;" title="Copy-pasted word detected">${match}</span>`;
-                  }
-                  return match;
-                });
-              }
-            }
-          });
-        }
+        // Split pasted text into sentences/paragraphs and match them individually
+        const pastedSentences = paste.text.split(/\n\n|\. /).filter((s: string) => s.trim().length > 0);
         
-        // Also try to match complete phrases for better highlighting
-        const phrases = paste.text.split(/[.!?]+/).filter(p => p.trim().length > 10);
-        phrases.forEach(phrase => {
-          const cleanPhrase = phrase.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
-          if (cleanPhrase.length > 10) {
-            // Remove HTML tags from content for matching
-            const plainContent = result.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ');
-            const plainPhrase = cleanPhrase.replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').toLowerCase();
+        pastedSentences.forEach((sentence: string) => {
+          const cleanSentence = sentence.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
+          
+          if (cleanSentence.length > 5) {
+            console.log('Looking for sentence in content:', cleanSentence);
             
-            if (plainContent.toLowerCase().includes(plainPhrase)) {
-              // If we find the phrase, wrap the entire paragraph containing it
-              const words = cleanPhrase.split(' ').filter(w => w.length > 0);
-              if (words.length >= 5) {
-                // Build a flexible pattern that matches across HTML tags
-                const flexPattern = words.slice(0, 5).map(w => 
-                  w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-                ).join('[\\s\\S]*?');
-                
-                const phraseRegex = new RegExp(`(<p[^>]*>)([\\s\\S]*?${flexPattern}[\\s\\S]*?)(<\/p>)`, 'gi');
-                result = result.replace(phraseRegex, (match, openTag, content, closeTag) => {
-                  return `${openTag}<span style="background-color: #fee2e2; border: 2px solid #dc2626; padding: 4px; border-radius: 4px; color: #991b1b; font-weight: 600; display: block;" title="Copy-pasted content detected on ${new Date(paste.timestamp).toLocaleString()}">${content}</span>${closeTag}`;
+            // Create a more flexible regex that handles HTML tags
+            const words = cleanSentence.split(' ').filter((w: string) => w.length > 0);
+            if (words.length >= 3) {
+              // Build pattern that allows HTML tags between words
+              const pattern = words.map((word: string) => 
+                word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+              ).join('\\s*(?:<[^>]*>)*\\s*');
+              
+              console.log('Search pattern:', pattern);
+              
+              const regex = new RegExp(`(${pattern})`, 'gi');
+              const matches = content.match(regex);
+              
+              if (matches) {
+                console.log('Found matches:', matches);
+                result = result.replace(regex, (match) => {
+                  console.log('Highlighting match:', match);
+                  return `<span style="background-color: #fee2e2; border: 2px solid #dc2626; padding: 2px 4px; border-radius: 3px; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected on ${new Date(paste.timestamp).toLocaleString()}">${match}</span>`;
                 });
+              } else {
+                console.log('No matches found for:', cleanSentence);
               }
             }
           }
@@ -682,6 +668,7 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
       }
     });
 
+    console.log('Final highlighted result:', result);
     return result;
   };
 
