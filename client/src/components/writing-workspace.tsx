@@ -203,14 +203,14 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   });
 
   // Fetch inline comments for graded assignments
-  const { data: inlineComments = [] } = useQuery({
+  const { data: inlineCommentsData } = useQuery({
     queryKey: [`/api/sessions/${sessionId}/comments`],
     enabled: !!sessionId && session?.status === 'graded',
     retry: false,
   });
 
-  // Ensure inlineComments is always an array
-  const commentsArray = Array.isArray(inlineComments) ? inlineComments : [];
+  // Ensure comments is always an array with proper typing
+  const commentsArray: any[] = Array.isArray(inlineCommentsData) ? inlineCommentsData : [];
 
   // Auto-save effect
   useEffect(() => {
