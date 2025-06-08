@@ -47,6 +47,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   const [spellCheckActive, setSpellCheckActive] = useState(false);
   const [showAiSidebar, setShowAiSidebar] = useState(false);
   const [isAiSidebarMinimized, setIsAiSidebarMinimized] = useState(false);
+  const [openCommentId, setOpenCommentId] = useState<number | null>(null);
 
   // Function to highlight text that has teacher comments
   const highlightCommentedText = (content: string, comments: any[]): string => {
@@ -658,11 +659,26 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                     <h3 className="text-xl font-bold text-green-800 mb-2">🎉 Assignment Graded!</h3>
                     <p className="text-green-700 mb-4 text-lg">Your teacher has reviewed and graded your work</p>
                     
+                    {/* Inline Comments Summary */}
+                    {commentsArray.length > 0 && (
+                      <div className="bg-yellow-50 border border-yellow-300 p-3 rounded-lg mb-4">
+                        <div className="flex items-center gap-2">
+                          <MessageSquare className="h-4 w-4 text-yellow-600" />
+                          <span className="text-sm font-medium text-yellow-800">
+                            {commentsArray.length} inline comment{commentsArray.length !== 1 ? 's' : ''} from your teacher
+                          </span>
+                        </div>
+                        <p className="text-xs text-yellow-700 mt-1">
+                          Look for the yellow comment buttons to see specific feedback on different parts of your writing.
+                        </p>
+                      </div>
+                    )}
+                    
                     {session.teacherFeedback && (
                       <div className="bg-white p-6 rounded-lg border-2 border-green-300 mb-4">
                         <div className="flex items-center gap-2 mb-3">
                           <GraduationCap className="h-5 w-5 text-green-600" />
-                          <span className="font-bold text-green-800 text-lg">Teacher Feedback:</span>
+                          <span className="font-bold text-green-800 text-lg">Overall Teacher Feedback:</span>
                         </div>
                         <p className="text-gray-800 leading-relaxed text-lg">{session.teacherFeedback}</p>
                       </div>
@@ -704,30 +720,56 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
               {/* Inline Comments Display for Students */}
               {session?.status === 'graded' && commentsArray.length > 0 && (
                 <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
-                  {commentsArray.map((comment: any) => (
-                    <div
-                      key={comment.id}
-                      className="absolute bg-yellow-200 border-l-4 border-yellow-500 p-2 m-1 rounded shadow-lg pointer-events-auto z-10"
-                      style={{
-                        top: `${Math.min(comment.startIndex * 0.5, 90)}%`,
-                        right: '10px',
-                        maxWidth: '300px'
-                      }}
-                    >
-                      <div className="text-xs font-semibold text-yellow-800 mb-1">
-                        Teacher Comment:
+                  {commentsArray.map((comment: any, index: number) => {
+                    const isOpen = openCommentId === comment.id;
+                    return (
+                      <div
+                        key={comment.id}
+                        className="absolute pointer-events-auto z-10"
+                        style={{
+                          top: `${Math.min(20 + index * 60, 85)}%`,
+                          right: '10px',
+                          maxWidth: '300px'
+                        }}
+                      >
+                        {/* Comment Indicator Button */}
+                        <div
+                          onClick={() => setOpenCommentId(isOpen ? null : comment.id)}
+                          className="bg-yellow-400 hover:bg-yellow-500 cursor-pointer rounded-full w-8 h-8 flex items-center justify-center shadow-lg border-2 border-yellow-600 transition-colors"
+                          title="Click to view teacher comment"
+                        >
+                          <MessageSquare className="h-4 w-4 text-yellow-800" />
+                        </div>
+                        
+                        {/* Expanded Comment Box */}
+                        {isOpen && (
+                          <div className="bg-yellow-100 border-2 border-yellow-500 p-3 mt-2 rounded-lg shadow-xl max-w-sm">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="text-xs font-semibold text-yellow-800">
+                                Teacher Comment:
+                              </div>
+                              <button
+                                onClick={() => setOpenCommentId(null)}
+                                className="text-yellow-600 hover:text-yellow-800 text-lg font-bold"
+                                title="Close comment"
+                              >
+                                ×
+                              </button>
+                            </div>
+                            <div className="text-sm text-yellow-900 mb-2 bg-yellow-50 p-2 rounded border-l-2 border-yellow-400">
+                              "{comment.highlightedText}"
+                            </div>
+                            <div className="text-sm text-gray-700 leading-relaxed">
+                              {comment.comment}
+                            </div>
+                            <div className="text-xs text-gray-500 mt-2 pt-2 border-t border-yellow-300">
+                              {new Date(comment.createdAt).toLocaleDateString()}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      <div className="text-sm text-yellow-900 mb-2">
-                        "{comment.highlightedText}"
-                      </div>
-                      <div className="text-sm text-gray-700">
-                        {comment.comment}
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {new Date(comment.createdAt).toLocaleDateString()}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
