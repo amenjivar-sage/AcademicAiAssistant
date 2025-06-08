@@ -33,6 +33,8 @@ interface WritingWorkspaceProps {
   initialSession?: any;
 }
 
+
+
 export default function WritingWorkspace({ sessionId: initialSessionId, assignmentId, initialSession }: WritingWorkspaceProps) {
   const [sessionId, setSessionId] = useState(initialSessionId);
   const [title, setTitle] = useState("");
@@ -45,6 +47,31 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   const [spellCheckActive, setSpellCheckActive] = useState(false);
   const [showAiSidebar, setShowAiSidebar] = useState(false);
   const [isAiSidebarMinimized, setIsAiSidebarMinimized] = useState(false);
+
+  // Function to highlight text that has teacher comments
+  const highlightCommentedText = (content: string, comments: any[]): string => {
+    if (!content || !comments || comments.length === 0) return content;
+    
+    let highlightedContent = content;
+    
+    // Sort comments by start index to avoid overlap issues
+    const sortedComments = [...comments].sort((a, b) => (a.startIndex || 0) - (b.startIndex || 0));
+    
+    // Apply highlighting from end to beginning to preserve indices
+    for (let i = sortedComments.length - 1; i >= 0; i--) {
+      const comment = sortedComments[i];
+      if (comment.highlightedText && comment.highlightedText.trim()) {
+        const escapedText = comment.highlightedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`(${escapedText})`, 'gi');
+        
+        highlightedContent = highlightedContent.replace(regex, (match) => {
+          return `<span style="background-color: #fef3c7; border-bottom: 2px solid #f59e0b; padding: 2px 4px; border-radius: 3px;" title="Teacher commented on this text">${match}</span>`;
+        });
+      }
+    }
+    
+    return highlightedContent;
+  };
   const [headerFooterSettings, setHeaderFooterSettings] = useState({
     header: "",
     footer: "",
@@ -181,6 +208,9 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     enabled: !!sessionId && session?.status === 'graded',
     retry: false,
   });
+
+  // Ensure inlineComments is always an array
+  const commentsArray = Array.isArray(inlineComments) ? inlineComments : [];
 
   // Auto-save effect
   useEffect(() => {
@@ -658,17 +688,49 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
             onPasteDetected={handlePasteDetected}
             className="min-h-full"
           >
-            <RichTextEditor
-              ref={contentRef}
-              content={content}
-              onContentChange={(newContent) => {
-                console.log('Content changed from rich editor:', newContent);
-                setContent(newContent);
-              }}
-              onTextSelection={setSelectedText}
-              readOnly={session?.status === 'graded'}
-              placeholder="Start writing your assignment..."
-            />
+            <div className="relative">
+              <RichTextEditor
+                ref={contentRef}
+                content={session?.status === 'graded' ? highlightCommentedText(content, commentsArray) : content}
+                onContentChange={(newContent) => {
+                  console.log('Content changed from rich editor:', newContent);
+                  setContent(newContent);
+                }}
+                onTextSelection={setSelectedText}
+                readOnly={session?.status === 'graded'}
+                placeholder="Start writing your assignment..."
+              />
+              
+              {/* Inline Comments Display for Students */}
+              {session?.status === 'graded' && commentsArray.length > 0 && (
+                <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+                  {commentsArray.map((comment: any) => (
+                    <div
+                      key={comment.id}
+                      className="absolute bg-yellow-200 border-l-4 border-yellow-500 p-2 m-1 rounded shadow-lg pointer-events-auto z-10"
+                      style={{
+                        top: `${Math.min(comment.startIndex * 0.5, 90)}%`,
+                        right: '10px',
+                        maxWidth: '300px'
+                      }}
+                    >
+                      <div className="text-xs font-semibold text-yellow-800 mb-1">
+                        Teacher Comment:
+                      </div>
+                      <div className="text-sm text-yellow-900 mb-2">
+                        "{comment.highlightedText}"
+                      </div>
+                      <div className="text-sm text-gray-700">
+                        {comment.comment}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {new Date(comment.createdAt).toLocaleDateString()}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </CopyPasteDetector>
         </div>
 
