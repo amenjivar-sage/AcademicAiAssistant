@@ -626,16 +626,59 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
     // Apply red highlighting to each pasted segment
     session.pastedContent.forEach((paste: any) => {
       if (paste.text && paste.text.trim()) {
-        // Clean and escape the pasted text for regex
-        const pastedText = paste.text.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
-        const escapedText = pastedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        // Extract words from pasted text
+        const pastedWords = paste.text.toLowerCase()
+          .replace(/[^\w\s]/g, ' ')
+          .split(/\s+/)
+          .filter(word => word.length > 2);
         
-        if (escapedText.length > 10) { // Only highlight substantial text
-          const regex = new RegExp(`(${escapedText})`, 'gi');
-          result = result.replace(regex, (match) => {
-            return `<span style="background-color: #fee2e2; border: 2px solid #dc2626; padding: 2px 4px; border-radius: 3px; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected on ${new Date(paste.timestamp).toLocaleString()}">${match}</span>`;
+        // For substantial pasted content (>5 words), highlight individual words
+        if (pastedWords.length > 5) {
+          pastedWords.forEach(word => {
+            if (word.length > 3) {
+              const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+              // Look for the word with word boundaries, case insensitive
+              const wordRegex = new RegExp(`\\b(${escapedWord})\\b`, 'gi');
+              
+              if (result.toLowerCase().includes(word)) {
+                result = result.replace(wordRegex, (match) => {
+                  // Don't re-highlight already highlighted content
+                  if (!result.includes(`style="background-color: #fee2e2`)) {
+                    return `<span style="background-color: #fee2e2; border: 1px solid #dc2626; padding: 1px 2px; border-radius: 2px; color: #991b1b;" title="Copy-pasted word detected">${match}</span>`;
+                  }
+                  return match;
+                });
+              }
+            }
           });
         }
+        
+        // Also try to match complete phrases for better highlighting
+        const phrases = paste.text.split(/[.!?]+/).filter(p => p.trim().length > 10);
+        phrases.forEach(phrase => {
+          const cleanPhrase = phrase.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
+          if (cleanPhrase.length > 10) {
+            // Remove HTML tags from content for matching
+            const plainContent = result.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ');
+            const plainPhrase = cleanPhrase.replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').toLowerCase();
+            
+            if (plainContent.toLowerCase().includes(plainPhrase)) {
+              // If we find the phrase, wrap the entire paragraph containing it
+              const words = cleanPhrase.split(' ').filter(w => w.length > 0);
+              if (words.length >= 5) {
+                // Build a flexible pattern that matches across HTML tags
+                const flexPattern = words.slice(0, 5).map(w => 
+                  w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+                ).join('[\\s\\S]*?');
+                
+                const phraseRegex = new RegExp(`(<p[^>]*>)([\\s\\S]*?${flexPattern}[\\s\\S]*?)(<\/p>)`, 'gi');
+                result = result.replace(phraseRegex, (match, openTag, content, closeTag) => {
+                  return `${openTag}<span style="background-color: #fee2e2; border: 2px solid #dc2626; padding: 4px; border-radius: 4px; color: #991b1b; font-weight: 600; display: block;" title="Copy-pasted content detected on ${new Date(paste.timestamp).toLocaleString()}">${content}</span>${closeTag}`;
+                });
+              }
+            }
+          }
+        });
       }
     });
 
