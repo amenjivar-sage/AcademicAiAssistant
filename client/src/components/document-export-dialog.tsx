@@ -77,7 +77,8 @@ export default function DocumentExportDialog({
             paragraphs.push(new Paragraph({
               children: textRuns,
               spacing: { 
-                line: 480, // Double spacing
+                line: 480, // Double spacing in TWIPS (240 TWIPS = single, 480 = double)
+                lineRule: "auto",
                 after: 0
               },
               indent: {
@@ -99,7 +100,8 @@ export default function DocumentExportDialog({
               paragraphs.push(new Paragraph({
                 children: textRuns,
                 spacing: { 
-                  line: 480, // Double spacing
+                  line: 480, // Double spacing in TWIPS (240 TWIPS = single, 480 = double)
+                  lineRule: "auto",
                   after: 0
                 },
                 indent: {

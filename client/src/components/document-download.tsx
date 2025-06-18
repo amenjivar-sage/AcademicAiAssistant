@@ -49,7 +49,11 @@ export default function DocumentDownload({
           if (textRuns.length > 0) {
             paragraphs.push(new Paragraph({
               children: textRuns,
-              spacing: { after: 200 }
+              spacing: { 
+                line: 480, // Double spacing in TWIPS (240 TWIPS = single, 480 = double)
+                lineRule: "auto",
+                after: 200 
+              }
             }));
           }
         } else {
@@ -65,7 +69,11 @@ export default function DocumentDownload({
             } else {
               paragraphs.push(new Paragraph({
                 children: textRuns,
-                spacing: { after: 200 }
+                spacing: { 
+                  line: 480, // Double spacing in TWIPS (240 TWIPS = single, 480 = double)
+                  lineRule: "auto",
+                  after: 200 
+                }
               }));
             }
           });
