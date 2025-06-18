@@ -211,26 +211,26 @@ export default function Login() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
+            <div className="flex justify-center">
               <Dialog open={dialogOpen && selectedRole === "admin"} onOpenChange={setDialogOpen}>
                 <DialogTrigger asChild>
                   <Button
                     variant="outline"
                     onClick={() => handleDemoLogin("admin")}
                     disabled={loginMutation.isPending}
-                    className="flex flex-col items-center py-4 h-auto"
+                    className="flex flex-col items-center py-4 h-auto w-32"
                   >
                     <Shield className="h-5 w-5 mb-1 text-red-600" />
-                    <span className="text-sm font-medium">Admin</span>
+                    <span className="text-sm font-medium">Sage Admin</span>
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Administrator Access</DialogTitle>
+                    <DialogTitle>Sage Administrator Access</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4">
                     <p className="text-sm text-gray-600">
-                      Enter the administrator password to access the admin interface.
+                      Enter the Sage administrator password to access the admin interface.
                     </p>
                     <div className="space-y-2">
                       <Label htmlFor="admin-password">Administrator Password</Label>
@@ -249,49 +249,6 @@ export default function Login() {
                       </Button>
                       <Button onClick={confirmDemoLogin}>
                         Access Admin
-                      </Button>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
-              
-              <Dialog open={dialogOpen && selectedRole === "school_admin"} onOpenChange={setDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button
-                    variant="outline"
-                    onClick={() => handleDemoLogin("school_admin")}
-                    disabled={loginMutation.isPending}
-                    className="flex flex-col items-center py-4 h-auto"
-                  >
-                    <GraduationCap className="h-5 w-5 mb-1 text-purple-600" />
-                    <span className="text-sm font-medium">School Admin</span>
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>School Administrator Access</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <p className="text-sm text-gray-600">
-                      Enter the school administrator password to access the school administration interface.
-                    </p>
-                    <div className="space-y-2">
-                      <Label htmlFor="school-admin-password">School Admin Password</Label>
-                      <Input
-                        id="school-admin-password"
-                        type="password"
-                        value={demoPassword}
-                        onChange={(e) => setDemoPassword(e.target.value)}
-                        placeholder="Enter school admin password"
-                        onKeyDown={(e) => e.key === "Enter" && confirmDemoLogin()}
-                      />
-                    </div>
-                    <div className="flex justify-end space-x-2">
-                      <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                        Cancel
-                      </Button>
-                      <Button onClick={confirmDemoLogin}>
-                        Access School Admin
                       </Button>
                     </div>
                   </div>
