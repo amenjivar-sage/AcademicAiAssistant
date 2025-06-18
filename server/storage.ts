@@ -57,6 +57,13 @@ export interface IStorage {
   createStudentProfile(profile: any): Promise<any>;
   updateStudentProfile(userId: number, updates: any): Promise<any | undefined>;
   updateLearningProgress(userId: number, interactionData: any): Promise<void>;
+  
+  // Feedback operations
+  createFeedback(feedback: InsertFeedback): Promise<Feedback>;
+  getFeedback(id: number): Promise<Feedback | undefined>;
+  getAllFeedback(): Promise<Feedback[]>;
+  getUserFeedback(userId: number): Promise<Feedback[]>;
+  updateFeedback(id: number, updates: Partial<InsertFeedback>): Promise<Feedback | undefined>;
 }
 
 // Database connection

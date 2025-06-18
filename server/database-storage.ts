@@ -10,7 +10,7 @@ import {
   classroomEnrollments,
   messages,
   inlineComments,
-  feedback,
+  feedback as feedbackTable,
   type User,
   type InsertUser,
   type Assignment,
@@ -583,5 +583,33 @@ export class DatabaseStorage implements IStorage {
   async updateLearningProgress(userId: number, interactionData: any): Promise<void> {
     // For now, just log the progress update
     console.log(`Learning progress updated for user ${userId}:`, interactionData);
+  }
+
+  // Feedback operations
+  async createFeedback(feedbackData: InsertFeedback): Promise<Feedback> {
+    const [newFeedback] = await db.insert(feedbackTable).values(feedbackData).returning();
+    return newFeedback;
+  }
+
+  async getFeedback(id: number): Promise<Feedback | undefined> {
+    const [feedbackItem] = await db.select().from(feedbackTable).where(eq(feedbackTable.id, id));
+    return feedbackItem || undefined;
+  }
+
+  async getAllFeedback(): Promise<Feedback[]> {
+    return await db.select().from(feedbackTable);
+  }
+
+  async getUserFeedback(userId: number): Promise<Feedback[]> {
+    return await db.select().from(feedbackTable).where(eq(feedbackTable.userId, userId));
+  }
+
+  async updateFeedback(id: number, updates: Partial<InsertFeedback>): Promise<Feedback | undefined> {
+    const [updatedFeedback] = await db
+      .update(feedbackTable)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(feedbackTable.id, id))
+      .returning();
+    return updatedFeedback || undefined;
   }
 }
