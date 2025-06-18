@@ -61,14 +61,25 @@ export default function DocumentExportDialog({
       
       let cleanText = content;
       
-      // Create a temporary DOM element to properly parse HTML
+      // First, handle paragraph breaks properly before stripping HTML
+      cleanText = cleanText
+        .replace(/<\/p>\s*<p[^>]*>/gi, '\n\n') // Convert </p><p> to double line breaks
+        .replace(/<p[^>]*>/gi, '') // Remove opening <p> tags
+        .replace(/<\/p>/gi, '\n') // Convert closing </p> to line break
+        .replace(/<br\s*\/?>/gi, '\n') // Convert <br> tags to line breaks
+        .replace(/<div[^>]*>/gi, '\n') // Convert <div> to line breaks
+        .replace(/<\/div>/gi, '') // Remove closing </div>
+        .replace(/<h[1-6][^>]*>/gi, '\n') // Convert headings to line breaks
+        .replace(/<\/h[1-6]>/gi, '\n') // Convert closing headings to line breaks
+      
+      // Create a temporary DOM element to properly parse remaining HTML
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = cleanText;
       
-      // Extract just the text content, which automatically removes all HTML tags
+      // Extract just the text content, which automatically removes all remaining HTML tags
       cleanText = tempDiv.textContent || tempDiv.innerText || '';
       
-      // Clean up common HTML entities and whitespace
+      // Clean up HTML entities and excessive whitespace
       cleanText = cleanText
         .replace(/&nbsp;/g, ' ') // Replace &nbsp; with spaces
         .replace(/&amp;/g, '&') // Replace &amp; with &
@@ -76,7 +87,10 @@ export default function DocumentExportDialog({
         .replace(/&gt;/g, '>') // Replace &gt; with >
         .replace(/&quot;/g, '"') // Replace &quot; with "
         .replace(/&#39;/g, "'") // Replace &#39; with '
-        .replace(/\n\s*\n/g, '\n') // Remove multiple line breaks
+        .replace(/&#x27;/g, "'") // Replace &#x27; with '
+        .replace(/&hellip;/g, '...') // Replace &hellip; with ...
+        .replace(/\n{3,}/g, '\n\n') // Replace 3+ line breaks with double line breaks
+        .replace(/[ \t]+/g, ' ') // Replace multiple spaces/tabs with single space
         .replace(/^\s+|\s+$/g, '') // Trim whitespace from start and end
         .trim();
 
