@@ -2053,6 +2053,138 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Feedback routes
+  app.post("/api/feedback", async (req, res) => {
+    try {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { insertFeedbackSchema } = await import('../shared/schema');
+      
+      const validatedData = insertFeedbackSchema.parse({
+        ...req.body,
+        userId: currentUser.id
+      });
+
+      const feedback = await storage.createFeedback(validatedData);
+      res.status(201).json(feedback);
+    } catch (error) {
+      console.error("Error creating feedback:", error);
+      res.status(500).json({ message: "Failed to submit feedback" });
+    }
+  });
+
+  app.get("/api/feedback", async (req, res) => {
+    try {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      let feedback;
+      if (currentUser.role === 'admin') {
+        // Admins can see all feedback
+        feedback = await storage.getAllFeedback();
+      } else {
+        // Users can only see their own feedback
+        feedback = await storage.getUserFeedback(currentUser.id);
+      }
+      
+      res.json(feedback);
+    } catch (error) {
+      console.error("Error fetching feedback:", error);
+      res.status(500).json({ message: "Failed to fetch feedback" });
+    }
+  });
+
+  app.get("/api/feedback/:id", async (req, res) => {
+    try {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const feedbackId = parseInt(req.params.id);
+      const feedback = await storage.getFeedback(feedbackId);
+      
+      if (!feedback) {
+        return res.status(404).json({ message: "Feedback not found" });
+      }
+
+      // Check access permissions
+      if (currentUser.role !== 'admin' && feedback.userId !== currentUser.id) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      res.json(feedback);
+    } catch (error) {
+      console.error("Error fetching feedback:", error);
+      res.status(500).json({ message: "Failed to fetch feedback" });
+    }
+  });
+
+  app.patch("/api/feedback/:id", async (req, res) => {
+    try {
+      const currentUser = await getCurrentUser();
+      if (!currentUser || currentUser.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const feedbackId = parseInt(req.params.id);
+      const { status, adminResponse } = req.body;
+      
+      const updates: any = {};
+      if (status) updates.status = status;
+      if (adminResponse) {
+        updates.adminResponse = adminResponse;
+        updates.adminResponseAt = new Date();
+        updates.adminResponseBy = currentUser.id;
+      }
+
+      const feedback = await storage.updateFeedback(feedbackId, updates);
+      res.json(feedback);
+    } catch (error) {
+      console.error("Error updating feedback:", error);
+      res.status(500).json({ message: "Failed to update feedback" });
+    }
+  });
+
+  app.get("/api/admin/feedback-stats", async (req, res) => {
+    try {
+      const currentUser = await getCurrentUser();
+      if (!currentUser || currentUser.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const allFeedback = await storage.getAllFeedback();
+      
+      const stats = {
+        total: allFeedback.length,
+        open: allFeedback.filter(f => f.status === 'open').length,
+        inProgress: allFeedback.filter(f => f.status === 'in_progress').length,
+        resolved: allFeedback.filter(f => f.status === 'resolved').length,
+        byType: {
+          bug: allFeedback.filter(f => f.type === 'bug').length,
+          feature: allFeedback.filter(f => f.type === 'feature').length,
+          general: allFeedback.filter(f => f.type === 'general').length,
+          assignment: allFeedback.filter(f => f.type === 'assignment').length,
+        },
+        byPriority: {
+          high: allFeedback.filter(f => f.priority === 'high').length,
+          medium: allFeedback.filter(f => f.priority === 'medium').length,
+          low: allFeedback.filter(f => f.priority === 'low').length,
+        }
+      };
+
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching feedback stats:", error);
+      res.status(500).json({ message: "Failed to fetch feedback statistics" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

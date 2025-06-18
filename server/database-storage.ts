@@ -10,6 +10,7 @@ import {
   classroomEnrollments,
   messages,
   inlineComments,
+  feedback,
   type User,
   type InsertUser,
   type Assignment,
@@ -24,6 +25,8 @@ import {
   type InsertInlineComment,
   type Message,
   type InsertMessage,
+  type Feedback,
+  type InsertFeedback,
 } from "@shared/schema";
 import type { IStorage } from "./storage";
 

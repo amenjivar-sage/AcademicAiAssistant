@@ -172,6 +172,27 @@ export const writingGoals = pgTable("writing_goals", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const feedback = pgTable("feedback", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  type: text("type").notNull(), // "bug", "feature", "general", "assignment"
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  category: text("category"),
+  priority: text("priority").notNull().default("medium"), // "low", "medium", "high"
+  rating: integer("rating"), // 1-5 star rating
+  contextType: text("context_type"), // "assignment", "platform", "general"
+  contextId: integer("context_id"), // ID of assignment or other context
+  status: text("status").notNull().default("open"), // "open", "in_progress", "resolved", "closed"
+  adminResponse: text("admin_response"),
+  adminResponseAt: timestamp("admin_response_at"),
+  adminResponseBy: integer("admin_response_by"),
+  userAgent: text("user_agent"),
+  url: text("url"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 export const insertWritingStreakSchema = createInsertSchema(writingStreaks).omit({
   id: true,
   createdAt: true,
@@ -188,6 +209,15 @@ export const insertWritingGoalSchema = createInsertSchema(writingGoals).omit({
   createdAt: true,
 });
 
+export const insertFeedbackSchema = createInsertSchema(feedback).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  adminResponse: true,
+  adminResponseAt: true,
+  adminResponseBy: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type Assignment = typeof assignments.$inferSelect;
@@ -198,6 +228,8 @@ export type AiInteraction = typeof aiInteractions.$inferSelect;
 export type InsertAiInteraction = z.infer<typeof insertAiInteractionSchema>;
 export type Classroom = typeof classrooms.$inferSelect;
 export type InsertClassroom = z.infer<typeof insertClassroomSchema>;
+export type Feedback = typeof feedback.$inferSelect;
+export type InsertFeedback = z.infer<typeof insertFeedbackSchema>;
 export type ClassroomEnrollment = typeof classroomEnrollments.$inferSelect;
 export type InsertClassroomEnrollment = z.infer<typeof insertClassroomEnrollmentSchema>;
 export type Message = typeof messages.$inferSelect;
