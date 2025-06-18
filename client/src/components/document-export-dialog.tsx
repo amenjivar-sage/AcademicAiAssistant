@@ -59,71 +59,116 @@ export default function DocumentExportDialog({
       console.log('Export Debug - Original content length:', content.length);
       console.log('Export Debug - Original content sample:', content.substring(0, 200));
       
-      let cleanText = content;
-      
-      // First, handle paragraph breaks properly before stripping HTML
-      cleanText = cleanText
-        .replace(/<\/p>\s*<p[^>]*>/gi, '\n\n') // Convert </p><p> to double line breaks
-        .replace(/<p[^>]*>/gi, '') // Remove opening <p> tags
-        .replace(/<\/p>/gi, '\n') // Convert closing </p> to line break
-        .replace(/<br\s*\/?>/gi, '\n') // Convert <br> tags to line breaks
-        .replace(/<div[^>]*>/gi, '\n') // Convert <div> to line breaks
-        .replace(/<\/div>/gi, '') // Remove closing </div>
-        .replace(/<h[1-6][^>]*>/gi, '\n') // Convert headings to line breaks
-        .replace(/<\/h[1-6]>/gi, '\n') // Convert closing headings to line breaks
-      
-      // Create a temporary DOM element to properly parse remaining HTML
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = cleanText;
-      
-      // Extract just the text content, which automatically removes all remaining HTML tags
-      cleanText = tempDiv.textContent || tempDiv.innerText || '';
-      
-      // Clean up HTML entities and excessive whitespace
-      cleanText = cleanText
-        .replace(/&nbsp;/g, ' ') // Replace &nbsp; with spaces
-        .replace(/&amp;/g, '&') // Replace &amp; with &
-        .replace(/&lt;/g, '<') // Replace &lt; with <
-        .replace(/&gt;/g, '>') // Replace &gt; with >
-        .replace(/&quot;/g, '"') // Replace &quot; with "
-        .replace(/&#39;/g, "'") // Replace &#39; with '
-        .replace(/&#x27;/g, "'") // Replace &#x27; with '
-        .replace(/&hellip;/g, '...') // Replace &hellip; with ...
-        .replace(/\n{3,}/g, '\n\n') // Replace 3+ line breaks with double line breaks
-        .replace(/[ \t]+/g, ' ') // Replace multiple spaces/tabs with single space
-        .replace(/^\s+|\s+$/g, '') // Trim whitespace from start and end
-        .trim();
-
-      console.log('Export Debug - Cleaned text length:', cleanText.length);
-      console.log('Export Debug - Cleaned text sample:', cleanText.substring(0, 200));
-      console.log('Export Debug - Contains HTML tags:', /<[^>]*>/.test(cleanText));
-
-      // Split into paragraphs and create document paragraphs
-      const paragraphs = cleanText.split('\n').map(paragraph => {
-        if (paragraph.trim() === '') {
-          return new Paragraph({
-            children: [new TextRun({ text: '' })],
-            spacing: { after: 200 }
+      // Parse HTML content and convert to Word formatting
+      const parseHtmlToWordParagraphs = (html: string): Paragraph[] => {
+        // Create a temporary DOM element to parse HTML
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        
+        const paragraphs: Paragraph[] = [];
+        
+        // Process each paragraph element
+        const paragraphElements = tempDiv.querySelectorAll('p');
+        
+        if (paragraphElements.length === 0) {
+          // If no <p> tags, treat as single paragraph
+          const textRuns = parseTextWithFormatting(tempDiv);
+          if (textRuns.length > 0) {
+            paragraphs.push(new Paragraph({
+              children: textRuns,
+              spacing: { 
+                line: 480, // Double spacing
+                after: 0
+              },
+              indent: {
+                firstLine: 720 // First line indent (0.5 inch)
+              }
+            }));
+          }
+        } else {
+          paragraphElements.forEach((p) => {
+            const textRuns = parseTextWithFormatting(p);
+            
+            if (textRuns.length === 0) {
+              // Empty paragraph
+              paragraphs.push(new Paragraph({
+                children: [new TextRun({ text: '' })],
+                spacing: { after: 200 }
+              }));
+            } else {
+              paragraphs.push(new Paragraph({
+                children: textRuns,
+                spacing: { 
+                  line: 480, // Double spacing
+                  after: 0
+                },
+                indent: {
+                  firstLine: 720 // First line indent (0.5 inch)
+                }
+              }));
+            }
           });
         }
-
-        return new Paragraph({
-          children: [
-            new TextRun({
-              text: paragraph.trim(),
-              size: 24, // 12pt in half-points
-              font: 'Times New Roman'
-            })
-          ],
-          spacing: { 
-            line: 480, // Double spacing
-            after: 0
-          },
-          indent: {
-            firstLine: 720 // First line indent (0.5 inch)
+        
+        return paragraphs;
+      };
+      
+      // Function to parse text with formatting (bold, italic, underline)
+      const parseTextWithFormatting = (element: Element): TextRun[] => {
+        const textRuns: TextRun[] = [];
+        
+        const processNode = (node: Node, inheritedFormatting: any = {}) => {
+          if (node.nodeType === Node.TEXT_NODE) {
+            const text = node.textContent || '';
+            if (text.trim()) {
+              textRuns.push(new TextRun({
+                text: text,
+                size: 24, // 12pt in half-points
+                font: 'Times New Roman',
+                bold: inheritedFormatting.bold || false,
+                italics: inheritedFormatting.italics || false,
+                underline: inheritedFormatting.underline ? {} : undefined
+              }));
+            }
+          } else if (node.nodeType === Node.ELEMENT_NODE) {
+            const elem = node as Element;
+            const tagName = elem.tagName.toLowerCase();
+            
+            // Determine formatting based on tag
+            const formatting = { ...inheritedFormatting };
+            
+            switch (tagName) {
+              case 'strong':
+              case 'b':
+                formatting.bold = true;
+                break;
+              case 'em':
+              case 'i':
+                formatting.italics = true;
+                break;
+              case 'u':
+                formatting.underline = true;
+                break;
+              case 'br':
+                textRuns.push(new TextRun({ text: '\n', size: 24, font: 'Times New Roman' }));
+                return;
+            }
+            
+            // Process child nodes
+            Array.from(elem.childNodes).forEach(child => {
+              processNode(child, formatting);
+            });
           }
+        };
+        
+        Array.from(element.childNodes).forEach(child => {
+          processNode(child);
         });
-      });
+        
+        return textRuns;
+      };
+
+      const paragraphs = parseHtmlToWordParagraphs(content);
 
       // Create header content - prioritize custom header text
       const headerParagraphs = [];
