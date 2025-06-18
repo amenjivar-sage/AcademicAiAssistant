@@ -251,13 +251,9 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
 
   // Helper function to highlight pasted content in red
   const highlightPastedContent = (text: string) => {
-    console.log('=== DOCUMENT REVIEWER DEBUG ===');
-    console.log('Session ID:', session.id);
-    console.log('Raw pastedContent type:', typeof session.pastedContent);
-    console.log('Raw pastedContent value:', session.pastedContent);
-    console.log('Content length:', session.pastedContent ? session.pastedContent.length : 'null');
-
-    // Parse the pasted content from the database (stored as JSON string)
+    console.log('=== PLAGIARISM HIGHLIGHTING ===');
+    
+    // Parse the pasted content from the database
     let pastedData = [];
     if (session.pastedContent) {
       try {
@@ -272,115 +268,98 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
       }
     }
 
-    console.log('Parsed pasted data:', pastedData);
-    console.log('Pasted data length:', pastedData.length);
-
     if (!pastedData || !Array.isArray(pastedData) || pastedData.length === 0) {
-      console.log('No valid pasted content found');
       return text;
     }
 
     let result = text;
     
-    const pastedTexts = pastedData.map((item: any) => {
-      if (typeof item === 'string') return item;
-      if (item && typeof item === 'object') {
-        return item.text || item.content || item.value || '';
-      }
-      return '';
-    }).filter((pastedText: string) => pastedText && pastedText.length > 10);
-
-    console.log('Extracted pasted texts:', pastedTexts);
-
-    // Track overall document statistics for comprehensive detection
-    let totalSentencesAnalyzed = 0;
-    let totalSentencesWithMatches = 0;
-    let totalWordsInDocument = 0;
-    let totalMatchedWords = 0;
-
-    pastedTexts.forEach((pastedText: string) => {
-      if (pastedText) {
-        console.log('Processing pasted text:', pastedText);
-        
-        // Try exact match first
-        if (result.includes(pastedText)) {
-          const escapedText = pastedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-          const regex = new RegExp(escapedText, 'gi');
-          result = result.replace(regex, `<span style="background-color: #fee2e2; border: 2px solid #dc2626; padding: 2px 4px; border-radius: 3px; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected">${pastedText}</span>`);
-        } else {
-          // Split pasted text into sentences and try to match each one
-          const sentences = pastedText.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 10);
-          
-          sentences.forEach((sentence: string) => {
-            const trimmedSentence = sentence.trim();
-            if (trimmedSentence) {
-              console.log('Looking for sentence:', trimmedSentence);
-              
-              // Try exact sentence match first
-              if (result.includes(trimmedSentence)) {
-                console.log('Found exact sentence match:', trimmedSentence.substring(0, 50));
-                const escapedSentence = trimmedSentence.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                const regex = new RegExp(escapedSentence, 'gi');
-                result = result.replace(regex, `<span style="background-color: #fee2e2; border: 2px solid #dc2626; padding: 2px 4px; border-radius: 3px; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected">${trimmedSentence}</span>`);
-              } else {
-                // Try matching significant word sequences (4+ consecutive words)
-                const words = trimmedSentence.split(/\s+/).filter(w => w.length >= 3);
-                
-                for (let i = 0; i <= words.length - 4; i++) {
-                  const wordSequence = words.slice(i, i + 4).join(' ');
-                  
-                  if (result.includes(wordSequence)) {
-                    console.log('Found word sequence match:', wordSequence);
-                    const escapedSequence = wordSequence.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                    const regex = new RegExp(escapedSequence, 'gi');
-                    result = result.replace(regex, `<span style="background-color: #fee2e2; border: 2px solid #dc2626; padding: 2px 4px; border-radius: 3px; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected">${wordSequence}</span>`);
-                  }
-                }
-                
-                // Try flexible pattern matching for HTML-embedded text
-                const pastedWords = trimmedSentence.split(/\s+/)
-                  .filter(w => w.length >= 3)
-                  .map(w => w.toLowerCase().replace(/[.,!?;]/g, ''));
-                
-                if (pastedWords.length >= 5) {
-                  // Create flexible regex pattern that handles HTML tags and formatting
-                  const flexiblePattern = pastedWords.map(word => 
-                    word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-                  ).join('\\s*(?:<[^>]*>)*\\s*');
-                  
-                  const regex = new RegExp(`(${flexiblePattern})`, 'gi');
-                  const matches = result.match(regex);
-                  
-                  if (matches && matches.length > 0) {
-                    console.log('Found flexible pattern matches:', matches);
-                    result = result.replace(regex, (match) => {
-                      console.log('Highlighting flexible match:', match.substring(0, 50));
-                      return `<span style="background-color: #fee2e2; border: 2px solid #dc2626; padding: 2px 4px; border-radius: 3px; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected">${match}</span>`;
-                    });
-                  } else {
-                    console.log('No flexible matches found for sentence:', trimmedSentence.substring(0, 50));
-                  }
-                }
-              }
-            }
-          });
+    // Extract all pasted texts
+    const pastedTexts = pastedData
+      .map((item: any) => {
+        if (typeof item === 'string') return item;
+        if (item && typeof item === 'object') {
+          return item.text || item.content || item.value || '';
         }
-      }
+        return '';
+      })
+      .filter((text: string) => text && text.length > 10);
+
+    console.log('Valid pasted texts:', pastedTexts.length);
+
+    // Process each pasted text
+    pastedTexts.forEach((pastedText: string, index: number) => {
+      console.log(`Processing paste ${index + 1}:`, pastedText.substring(0, 60) + '...');
+      
+      // Split into sentences for more precise highlighting
+      const sentences = pastedText
+        .split(/\.\s+|\?\s+|\!\s+/)
+        .filter(s => s.trim().length > 15)
+        .map(s => s.trim());
+
+      sentences.forEach((sentence: string) => {
+        console.log(`Looking for sentence: "${sentence.substring(0, 50)}..."`);
+        
+        // Try multiple variations to catch the sentence
+        const variations = [
+          sentence,
+          sentence + '.',
+          sentence + '!',
+          sentence + '?',
+          sentence.replace(/[.!?]+$/, ''),
+          sentence.replace(/\s+/g, ' ').trim()
+        ];
+
+        let found = false;
+        for (const variation of variations) {
+          if (variation.length > 15 && result.includes(variation) && !result.includes(`>${variation}</span>`)) {
+            console.log(`✓ Found match: "${variation.substring(0, 40)}..."`);
+            
+            const escapedText = variation.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp(escapedText, 'gi');
+            
+            result = result.replace(regex, (match) => {
+              return `<span style="background-color: #fee2e2; border: 2px solid #dc2626; padding: 2px 4px; border-radius: 3px; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected">${match}</span>`;
+            });
+            
+            found = true;
+            break;
+          }
+        }
+
+        // If exact matches fail, try word sequence matching
+        if (!found && sentence.length > 20) {
+          const words = sentence.split(/\s+/).filter(w => w.length >= 3);
+          
+          // Try 6-word sequences
+          for (let i = 0; i <= words.length - 6; i++) {
+            const wordSeq = words.slice(i, i + 6).join(' ');
+            
+            if (result.includes(wordSeq) && !result.includes(`>${wordSeq}</span>`)) {
+              console.log(`✓ Found word sequence: "${wordSeq}"`);
+              
+              const escapedSeq = wordSeq.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+              const regex = new RegExp(escapedSeq, 'gi');
+              
+              result = result.replace(regex, (match) => {
+                return `<span style="background-color: #fee2e2; border: 2px solid #dc2626; padding: 2px 4px; border-radius: 3px; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected">${match}</span>`;
+              });
+              
+              found = true;
+              break;
+            }
+          }
+        }
+
+        if (!found) {
+          console.log(`✗ No match found for: "${sentence.substring(0, 40)}..."`);
+        }
+      });
     });
 
-    // Also try a comprehensive document-level analysis
-    console.log('=== COMPREHENSIVE SCAN ===');
-    
-    // Extract all text content from pasted data for comprehensive matching
-    const allPastedText = pastedTexts.join(' ').toLowerCase().replace(/[.,!?;]/g, '');
-    const allPastedWords = allPastedText.split(/\s+/).filter(w => w.length >= 3);
-    
-    // Get clean document text for comparison
-    const cleanDocText = result.replace(/<[^>]*>/g, ' ').toLowerCase().replace(/[.,!?;]/g, '');
-    const docWords = cleanDocText.split(/\s+/).filter(w => w.length >= 3);
-    
-    console.log('Total pasted words:', allPastedWords.length);
-    console.log('Total document words:', docWords.length);
+    console.log('=== HIGHLIGHTING COMPLETE ===');
+    return result;
+  };
     
     // Find any remaining unmatched sequences of 4+ words from pasted content
     for (let i = 0; i <= allPastedWords.length - 4; i++) {
