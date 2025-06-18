@@ -15,6 +15,7 @@ import MessagingSystem from "@/components/messaging-system";
 import AchievementSystem from "@/components/achievement-system";
 import WritingAnalytics from "@/components/writing-analytics";
 import { AnalyticsDashboard } from "@/components/analytics-dashboard";
+import FeedbackButton from "@/components/feedback-button";
 import type { Assignment, WritingSession, Classroom } from "@shared/schema";
 
 export default function StudentDashboard() {
@@ -109,6 +110,7 @@ export default function StudentDashboard() {
                   Messages
                 </Button>
               </MessagingSystem>
+              <FeedbackButton context="platform" variant="outline" size="sm" />
               <Button 
                 variant="outline" 
                 onClick={handleLogout}
