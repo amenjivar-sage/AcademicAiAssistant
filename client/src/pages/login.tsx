@@ -207,7 +207,7 @@ export default function Login() {
                 <span className="w-full border-t border-gray-300" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-gray-500">Demo Accounts</span>
+                <span className="bg-white px-2 text-gray-500">Quick Access</span>
               </div>
             </div>
 
@@ -221,26 +221,25 @@ export default function Login() {
                     className="flex flex-col items-center py-4 h-auto"
                   >
                     <Shield className="h-5 w-5 mb-1 text-red-600" />
-                    <span className="text-xs font-medium">Admin</span>
-                    <span className="text-xs text-gray-500">Demo</span>
+                    <span className="text-sm font-medium">Admin</span>
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Admin Demo Access</DialogTitle>
+                    <DialogTitle>Administrator Access</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4">
                     <p className="text-sm text-gray-600">
-                      Enter the demo password to access the administrator interface.
+                      Enter the administrator password to access the admin interface.
                     </p>
                     <div className="space-y-2">
-                      <Label htmlFor="demo-password">Demo Password</Label>
+                      <Label htmlFor="admin-password">Administrator Password</Label>
                       <Input
-                        id="demo-password"
+                        id="admin-password"
                         type="password"
                         value={demoPassword}
                         onChange={(e) => setDemoPassword(e.target.value)}
-                        placeholder="Enter demo password"
+                        placeholder="Enter admin password"
                         onKeyDown={(e) => e.key === "Enter" && confirmDemoLogin()}
                       />
                     </div>
@@ -249,7 +248,7 @@ export default function Login() {
                         Cancel
                       </Button>
                       <Button onClick={confirmDemoLogin}>
-                        Access Demo
+                        Access Admin
                       </Button>
                     </div>
                   </div>
@@ -265,26 +264,25 @@ export default function Login() {
                     className="flex flex-col items-center py-4 h-auto"
                   >
                     <GraduationCap className="h-5 w-5 mb-1 text-purple-600" />
-                    <span className="text-xs font-medium">School Admin</span>
-                    <span className="text-xs text-gray-500">Demo</span>
+                    <span className="text-sm font-medium">School Admin</span>
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>School Admin Demo Access</DialogTitle>
+                    <DialogTitle>School Administrator Access</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4">
                     <p className="text-sm text-gray-600">
-                      Enter the demo password to access the school administration interface with full oversight capabilities.
+                      Enter the school administrator password to access the school administration interface.
                     </p>
                     <div className="space-y-2">
-                      <Label htmlFor="demo-password">Demo Password</Label>
+                      <Label htmlFor="school-admin-password">School Admin Password</Label>
                       <Input
-                        id="demo-password"
+                        id="school-admin-password"
                         type="password"
                         value={demoPassword}
                         onChange={(e) => setDemoPassword(e.target.value)}
-                        placeholder="Enter demo password"
+                        placeholder="Enter school admin password"
                         onKeyDown={(e) => e.key === "Enter" && confirmDemoLogin()}
                       />
                     </div>
@@ -293,19 +291,13 @@ export default function Login() {
                         Cancel
                       </Button>
                       <Button onClick={confirmDemoLogin}>
-                        Access Demo
+                        Access School Admin
                       </Button>
                     </div>
                   </div>
                 </DialogContent>
               </Dialog>
             </div>
-
-            <Alert>
-              <AlertDescription className="text-center text-sm">
-                Use the demo accounts above to explore Sage's features for teachers, students, and administrators.
-              </AlertDescription>
-            </Alert>
 
             <div className="text-center space-y-2">
               <p className="text-sm text-gray-600">
