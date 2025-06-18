@@ -110,17 +110,26 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-edu-blue to-blue-700 flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-blue-800 to-purple-900 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-10 left-10 w-32 h-32 bg-white rounded-full mix-blend-overlay filter blur-xl animate-pulse"></div>
+        <div className="absolute top-1/3 right-10 w-24 h-24 bg-blue-300 rounded-full mix-blend-overlay filter blur-xl animate-pulse animation-delay-1000"></div>
+        <div className="absolute bottom-20 left-1/3 w-20 h-20 bg-purple-300 rounded-full mix-blend-overlay filter blur-xl animate-pulse animation-delay-2000"></div>
+        <div className="absolute bottom-10 right-20 w-28 h-28 bg-indigo-300 rounded-full mix-blend-overlay filter blur-xl animate-pulse animation-delay-3000"></div>
+      </div>
+      
+      <div className="w-full max-w-md space-y-8 relative z-10">
         {/* Logo and Header */}
-        <div className="text-center text-white">
-          <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+        <div className="text-center text-white animate-fade-in">
+          <div className="w-24 h-24 bg-gradient-to-br from-white to-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-2xl transform hover:scale-105 transition-transform duration-300">
             <svg
-              width="48"
-              height="48"
+              width="56"
+              height="56"
               viewBox="0 0 48 48"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
+              className="drop-shadow-lg"
             >
               {/* Tree Trunk - much darker */}
               <rect
@@ -157,47 +166,64 @@ export default function Login() {
               <circle cx="39" cy="27" r="2" fill="#1d4ed8" />
             </svg>
           </div>
-          <h1 className="text-4xl font-bold mb-2 text-gray-900 bg-white bg-opacity-90 px-4 py-2 rounded-lg shadow-lg">Sage</h1>
-          <p className="text-white text-lg drop-shadow-md bg-black bg-opacity-20 px-3 py-1 rounded">AI Writing Platform for Ethical Student Learning</p>
+          <h1 className="text-5xl font-bold mb-3 bg-gradient-to-r from-white via-blue-100 to-purple-100 bg-clip-text text-transparent drop-shadow-lg">
+            Sage
+          </h1>
+          <p className="text-blue-100 text-lg drop-shadow-md bg-white bg-opacity-10 backdrop-blur-sm px-4 py-2 rounded-full border border-white border-opacity-20">
+            AI Writing Platform for Ethical Student Learning
+          </p>
         </div>
 
         {/* Login Form */}
-        <Card className="bg-white shadow-xl">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl text-gray-900">Welcome Back</CardTitle>
+        <Card className="bg-white/95 backdrop-blur-sm shadow-2xl border-0 animate-slide-up">
+          <CardHeader className="text-center pb-8">
+            <CardTitle className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+              Welcome Back
+            </CardTitle>
+            <p className="text-gray-500 mt-2">Please sign in to your account</p>
           </CardHeader>
           <CardContent className="space-y-6">
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="username" className="text-gray-700 font-medium">Username</Label>
                 <Input
                   id="username"
                   type="text"
                   value={formData.username}
                   onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
                   placeholder="Enter your username"
+                  className="h-12 border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 rounded-lg"
                   required
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password" className="text-gray-700 font-medium">Password</Label>
                 <Input
                   id="password"
                   type="password"
                   value={formData.password}
                   onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                   placeholder="Enter your password"
+                  className="h-12 border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 rounded-lg"
                   required
                 />
               </div>
 
               <Button 
                 type="submit" 
-                className="w-full bg-edu-blue hover:bg-blue-700"
+                className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200"
                 disabled={loginMutation.isPending}
               >
-                {loginMutation.isPending ? "Signing In..." : "Sign In"}
+                {loginMutation.isPending ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Signing In...
+                  </span>
+                ) : "Sign In"}
               </Button>
             </form>
 
@@ -218,10 +244,10 @@ export default function Login() {
                     variant="outline"
                     onClick={() => handleDemoLogin("admin")}
                     disabled={loginMutation.isPending}
-                    className="flex flex-col items-center py-4 h-auto w-32"
+                    className="flex flex-col items-center py-6 h-auto w-40 border-2 border-gray-200 hover:border-red-300 hover:bg-red-50 transition-all duration-200 rounded-lg shadow-md hover:shadow-lg transform hover:scale-105"
                   >
-                    <Shield className="h-5 w-5 mb-1 text-red-600" />
-                    <span className="text-sm font-medium">Sage Admin</span>
+                    <Shield className="h-6 w-6 mb-2 text-red-600" />
+                    <span className="text-sm font-semibold text-gray-700">Sage Admin</span>
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
