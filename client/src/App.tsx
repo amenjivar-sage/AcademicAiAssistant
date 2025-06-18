@@ -8,6 +8,7 @@ import InactivityWarning from "@/components/inactivity-warning";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
 import ForgotCredentials from "@/pages/forgot-credentials";
+import PrivacyNotice from "@/pages/privacy-notice";
 import TeacherDashboard from "@/pages/teacher-dashboard";
 import StudentDashboard from "@/pages/student-dashboard";
 import AdminDashboard from "@/pages/admin-dashboard";
@@ -22,6 +23,7 @@ function Router() {
       <Route path="/" component={Login} />
       <Route path="/register" component={Register} />
       <Route path="/forgot-credentials" component={ForgotCredentials} />
+      <Route path="/privacy-notice" component={PrivacyNotice} />
       <Route path="/student" component={StudentDashboard} />
       <Route path="/teacher" component={TeacherDashboard} />
       <Route path="/admin" component={AdminDashboard} />
@@ -48,8 +50,8 @@ function AppContent() {
     window.location.href = '/api/auth/logout';
   };
 
-  // Only show inactivity warning on authenticated pages (not login/register)
-  const isAuthPage = ['/', '/register', '/forgot-credentials'].includes(location);
+  // Only show inactivity warning on authenticated pages (not login/register/privacy)
+  const isAuthPage = ['/', '/register', '/forgot-credentials', '/privacy-notice'].includes(location);
 
   return (
     <>

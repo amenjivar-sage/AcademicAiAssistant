@@ -299,9 +299,21 @@ export default function Login() {
         </Card>
 
         {/* Footer */}
-        <p className="text-center text-blue-100 text-sm">
-          © 2024 Sage - Empowering ethical AI-assisted learning
-        </p>
+        <div className="text-center space-y-2">
+          <p className="text-blue-100 text-sm">
+            © 2024 Sage - Empowering ethical AI-assisted learning
+          </p>
+          <p className="text-blue-200 text-xs">
+            <a 
+              href="/privacy-notice" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="hover:text-white underline transition-colors duration-200"
+            >
+              Privacy Notice
+            </a>
+          </p>
+        </div>
       </div>
     </div>
   );
