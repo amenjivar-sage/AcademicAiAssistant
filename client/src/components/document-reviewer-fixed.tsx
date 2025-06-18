@@ -301,48 +301,104 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
     pastedTexts.forEach((pastedText: string) => {
       if (pastedText) {
         console.log('Processing pasted text:', pastedText);
-        console.log('Current document content:', result);
         
         // Try exact match first
         if (result.includes(pastedText)) {
           const escapedText = pastedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
           const regex = new RegExp(escapedText, 'gi');
-          result = result.replace(regex, `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected">${pastedText}</span>`);
+          result = result.replace(regex, `<span style="background-color: #fee2e2; border: 2px solid #dc2626; padding: 2px 4px; border-radius: 3px; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected">${pastedText}</span>`);
         } else {
-          // Simple but effective approach for spell-corrected content
-          // Split the pasted text into overlapping phrases and look for similar content
-          const sentences = pastedText.split(/[.!?]+/).filter(s => s.trim().length > 10);
+          // Split pasted text into sentences and try to match each one
+          const sentences = pastedText.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 10);
           
           sentences.forEach((sentence: string) => {
             const trimmedSentence = sentence.trim();
             if (trimmedSentence) {
               console.log('Looking for sentence:', trimmedSentence);
               
-              // Get significant words from the pasted sentence (clean punctuation)
-              const pastedWords = trimmedSentence.split(/\s+/)
-                .filter(w => w.length >= 3)
-                .map(w => w.toLowerCase().replace(/[.,!?;]/g, ''));
-              
-              console.log('Pasted words:', pastedWords);
-              
-              if (pastedWords.length >= 4) {
-                // Get clean document text (without HTML highlighting) for accurate comparison
-                const cleanDocumentText = result.replace(/<span[^>]*style="background-color: #fecaca[^>]*>([^<]*)<\/span>/gi, '$1');
-                const documentSentences = cleanDocumentText.split(/[.!?]+/).filter(s => s.trim().length > 10);
+              // Try exact sentence match first
+              if (result.includes(trimmedSentence)) {
+                console.log('Found exact sentence match:', trimmedSentence.substring(0, 50));
+                const escapedSentence = trimmedSentence.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const regex = new RegExp(escapedSentence, 'gi');
+                result = result.replace(regex, `<span style="background-color: #fee2e2; border: 2px solid #dc2626; padding: 2px 4px; border-radius: 3px; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected">${trimmedSentence}</span>`);
+              } else {
+                // Try matching significant word sequences (4+ consecutive words)
+                const words = trimmedSentence.split(/\s+/).filter(w => w.length >= 3);
                 
-                // Additional safeguard: only check content that comes after the paste detection area
-                // This helps avoid flagging content that was written before the paste
-                const pasteStart = session.copyPasteData?.[0]?.startIndex || 0;
-                
-                documentSentences.forEach((docSent: string) => {
-                  const docSentTrimmed = docSent.trim();
+                for (let i = 0; i <= words.length - 4; i++) {
+                  const wordSequence = words.slice(i, i + 4).join(' ');
                   
-                  // Skip sentences that appear before the paste area (likely original work)
-                  const sentencePosition = cleanDocumentText.indexOf(docSentTrimmed);
-                  if (sentencePosition >= 0 && sentencePosition < pasteStart - 50) {
-                    console.log('Skipping sentence before paste area:', docSentTrimmed);
-                    return;
+                  if (result.includes(wordSequence)) {
+                    console.log('Found word sequence match:', wordSequence);
+                    const escapedSequence = wordSequence.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const regex = new RegExp(escapedSequence, 'gi');
+                    result = result.replace(regex, `<span style="background-color: #fee2e2; border: 2px solid #dc2626; padding: 2px 4px; border-radius: 3px; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected">${wordSequence}</span>`);
                   }
+                }
+                
+                // Try flexible pattern matching for HTML-embedded text
+                const pastedWords = trimmedSentence.split(/\s+/)
+                  .filter(w => w.length >= 3)
+                  .map(w => w.toLowerCase().replace(/[.,!?;]/g, ''));
+                
+                if (pastedWords.length >= 5) {
+                  // Create flexible regex pattern that handles HTML tags and formatting
+                  const flexiblePattern = pastedWords.map(word => 
+                    word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+                  ).join('\\s*(?:<[^>]*>)*\\s*');
+                  
+                  const regex = new RegExp(`(${flexiblePattern})`, 'gi');
+                  const matches = result.match(regex);
+                  
+                  if (matches && matches.length > 0) {
+                    console.log('Found flexible pattern matches:', matches);
+                    result = result.replace(regex, (match) => {
+                      console.log('Highlighting flexible match:', match.substring(0, 50));
+                      return `<span style="background-color: #fee2e2; border: 2px solid #dc2626; padding: 2px 4px; border-radius: 3px; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected">${match}</span>`;
+                    });
+                  } else {
+                    console.log('No flexible matches found for sentence:', trimmedSentence.substring(0, 50));
+                  }
+                }
+              }
+            }
+          });
+        }
+      }
+    });
+
+    // Also try a comprehensive document-level analysis
+    console.log('=== COMPREHENSIVE SCAN ===');
+    
+    // Extract all text content from pasted data for comprehensive matching
+    const allPastedText = pastedTexts.join(' ').toLowerCase().replace(/[.,!?;]/g, '');
+    const allPastedWords = allPastedText.split(/\s+/).filter(w => w.length >= 3);
+    
+    // Get clean document text for comparison
+    const cleanDocText = result.replace(/<[^>]*>/g, ' ').toLowerCase().replace(/[.,!?;]/g, '');
+    const docWords = cleanDocText.split(/\s+/).filter(w => w.length >= 3);
+    
+    console.log('Total pasted words:', allPastedWords.length);
+    console.log('Total document words:', docWords.length);
+    
+    // Find any remaining unmatched sequences of 4+ words from pasted content
+    for (let i = 0; i <= allPastedWords.length - 4; i++) {
+      const wordSequence = allPastedWords.slice(i, i + 4);
+      const sequencePattern = wordSequence.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('\\s+');
+      
+      const sequenceRegex = new RegExp(sequencePattern, 'gi');
+      if (result.match(sequenceRegex) && !result.includes(`background-color: #fee2e2`)) {
+        console.log('Found unmatched word sequence:', wordSequence.join(' '));
+        
+        result = result.replace(sequenceRegex, (match) => {
+          return `<span style="background-color: #fee2e2; border: 2px solid #dc2626; padding: 2px 4px; border-radius: 3px; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected">${match}</span>`;
+        });
+      }
+    
+    console.log('Final highlighted result:', result.substring(0, 200));
+    return result;
+  };
                   
                   // Skip already highlighted content - be more precise
                   const sentenceStart = docSentTrimmed.substring(0, Math.min(15, docSentTrimmed.length));
