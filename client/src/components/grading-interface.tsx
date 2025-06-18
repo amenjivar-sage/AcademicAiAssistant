@@ -266,9 +266,12 @@ export default function GradingInterface({ assignmentId, children }: GradingInte
                       {selectedSubmission.wordCount} words • Submitted {selectedSubmission.submittedAt ? new Date(selectedSubmission.submittedAt).toLocaleDateString() : 'Not submitted'}
                     </div>
                     <div className="max-h-40 overflow-y-auto bg-white p-3 rounded border">
-                      <p className="whitespace-pre-wrap text-sm">
-                        {selectedSubmission.content || "No content available"}
-                      </p>
+                      <div 
+                        className="whitespace-pre-wrap text-sm prose max-w-none"
+                        dangerouslySetInnerHTML={{ 
+                          __html: selectedSubmission.content || "No content available" 
+                        }}
+                      />
                     </div>
                   </div>
                 </div>
