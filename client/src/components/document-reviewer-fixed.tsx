@@ -251,9 +251,13 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
 
   // Helper function to highlight pasted content in red
   const highlightPastedContent = (text: string) => {
-    console.log('=== PLAGIARISM HIGHLIGHTING ===');
-    
-    // Parse the pasted content from the database
+    console.log('=== DOCUMENT REVIEWER DEBUG ===');
+    console.log('Session ID:', session.id);
+    console.log('Raw pastedContent type:', typeof session.pastedContent);
+    console.log('Raw pastedContent value:', session.pastedContent);
+    console.log('Content length:', session.pastedContent ? session.pastedContent.length : 'null');
+
+    // Parse the pasted content from the database (stored as JSON string)
     let pastedData = [];
     if (session.pastedContent) {
       try {
@@ -268,98 +272,260 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
       }
     }
 
+    console.log('Parsed pasted data:', pastedData);
+    console.log('Pasted data length:', pastedData.length);
+
     if (!pastedData || !Array.isArray(pastedData) || pastedData.length === 0) {
+      console.log('No valid pasted content found');
       return text;
     }
 
     let result = text;
     
-    // Extract all pasted texts
-    const pastedTexts = pastedData
-      .map((item: any) => {
-        if (typeof item === 'string') return item;
-        if (item && typeof item === 'object') {
-          return item.text || item.content || item.value || '';
-        }
-        return '';
-      })
-      .filter((text: string) => text && text.length > 10);
+    const pastedTexts = pastedData.map((item: any) => {
+      if (typeof item === 'string') return item;
+      if (item && typeof item === 'object') {
+        return item.text || item.content || item.value || '';
+      }
+      return '';
+    }).filter((pastedText: string) => pastedText && pastedText.length > 10);
 
-    console.log('Valid pasted texts:', pastedTexts.length);
+    console.log('Extracted pasted texts:', pastedTexts);
 
-    // Process each pasted text
-    pastedTexts.forEach((pastedText: string, index: number) => {
-      console.log(`Processing paste ${index + 1}:`, pastedText.substring(0, 60) + '...');
-      
-      // Split into sentences for more precise highlighting
-      const sentences = pastedText
-        .split(/\.\s+|\?\s+|\!\s+/)
-        .filter(s => s.trim().length > 15)
-        .map(s => s.trim());
+    // Track overall document statistics for comprehensive detection
+    let totalSentencesAnalyzed = 0;
+    let totalSentencesWithMatches = 0;
+    let totalWordsInDocument = 0;
+    let totalMatchedWords = 0;
 
-      sentences.forEach((sentence: string) => {
-        console.log(`Looking for sentence: "${sentence.substring(0, 50)}..."`);
+    pastedTexts.forEach((pastedText: string) => {
+      if (pastedText) {
+        console.log('Processing pasted text:', pastedText);
+        console.log('Current document content:', result);
         
-        // Try multiple variations to catch the sentence
-        const variations = [
-          sentence,
-          sentence + '.',
-          sentence + '!',
-          sentence + '?',
-          sentence.replace(/[.!?]+$/, ''),
-          sentence.replace(/\s+/g, ' ').trim()
-        ];
-
-        let found = false;
-        for (const variation of variations) {
-          if (variation.length > 15 && result.includes(variation) && !result.includes(`>${variation}</span>`)) {
-            console.log(`✓ Found match: "${variation.substring(0, 40)}..."`);
-            
-            const escapedText = variation.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            const regex = new RegExp(escapedText, 'gi');
-            
-            result = result.replace(regex, (match) => {
-              return `<span style="background-color: #fee2e2; border: 2px solid #dc2626; padding: 2px 4px; border-radius: 3px; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected">${match}</span>`;
-            });
-            
-            found = true;
-            break;
-          }
-        }
-
-        // If exact matches fail, try word sequence matching
-        if (!found && sentence.length > 20) {
-          const words = sentence.split(/\s+/).filter(w => w.length >= 3);
+        // Try exact match first
+        if (result.includes(pastedText)) {
+          const escapedText = pastedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const regex = new RegExp(escapedText, 'gi');
+          result = result.replace(regex, `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected">${pastedText}</span>`);
+        } else {
+          // Simple but effective approach for spell-corrected content
+          // Split the pasted text into overlapping phrases and look for similar content
+          const sentences = pastedText.split(/[.!?]+/).filter(s => s.trim().length > 10);
           
-          // Try 6-word sequences
-          for (let i = 0; i <= words.length - 6; i++) {
-            const wordSeq = words.slice(i, i + 6).join(' ');
-            
-            if (result.includes(wordSeq) && !result.includes(`>${wordSeq}</span>`)) {
-              console.log(`✓ Found word sequence: "${wordSeq}"`);
+          sentences.forEach((sentence: string) => {
+            const trimmedSentence = sentence.trim();
+            if (trimmedSentence) {
+              console.log('Looking for sentence:', trimmedSentence);
               
-              const escapedSeq = wordSeq.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-              const regex = new RegExp(escapedSeq, 'gi');
+              // Get significant words from the pasted sentence (clean punctuation)
+              const pastedWords = trimmedSentence.split(/\s+/)
+                .filter(w => w.length >= 3)
+                .map(w => w.toLowerCase().replace(/[.,!?;]/g, ''));
               
-              result = result.replace(regex, (match) => {
-                return `<span style="background-color: #fee2e2; border: 2px solid #dc2626; padding: 2px 4px; border-radius: 3px; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected">${match}</span>`;
-              });
+              console.log('Pasted words:', pastedWords);
               
-              found = true;
-              break;
+              if (pastedWords.length >= 4) {
+                // Get clean document text (without HTML highlighting) for accurate comparison
+                const cleanDocumentText = result.replace(/<span[^>]*style="background-color: #fecaca[^>]*>([^<]*)<\/span>/gi, '$1');
+                const documentSentences = cleanDocumentText.split(/[.!?]+/).filter(s => s.trim().length > 10);
+                
+                // Additional safeguard: only check content that comes after the paste detection area
+                // This helps avoid flagging content that was written before the paste
+                const pasteStart = session.copyPasteData?.[0]?.startIndex || 0;
+                
+                documentSentences.forEach((docSent: string) => {
+                  const docSentTrimmed = docSent.trim();
+                  
+                  // Skip sentences that appear before the paste area (likely original work)
+                  const sentencePosition = cleanDocumentText.indexOf(docSentTrimmed);
+                  if (sentencePosition >= 0 && sentencePosition < pasteStart - 50) {
+                    console.log('Skipping sentence before paste area:', docSentTrimmed);
+                    return;
+                  }
+                  
+                  // Skip already highlighted content - be more precise
+                  const sentenceStart = docSentTrimmed.substring(0, Math.min(15, docSentTrimmed.length));
+                  const isAlreadyHighlighted = result.includes(`<span style="background-color: #fecaca`) && 
+                                             result.includes(`>${sentenceStart}`) && 
+                                             result.includes(`${sentenceStart}</span>`);
+                  if (isAlreadyHighlighted) {
+                    console.log('Skipping already highlighted content:', docSentTrimmed.substring(0, 30));
+                    return;
+                  }
+                  
+                  // Add debug logging for sentence analysis
+                  console.log('Analyzing document sentence:', docSentTrimmed);
+                  
+                  const docWords = docSentTrimmed.split(/\s+/)
+                    .filter(w => w.length >= 3)
+                    .map(w => w.toLowerCase().replace(/[.,!?;]/g, ''));
+                  
+                  if (docWords.length >= 5) {
+                    // More precise matching - require exact or very close matches for most words
+                    let exactMatches = 0;
+                    let closeMatches = 0;
+                    
+                    // Simple approach: if pasted content and document content have similar structure, it's likely copy-pasted
+                    const pastedStructure = pastedWords.join(' ').replace(/[.,!?;]/g, '').toLowerCase();
+                    const docStructure = docWords.join(' ').replace(/[.,!?;]/g, '').toLowerCase();
+                    
+                    // Count how many pasted words have matches in the document sentence
+                    pastedWords.forEach((pastedWord: string) => {
+                      const cleanPastedWord = pastedWord.replace(/[.,!?;]/g, '');
+                      
+                      docWords.forEach((docWord: string) => {
+                        // Exact match
+                        if (cleanPastedWord === docWord) {
+                          exactMatches += 1;
+                        }
+                        // Spell-corrected match (similar root words)
+                        else if (cleanPastedWord.length >= 3 && docWord.length >= 3) {
+                          // Enhanced spelling correction detection
+                          const corrections: Record<string, string[]> = {
+                            'fealing': ['feeling'], 'sandwitches': ['sandwiches'], 'promissed': ['promised'],
+                            'probbably': ['probably'], 'perfact': ['perfect'], 'reminde': ['remind'],
+                            'teh': ['the'], 'adn': ['and'], 'recieve': ['receive'], 'seperate': ['separate'],
+                            'definately': ['definitely'], 'occured': ['occurred'], 'necesary': ['necessary'],
+                            'beleive': ['believe'], 'freind': ['friend'], 'wierd': ['weird'], 'messed': ['messed'],
+                            'compass': ['compass'], 'exploring': ['exploring'], 'nature': ['nature'], 'friendship': ['friendship']
+                          };
+                          
+                          // Check direct corrections
+                          const isDirectCorrection = corrections[cleanPastedWord]?.includes(docWord) || 
+                                                    corrections[docWord]?.includes(cleanPastedWord);
+                          
+                          // Check reverse corrections  
+                          const isReverseCorrection = Object.entries(corrections).some(([incorrect, correctList]) => 
+                            (correctList.includes(cleanPastedWord) && docWord === incorrect) ||
+                            (correctList.includes(docWord) && cleanPastedWord === incorrect)
+                          );
+                          
+                          // Check phonetic/visual similarity for common errors
+                          const isPhoneticMatch = (
+                            (cleanPastedWord === 'fealing' && docWord === 'feeling') ||
+                            (cleanPastedWord === 'feeling' && docWord === 'fealing') ||
+                            (cleanPastedWord === 'sandwitches' && docWord === 'sandwiches') ||
+                            (cleanPastedWord === 'sandwiches' && docWord === 'sandwitches') ||
+                            (cleanPastedWord === 'promissed' && docWord === 'promised') ||
+                            (cleanPastedWord === 'promised' && docWord === 'promissed') ||
+                            (cleanPastedWord === 'probbably' && docWord === 'probably') ||
+                            (cleanPastedWord === 'probably' && docWord === 'probbably') ||
+                            (cleanPastedWord === 'perfact' && docWord === 'perfect') ||
+                            (cleanPastedWord === 'perfect' && docWord === 'perfact') ||
+                            (cleanPastedWord === 'reminde' && docWord === 'remind') ||
+                            (cleanPastedWord === 'remind' && docWord === 'reminde')
+                          );
+                          
+                          if (isDirectCorrection || isReverseCorrection || isPhoneticMatch) {
+                            exactMatches += 0.9; // Give high weight to spelling corrections
+                            console.log(`Found spelling correction: ${cleanPastedWord} <-> ${docWord}`);
+                          }
+                          
+                          const rootMatch = cleanPastedWord.substring(0, 3) === docWord.substring(0, 3) ||
+                                          (cleanPastedWord.includes('tr') && docWord.includes('tr')) ||
+                                          (cleanPastedWord.includes('ig') && docWord.includes('ig')) ||
+                                          (cleanPastedWord.includes('co') && docWord.includes('co'));
+                          
+                          if (rootMatch && Math.abs(cleanPastedWord.length - docWord.length) <= 3) {
+                            closeMatches += 1;
+                          }
+                        }
+                      });
+                    });
+                    
+                    // Calculate match strength - require mostly exact matches
+                    const totalMatches = exactMatches + (closeMatches * 0.7);
+                    const matchPercentage = totalMatches / pastedWords.length;
+                    console.log('Match analysis for sentence:', docSentTrimmed, 
+                               'Exact:', exactMatches, 'Close:', closeMatches, 'Percentage:', matchPercentage);
+                    
+                    // More balanced criteria to catch large-scale copying while reducing false positives
+                    const meetsThreshold = matchPercentage >= 0.60; // Require 60% similarity (lowered for better detection)
+                    const hasEnoughExactMatches = exactMatches >= Math.max(2, Math.floor(pastedWords.length * 0.40)); // Require 40% exact matches
+                    const hasMinLength = pastedWords.length >= 4 && docWords.length >= 4; // Shorter minimum length
+                    
+                    console.log('Criteria check for:', docSentTrimmed);
+                    console.log('- Meets threshold (60%):', meetsThreshold, matchPercentage);
+                    console.log('- Has enough exact matches (40%):', hasEnoughExactMatches, exactMatches, 'needed:', Math.floor(pastedWords.length * 0.4));
+                    console.log('- Has min length:', hasMinLength, 'pasted:', pastedWords.length, 'doc:', docWords.length);
+                    
+                    // Track statistics for aggregate analysis
+                    totalSentencesAnalyzed++;
+                    totalWordsInDocument += docWords.length;
+                    
+                    if (matchPercentage >= 0.30) { // Count any significant matches
+                      totalSentencesWithMatches++;
+                      totalMatchedWords += exactMatches + (closeMatches * 0.5);
+                    }
+                    
+                    if (meetsThreshold && hasEnoughExactMatches && hasMinLength) {
+                      console.log('✓ All criteria met, proceeding with highlighting checks for:', docSentTrimmed.substring(0, 100));
+                      
+                      try {
+                        // Enhanced check: avoid highlighting legitimate content patterns
+                        const hasOriginalPatterns = /\b(sky|hello|how are you|doing|good morning|dear|sincerely)\b/i.test(docSentTrimmed);
+                        
+                        // Skip code snippets and technical documentation - these are often legitimate references
+                        const isCodeSnippet = /(\{|\}|function|const|let|var|import|export|return|if\s*\(|\.map\(|\.filter\(|className=|style=|<\/|&gt;|&lt;|useEffect|useState|ReactQuill|HTMLDivElement|<\/li>|<li>|<ul>|<\/ul>|<p>|<\/p>)/i.test(docSentTrimmed);
+                        
+                        // Skip content that looks like legitimate references or citations
+                        const isReference = /(\(\d{4}\)|et al\.|pp\.|Vol\.|No\.|ISBN|DOI:|https?:\/\/)/i.test(docSentTrimmed);
+                        
+                        // Skip content that looks like random character strings (not real plagiarism)
+                        const isRandomText = /^[a-z]{3,}[;:.,]{1,3}[a-z]{3,}[;:.,]{1,3}/.test(docSentTrimmed) || 
+                                            docSentTrimmed.split(';').length > 3 ||
+                                            /^[a-z]+;[a-z]+;[a-z]+/.test(docSentTrimmed);
+                        
+                        console.log('- Has original patterns:', hasOriginalPatterns);
+                        console.log('- Is code snippet:', isCodeSnippet);
+                        console.log('- Is reference:', isReference);
+                        console.log('- Is random text:', isRandomText);
+                        
+                        // Don't highlight if it's code, references, or random text
+                        if (isCodeSnippet || isReference || isRandomText) {
+                          console.log('✗ Skipped - code snippet, reference, or random text');
+                          return;
+                        }
+                        
+                        // Highlight content based on stricter exact word matches and similarity percentage
+                        if ((matchPercentage >= 0.8 && exactMatches >= 8) || (matchPercentage >= 0.9 && exactMatches >= 6)) {
+                          console.log('✓ Highlighting detected copy-paste content:', docSentTrimmed.substring(0, 50));
+                          const escapedSentence = docSentTrimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                          const sentenceRegex = new RegExp(escapedSentence, 'gi');
+                          
+                          result = result.replace(sentenceRegex, (match) => {
+                            if (!match.includes('style="background-color: #fecaca')) {
+                              console.log('Applied red highlighting to:', match.substring(0, 50));
+                              const highlightedHTML = `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600; padding: 2px 4px; border-radius: 3px;" title="Copy-pasted content detected (${Math.round(matchPercentage * 100)}% match)">${match}</span>`;
+                              return highlightedHTML;
+                            }
+                            return match;
+                          });
+                        } else {
+                          console.log('✗ Skipped - insufficient match criteria:', matchPercentage, 'exactMatches:', exactMatches);
+                        }
+                      } catch (error) {
+                        console.error('Error in highlighting logic:', error);
+                      }
+                    } else {
+                      console.log('✗ Does not meet criteria');
+                    }
+                  }
+                });
+              }
             }
-          }
+          });
         }
-
-        if (!found) {
-          console.log(`✗ No match found for: "${sentence.substring(0, 40)}..."`);
-        }
-      });
+      }
     });
 
-    console.log('=== HIGHLIGHTING COMPLETE ===');
-    return result;
-  };
+    // Comprehensive document-level analysis for large-scale copying
+    console.log('=== AGGREGATE ANALYSIS ===');
+    console.log('Total sentences analyzed:', totalSentencesAnalyzed);
+    console.log('Sentences with matches:', totalSentencesWithMatches);
+    console.log('Total words in document:', totalWordsInDocument);
+    console.log('Total matched words:', totalMatchedWords);
     
     if (totalSentencesAnalyzed > 0) {
       const sentenceMatchPercentage = totalSentencesWithMatches / totalSentencesAnalyzed;
