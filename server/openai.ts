@@ -1,8 +1,12 @@
 import OpenAI from "openai";
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+if (!process.env.OPENAI_API_KEY) {
+  console.error('OPENAI_API_KEY environment variable is not set');
+}
+
 const openai = new OpenAI({ 
-  apiKey: process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY_ENV_VAR || "default_key"
+  apiKey: process.env.OPENAI_API_KEY
 });
 
 // Restricted prompts that indicate academic dishonesty
@@ -35,6 +39,11 @@ export function checkRestrictedPrompt(prompt: string): boolean {
 
 export async function generateAiResponseWithHistory(prompt: string, conversationHistory: any[] = [], documentContent?: string): Promise<string> {
   try {
+    if (!process.env.OPENAI_API_KEY) {
+      console.error('OpenAI API key is missing in generateAiResponseWithHistory');
+      throw new Error('AI service is not configured. Please contact your administrator.');
+    }
+
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
     // Build conversation context from history
@@ -96,12 +105,31 @@ Provide helpful, educational responses that guide students toward better writing
     return aiResponse;
   } catch (error) {
     console.error("OpenAI API error:", error);
-    throw new Error("Failed to generate AI response");
+    
+    // Check for specific OpenAI API errors
+    if (error instanceof Error) {
+      if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+        console.error('OpenAI API key is invalid or expired');
+        throw new Error("AI service authentication failed. Please contact your administrator to verify the API configuration.");
+      }
+      if (error.message.includes('429') || error.message.includes('rate_limit')) {
+        throw new Error("AI service is temporarily busy. Please wait a moment and try again.");
+      }
+      if (error.message.includes('quota') || error.message.includes('billing')) {
+        throw new Error("AI service quota exceeded. Please contact your administrator.");
+      }
+    }
+    
+    throw new Error("Failed to generate AI response. Please try again or contact your administrator.");
   }
 }
 
 export async function generateAiResponse(prompt: string, studentProfile?: any, documentContent?: string): Promise<string> {
   try {
+    if (!process.env.OPENAI_API_KEY) {
+      console.error('OpenAI API key is missing in generateAiResponse');
+      throw new Error('AI service is not configured. Please contact your administrator.');
+    }
     let personalizedContext = "";
     if (studentProfile) {
       personalizedContext = `
@@ -178,13 +206,20 @@ Focus on teaching writing skills through concrete examples rather than abstract 
   } catch (error) {
     console.error("OpenAI API error:", error);
     
-    // Fallback response if OpenAI fails
-    if (prompt.toLowerCase().includes('brainstorm') || prompt.toLowerCase().includes('ideas')) {
-      return "✅ Great question! Here are some brainstorming strategies you could try:\n\n1. Mind mapping - Start with your main topic and branch out with related ideas\n2. Free writing - Write continuously for 10 minutes without stopping\n3. Question generation - Ask who, what, when, where, why, and how about your topic\n4. Research different perspectives on your subject\n5. Look for connections between concepts\n\n💡 Try developing each idea with specific examples and evidence!";
-    } else if (prompt.toLowerCase().includes('outline') || prompt.toLowerCase().includes('structure')) {
-      return "✅ Here's a helpful structure you could consider:\n\n1. Introduction with clear thesis statement\n2. Background/Context section\n3. Main argument points (2-3 strong sections)\n4. Evidence and examples for each point\n5. Address counterarguments\n6. Conclusion that reinforces your thesis\n\n💡 Each section should flow logically to the next with smooth transitions!";
-    } else {
-      return "✅ I'd be happy to help! I can assist with:\n\n• Brainstorming and idea generation\n• Creating outlines and structure\n• Grammar and style feedback\n• Research strategies\n• Citation guidance\n\n💡 Could you be more specific about what aspect of your writing you'd like help with?";
+    // Check for specific OpenAI API errors
+    if (error instanceof Error) {
+      if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+        console.error('OpenAI API key is invalid or expired');
+        throw new Error("AI service authentication failed. Please contact your administrator to verify the API configuration.");
+      }
+      if (error.message.includes('429') || error.message.includes('rate_limit')) {
+        throw new Error("AI service is temporarily busy. Please wait a moment and try again.");
+      }
+      if (error.message.includes('quota') || error.message.includes('billing')) {
+        throw new Error("AI service quota exceeded. Please contact your administrator.");
+      }
     }
+    
+    throw new Error("Failed to generate AI response. Please try again or contact your administrator.");
   }
 }

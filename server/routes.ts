@@ -2279,6 +2279,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Diagnostic endpoint for checking OpenAI configuration
+  app.get('/api/diagnostic/openai', async (req, res) => {
+    try {
+      const hasApiKey = !!process.env.OPENAI_API_KEY;
+      const keyLength = process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.length : 0;
+      const keyPrefix = process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.substring(0, 7) + '...' : 'Not set';
+      
+      res.json({
+        configured: hasApiKey,
+        keyLength,
+        keyPrefix,
+        environment: process.env.NODE_ENV || 'development',
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Error checking OpenAI configuration:", error);
+      res.status(500).json({ message: "Failed to check configuration" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
