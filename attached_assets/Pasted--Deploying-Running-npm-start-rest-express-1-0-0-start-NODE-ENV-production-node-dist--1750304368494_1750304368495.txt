@@ -1,0 +1,98 @@
+==> Deploying...
+==> Running 'npm start'
+> rest-express@1.0.0 start
+> NODE_ENV=production node dist/index.js
+Warning: connect.session() MemoryStore is not
+designed for a production environment, as it will leak
+memory, and will not scale past a single process.
+3:31:34 AM [express] serving on port 5000
+     ==> Detected a new open port HTTP:5000
+     ==> New primary port detected: 5000. Restarting deploy to update network configuration...
+     ==> Docs on specifying a port: https://render.com/docs/web-services#port-binding
+     ==> Detected a new open port HTTP:5000
+==> Running 'npm start'
+> rest-express@1.0.0 start
+> NODE_ENV=production node dist/index.js
+Warning: connect.session() MemoryStore is not
+designed for a production environment, as it will leak
+memory, and will not scale past a single process.
+3:33:25 AM [express] serving on port 5000
+     ==> Your service is live 🎉
+     ==> Detected a new open port HTTP:5000
+Database username lookup for: "alexander.menjivar"
+Database username lookup for: "alexander.menjivar"
+file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:1384
+ connect",o),this._clients=this._clients.filter(u=>u!==t),s&&(o.message="Connect\
+                                                                       ^
+TypeError: Cannot set property message of #<ErrorEvent> which has only a getter
+    at An._connectionCallback (file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:1384:72)
+    at An._handleErrorWhileConnecting (file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:1290:38)
+    at An._handleErrorEvent (file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:1291:33)
+    at fn.emit (file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:397:12)
+    at v.reportStreamError (file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:1201:46)
+    at v.emit (file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:397:12)
+    at WebSocket.<anonymous> (file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:986:42)
+    at callListener (/opt/render/project/src/node_modules/ws/lib/event-target.js:290:14)
+    at WebSocket.onError (/opt/render/project/src/node_modules/ws/lib/event-target.js:230:9)
+    at WebSocket.emit (node:events:518:28)
+Node.js v22.16.0
+==> Running 'npm start'
+> rest-express@1.0.0 start
+> NODE_ENV=production node dist/index.js
+Warning: connect.session() MemoryStore is not
+designed for a production environment, as it will leak
+memory, and will not scale past a single process.
+3:35:12 AM [express] serving on port 5000
+     ==> Detected a new open port HTTP:5000
+Database username lookup for: "jason.menjivar"
+Database username lookup for: "jason.menjivar"
+file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:1384
+ connect",o),this._clients=this._clients.filter(u=>u!==t),s&&(o.message="Connect\
+                                                                       ^
+TypeError: Cannot set property message of #<ErrorEvent> which has only a getter
+    at An._connectionCallback (file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:1384:72)
+    at An._handleErrorWhileConnecting (file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:1290:38)
+    at An._handleErrorEvent (file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:1291:33)
+    at fn.emit (file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:397:12)
+    at v.reportStreamError (file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:1201:46)
+    at v.emit (file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:397:12)
+    at WebSocket.<anonymous> (file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:986:42)
+    at callListener (/opt/render/project/src/node_modules/ws/lib/event-target.js:290:14)
+    at WebSocket.onError (/opt/render/project/src/node_modules/ws/lib/event-target.js:230:9)
+    at WebSocket.emit (node:events:518:28)
+Node.js v22.16.0
+==> Running 'npm start'
+> rest-express@1.0.0 start
+> NODE_ENV=production node dist/index.js
+Warning: connect.session() MemoryStore is not
+designed for a production environment, as it will leak
+memory, and will not scale past a single process.
+3:36:12 AM [express] serving on port 5000
+     ==> Detected a new open port HTTP:5000
+Database lookup for email: amenjivar9@yahoo.com
+file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:1384
+ connect",o),this._clients=this._clients.filter(u=>u!==t),s&&(o.message="Connect\
+                                                                       ^
+TypeError: Cannot set property message of #<ErrorEvent> which has only a getter
+    at An._connectionCallback (file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:1384:72)
+    at An._handleErrorWhileConnecting (file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:1290:38)
+    at An._handleErrorEvent (file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:1291:33)
+    at fn.emit (file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:397:12)
+    at v.reportStreamError (file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:1201:46)
+    at v.emit (file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:397:12)
+    at WebSocket.<anonymous> (file:///opt/render/project/src/node_modules/@neondatabase/serverless/index.mjs:986:42)
+    at callListener (/opt/render/project/src/node_modules/ws/lib/event-target.js:290:14)
+    at WebSocket.onError (/opt/render/project/src/node_modules/ws/lib/event-target.js:230:9)
+    at WebSocket.emit (node:events:518:28)
+Node.js v22.16.0
+==> Running 'npm start'
+> rest-express@1.0.0 start
+> NODE_ENV=production node dist/index.js
+Warning: connect.session() MemoryStore is not
+designed for a production environment, as it will leak
+memory, and will not scale past a single process.
+3:37:10 AM [express] serving on port 5000
+     ==> Detected a new open port HTTP:5000
+
+     ==> Detected service running on port 5000
+     ==> Docs on specifying a port: https://render.com/docs/web-services#port-binding
