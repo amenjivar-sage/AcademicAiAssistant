@@ -1868,24 +1868,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Inline comments routes
   app.post("/api/sessions/:sessionId/comments", async (req, res) => {
     try {
+      console.log("=== INLINE COMMENT CREATION DEBUG ===");
+      console.log("Request body:", JSON.stringify(req.body, null, 2));
+      console.log("Session ID from params:", req.params.sessionId);
+      
       const currentUser = await getCurrentUser();
+      console.log("Current user:", currentUser ? `${currentUser.firstName} ${currentUser.lastName} (${currentUser.role})` : "null");
+      
       if (!currentUser) {
+        console.log("Authentication failed - no current user");
         return res.status(401).json({ error: "Authentication required" });
       }
 
       // Only teachers can create inline comments
       if (currentUser.role !== 'teacher' && currentUser.role !== 'admin' && currentUser.role !== 'school_admin' && currentUser.role !== 'sage_admin') {
+        console.log("Authorization failed - user role:", currentUser.role);
         return res.status(403).json({ error: "Only teachers can create comments" });
       }
 
       const sessionId = parseInt(req.params.sessionId);
       if (isNaN(sessionId)) {
+        console.log("Invalid session ID:", req.params.sessionId);
         return res.status(400).json({ error: "Invalid session ID" });
       }
 
+      console.log("Checking if session exists:", sessionId);
       // Verify the session exists
       const session = await storage.getWritingSession(sessionId);
+      console.log("Session found:", session ? `ID: ${session.id}, User: ${session.userId}` : "null");
+      
       if (!session) {
+        console.log("Session not found for ID:", sessionId);
         return res.status(404).json({ error: "Writing session not found" });
       }
 
@@ -1910,7 +1923,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(comment);
     } catch (error) {
       console.error("Error creating inline comment:", error);
-      res.status(500).json({ error: "Failed to create comment" });
+      
+      // Provide specific error messages for better debugging
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ 
+          error: "Invalid comment data", 
+          details: error.errors 
+        });
+      }
+      
+      if (error.message && error.message.includes('relation') && error.message.includes('does not exist')) {
+        return res.status(500).json({ 
+          error: "Database schema error - please contact administrator",
+          details: "inline_comments table may not exist"
+        });
+      }
+      
+      res.status(500).json({ 
+        error: "Failed to create comment",
+        details: error.message || "Unknown error"
+      });
     }
   });
 
@@ -2376,6 +2408,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error checking OpenAI configuration:", error);
       res.status(500).json({ message: "Failed to check configuration" });
+    }
+  });
+
+  // Comprehensive diagnostic endpoint for authentication and database
+  app.get('/api/diagnostic/system', async (req, res) => {
+    try {
+      const currentUser = await getCurrentUser();
+      const userCount = await storage.getAllUsers().then(users => users.length);
+      const sessionCount = await storage.getUserWritingSessions(1).then(sessions => sessions.length).catch(() => 0);
+      
+      res.json({
+        authentication: {
+          currentSessionUserId,
+          currentUser: currentUser ? {
+            id: currentUser.id,
+            role: currentUser.role,
+            firstName: currentUser.firstName,
+            lastName: currentUser.lastName
+          } : null,
+          authenticated: !!currentUser
+        },
+        database: {
+          userCount,
+          sessionCount,
+          connected: true
+        },
+        environment: process.env.NODE_ENV || 'development',
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Error in system diagnostic:", error);
+      res.status(500).json({ 
+        error: "System diagnostic failed",
+        details: error.message 
+      });
     }
   });
 
