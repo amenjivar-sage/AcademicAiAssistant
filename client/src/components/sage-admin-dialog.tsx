@@ -112,7 +112,7 @@ export default function SageAdminDialog({ open, onClose, onSuccess }: SageAdminD
   if (!open) return null;
 
   return (
-    <DialogContent className="sm:max-w-md">
+    <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
       <DialogHeader>
         <DialogTitle className="flex items-center gap-2">
           <div className="h-8 w-8 bg-red-100 rounded-full flex items-center justify-center">
