@@ -135,8 +135,13 @@ export async function runMigrations() {
       );
     `);
 
+    // Handle inline_comments table with proper schema migration
     await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS inline_comments (
+      DROP TABLE IF EXISTS inline_comments;
+    `);
+    
+    await db.execute(sql`
+      CREATE TABLE inline_comments (
         id SERIAL PRIMARY KEY,
         session_id INTEGER NOT NULL REFERENCES writing_sessions(id),
         teacher_id INTEGER NOT NULL REFERENCES users(id),

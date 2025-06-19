@@ -1,0 +1,247 @@
+     ==> Your service is live 🎉
+Running database migrations...
+Warning: connect.session() MemoryStore is not
+designed for a production environment, as it will leak
+memory, and will not scale past a single process.
+Database migrations completed successfully
+5:50:38 AM [express] serving on port 5000 - schema fix v2 deployed
+Database username lookup for: "jason.menjivar"
+Database username lookup for: "jason.menjivar"
+Username database result: Found: Jason  Menjivar
+User found: YES
+Login attempt for user jason.menjivar: isActive=true
+DatabaseStorage: Updating user 2 status to isActive=true
+DatabaseStorage: UpdateUserStatus result: Result {
+  command: 'UPDATE',
+  rowCount: 1,
+  oid: null,
+  rows: [],
+  fields: [],
+  _parsers: undefined,
+  _types: { getTypeParser: [Function: getTypeParser] },
+  RowCtor: null,
+  rowAsArray: false,
+  _prebuiltEmptyResultObject: null
+}
+5:51:35 AM [express] POST /api/auth/login 200 in 85ms :: {"user":{"id":2,"username":"jason.menjivar"…
+Getting current user, currentSessionUserId: 2
+Retrieved user from storage: Jason  Menjivar (teacher)
+DatabaseStorage: Getting classrooms for teacher 2
+Found 1 classrooms for teacher 2
+5:51:35 AM [express] GET /api/teacher/classrooms 304 in 69ms :: [{"id":1,"teacherId":2,"name":"engli…
+Getting current user, currentSessionUserId: 2
+Getting current user, currentSessionUserId: 2
+Retrieved user from storage: Jason  Menjivar (teacher)
+Fetching assignments for teacher ID: 2
+DatabaseStorage: Getting assignments for teacher 2
+Found 1 assignments for teacher 2
+Found 1 assignments: [ { id: 1, title: 'Persuasive Essay', teacherId: 2 } ]
+5:51:35 AM [express] GET /api/teacher/assignments 304 in 66ms :: [{"id":1,"teacherId":2,"classroomId…
+Getting current user, currentSessionUserId: 2
+DatabaseStorage: Getting classrooms for teacher 1
+Getting current user, currentSessionUserId: 2
+Retrieved user from storage: Jason  Menjivar (teacher)
+Auth check - current user: Jason  Menjivar
+5:51:36 AM [express] GET /api/auth/user 200 in 353ms :: {"id":2,"username":"jason.menjivar","role":"…
+Retrieved user from storage: Jason  Menjivar (teacher)
+DatabaseStorage: Getting assignments for teacher 2
+Found 1 assignments for teacher 2
+5:51:36 AM [express] GET /api/teacher/all-writing-sessions 304 in 110ms :: [{"id":1,"userId":1,"assi…
+DatabaseStorage: Getting classrooms for teacher 2
+Found 1 classrooms for teacher 2
+DatabaseStorage: Getting writing sessions for user 1
+Found 1 sessions for user 1
+5:51:36 AM [express] GET /api/teacher/2/students 304 in 98ms :: [{"id":1,"name":"Alexander Menjivar"…
+Retrieved user from storage: Jason  Menjivar (teacher)
+DatabaseStorage: Getting classrooms for teacher 2
+Found 1 classrooms for teacher 2
+5:51:36 AM [express] GET /api/classrooms/students-count 304 in 333ms :: {"1":[{"id":1,"username":"am…
+Found 0 classrooms for teacher 1
+5:51:36 AM [express] GET /api/teacher/1/students 304 in 369ms :: []
+Getting current user, currentSessionUserId: 2
+Retrieved user from storage: Jason  Menjivar (teacher)
+DatabaseStorage: Getting writing sessions for user 1
+Found 1 sessions for user 1
+Found 1 students for classroom 1
+5:51:37 AM [express] GET /api/classrooms/1/students 304 in 102ms :: [{"id":1,"username":"amenjivar9"…
+Fetching submissions for assignment: 1
+Found submissions: 1
+5:51:39 AM [express] GET /api/assignments/1/submissions 304 in 53ms :: [{"id":1,"userId":1,"assignme…
+Getting current user, currentSessionUserId: 2
+Retrieved user from storage: Jason  Menjivar (teacher)
+DatabaseStorage: Getting classrooms for teacher 2
+Found 1 classrooms for teacher 2
+5:51:40 AM [express] GET /api/teacher/classrooms 304 in 62ms :: [{"id":1,"teacherId":2,"name":"engli…
+Getting current user, currentSessionUserId: 2
+Retrieved user from storage: Jason  Menjivar (teacher)
+Fetching assignments for teacher ID: 2
+DatabaseStorage: Getting assignments for teacher 2
+Found 1 assignments for teacher 2
+Found 1 assignments: [ { id: 1, title: 'Persuasive Essay', teacherId: 2 } ]
+5:51:41 AM [express] GET /api/teacher/assignments 304 in 65ms :: [{"id":1,"teacherId":2,"classroomId…
+Getting current user, currentSessionUserId: 2
+Retrieved user from storage: Jason  Menjivar (teacher)
+DatabaseStorage.getWritingSession called with ID: 1
+5:51:42 AM [express] GET /api/users/1 304 in 32ms :: {"id":1,"username":"amenjivar9","role":"student…
+Found session: 1 Title:  Content length: 323
+Fetching comments for session: 1
+Error fetching inline comments: error: column "teacher_id" does not exist
+    at /opt/render/project/src/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async file:///opt/render/project/src/node_modules/drizzle-orm/node-postgres/session.js:83:22
+    at async DatabaseStorage.getSessionInlineComments (file:///opt/render/project/src/dist/index.js:1155:12)
+    at async file:///opt/render/project/src/dist/index.js:2732:24 {
+  length: 110,
+  severity: 'ERROR',
+  code: '42703',
+  detail: undefined,
+  hint: undefined,
+  position: '28',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '3722',
+  routine: 'errorMissingColumn'
+}
+5:51:42 AM [express] GET /api/sessions/1/comments 500 in 99ms :: {"error":"Failed to fetch comments"}
+Getting current user, currentSessionUserId: 2
+Retrieved user from storage: Jason  Menjivar (teacher)
+DatabaseStorage: Getting classrooms for teacher 2
+Found 1 classrooms for teacher 2
+5:51:46 AM [express] GET /api/teacher/classrooms 304 in 67ms :: [{"id":1,"teacherId":2,"name":"engli…
+Getting current user, currentSessionUserId: 2
+Retrieved user from storage: Jason  Menjivar (teacher)
+Fetching assignments for teacher ID: 2
+DatabaseStorage: Getting assignments for teacher 2
+Found 1 assignments for teacher 2
+Found 1 assignments: [ { id: 1, title: 'Persuasive Essay', teacherId: 2 } ]
+5:51:46 AM [express] GET /api/teacher/assignments 304 in 66ms :: [{"id":1,"teacherId":2,"classroomId…
+=== INLINE COMMENT CREATION DEBUG ===
+Request body: {
+  "startIndex": 0,
+  "endIndex": 11,
+  "highlightedText": "kjkjfk;jsda",
+  "comment": "good job",
+  "teacherId": 2
+}
+Session ID from params: 1
+Getting current user, currentSessionUserId: 2
+Retrieved user from storage: Jason  Menjivar (teacher)
+Current user: Jason  Menjivar (teacher)
+Checking if session exists: 1
+DatabaseStorage.getWritingSession called with ID: 1
+Found session: 1 Title:  Content length: 323
+Session found: ID: 1, User: 1
+Creating inline comment: {
+  sessionId: 1,
+  teacherId: 2,
+  startIndex: 0,
+  endIndex: 11,
+  highlightedText: 'kjkjfk;jsda',
+  comment: 'good job'
+}
+DatabaseStorage: Creating inline comment with data: {
+  sessionId: 1,
+  teacherId: 2,
+  startIndex: 0,
+  endIndex: 11,
+  highlightedText: 'kjkjfk;jsda',
+  comment: 'good job'
+}
+DatabaseStorage: Error creating inline comment: error: column "teacher_id" of relation "inline_comments" does not exist
+    at /opt/render/project/src/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async file:///opt/render/project/src/node_modules/drizzle-orm/node-postgres/session.js:83:22
+    at async DatabaseStorage.createInlineComment (file:///opt/render/project/src/dist/index.js:1124:25)
+    at async file:///opt/render/project/src/dist/index.js:2690:23 {
+  length: 138,
+  severity: 'ERROR',
+  code: '42703',
+  detail: undefined,
+  hint: undefined,
+  position: '52',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_target.c',
+  line: '1066',
+  routine: 'checkInsertTargets'
+}
+Error details: {
+  message: 'column "teacher_id" of relation "inline_comments" does not exist',
+  code: '42703',
+  detail: undefined,
+  table: undefined,
+  column: undefined
+}
+Attempting direct database insert as fallback...
+Fallback SQL also failed: error: column "teacher_id" of relation "inline_comments" does not exist
+    at /opt/render/project/src/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async DatabaseStorage.createInlineComment (file:///opt/render/project/src/dist/index.js:1140:26)
+    at async file:///opt/render/project/src/dist/index.js:2690:23 {
+  length: 138,
+  severity: 'ERROR',
+  code: '42703',
+  detail: undefined,
+  hint: undefined,
+  position: '42',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_target.c',
+  line: '1066',
+  routine: 'checkInsertTargets'
+}
+Error creating inline comment: error: column "teacher_id" of relation "inline_comments" does not exist
+    at /opt/render/project/src/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async DatabaseStorage.createInlineComment (file:///opt/render/project/src/dist/index.js:1140:26)
+    at async file:///opt/render/project/src/dist/index.js:2690:23 {
+  length: 138,
+  severity: 'ERROR',
+  code: '42703',
+  detail: undefined,
+  hint: undefined,
+  position: '42',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_target.c',
+  line: '1066',
+  routine: 'checkInsertTargets'
+}
+5:51:48 AM [express] POST /api/sessions/1/comments 500 in 138ms :: {"error":"Database schema error -…
+Getting current user, currentSessionUserId: 2
+Retrieved user from storage: Jason  Menjivar (teacher)
+DatabaseStorage: Getting classrooms for teacher 2
+Found 1 classrooms for teacher 2
+5:51:51 AM [express] GET /api/teacher/classrooms 304 in 63ms :: [{"id":1,"teacherId":2,"name":"engli…
+Getting current user, currentSessionUserId: 2
+Retrieved user from storage: Jason  Menjivar (teacher)
+Fetching assignments for teacher ID: 2
+DatabaseStorage: Getting assignments for teacher 2
+Found 1 assignments for teacher 2
+Found 1 assignments: [ { id: 1, title: 'Persuasive Essay', teacherId: 2 } ]
+5:51:51 AM [express] GET /api/teacher/assignments 304 in 68ms :: [{"id":1,"teacherId":2,"classroomId…
