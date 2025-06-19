@@ -138,10 +138,14 @@ export async function runMigrations() {
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS inline_comments (
         id SERIAL PRIMARY KEY,
-        session_id INTEGER NOT NULL,
+        session_id INTEGER NOT NULL REFERENCES writing_sessions(id),
+        teacher_id INTEGER NOT NULL REFERENCES users(id),
+        start_index INTEGER NOT NULL,
+        end_index INTEGER NOT NULL,
+        highlighted_text TEXT NOT NULL,
         comment TEXT NOT NULL,
-        position INTEGER NOT NULL,
-        created_at TIMESTAMP NOT NULL DEFAULT NOW()
+        created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
+        updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW()
       );
     `);
 
