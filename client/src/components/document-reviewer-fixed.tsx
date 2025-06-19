@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { enhancedCopyPasteHighlight } from "./enhanced-copy-paste-highlighter";
 import {
   Form,
   FormControl,
@@ -249,13 +250,12 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
     });
   };
 
-  // Helper function to highlight pasted content in red
+  // Enhanced function to highlight pasted content using the new highlighter
   const highlightPastedContent = (text: string) => {
-    console.log('=== DOCUMENT REVIEWER DEBUG ===');
+    console.log('=== ENHANCED DOCUMENT REVIEWER ===');
     console.log('Session ID:', session.id);
     console.log('Raw pastedContent type:', typeof session.pastedContent);
     console.log('Raw pastedContent value:', session.pastedContent);
-    console.log('Content length:', session.pastedContent ? session.pastedContent.length : 'null');
 
     // Parse the pasted content from the database (stored as JSON string)
     let pastedData = [];
@@ -280,55 +280,33 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
       return text;
     }
 
-    let result = text;
+    // Use the enhanced copy-paste highlighter
+    try {
+      const highlightedContent = enhancedCopyPasteHighlight(text, pastedData);
+      console.log('Enhanced highlighting applied successfully');
+      return highlightedContent;
+    } catch (error) {
+      console.error('Error in enhanced highlighting:', error);
+      return text;
+    }
+  };
+
+  // Simple function to highlight pasted content in red using enhanced highlighter
+  const highlightPastedContentSimple = (content: string): string => {
+    if (!session.pastedContent || !Array.isArray(session.pastedContent) || session.pastedContent.length === 0) {
+      return content;
+    }
+
+    console.log('Using enhanced copy-paste highlighter for simple highlighting');
     
-    const pastedTexts = pastedData.map((item: any) => {
-      if (typeof item === 'string') return item;
-      if (item && typeof item === 'object') {
-        return item.text || item.content || item.value || '';
-      }
-      return '';
-    }).filter((pastedText: string) => pastedText && pastedText.length > 10);
-
-    console.log('Extracted pasted texts:', pastedTexts);
-
-    // Track overall document statistics for comprehensive detection
-    let totalSentencesAnalyzed = 0;
-    let totalSentencesWithMatches = 0;
-    let totalWordsInDocument = 0;
-    let totalMatchedWords = 0;
-
-    pastedTexts.forEach((pastedText: string) => {
-      if (pastedText) {
-        console.log('Processing pasted text:', pastedText);
-        console.log('Current document content:', result);
-        
-        // Try exact match first
-        if (result.includes(pastedText)) {
-          const escapedText = pastedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-          const regex = new RegExp(escapedText, 'gi');
-          result = result.replace(regex, `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected">${pastedText}</span>`);
-        } else {
-          // Simple but effective approach for spell-corrected content
-          // Split the pasted text into overlapping phrases and look for similar content
-          const sentences = pastedText.split(/[.!?]+/).filter(s => s.trim().length > 10);
-          
-          sentences.forEach((sentence: string) => {
-            const trimmedSentence = sentence.trim();
-            if (trimmedSentence) {
-              console.log('Looking for sentence:', trimmedSentence);
-              
-              // Get significant words from the pasted sentence (clean punctuation)
-              const pastedWords = trimmedSentence.split(/\s+/)
-                .filter(w => w.length >= 3)
-                .map(w => w.toLowerCase().replace(/[.,!?;]/g, ''));
-              
-              console.log('Pasted words:', pastedWords);
-              
-              if (pastedWords.length >= 4) {
-                // Get clean document text (without HTML highlighting) for accurate comparison
-                const cleanDocumentText = result.replace(/<span[^>]*style="background-color: #fecaca[^>]*>([^<]*)<\/span>/gi, '$1');
-                const documentSentences = cleanDocumentText.split(/[.!?]+/).filter(s => s.trim().length > 10);
+    try {
+      const highlightedContent = enhancedCopyPasteHighlight(content, session.pastedContent);
+      return highlightedContent;
+    } catch (error) {
+      console.error('Error in simple highlighting:', error);
+      return content;
+    }
+  };
                 
                 // Additional safeguard: only check content that comes after the paste detection area
                 // This helps avoid flagging content that was written before the paste
