@@ -1868,17 +1868,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Inline comments routes
   app.post("/api/sessions/:sessionId/comments", async (req, res) => {
     try {
-      const sessionId = parseInt(req.params.sessionId);
       const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      // Only teachers can create inline comments
+      if (currentUser.role !== 'teacher' && currentUser.role !== 'admin' && currentUser.role !== 'school_admin' && currentUser.role !== 'sage_admin') {
+        return res.status(403).json({ error: "Only teachers can create comments" });
+      }
+
+      const sessionId = parseInt(req.params.sessionId);
+      if (isNaN(sessionId)) {
+        return res.status(400).json({ error: "Invalid session ID" });
+      }
+
+      // Verify the session exists
+      const session = await storage.getWritingSession(sessionId);
+      if (!session) {
+        return res.status(404).json({ error: "Writing session not found" });
+      }
+
+      // Validate the comment data structure
+      const { insertInlineCommentSchema } = await import('../shared/schema');
       
       const commentData = {
-        ...req.body,
         sessionId,
-        teacherId: currentUser?.id || req.body.teacherId || 1
+        teacherId: currentUser.id,
+        startIndex: req.body.startIndex,
+        endIndex: req.body.endIndex,
+        highlightedText: req.body.highlightedText,
+        comment: req.body.comment
       };
+
+      // Validate using Zod schema
+      const validatedData = insertInlineCommentSchema.parse(commentData);
       
-      console.log("Creating inline comment:", commentData);
-      const comment = await storage.createInlineComment(commentData);
+      console.log("Creating inline comment:", validatedData);
+      const comment = await storage.createInlineComment(validatedData);
       console.log("Created comment:", comment);
       res.json(comment);
     } catch (error) {
@@ -1889,7 +1916,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/sessions/:sessionId/comments", async (req, res) => {
     try {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
       const sessionId = parseInt(req.params.sessionId);
+      if (isNaN(sessionId)) {
+        return res.status(400).json({ error: "Invalid session ID" });
+      }
+
+      // Verify the session exists
+      const session = await storage.getWritingSession(sessionId);
+      if (!session) {
+        return res.status(404).json({ error: "Writing session not found" });
+      }
+
+      // Check permissions: teachers, admins, or the student who owns the session
+      const hasPermission = currentUser.role === 'teacher' || 
+                           currentUser.role === 'admin' || 
+                           currentUser.role === 'school_admin' || 
+                           currentUser.role === 'sage_admin' ||
+                           session.userId === currentUser.id;
+
+      if (!hasPermission) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
       console.log("Fetching comments for session:", sessionId);
       const comments = await storage.getSessionInlineComments(sessionId);
       console.log("Found comments:", comments);
@@ -1897,6 +1950,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching inline comments:", error);
       res.status(500).json({ error: "Failed to fetch comments" });
+    }
+  });
+
+  // Delete inline comment
+  app.delete("/api/sessions/:sessionId/comments/:commentId", async (req, res) => {
+    try {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+
+      // Only teachers and admins can delete comments
+      if (currentUser.role !== 'teacher' && currentUser.role !== 'admin' && currentUser.role !== 'school_admin' && currentUser.role !== 'sage_admin') {
+        return res.status(403).json({ error: "Only teachers can delete comments" });
+      }
+
+      const commentId = parseInt(req.params.commentId);
+      if (isNaN(commentId)) {
+        return res.status(400).json({ error: "Invalid comment ID" });
+      }
+
+      await storage.deleteInlineComment(commentId);
+      console.log("Deleted inline comment:", commentId);
+      res.json({ message: "Comment deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting inline comment:", error);
+      res.status(500).json({ error: "Failed to delete comment" });
     }
   });
 
