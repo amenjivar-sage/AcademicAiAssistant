@@ -56,8 +56,8 @@ app.use((req, res, next) => {
   // Initialize database tables
   await runMigrations();
   
-  // Seed the database with initial data
-  // await seedDatabase(); // Disabled to start with authentic data only
+  // Seed the database with initial data including admin user
+  await seedDatabase();
   
   const server = await registerRoutes(app);
 

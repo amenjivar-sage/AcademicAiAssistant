@@ -53,6 +53,17 @@ export async function seedDatabase() {
       password: "Dodgers23",
     });
 
+    // Create admin user for Sage Admin access
+    await db.insert(users).values({
+      username: "admin",
+      email: "admin@sage-edu.app",
+      firstName: "Dr. Patricia",
+      lastName: "Williams",
+      role: "admin",
+      department: "Administration",
+      password: "admin123",
+    });
+
     // Create demo classroom
     const [classroom] = await db.insert(classrooms).values({
       name: "Creative Writing Workshop",
