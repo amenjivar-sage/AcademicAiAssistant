@@ -76,7 +76,7 @@ export default function Login() {
       
       if (data.user.role === "teacher") {
         setLocation("/teacher");
-      } else if (data.user.role === "admin") {
+      } else if (data.user.role === "admin" || data.user.role === "super_admin") {
         setLocation("/admin");
       } else if (data.user.role === "school_admin") {
         setLocation("/school-admin");
