@@ -378,10 +378,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Sage Admin registration endpoint
   app.post("/api/auth/sage-admin-register", async (req, res) => {
     try {
-      const { username, email, firstName, lastName, password } = req.body;
+      const { username, email, firstName, lastName, password, verificationCode } = req.body;
       
-      if (!username || !email || !firstName || !lastName || !password) {
+      if (!username || !email || !firstName || !lastName || !password || !verificationCode) {
         return res.status(400).json({ message: "All fields are required" });
+      }
+
+      // Verify the special code for Sage Admin creation
+      if (verificationCode !== "8520") {
+        return res.status(403).json({ message: "Invalid verification code" });
       }
 
       // Check if username already exists

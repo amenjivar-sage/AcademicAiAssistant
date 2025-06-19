@@ -29,6 +29,7 @@ export default function SageAdminDialog({ open, onClose, onSuccess }: SageAdminD
     lastName: "",
     password: "",
     confirmPassword: "",
+    verificationCode: "",
   });
   const [error, setError] = useState("");
   const { toast } = useToast();
@@ -87,6 +88,11 @@ export default function SageAdminDialog({ open, onClose, onSuccess }: SageAdminD
 
     if (registerData.password.length < 6) {
       setError("Password must be at least 6 characters long");
+      return;
+    }
+
+    if (registerData.verificationCode !== "8520") {
+      setError("Invalid verification code");
       return;
     }
 
@@ -247,6 +253,18 @@ export default function SageAdminDialog({ open, onClose, onSuccess }: SageAdminD
               />
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="register-verificationCode">Verification Code</Label>
+              <Input
+                id="register-verificationCode"
+                type="password"
+                value={registerData.verificationCode}
+                onChange={(e) => updateRegisterData("verificationCode", e.target.value)}
+                placeholder="Enter verification code"
+                required
+              />
+            </div>
+
             {error && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
@@ -256,7 +274,7 @@ export default function SageAdminDialog({ open, onClose, onSuccess }: SageAdminD
 
             <div className="bg-red-50 p-3 rounded-lg">
               <p className="text-sm text-red-700">
-                <strong>Note:</strong> This creates a Sage Administrator account with full platform access.
+                <strong>Security:</strong> A verification code is required to create Sage Administrator accounts.
               </p>
             </div>
 
