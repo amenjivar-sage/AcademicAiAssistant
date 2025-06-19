@@ -1,0 +1,96 @@
+  line: '1066',
+  routine: 'checkInsertTargets'
+}
+Error details: {
+  message: 'column "teacher_id" of relation "inline_comments" does not exist',
+  code: '42703',
+Attempting direct database insert as fallback...
+  detail: undefined,
+  table: undefined,
+  column: undefined
+}
+Fallback SQL also failed: error: column "teacher_id" of relation "inline_comments" does not exist
+    at /opt/render/project/src/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async DatabaseStorage.createInlineComment (file:///opt/render/project/src/dist/index.js:1140:26)
+    at async file:///opt/render/project/src/dist/index.js:2690:23 {
+  length: 138,
+  severity: 'ERROR',
+  code: '42703',
+  detail: undefined,
+  hint: undefined,
+  position: '42',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_target.c',
+  line: '1066',
+  routine: 'checkInsertTargets'
+}
+Error creating inline comment: error: column "teacher_id" of relation "inline_comments" does not exist
+    at /opt/render/project/src/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async DatabaseStorage.createInlineComment (file:///opt/render/project/src/dist/index.js:1140:26)
+    at async file:///opt/render/project/src/dist/index.js:2690:23 {
+  length: 138,
+  severity: 'ERROR',
+  code: '42703',
+  detail: undefined,
+  hint: undefined,
+  position: '42',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_target.c',
+  line: '1066',
+  routine: 'checkInsertTargets'
+}
+5:23:11 AM [express] POST /api/sessions/1/comments 500 in 136ms :: {"error":"Database schema error -…
+Getting current user, currentSessionUserId: 2
+Getting current user, currentSessionUserId: 2
+Retrieved user from storage: Jason  Menjivar (teacher)
+Fetching assignments for teacher ID: 2
+DatabaseStorage: Getting assignments for teacher 2
+Found 1 assignments for teacher 2
+Found 1 assignments: [ { id: 1, title: 'Persuasive Essay', teacherId: 2 } ]
+5:23:15 AM [express] GET /api/teacher/assignments 304 in 276ms :: [{"id":1,"teacherId":2,"classroomI…
+Retrieved user from storage: Jason  Menjivar (teacher)
+DatabaseStorage: Getting classrooms for teacher 2
+Found 1 classrooms for teacher 2
+5:23:15 AM [express] GET /api/teacher/classrooms 304 in 369ms :: [{"id":1,"teacherId":2,"name":"engl…
+Getting current user, currentSessionUserId: 2
+Getting current user, currentSessionUserId: 2
+Retrieved user from storage: Jason  Menjivar (teacher)
+Fetching assignments for teacher ID: 2
+DatabaseStorage: Getting assignments for teacher 2
+Retrieved user from storage: Jason  Menjivar (teacher)
+DatabaseStorage: Getting classrooms for teacher 2
+Found 1 assignments for teacher 2
+Found 1 assignments: [ { id: 1, title: 'Persuasive Essay', teacherId: 2 } ]
+5:23:20 AM [express] GET /api/teacher/assignments 304 in 69ms :: [{"id":1,"teacherId":2,"classroomId…
+Found 1 classrooms for teacher 2
+5:23:20 AM [express] GET /api/teacher/classrooms 304 in 57ms :: [{"id":1,"teacherId":2,"name":"engli…
+     ==> Deploying...
+==> Running 'npm start'
+> rest-express@1.0.0 start
+> NODE_ENV=production node dist/index.js
+Warning: connect.session() MemoryStore is not
+designed for a production environment, as it will leak
+memory, and will not scale past a single process.
+Running database migrations...
+Database migrations completed successfully
+5:30:25 AM [express] serving on port 5000
+     ==> Your service is live 🎉
+     ==> Detected service running on port 5000
+     ==> Docs on specifying a port: https://render.com/docs/web-services#port-binding
+Need better ways to work with logs? Try theRender CLIor set up a log stream integration 

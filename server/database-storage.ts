@@ -543,6 +543,7 @@ export class DatabaseStorage implements IStorage {
 
   // Inline comment operations
   async createInlineComment(commentData: InsertInlineComment): Promise<InlineComment> {
+    // Force deployment update - teacher_id column fix deployed 2025-06-19
     console.log("DatabaseStorage: Creating inline comment with data:", commentData);
     
     try {
