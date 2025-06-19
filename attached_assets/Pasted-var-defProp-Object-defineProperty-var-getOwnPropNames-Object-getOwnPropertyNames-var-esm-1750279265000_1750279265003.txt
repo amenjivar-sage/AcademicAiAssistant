@@ -1,0 +1,247 @@
+var __defProp = Object.defineProperty;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __esm = (fn, res) => function __init() {
+  return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
+};
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+
+// shared/schema.ts
+var schema_exports = {};
+__export(schema_exports, {
+  achievements: () => achievements,
+  aiInteractions: () => aiInteractions,
+  assignments: () => assignments,
+  classroomEnrollments: () => classroomEnrollments,
+  classrooms: () => classrooms,
+  feedback: () => feedback,
+  inlineComments: () => inlineComments,
+  insertAchievementSchema: () => insertAchievementSchema,
+  insertAiInteractionSchema: () => insertAiInteractionSchema,
+  insertAssignmentSchema: () => insertAssignmentSchema,
+  insertClassroomEnrollmentSchema: () => insertClassroomEnrollmentSchema,
+  insertClassroomSchema: () => insertClassroomSchema,
+  insertFeedbackSchema: () => insertFeedbackSchema,
+  insertInlineCommentSchema: () => insertInlineCommentSchema,
+  insertMessageSchema: () => insertMessageSchema,
+  insertStudentProfileSchema: () => insertStudentProfileSchema,
+  insertUserSchema: () => insertUserSchema,
+  insertWritingGoalSchema: () => insertWritingGoalSchema,
+  insertWritingSessionSchema: () => insertWritingSessionSchema,
+  insertWritingStreakSchema: () => insertWritingStreakSchema,
+  messages: () => messages,
+  studentProfiles: () => studentProfiles,
+  users: () => users,
+  writingGoals: () => writingGoals,
+  writingSessions: () => writingSessions,
+  writingStreaks: () => writingStreaks
+});
+import { pgTable, text, serial, integer, boolean, timestamp, json } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
+var users, assignments, writingSessions, aiInteractions, classrooms, classroomEnrollments, insertUserSchema, insertAssignmentSchema, insertWritingSessionSchema, insertAiInteractionSchema, insertClassroomSchema, insertClassroomEnrollmentSchema, messages, insertMessageSchema, writingStreaks, achievements, writingGoals, feedback, insertWritingStreakSchema, insertAchievementSchema, insertWritingGoalSchema, insertFeedbackSchema, inlineComments, insertInlineCommentSchema, studentProfiles, insertStudentProfileSchema;
+var init_schema = __esm({
+  "shared/schema.ts"() {
+    "use strict";
+    users = pgTable("users", {
+      id: serial("id").primaryKey(),
+      username: text("username").notNull().unique(),
+      password: text("password").notNull(),
+      role: text("role").notNull().default("student"),
+      // "student", "teacher", "admin", "school_admin"
+      firstName: text("first_name").notNull(),
+      lastName: text("last_name").notNull(),
+      email: text("email").notNull().unique(),
+      department: text("department"),
+      grade: text("grade"),
+      isActive: boolean("is_active").notNull().default(true),
+      createdAt: timestamp("created_at").notNull().defaultNow(),
+      updatedAt: timestamp("updated_at").notNull().defaultNow()
+    });
+    assignments = pgTable("assignments", {
+      id: serial("id").primaryKey(),
+      teacherId: integer("teacher_id").notNull(),
+      classroomId: integer("classroom_id"),
+      // Link to specific classroom (deprecated - use classroomIds)
+      classroomIds: json("classroom_ids").default([]),
+      // Array of classroom IDs this assignment is assigned to
+      title: text("title").notNull(),
+      description: text("description").notNull(),
+      dueDate: timestamp("due_date"),
+      status: text("status").notNull().default("active"),
+      // "active", "completed", "overdue"
+      aiPermissions: text("ai_permissions").notNull().default("full"),
+      // "full", "limited", "none"
+      allowBrainstorming: boolean("allow_brainstorming").notNull().default(true),
+      allowOutlining: boolean("allow_outlining").notNull().default(true),
+      allowGrammarCheck: boolean("allow_grammar_check").notNull().default(true),
+      allowResearchHelp: boolean("allow_research_help").notNull().default(true),
+      allowCopyPaste: boolean("allow_copy_paste").notNull().default(false),
+      createdAt: timestamp("created_at").notNull().defaultNow(),
+      updatedAt: timestamp("updated_at").notNull().defaultNow()
+    });
+    writingSessions = pgTable("writing_sessions", {
+      id: serial("id").primaryKey(),
+      userId: integer("user_id"),
+      assignmentId: integer("assignment_id"),
+      // Links to specific assignment
+      title: text("title").notNull(),
+      content: text("content").notNull().default(""),
+      pastedContent: json("pasted_content").default([]),
+      // Array of {text, startIndex, endIndex, timestamp}
+      wordCount: integer("word_count").notNull().default(0),
+      status: text("status").notNull().default("draft"),
+      // "draft", "submitted", "graded"
+      submittedAt: timestamp("submitted_at"),
+      teacherFeedback: text("teacher_feedback"),
+      grade: text("grade"),
+      createdAt: timestamp("created_at").notNull().defaultNow(),
+      updatedAt: timestamp("updated_at").notNull().defaultNow()
+    });
+    aiInteractions = pgTable("ai_interactions", {
+      id: serial("id").primaryKey(),
+      sessionId: integer("session_id"),
+      prompt: text("prompt").notNull(),
+      response: text("response").notNull(),
+      isRestricted: boolean("is_restricted").notNull().default(false),
+      createdAt: timestamp("created_at").notNull().defaultNow()
+    });
+    classrooms = pgTable("classrooms", {
+      id: serial("id").primaryKey(),
+      teacherId: integer("teacher_id").notNull(),
+      name: text("name").notNull(),
+      subject: text("subject").notNull(),
+      gradeLevel: text("grade_level"),
+      classSize: integer("class_size").default(30),
+      joinCode: text("join_code").notNull().unique(),
+      description: text("description"),
+      isActive: boolean("is_active").notNull().default(true),
+      createdAt: timestamp("created_at").notNull().defaultNow(),
+      updatedAt: timestamp("updated_at").notNull().defaultNow()
+    });
+    classroomEnrollments = pgTable("classroom_enrollments", {
+      id: serial("id").primaryKey(),
+      classroomId: integer("classroom_id").notNull(),
+      studentId: integer("student_id").notNull(),
+      enrolledAt: timestamp("enrolled_at").notNull().defaultNow(),
+      isActive: boolean("is_active").notNull().default(true)
+    });
+    insertUserSchema = createInsertSchema(users).pick({
+      username: true,
+      password: true,
+      role: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+      department: true,
+      grade: true
+    });
+    insertAssignmentSchema = createInsertSchema(assignments).omit({
+      id: true,
+      createdAt: true,
+      updatedAt: true
+    });
+    insertWritingSessionSchema = createInsertSchema(writingSessions).omit({
+      id: true,
+      createdAt: true,
+      updatedAt: true,
+      submittedAt: true
+    });
+    insertAiInteractionSchema = createInsertSchema(aiInteractions).omit({
+      id: true,
+      createdAt: true
+    });
+    insertClassroomSchema = createInsertSchema(classrooms).omit({
+      id: true,
+      createdAt: true,
+      updatedAt: true,
+      joinCode: true
+      // Auto-generated
+    });
+    insertClassroomEnrollmentSchema = createInsertSchema(classroomEnrollments).omit({
+      id: true,
+      enrolledAt: true
+    });
+    messages = pgTable("messages", {
+      id: serial("id").primaryKey(),
+      senderId: integer("sender_id").notNull(),
+      receiverId: integer("receiver_id").notNull(),
+      subject: text("subject").notNull(),
+      content: text("content").notNull(),
+      isRead: boolean("is_read").notNull().default(false),
+      createdAt: timestamp("created_at").notNull().defaultNow()
+    });
+    insertMessageSchema = createInsertSchema(messages).omit({
+      id: true,
+      createdAt: true
+    });
+    writingStreaks = pgTable("writing_streaks", {
+      id: serial("id").primaryKey(),
+      userId: integer("user_id").notNull(),
+      currentStreak: integer("current_streak").notNull().default(0),
+      longestStreak: integer("longest_streak").notNull().default(0),
+      lastWritingDate: timestamp("last_writing_date"),
+      createdAt: timestamp("created_at").notNull().defaultNow(),
+      updatedAt: timestamp("updated_at").notNull().defaultNow()
+    });
+    achievements = pgTable("achievements", {
+      id: serial("id").primaryKey(),
+      userId: integer("user_id").notNull(),
+      type: text("type").notNull(),
+      // "streak", "wordcount", "assignment", "improvement"
+      name: text("name").notNull(),
+      description: text("description").notNull(),
+      badgeIcon: text("badge_icon").notNull(),
+      unlockedAt: timestamp("unlocked_at").notNull().defaultNow()
+    });
+    writingGoals = pgTable("writing_goals", {
+      id: serial("id").primaryKey(),
+      userId: integer("user_id").notNull(),
+      type: text("type").notNull(),
+      // "daily", "weekly", "assignment"
+      targetWords: integer("target_words").notNull(),
+      currentProgress: integer("current_progress").notNull().default(0),
+      startDate: timestamp("start_date").notNull(),
+      endDate: timestamp("end_date"),
+      isCompleted: boolean("is_completed").notNull().default(false),
+      createdAt: timestamp("created_at").notNull().defaultNow()
+    });
+    feedback = pgTable("feedback", {
+      id: serial("id").primaryKey(),
+      userId: integer("user_id").notNull(),
+      type: text("type").notNull(),
+      // "bug", "feature", "general", "assignment"
+      title: text("title").notNull(),
+      description: text("description").notNull(),
+      category: text("category"),
+      priority: text("priority").notNull().default("medium"),
+      // "low", "medium", "high"
+      rating: integer("rating"),
+      // 1-5 star rating
+      contextType: text("context_type"),
+      // "assignment", "platform", "general"
+      contextId: integer("context_id"),
+      // ID of assignment or other context
+      status: text("status").notNull().default("open"),
+      // "open", "in_progress", "resolved", "closed"
+      adminResponse: text("admin_response"),
+      adminResponseAt: timestamp("admin_response_at"),
+      adminResponseBy: integer("admin_response_by"),
+      userAgent: text("user_agent"),
+      url: text("url"),
+      createdAt: timestamp("created_at").notNull().defaultNow(),
+      updatedAt: timestamp("updated_at").notNull().defaultNow()
+    });
+    insertWritingStreakSchema = createInsertSchema(writingStreaks).omit({
+      id: true,
+      createdAt: true,
+      updatedAt: true
+    });
+    insertAchievementSchema = createInsertSchema(achievements).omit({
+      id: true,
+      unlockedAt: true
+    });
+    insertWritingGoalSchema = createInsertSchema(writingGoals).omit({
+      id: true,
+      createdAt: true

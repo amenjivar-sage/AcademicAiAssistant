@@ -1,21 +1,31 @@
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
+import connectPgSimple from "connect-pg-simple";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { seedDatabase } from "./seed-database";
+import { pool } from "./db";
 
 const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 
-// Add session middleware
+// Configure PostgreSQL session store
+const PgSession = connectPgSimple(session);
+
+// Add session middleware with PostgreSQL store
 app.use(session({
-  secret: 'sage-demo-secret-key', // In production: use environment variable
+  store: new PgSession({
+    pool: pool,
+    tableName: 'session',
+    createTableIfMissing: true
+  }),
+  secret: process.env.SESSION_SECRET || 'sage-demo-secret-key',
   resave: false,
   saveUninitialized: false,
-  rolling: true, // Reset session timeout on each request
+  rolling: true,
   cookie: { 
-    secure: false, 
+    secure: process.env.NODE_ENV === 'production',
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     httpOnly: true
   }
