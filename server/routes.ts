@@ -334,6 +334,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Sage Admin login endpoint
+  app.post("/api/auth/sage-admin-login", async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      
+      if (!username || !password) {
+        return res.status(400).json({ message: "Username and password are required" });
+      }
+
+      // Find sage admin user by username
+      const user = await storage.getUserByUsername(username);
+      
+      if (!user || user.role !== 'sage_admin') {
+        return res.status(401).json({ message: "Invalid credentials or not a Sage Admin account" });
+      }
+
+      if (user.password !== password) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+
+      if (!user.isActive) {
+        return res.status(403).json({ message: "Account has been deactivated" });
+      }
+
+      // Set current session
+      currentSessionUserId = user.id;
+      await storage.updateUserStatus(user.id, true);
+
+      // Remove password from response
+      const { password: _, ...userWithoutPassword } = user;
+      
+      res.json({
+        user: userWithoutPassword,
+        message: "Sage Admin login successful"
+      });
+    } catch (error) {
+      console.error("Sage Admin login error:", error);
+      res.status(500).json({ message: "Login failed" });
+    }
+  });
+
+  // Sage Admin registration endpoint
+  app.post("/api/auth/sage-admin-register", async (req, res) => {
+    try {
+      const { username, email, firstName, lastName, password } = req.body;
+      
+      if (!username || !email || !firstName || !lastName || !password) {
+        return res.status(400).json({ message: "All fields are required" });
+      }
+
+      // Check if username already exists
+      const existingUser = await storage.getUserByUsername(username);
+      if (existingUser) {
+        return res.status(400).json({ message: "Username already exists" });
+      }
+
+      // Check if email already exists
+      const existingEmail = await storage.getUserByEmail(email);
+      if (existingEmail) {
+        return res.status(400).json({ message: "Email already registered" });
+      }
+
+      // Create new sage admin user
+      const newUser = await storage.createUser({
+        username,
+        email,
+        firstName,
+        lastName,
+        password,
+        role: 'sage_admin',
+        isActive: true
+      });
+
+      // Set current session
+      currentSessionUserId = newUser.id;
+
+      // Remove password from response
+      const { password: _, ...userWithoutPassword } = newUser;
+      
+      res.json({
+        user: userWithoutPassword,
+        message: "Sage Admin account created successfully"
+      });
+    } catch (error) {
+      console.error("Sage Admin registration error:", error);
+      res.status(500).json({ message: "Account creation failed" });
+    }
+  });
+
   // Demo login endpoint
   app.post("/api/auth/demo-login", async (req, res) => {
     try {

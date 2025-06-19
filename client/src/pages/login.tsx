@@ -11,6 +11,7 @@ import { GraduationCap, Users, BookOpen, Shield } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import SageLogo from "@/components/sage-logo";
+import SageAdminDialog from "@/components/sage-admin-dialog";
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -250,35 +251,19 @@ export default function Login() {
                     <span className="text-sm font-semibold text-gray-700">Sage Admin</span>
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Sage Administrator Access</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <p className="text-sm text-gray-600">
-                      Enter the Sage administrator password to access the admin interface.
-                    </p>
-                    <div className="space-y-2">
-                      <Label htmlFor="admin-password">Administrator Password</Label>
-                      <Input
-                        id="admin-password"
-                        type="password"
-                        value={demoPassword}
-                        onChange={(e) => setDemoPassword(e.target.value)}
-                        placeholder="Enter admin password"
-                        onKeyDown={(e) => e.key === "Enter" && confirmDemoLogin()}
-                      />
-                    </div>
-                    <div className="flex justify-end space-x-2">
-                      <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                        Cancel
-                      </Button>
-                      <Button onClick={confirmDemoLogin}>
-                        Access Admin
-                      </Button>
-                    </div>
-                  </div>
-                </DialogContent>
+                <SageAdminDialog 
+                  open={dialogOpen && selectedRole === "admin"} 
+                  onClose={() => setDialogOpen(false)}
+                  onSuccess={(user) => {
+                    localStorage.setItem("user", JSON.stringify(user));
+                    setLocation("/admin");
+                    toast({
+                      title: "Welcome back!",
+                      description: `Logged in as ${user.firstName} ${user.lastName}`,
+                    });
+                    setDialogOpen(false);
+                  }}
+                />
               </Dialog>
             </div>
 
