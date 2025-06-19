@@ -510,16 +510,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log('Auto-saving session:', sessionId, 'with data:', Object.keys(updateData));
       
-      // Add enhanced logging for copy-paste data
-      if (updateData.pastedContent) {
-        console.log('Copy-paste data received:', {
-          type: typeof updateData.pastedContent,
-          isArray: Array.isArray(updateData.pastedContent),
-          length: updateData.pastedContent.length || 0,
-          sample: updateData.pastedContent[0] || null
-        });
-      }
-      
       // Calculate word count if content is provided
       if (updateData.content) {
         const words = updateData.content.trim().split(/\s+/).filter((word: string) => word.length > 0);

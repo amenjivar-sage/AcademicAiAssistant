@@ -239,17 +239,7 @@ export class DatabaseStorage implements IStorage {
         return undefined;
       }
       
-      // Enhanced logging for copy-paste data
-      console.log('Session updated successfully:', session.id, 'Content length:', session.content?.length);
-      if (session.pastedContent) {
-        console.log('Pasted content details:', {
-          type: typeof session.pastedContent,
-          isArray: Array.isArray(session.pastedContent),
-          length: Array.isArray(session.pastedContent) ? session.pastedContent.length : 'not array',
-          rawValue: session.pastedContent
-        });
-      }
-      
+      console.log('Session updated successfully:', session.id, 'Content length:', session.content?.length, 'Pasted content items:', session.pastedContent?.length || 0);
       return {
         ...session,
         pastedContent: session.pastedContent || []
