@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { withRetry } from "./db-retry";
 import {
   users,
@@ -543,8 +543,42 @@ export class DatabaseStorage implements IStorage {
 
   // Inline comment operations
   async createInlineComment(commentData: InsertInlineComment): Promise<InlineComment> {
-    const [comment] = await db.insert(inlineComments).values(commentData).returning();
-    return comment;
+    console.log("DatabaseStorage: Creating inline comment with data:", commentData);
+    
+    try {
+      // Add explicit error handling and debugging
+      const [comment] = await db.insert(inlineComments).values(commentData).returning();
+      console.log("DatabaseStorage: Successfully created comment:", comment);
+      return comment;
+    } catch (error: any) {
+      console.error("DatabaseStorage: Error creating inline comment:", error);
+      console.error("Error details:", {
+        message: error.message,
+        code: error.code,
+        detail: error.detail,
+        table: error.table,
+        column: error.column
+      });
+      
+      // Try manual approach for Render deployment - use raw pool connection
+      if (error.code === '42703' && error.message.includes('teacher_id')) {
+        console.log("Attempting direct database insert as fallback...");
+        try {
+          const { pool } = await import('./db');
+          const result = await pool.query(
+            'INSERT INTO inline_comments (session_id, teacher_id, start_index, end_index, highlighted_text, comment, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW()) RETURNING *',
+            [commentData.sessionId, commentData.teacherId, commentData.startIndex, commentData.endIndex, commentData.highlightedText, commentData.comment]
+          );
+          console.log("Direct SQL insert successful:", result.rows[0]);
+          return result.rows[0] as InlineComment;
+        } catch (fallbackError) {
+          console.error("Fallback SQL also failed:", fallbackError);
+          throw fallbackError;
+        }
+      }
+      
+      throw error;
+    }
   }
 
   async getSessionInlineComments(sessionId: number): Promise<InlineComment[]> {
