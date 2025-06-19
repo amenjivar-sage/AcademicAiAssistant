@@ -3,6 +3,7 @@ import session from "express-session";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { seedDatabase } from "./seed-database";
+import { runMigrations } from "./migrate";
 
 const app = express();
 app.use(express.json({ limit: '10mb' }));
@@ -52,6 +53,9 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Initialize database tables
+  await runMigrations();
+  
   // Seed the database with initial data
   // await seedDatabase(); // Disabled to start with authentic data only
   

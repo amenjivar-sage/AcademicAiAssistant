@@ -558,9 +558,14 @@ export class DatabaseStorage implements IStorage {
   // User email lookup method
   async getUserByEmail(email: string): Promise<User | undefined> {
     console.log('Database lookup for email:', email);
-    const [user] = await db.select().from(users).where(eq(users.email, email));
-    console.log('Database result:', user ? `Found user: ${user.firstName} ${user.lastName}` : 'No user found');
-    return user;
+    try {
+      const [user] = await db.select().from(users).where(eq(users.email, email));
+      console.log('Database result:', user ? `Found user: ${user.firstName} ${user.lastName}` : 'No user found');
+      return user;
+    } catch (error) {
+      console.error('Database error in getUserByEmail:', error);
+      throw error;
+    }
   }
 
   // Student profile methods (simplified for now)
