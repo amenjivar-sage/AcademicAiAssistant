@@ -355,7 +355,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Always use Alex Chen (alex.chen) as the demo student
         demoUser = allUsers.find(user => user.username === 'alex.chen');
       } else if (role === 'admin') {
-        // Always use Dr. Patricia Williams (admin) as the demo admin
+        // Always use Dr. Patricia Williams (admin) as the Sage Admin
         demoUser = allUsers.find(user => user.username === 'admin');
       } else if (role === 'school_admin') {
         // Use Principal Anderson (school.admin) as the demo school admin
