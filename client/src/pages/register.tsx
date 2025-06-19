@@ -206,7 +206,6 @@ export default function Register() {
                     <SelectItem value="student">Student</SelectItem>
                     <SelectItem value="teacher">Teacher</SelectItem>
                     <SelectItem value="admin">Administrator</SelectItem>
-                    <SelectItem value="super_admin">Super Administrator</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
