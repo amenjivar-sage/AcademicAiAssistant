@@ -13,6 +13,7 @@ import { TeacherGoalManagement } from "@/components/teacher-goal-management";
 import StudentManagement from "@/components/student-management";
 import { PlusCircle, Users, FileText, BarChart3, MessageSquare, Target, LogOut } from "lucide-react";
 import SageLogo from "@/components/sage-logo";
+import FeedbackButton from "@/components/feedback-button";
 import type { Assignment, Classroom } from "@shared/schema";
 
 export default function TeacherDashboard() {
@@ -141,6 +142,7 @@ export default function TeacherDashboard() {
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full text-xs"></div>
                 </Button>
               </MessagingSystem>
+              <FeedbackButton />
               <AssignmentForm teacherId={currentUser?.id || 1}>
                 <Button className="bg-edu-blue hover:bg-blue-700">
                   <PlusCircle className="h-4 w-4 mr-2" />
