@@ -1,5 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
+import connectPgSimple from "connect-pg-simple";
+import { pool } from "./db";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { seedDatabase } from "./seed-database";
@@ -9,8 +11,15 @@ const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 
-// Add session middleware
+// Database-backed session store for production multi-user support
+const PgSession = connectPgSimple(session);
+
 app.use(session({
+  store: new PgSession({
+    pool: pool,
+    tableName: 'user_sessions',
+    createTableIfMissing: true,
+  }),
   secret: process.env.SESSION_SECRET || 'sage-demo-secret-key',
   resave: false,
   saveUninitialized: false,
@@ -18,7 +27,8 @@ app.use(session({
   cookie: { 
     secure: process.env.NODE_ENV === 'production',
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    httpOnly: true
+    httpOnly: true,
+    sameSite: 'lax'
   }
 }));
 
@@ -87,6 +97,6 @@ app.use((req, res, next) => {
     host: "0.0.0.0",
     reusePort: true,
   }, () => {
-    log(`serving on port ${port} - inline comments schema fix v3 deployed`);
+    log(`serving on port ${port} - multi-user session fix v4 deployed`);
   });
 })();

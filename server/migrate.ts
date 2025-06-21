@@ -154,6 +154,19 @@ export async function runMigrations() {
       );
     `);
 
+    // Create session table for multi-user support
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS user_sessions (
+        sid VARCHAR NOT NULL COLLATE "default" PRIMARY KEY,
+        sess JSON NOT NULL,
+        expire TIMESTAMP(6) NOT NULL
+      ) WITH (OIDS=FALSE);
+    `);
+    
+    await db.execute(sql`
+      CREATE INDEX IF NOT EXISTS IDX_session_expire ON user_sessions(expire);
+    `);
+
     console.log('Database migrations completed successfully');
   } catch (error) {
     console.error('Migration failed:', error);
