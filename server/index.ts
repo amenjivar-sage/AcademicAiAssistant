@@ -105,6 +105,6 @@ app.use((req, res, next) => {
     host: "0.0.0.0",
     reusePort: true,
   }, () => {
-    log(`serving on port ${port} - session debug fix v6 deployed`);
+    log(`serving on port ${port} - production auth fix v7 deployed`);
   });
 })();
