@@ -14,18 +14,26 @@ app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 // Database-backed session store for production multi-user support
 const PgSession = connectPgSimple(session);
 
+const sessionStore = new PgSession({
+  pool: pool,
+  tableName: 'user_sessions',
+  createTableIfMissing: true,
+});
+
+// Add session store error handling
+sessionStore.on('error', (error) => {
+  console.error('Session store error:', error);
+});
+
 app.use(session({
-  store: new PgSession({
-    pool: pool,
-    tableName: 'user_sessions',
-    createTableIfMissing: true,
-  }),
+  store: sessionStore,
   secret: process.env.SESSION_SECRET || 'sage-demo-secret-key',
   resave: false,
-  saveUninitialized: false,
+  saveUninitialized: true,  // Changed to true for better session handling
   rolling: true,
+  name: 'sage-session',  // Custom session name
   cookie: { 
-    secure: process.env.NODE_ENV === 'production',
+    secure: false, // Disable secure for now to troubleshoot
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     httpOnly: true,
     sameSite: 'lax'
@@ -97,6 +105,6 @@ app.use((req, res, next) => {
     host: "0.0.0.0",
     reusePort: true,
   }, () => {
-    log(`serving on port ${port} - session isolation fix v5 deployed`);
+    log(`serving on port ${port} - session debug fix v6 deployed`);
   });
 })();

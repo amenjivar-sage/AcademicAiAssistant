@@ -185,6 +185,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Store user ID in session for this specific browser session
       (req.session as any).userId = user.id;
       
+      // Force session save
+      req.session.save((err) => {
+        if (err) {
+          console.error("Login session save error:", err);
+        } else {
+          console.log("Login session saved successfully");
+        }
+      });
+      
+      console.log("Session after login:", {
+        sessionID: req.sessionID,
+        userId: (req.session as any).userId,
+        session: req.session
+      });
+      
       // Update user's timestamp to mark as current session
       await storage.updateUserStatus(user.id, true);
       
@@ -208,6 +223,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   const getCurrentUser = async (req: any): Promise<any> => {
     try {
+      console.log("Session debug:", {
+        sessionID: req.sessionID,
+        session: req.session,
+        cookies: req.headers.cookie
+      });
+      
       const sessionUserId = (req.session as any).userId;
       console.log("Getting current user, sessionUserId:", sessionUserId);
       
@@ -230,6 +251,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/init-session", async (req, res) => {
     try {
       console.log("Initializing session for deployment environment");
+      console.log("Request session before init:", req.session);
       
       // Check if we already have a valid session
       const sessionUserId = (req.session as any).userId;
@@ -248,7 +270,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (teacher) {
         (req.session as any).userId = teacher.id;
+        
+        // Force session save
+        req.session.save((err) => {
+          if (err) {
+            console.error("Session save error:", err);
+          } else {
+            console.log("Session saved successfully");
+          }
+        });
+        
         console.log("Session initialized with teacher:", teacher.firstName, teacher.lastName);
+        console.log("Session after init:", req.session);
         const { password: _, ...userWithoutPassword } = teacher;
         res.json({ user: userWithoutPassword, message: "Session initialized" });
       } else {

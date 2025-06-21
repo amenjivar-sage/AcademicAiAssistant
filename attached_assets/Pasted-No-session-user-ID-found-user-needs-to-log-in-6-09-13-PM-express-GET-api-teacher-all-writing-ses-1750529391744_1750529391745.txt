@@ -1,0 +1,1081 @@
+No session user ID found, user needs to log in
+6:09:13 PM [express] GET /api/teacher/all-writing-sessions 401 in 1ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:13 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:13 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:13 PM [express] GET /api/teacher/all-writing-sessions 401 in 1ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:13 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:13 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:13 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:13 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:13 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:13 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:13 PM [express] GET /api/teacher/all-writing-sessions 401 in 1ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:13 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:13 PM [express] GET /api/teacher/classrooms 401 in 1ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:13 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:13 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:13 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:13 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:13 PM [express] GET /api/teacher/all-writing-sessions 401 in 1ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:13 PM [express] GET /api/teacher/classrooms 401 in 1ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:13 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:13 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:13 PM [express] GET /api/teacher/all-writing-sessions 401 in 1ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:13 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:13 PM [express] GET /api/teacher/classrooms 401 in 1ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:14 PM [express] GET /api/classrooms/students-count 403 in 1ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:14 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:14 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:14 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:14 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:14 PM [express] GET /api/classrooms/students-count 403 in 19ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:14 PM [express] GET /api/teacher/all-writing-sessions 401 in 1ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:14 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:14 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:14 PM [express] GET /api/teacher/classrooms 401 in 1ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:14 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:14 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:14 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:14 PM [express] GET /api/classrooms/students-count 403 in 1ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:14 PM [express] GET /api/teacher/classrooms 401 in 1ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:14 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:14 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:14 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:14 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:14 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:14 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:14 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:14 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:14 PM [express] GET /api/classrooms/students-count 403 in 1ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:14 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:14 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:14 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:14 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:14 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:14 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:14 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:14 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:14 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:14 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:14 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:14 PM [express] GET /api/classrooms/students-count 403 in 1ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:14 PM [express] GET /api/teacher/classrooms 401 in 1ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:15 PM [express] GET /api/classrooms/students-count 403 in 1ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:15 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:15 PM [express] GET /api/teacher/all-writing-sessions 401 in 1ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:15 PM [express] GET /api/classrooms/students-count 403 in 1ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:15 PM [express] GET /api/teacher/classrooms 401 in 1ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:15 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:15 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:15 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:15 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:15 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:15 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:15 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:15 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:15 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:15 PM [express] GET /api/classrooms/students-count 403 in 1ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:15 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:15 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:15 PM [express] GET /api/classrooms/students-count 403 in 1ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:15 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:15 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:15 PM [express] GET /api/classrooms/students-count 403 in 1ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:15 PM [express] GET /api/teacher/all-writing-sessions 401 in 1ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:15 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:15 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:15 PM [express] GET /api/teacher/all-writing-sessions 401 in 1ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:15 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:15 PM [express] GET /api/teacher/classrooms 401 in 1ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:15 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:15 PM [express] GET /api/teacher/all-writing-sessions 401 in 1ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:15 PM [express] GET /api/teacher/classrooms 401 in 1ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:15 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:15 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:15 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:15 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:15 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:15 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:15 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:15 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:15 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:15 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:15 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:16 PM [express] GET /api/teacher/classrooms 401 in 1ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:16 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:16 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:16 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:16 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:16 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:16 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:16 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:16 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:16 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:16 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:16 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:16 PM [express] GET /api/classrooms/students-count 403 in 1ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:16 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:16 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:16 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:16 PM [express] GET /api/teacher/all-writing-sessions 401 in 1ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:16 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:16 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:16 PM [express] GET /api/classrooms/students-count 403 in 1ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:16 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:16 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:16 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:16 PM [express] GET /api/classrooms/students-count 403 in 1ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:16 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:16 PM [express] GET /api/classrooms/students-count 403 in 1ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:16 PM [express] GET /api/teacher/all-writing-sessions 401 in 1ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:16 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:16 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:16 PM [express] GET /api/classrooms/students-count 403 in 1ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:16 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:16 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:16 PM [express] GET /api/teacher/classrooms 401 in 1ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:16 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:16 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:16 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:16 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:16 PM [express] GET /api/teacher/classrooms 401 in 1ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:17 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:17 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:17 PM [express] GET /api/teacher/all-writing-sessions 401 in 1ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:17 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:17 PM [express] GET /api/teacher/classrooms 401 in 1ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:17 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:17 PM [express] GET /api/teacher/all-writing-sessions 401 in 1ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:17 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:17 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:17 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:17 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:17 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:17 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:17 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:17 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:17 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:17 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:17 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:17 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:17 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:17 PM [express] GET /api/teacher/all-writing-sessions 401 in 1ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:17 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:17 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:17 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:17 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:17 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:17 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:17 PM [express] GET /api/classrooms/students-count 403 in 1ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:17 PM [express] GET /api/teacher/all-writing-sessions 401 in 1ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:17 PM [express] GET /api/classrooms/students-count 403 in 1ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:17 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:17 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:17 PM [express] GET /api/teacher/all-writing-sessions 401 in 1ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:17 PM [express] GET /api/classrooms/students-count 403 in 1ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:17 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:18 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:18 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:18 PM [express] GET /api/classrooms/students-count 403 in 1ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:18 PM [express] GET /api/teacher/all-writing-sessions 401 in 1ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:18 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:18 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:18 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:18 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:18 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:18 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:18 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:18 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:18 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:18 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:18 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:18 PM [express] GET /api/classrooms/students-count 403 in 1ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:18 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:18 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:18 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:18 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:18 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:18 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:18 PM [express] GET /api/teacher/all-writing-sessions 401 in 1ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:18 PM [express] GET /api/classrooms/students-count 403 in 1ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:18 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:18 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:18 PM [express] GET /api/classrooms/students-count 403 in 1ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:18 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:18 PM [express] GET /api/teacher/all-writing-sessions 401 in 1ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:18 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:18 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:18 PM [express] GET /api/teacher/classrooms 401 in 1ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:18 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:18 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:18 PM [express] GET /api/teacher/classrooms 401 in 1ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:18 PM [express] GET /api/classrooms/students-count 403 in 1ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:18 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:19 PM [express] GET /api/classrooms/students-count 403 in 1ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:19 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:19 PM [express] GET /api/teacher/all-writing-sessions 401 in 1ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:19 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:19 PM [express] GET /api/teacher/all-writing-sessions 401 in 1ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:19 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:19 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:19 PM [express] GET /api/classrooms/students-count 403 in 1ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:19 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:19 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:19 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:19 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:19 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:19 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:19 PM [express] GET /api/classrooms/students-count 403 in 1ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:19 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:19 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:19 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:19 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:19 PM [express] GET /api/teacher/all-writing-sessions 401 in 1ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:19 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:19 PM [express] GET /api/classrooms/students-count 403 in 1ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:19 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:19 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:19 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:19 PM [express] GET /api/teacher/all-writing-sessions 401 in 1ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:19 PM [express] GET /api/teacher/classrooms 401 in 1ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:19 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:19 PM [express] GET /api/classrooms/students-count 403 in 1ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:19 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:19 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:19 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:19 PM [express] GET /api/classrooms/students-count 403 in 1ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:19 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:19 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:19 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:19 PM [express] GET /api/classrooms/students-count 403 in 1ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:19 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:19 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:19 PM [express] GET /api/teacher/all-writing-sessions 401 in 1ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:19 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:19 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:19 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:20 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:20 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:20 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:20 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:20 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:20 PM [express] GET /api/classrooms/students-count 403 in 1ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:20 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:20 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:20 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:20 PM [express] GET /api/teacher/classrooms 401 in 1ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:20 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:20 PM [express] GET /api/teacher/all-writing-sessions 401 in 1ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:20 PM [express] GET /api/classrooms/students-count 403 in 1ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:20 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:20 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:20 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:20 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:20 PM [express] GET /api/teacher/all-writing-sessions 401 in 1ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:20 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:20 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:20 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:20 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:20 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:20 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:20 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:20 PM [express] GET /api/teacher/classrooms 401 in 1ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:20 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:20 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:20 PM [express] GET /api/teacher/classrooms 401 in 1ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:20 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:20 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:20 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:20 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:20 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:20 PM [express] GET /api/teacher/all-writing-sessions 401 in 1ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:20 PM [express] GET /api/classrooms/students-count 403 in 1ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:20 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:20 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:21 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:21 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:21 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:21 PM [express] GET /api/teacher/classrooms 401 in 1ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:21 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:21 PM [express] GET /api/classrooms/students-count 403 in 1ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:21 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:21 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:21 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:21 PM [express] GET /api/classrooms/students-count 403 in 1ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:21 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:21 PM [express] GET /api/teacher/classrooms 401 in 1ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:21 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:21 PM [express] GET /api/teacher/all-writing-sessions 401 in 1ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:21 PM [express] GET /api/teacher/classrooms 401 in 1ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:21 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:21 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:21 PM [express] GET /api/classrooms/students-count 403 in 1ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:21 PM [express] GET /api/teacher/all-writing-sessions 401 in 1ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:21 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:21 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:21 PM [express] GET /api/teacher/all-writing-sessions 401 in 1ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:21 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:21 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:21 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:21 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:21 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:21 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:21 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:21 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:21 PM [express] GET /api/classrooms/students-count 403 in 1ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:21 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:21 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:21 PM [express] GET /api/classrooms/students-count 403 in 1ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:21 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:21 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:21 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:21 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:21 PM [express] GET /api/teacher/classrooms 401 in 1ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:22 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:22 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:22 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:22 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:22 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:22 PM [express] GET /api/classrooms/students-count 403 in 1ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:22 PM [express] GET /api/teacher/all-writing-sessions 401 in 1ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:22 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:22 PM [express] GET /api/teacher/classrooms 401 in 1ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:22 PM [express] GET /api/teacher/all-writing-sessions 401 in 0ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:22 PM [express] GET /api/teacher/assignments 401 in 1ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:22 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:22 PM [express] GET /api/teacher/all-writing-sessions 401 in 1ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:22 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:22 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:22 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:22 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:22 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:22 PM [express] GET /api/teacher/classrooms 401 in 0ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:22 PM [express] GET /api/teacher/all-writing-sessions 401 in 1ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:22 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:22 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:22 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:22 PM [express] GET /api/teacher/classrooms 401 in 1ms :: {"message":"Teacher authentication re…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:22 PM [express] GET /api/teacher/all-writing-sessions 401 in 1ms :: {"message":"Teacher authent…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:22 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:22 PM [express] GET /api/classrooms/students-count 403 in 0ms :: {"message":"Access denied"}
+Getting current user, sessionUserId: undefined
+No session user ID found, user needs to log in
+6:09:22 PM [express] GET /api/teacher/assignments 401 in 0ms :: {"message":"Teacher authentication r…
+Getting current user, sessionUserId: undefined
+Need better ways to work with logs? Try theRend
