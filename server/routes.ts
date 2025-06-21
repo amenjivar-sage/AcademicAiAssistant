@@ -233,20 +233,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Getting current user, sessionUserId:", sessionUserId);
       
       if (!sessionUserId) {
-        console.log("No session user ID found");
-        
-        // Production fallback for demonstration purposes
-        if (process.env.NODE_ENV === 'production') {
-          console.log("Production mode: Using fallback authentication");
-          const allUsers = await storage.getAllUsers();
-          const teacher = allUsers.find(u => u.role === 'teacher' && u.isActive);
-          if (teacher) {
-            console.log("Fallback to teacher:", teacher.firstName, teacher.lastName);
-            return teacher;
-          }
-        }
-        
-        console.log("User needs to log in");
+        console.log("No session user ID found, user needs to log in");
         return null;
       }
       

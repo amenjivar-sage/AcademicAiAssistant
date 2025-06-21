@@ -18,6 +18,8 @@ const sessionStore = new PgSession({
   pool: pool,
   tableName: 'user_sessions',
   createTableIfMissing: true,
+  ttl: 7 * 24 * 60 * 60, // 7 days in seconds
+  disableTouch: false
 });
 
 // Add session store error handling
@@ -27,16 +29,17 @@ sessionStore.on('error', (error) => {
 
 app.use(session({
   store: sessionStore,
-  secret: process.env.SESSION_SECRET || 'sage-demo-secret-key',
-  resave: false,
-  saveUninitialized: true,  // Changed to true for better session handling
+  secret: process.env.SESSION_SECRET || 'sage-demo-secret-key-2025',
+  resave: true,  // Force session resaving
+  saveUninitialized: true,
   rolling: true,
-  name: 'sage-session',  // Custom session name
+  name: 'sage-session',
   cookie: { 
-    secure: false, // Disable secure for now to troubleshoot
+    secure: false,
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     httpOnly: true,
-    sameSite: 'lax'
+    sameSite: 'lax',
+    domain: undefined // Let it auto-detect
   }
 }));
 
@@ -105,6 +108,6 @@ app.use((req, res, next) => {
     host: "0.0.0.0",
     reusePort: true,
   }, () => {
-    log(`serving on port ${port} - production auth fix v7 deployed`);
+    log(`serving on port ${port} - session store fix v8 deployed`);
   });
 })();
