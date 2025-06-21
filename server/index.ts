@@ -97,6 +97,6 @@ app.use((req, res, next) => {
     host: "0.0.0.0",
     reusePort: true,
   }, () => {
-    log(`serving on port ${port} - multi-user session fix v4 deployed`);
+    log(`serving on port ${port} - session isolation fix v5 deployed`);
   });
 })();

@@ -263,7 +263,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get current authenticated user endpoint  
   app.get("/api/auth/user", async (req, res) => {
     try {
-      const currentUser = await getCurrentUser();
+      const currentUser = await getCurrentUser(req);
       console.log("Auth check - current user:", currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : "null");
       
       if (!currentUser) {
@@ -283,7 +283,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/logout", async (req, res) => {
     try {
       // Clear session data
-      currentSessionUserId = null;
+      (req.session as any).userId = null;
       res.json({ message: "Logged out successfully" });
     } catch (error) {
       console.error("Error during logout:", error);
@@ -478,7 +478,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update writing session content with proper auto-save
   app.patch("/api/writing-sessions/:id", async (req, res) => {
     try {
-      const currentUser = await getCurrentUser();
+      const currentUser = await getCurrentUser(req);
       if (!currentUser) {
         return res.status(401).json({ message: "Authentication required" });
       }
@@ -548,7 +548,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/writing-sessions/:sessionId/submit", async (req, res) => {
     try {
       const sessionId = parseInt(req.params.sessionId);
-      const currentUser = await getCurrentUser();
+      const currentUser = await getCurrentUser(req);
       
       if (!currentUser) {
         return res.status(401).json({ message: "Authentication required" });
@@ -582,7 +582,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create new writing session
   app.post("/api/writing-sessions", async (req, res) => {
     try {
-      const currentUser = await getCurrentUser();
+      const currentUser = await getCurrentUser(req);
       if (!currentUser) {
         return res.status(401).json({ message: "Authentication required" });
       }
@@ -676,7 +676,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get teacher assignments (alternative endpoint used by frontend)
   app.get("/api/teacher/assignments", async (req, res) => {
     try {
-      const currentUser = await getCurrentUser();
+      const currentUser = await getCurrentUser(req);
       if (!currentUser || currentUser.role !== 'teacher') {
         return res.status(401).json({ message: "Teacher authentication required" });
       }
@@ -694,7 +694,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all writing sessions for teacher (for pending grading and submission calculation)
   app.get("/api/teacher/all-writing-sessions", async (req, res) => {
     try {
-      const currentUser = await getCurrentUser();
+      const currentUser = await getCurrentUser(req);
       if (!currentUser || currentUser.role !== 'teacher') {
         return res.status(401).json({ message: "Teacher authentication required" });
       }
@@ -735,7 +735,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get teacher classrooms (endpoint used by frontend)
   app.get("/api/teacher/classrooms", async (req, res) => {
     try {
-      const currentUser = await getCurrentUser();
+      const currentUser = await getCurrentUser(req);
       if (!currentUser || currentUser.role !== 'teacher') {
         return res.status(401).json({ message: "Teacher authentication required" });
       }
@@ -751,7 +751,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get student's classes
   app.get("/api/student/classes", async (req, res) => {
     try {
-      const currentUser = await getCurrentUser();
+      const currentUser = await getCurrentUser(req);
       if (!currentUser || currentUser.role !== 'student') {
         return res.status(401).json({ message: "Student authentication required" });
       }
@@ -767,7 +767,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get student's assignments
   app.get("/api/student/assignments", async (req, res) => {
     try {
-      const currentUser = await getCurrentUser();
+      const currentUser = await getCurrentUser(req);
       if (!currentUser || currentUser.role !== 'student') {
         return res.status(401).json({ message: "Student authentication required" });
       }
@@ -842,7 +842,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get student's writing sessions
   app.get("/api/student/writing-sessions", async (req, res) => {
     try {
-      const currentUser = await getCurrentUser();
+      const currentUser = await getCurrentUser(req);
       if (!currentUser || currentUser.role !== 'student') {
         return res.status(401).json({ message: "Student authentication required" });
       }
@@ -900,7 +900,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("Classroom creation request body:", req.body);
       
-      const currentUser = await getCurrentUser();
+      const currentUser = await getCurrentUser(req);
       console.log("Current user for classroom creation:", currentUser);
       
       if (!currentUser || currentUser.role !== 'teacher') {
@@ -932,7 +932,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("Assignment creation request body:", req.body);
       
-      const currentUser = await getCurrentUser();
+      const currentUser = await getCurrentUser(req);
       console.log("Current user for assignment creation:", currentUser);
       
       if (!currentUser || currentUser.role !== 'teacher') {
@@ -1022,7 +1022,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get classroom students
   app.get("/api/classrooms/:id/students", async (req, res) => {
     try {
-      const currentUser = await getCurrentUser();
+      const currentUser = await getCurrentUser(req);
       if (!currentUser) {
         return res.status(401).json({ message: "Authentication required" });
       }
@@ -1226,7 +1226,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Student analytics endpoint for bulk management
   app.get("/api/admin/student-analytics", async (req, res) => {
     try {
-      const currentUser = await getCurrentUser();
+      const currentUser = await getCurrentUser(req);
       if (!currentUser || currentUser.role !== 'admin') {
         return res.status(403).json({ message: "Admin access required" });
       }
@@ -1308,7 +1308,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Export student analytics (CSV)
   app.get("/api/admin/export-student-analytics", async (req, res) => {
     try {
-      const currentUser = await getCurrentUser();
+      const currentUser = await getCurrentUser(req);
       if (!currentUser || currentUser.role !== 'admin') {
         return res.status(403).json({ message: "Admin access required" });
       }
@@ -1366,7 +1366,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Export student analytics (Excel)
   app.get("/api/admin/export-student-analytics-excel", async (req, res) => {
     try {
-      const currentUser = await getCurrentUser();
+      const currentUser = await getCurrentUser(req);
       if (!currentUser || currentUser.role !== 'admin') {
         return res.status(403).json({ message: "Admin access required" });
       }
@@ -1443,7 +1443,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Import student analytics
   app.post("/api/admin/import-student-analytics", async (req, res) => {
     try {
-      const currentUser = await getCurrentUser();
+      const currentUser = await getCurrentUser(req);
       if (!currentUser || currentUser.role !== 'admin') {
         return res.status(403).json({ message: "Admin access required" });
       }
@@ -1827,7 +1827,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get student counts for all classrooms
   app.get("/api/classrooms/students-count", async (req, res) => {
     try {
-      const currentUser = await getCurrentUser();
+      const currentUser = await getCurrentUser(req);
       if (!currentUser || currentUser.role !== 'teacher') {
         return res.status(403).json({ message: "Access denied" });
       }
@@ -1861,7 +1861,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Request body:", JSON.stringify(req.body, null, 2));
       console.log("Session ID from params:", req.params.sessionId);
       
-      const currentUser = await getCurrentUser();
+      const currentUser = await getCurrentUser(req);
       console.log("Current user:", currentUser ? `${currentUser.firstName} ${currentUser.lastName} (${currentUser.role})` : "null");
       
       if (!currentUser) {
@@ -1937,7 +1937,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/sessions/:sessionId/comments", async (req, res) => {
     try {
-      const currentUser = await getCurrentUser();
+      const currentUser = await getCurrentUser(req);
       if (!currentUser) {
         return res.status(401).json({ error: "Authentication required" });
       }
@@ -1977,7 +1977,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Delete inline comment
   app.delete("/api/sessions/:sessionId/comments/:commentId", async (req, res) => {
     try {
-      const currentUser = await getCurrentUser();
+      const currentUser = await getCurrentUser(req);
       if (!currentUser) {
         return res.status(401).json({ error: "Authentication required" });
       }
@@ -2004,7 +2004,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // School Admin API endpoints - comprehensive oversight
   app.get("/api/admin/users", async (req, res) => {
     try {
-      const currentUser = await getCurrentUser();
+      const currentUser = await getCurrentUser(req);
       if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'school_admin')) {
         return res.status(403).json({ message: "Admin access required" });
       }
@@ -2019,7 +2019,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/admin/assignments", async (req, res) => {
     try {
-      const currentUser = await getCurrentUser();
+      const currentUser = await getCurrentUser(req);
       if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'school_admin')) {
         return res.status(403).json({ message: "Admin access required" });
       }
@@ -2042,7 +2042,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/admin/writing-sessions", async (req, res) => {
     try {
-      const currentUser = await getCurrentUser();
+      const currentUser = await getCurrentUser(req);
       if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'school_admin')) {
         return res.status(403).json({ message: "Admin access required" });
       }
@@ -2065,7 +2065,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/admin/classrooms", async (req, res) => {
     try {
-      const currentUser = await getCurrentUser();
+      const currentUser = await getCurrentUser(req);
       if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'school_admin')) {
         return res.status(403).json({ message: "Admin access required" });
       }
@@ -2081,7 +2081,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update classroom (archive/reactivate)
   app.patch("/api/classrooms/:id", async (req, res) => {
     try {
-      const currentUser = await getCurrentUser();
+      const currentUser = await getCurrentUser(req);
       if (!currentUser) {
         return res.status(401).json({ message: "Authentication required" });
       }
@@ -2117,7 +2117,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Individual writing session details for submission viewer
   app.get("/api/writing-sessions/:sessionId", async (req, res) => {
     try {
-      const currentUser = await getCurrentUser();
+      const currentUser = await getCurrentUser(req);
       if (!currentUser) {
         return res.status(401).json({ message: "Authentication required" });
       }
@@ -2154,7 +2154,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // AI interactions for a specific session
   app.get("/api/session/:sessionId/interactions", async (req, res) => {
     try {
-      const currentUser = await getCurrentUser();
+      const currentUser = await getCurrentUser(req);
       if (!currentUser) {
         return res.status(401).json({ message: "Authentication required" });
       }
@@ -2192,7 +2192,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Individual user details
   app.get("/api/users/:userId", async (req, res) => {
     try {
-      const currentUser = await getCurrentUser();
+      const currentUser = await getCurrentUser(req);
       if (!currentUser) {
         return res.status(401).json({ message: "Authentication required" });
       }
@@ -2220,7 +2220,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Individual assignment details
   app.get("/api/assignments/:assignmentId", async (req, res) => {
     try {
-      const currentUser = await getCurrentUser();
+      const currentUser = await getCurrentUser(req);
       if (!currentUser) {
         return res.status(401).json({ message: "Authentication required" });
       }
@@ -2251,7 +2251,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Feedback routes
   app.post("/api/feedback", async (req, res) => {
     try {
-      const currentUser = await getCurrentUser();
+      const currentUser = await getCurrentUser(req);
       if (!currentUser) {
         return res.status(401).json({ message: "Authentication required" });
       }
@@ -2273,7 +2273,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/feedback", async (req, res) => {
     try {
-      const currentUser = await getCurrentUser();
+      const currentUser = await getCurrentUser(req);
       if (!currentUser) {
         return res.status(401).json({ message: "Authentication required" });
       }
@@ -2296,7 +2296,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/feedback/:id", async (req, res) => {
     try {
-      const currentUser = await getCurrentUser();
+      const currentUser = await getCurrentUser(req);
       if (!currentUser) {
         return res.status(401).json({ message: "Authentication required" });
       }
@@ -2322,7 +2322,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/feedback/:id", async (req, res) => {
     try {
-      const currentUser = await getCurrentUser();
+      const currentUser = await getCurrentUser(req);
       if (!currentUser || currentUser.role !== 'admin') {
         return res.status(403).json({ message: "Admin access required" });
       }
@@ -2348,7 +2348,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/admin/feedback-stats", async (req, res) => {
     try {
-      const currentUser = await getCurrentUser();
+      const currentUser = await getCurrentUser(req);
       if (!currentUser || currentUser.role !== 'admin') {
         return res.status(403).json({ message: "Admin access required" });
       }
@@ -2403,7 +2403,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Comprehensive diagnostic endpoint for authentication and database
   app.get('/api/diagnostic/system', async (req, res) => {
     try {
-      const currentUser = await getCurrentUser();
+      const currentUser = await getCurrentUser(req);
       const userCount = await storage.getAllUsers().then(users => users.length);
       const sessionCount = await storage.getUserWritingSessions(1).then(sessions => sessions.length).catch(() => 0);
       
