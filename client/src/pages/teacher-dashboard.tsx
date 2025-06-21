@@ -14,6 +14,7 @@ import StudentManagement from "@/components/student-management";
 import { PlusCircle, Users, FileText, BarChart3, MessageSquare, Target, LogOut } from "lucide-react";
 import SageLogo from "@/components/sage-logo";
 import FeedbackButton from "@/components/feedback-button";
+import RoleRedirect from "@/components/role-redirect";
 import type { Assignment, Classroom } from "@shared/schema";
 
 export default function TeacherDashboard() {

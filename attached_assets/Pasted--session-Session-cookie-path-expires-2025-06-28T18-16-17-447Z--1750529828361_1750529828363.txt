@@ -1,0 +1,1312 @@
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:17.447Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Retrieved user from storage: Alexander Menjivar (student)
+6:16:17 PM [express] GET /api/teacher/classrooms 401 in 68ms :: {"message":"Teacher authentication r…
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:17.858Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:17.858Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Retrieved user from storage: Alexander Menjivar (student)
+Retrieved user from storage: Alexander Menjivar (student)
+6:16:18 PM [express] GET /api/teacher/assignments 401 in 196ms :: {"message":"Teacher authentication…
+6:16:18 PM [express] GET /api/teacher/all-writing-sessions 401 in 198ms :: {"message":"Teacher authe…
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:18.145Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:18.145Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:18.145Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Retrieved user from storage: Alexander Menjivar (student)
+Retrieved user from storage: Alexander Menjivar (student)
+Retrieved user from storage: Alexander Menjivar (student)
+6:16:18 PM [express] GET /api/teacher/all-writing-sessions 401 in 65ms :: {"message":"Teacher authen…
+6:16:18 PM [express] GET /api/classrooms/students-count 403 in 67ms :: {"message":"Access denied"}
+6:16:18 PM [express] GET /api/teacher/assignments 401 in 62ms :: {"message":"Teacher authentication …
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:18.407Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:18.407Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Retrieved user from storage: Alexander Menjivar (student)
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:18.407Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Retrieved user from storage: Alexander Menjivar (student)
+6:16:18 PM [express] GET /api/teacher/classrooms 401 in 66ms :: {"message":"Teacher authentication r…
+6:16:18 PM [express] GET /api/classrooms/students-count 403 in 55ms :: {"message":"Access denied"}
+Retrieved user from storage: Alexander Menjivar (student)
+6:16:18 PM [express] GET /api/teacher/assignments 401 in 68ms :: {"message":"Teacher authentication …
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:18.685Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:18.685Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:18.685Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:18.685Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Retrieved user from storage: Alexander Menjivar (student)
+Retrieved user from storage: Alexander Menjivar (student)
+Retrieved user from storage: Alexander Menjivar (student)
+Retrieved user from storage: Alexander Menjivar (student)
+6:16:18 PM [express] GET /api/teacher/classrooms 401 in 65ms :: {"message":"Teacher authentication r…
+6:16:18 PM [express] GET /api/classrooms/students-count 403 in 73ms :: {"message":"Access denied"}
+6:16:18 PM [express] GET /api/teacher/all-writing-sessions 401 in 66ms :: {"message":"Teacher authen…
+6:16:18 PM [express] GET /api/teacher/assignments 401 in 84ms :: {"message":"Teacher authentication …
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:18.864Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:18.864Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:18.864Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:18.864Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Retrieved user from storage: Alexander Menjivar (student)
+Retrieved user from storage: Alexander Menjivar (student)
+Retrieved user from storage: Alexander Menjivar (student)
+Retrieved user from storage: Alexander Menjivar (student)
+6:16:19 PM [express] GET /api/classrooms/students-count 403 in 54ms :: {"message":"Access denied"}
+6:16:19 PM [express] GET /api/teacher/assignments 401 in 65ms :: {"message":"Teacher authentication …
+6:16:19 PM [express] GET /api/teacher/classrooms 401 in 66ms :: {"message":"Teacher authentication r…
+6:16:19 PM [express] GET /api/teacher/all-writing-sessions 401 in 67ms :: {"message":"Teacher authen…
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:19.020Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:19.020Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Retrieved user from storage: Alexander Menjivar (student)
+Retrieved user from storage: Alexander Menjivar (student)
+6:16:19 PM [express] GET /api/teacher/assignments 401 in 69ms :: {"message":"Teacher authentication …
+6:16:19 PM [express] GET /api/classrooms/students-count 403 in 68ms :: {"message":"Access denied"}
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:19.195Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:19.195Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:19.195Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Retrieved user from storage: Alexander Menjivar (student)
+Retrieved user from storage: Alexander Menjivar (student)
+Retrieved user from storage: Alexander Menjivar (student)
+6:16:19 PM [express] GET /api/teacher/classrooms 401 in 68ms :: {"message":"Teacher authentication r…
+6:16:19 PM [express] GET /api/teacher/assignments 401 in 68ms :: {"message":"Teacher authentication …
+6:16:19 PM [express] GET /api/teacher/all-writing-sessions 401 in 65ms :: {"message":"Teacher authen…
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:19.371Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:19.371Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:19.371Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:19.371Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Retrieved user from storage: Alexander Menjivar (student)
+Retrieved user from storage: Alexander Menjivar (student)
+Retrieved user from storage: Alexander Menjivar (student)
+Retrieved user from storage: Alexander Menjivar (student)
+6:16:19 PM [express] GET /api/teacher/assignments 401 in 56ms :: {"message":"Teacher authentication …
+6:16:19 PM [express] GET /api/teacher/classrooms 401 in 67ms :: {"message":"Teacher authentication r…
+6:16:19 PM [express] GET /api/teacher/all-writing-sessions 401 in 67ms :: {"message":"Teacher authen…
+6:16:19 PM [express] GET /api/classrooms/students-count 403 in 67ms :: {"message":"Access denied"}
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:19.547Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Retrieved user from storage: Alexander Menjivar (student)
+6:16:19 PM [express] GET /api/teacher/assignments 401 in 191ms :: {"message":"Teacher authentication…
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:19.760Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:19.760Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:19.760Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:19.760Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Retrieved user from storage: Alexander Menjivar (student)
+Retrieved user from storage: Alexander Menjivar (student)
+Retrieved user from storage: Alexander Menjivar (student)
+Retrieved user from storage: Alexander Menjivar (student)
+6:16:20 PM [express] GET /api/teacher/assignments 401 in 252ms :: {"message":"Teacher authentication…
+6:16:20 PM [express] GET /api/classrooms/students-count 403 in 248ms :: {"message":"Access denied"}
+6:16:20 PM [express] GET /api/teacher/all-writing-sessions 401 in 252ms :: {"message":"Teacher authe…
+6:16:20 PM [express] GET /api/teacher/classrooms 401 in 250ms :: {"message":"Teacher authentication …
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:20.074Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:20.074Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:20.074Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Retrieved user from storage: Alexander Menjivar (student)
+Retrieved user from storage: Alexander Menjivar (student)
+6:16:20 PM [express] GET /api/teacher/all-writing-sessions 401 in 102ms :: {"message":"Teacher authe…
+Retrieved user from storage: Alexander Menjivar (student)
+6:16:20 PM [express] GET /api/teacher/assignments 401 in 133ms :: {"message":"Teacher authentication…
+6:16:20 PM [express] GET /api/teacher/classrooms 401 in 135ms :: {"message":"Teacher authentication …
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:20.478Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Retrieved user from storage: Alexander Menjivar (student)
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:20.478Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:20.478Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Retrieved user from storage: Alexander Menjivar (student)
+Retrieved user from storage: Alexander Menjivar (student)
+6:16:20 PM [express] GET /api/classrooms/students-count 403 in 162ms :: {"message":"Access denied"}
+6:16:20 PM [express] GET /api/teacher/all-writing-sessions 401 in 137ms :: {"message":"Teacher authe…
+6:16:20 PM [express] GET /api/teacher/assignments 401 in 139ms :: {"message":"Teacher authentication…
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:20.778Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:20.778Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:20.778Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Retrieved user from storage: Alexander Menjivar (student)
+Retrieved user from storage: Alexander Menjivar (student)
+Retrieved user from storage: Alexander Menjivar (student)
+6:16:20 PM [express] GET /api/teacher/classrooms 401 in 57ms :: {"message":"Teacher authentication r…
+6:16:20 PM [express] GET /api/teacher/assignments 401 in 67ms :: {"message":"Teacher authentication …
+6:16:20 PM [express] GET /api/classrooms/students-count 403 in 67ms :: {"message":"Access denied"}
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:20.950Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:20.950Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:20.950Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Retrieved user from storage: Alexander Menjivar (student)
+Retrieved user from storage: Alexander Menjivar (student)
+Retrieved user from storage: Alexander Menjivar (student)
+6:16:21 PM [express] GET /api/teacher/assignments 401 in 55ms :: {"message":"Teacher authentication …
+6:16:21 PM [express] GET /api/teacher/all-writing-sessions 401 in 68ms :: {"message":"Teacher authen…
+6:16:21 PM [express] GET /api/teacher/classrooms 401 in 69ms :: {"message":"Teacher authentication r…
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:21.122Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:21.122Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Retrieved user from storage: Alexander Menjivar (student)
+Retrieved user from storage: Alexander Menjivar (student)
+6:16:21 PM [express] GET /api/teacher/assignments 401 in 67ms :: {"message":"Teacher authentication …
+6:16:21 PM [express] GET /api/classrooms/students-count 403 in 66ms :: {"message":"Access denied"}
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:21.312Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:21.312Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:21.312Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Retrieved user from storage: Alexander Menjivar (student)
+Retrieved user from storage: Alexander Menjivar (student)
+Retrieved user from storage: Alexander Menjivar (student)
+6:16:21 PM [express] GET /api/teacher/assignments 401 in 66ms :: {"message":"Teacher authentication …
+6:16:21 PM [express] GET /api/teacher/classrooms 401 in 67ms :: {"message":"Teacher authentication r…
+6:16:21 PM [express] GET /api/teacher/all-writing-sessions 401 in 86ms :: {"message":"Teacher authen…
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:21.466Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Retrieved user from storage: Alexander Menjivar (student)
+6:16:21 PM [express] GET /api/classrooms/students-count 403 in 69ms :: {"message":"Access denied"}
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:21.466Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Retrieved user from storage: Alexander Menjivar (student)
+6:16:21 PM [express] GET /api/teacher/assignments 401 in 67ms :: {"message":"Teacher authentication …
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:21.707Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:21.707Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:21.707Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:21.707Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Retrieved user from storage: Alexander Menjivar (student)
+Retrieved user from storage: Alexander Menjivar (student)
+Retrieved user from storage: Alexander Menjivar (student)
+Retrieved user from storage: Alexander Menjivar (student)
+6:16:21 PM [express] GET /api/teacher/assignments 401 in 65ms :: {"message":"Teacher authentication …
+6:16:21 PM [express] GET /api/teacher/classrooms 401 in 65ms :: {"message":"Teacher authentication r…
+6:16:21 PM [express] GET /api/teacher/all-writing-sessions 401 in 70ms :: {"message":"Teacher authen…
+6:16:21 PM [express] GET /api/classrooms/students-count 403 in 79ms :: {"message":"Access denied"}
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:21.873Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:21.873Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Retrieved user from storage: Alexander Menjivar (student)
+Retrieved user from storage: Alexander Menjivar (student)
+6:16:22 PM [express] GET /api/teacher/classrooms 401 in 55ms :: {"message":"Teacher authentication r…
+6:16:22 PM [express] GET /api/teacher/assignments 401 in 70ms :: {"message":"Teacher authentication …
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:22.036Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:22.036Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:22.036Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Retrieved user from storage: Alexander Menjivar (student)
+Retrieved user from storage: Alexander Menjivar (student)
+Retrieved user from storage: Alexander Menjivar (student)
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:22.036Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+6:16:22 PM [express] GET /api/classrooms/students-count 403 in 59ms :: {"message":"Access denied"}
+6:16:22 PM [express] GET /api/teacher/assignments 401 in 67ms :: {"message":"Teacher authentication …
+6:16:22 PM [express] GET /api/teacher/classrooms 401 in 68ms :: {"message":"Teacher authentication r…
+Retrieved user from storage: Alexander Menjivar (student)
+6:16:22 PM [express] GET /api/teacher/all-writing-sessions 401 in 67ms :: {"message":"Teacher authen…
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:22.259Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:22.259Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Retrieved user from storage: Alexander Menjivar (student)
+Retrieved user from storage: Alexander Menjivar (student)
+6:16:22 PM [express] GET /api/teacher/assignments 401 in 65ms :: {"message":"Teacher authentication …
+6:16:22 PM [express] GET /api/classrooms/students-count 403 in 67ms :: {"message":"Access denied"}
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:22.399Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:22.399Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:22.399Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:22.399Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Retrieved user from storage: Alexander Menjivar (student)
+Retrieved user from storage: Alexander Menjivar (student)
+Retrieved user from storage: Alexander Menjivar (student)
+Retrieved user from storage: Alexander Menjivar (student)
+6:16:22 PM [express] GET /api/teacher/all-writing-sessions 401 in 66ms :: {"message":"Teacher authen…
+6:16:22 PM [express] GET /api/teacher/assignments 401 in 68ms :: {"message":"Teacher authentication …
+6:16:22 PM [express] GET /api/teacher/classrooms 401 in 54ms :: {"message":"Teacher authentication r…
+6:16:22 PM [express] GET /api/classrooms/students-count 403 in 68ms :: {"message":"Access denied"}
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:22.577Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:22.577Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Retrieved user from storage: Alexander Menjivar (student)
+Retrieved user from storage: Alexander Menjivar (student)
+6:16:22 PM [express] GET /api/teacher/all-writing-sessions 401 in 68ms :: {"message":"Teacher authen…
+6:16:22 PM [express] GET /api/teacher/assignments 401 in 55ms :: {"message":"Teacher authentication …
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:22.744Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:22.744Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:22.744Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:22.744Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Retrieved user from storage: Alexander Menjivar (student)
+Retrieved user from storage: Alexander Menjivar (student)
+Retrieved user from storage: Alexander Menjivar (student)
+Retrieved user from storage: Alexander Menjivar (student)
+6:16:22 PM [express] GET /api/teacher/assignments 401 in 56ms :: {"message":"Teacher authentication …
+6:16:22 PM [express] GET /api/classrooms/students-count 403 in 65ms :: {"message":"Access denied"}
+6:16:22 PM [express] GET /api/teacher/all-writing-sessions 401 in 68ms :: {"message":"Teacher authen…
+6:16:22 PM [express] GET /api/teacher/classrooms 401 in 67ms :: {"message":"Teacher authentication r…
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-06-28T18:16:22.906Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Retrieved user from storage: Alexander Menjivar (student)
+6:16:23 PM [express] GET /

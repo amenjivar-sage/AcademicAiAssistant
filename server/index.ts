@@ -108,6 +108,6 @@ app.use((req, res, next) => {
     host: "0.0.0.0",
     reusePort: true,
   }, () => {
-    log(`serving on port ${port} - session store fix v8 deployed`);
+    log(`serving on port ${port} - role-based routing fix v9 deployed`);
   });
 })();
