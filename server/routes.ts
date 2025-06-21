@@ -182,8 +182,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Account has been suspended. Please contact your administrator." });
       }
 
-      // Update session to current user
-      currentSessionUserId = user.id;
+      // Store user ID in session for this specific browser session
+      (req.session as any).userId = user.id;
       
       // Update user's timestamp to mark as current session
       await storage.updateUserStatus(user.id, true);
@@ -203,33 +203,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Simple session store - in production this would use proper session management
-  let currentSessionUserId: number | null = null;
+  // Session-based user management - each session tracks its own user
+  // No global variable needed - using req.session instead
 
-  const getCurrentUser = async (): Promise<any> => {
+  const getCurrentUser = async (req: any): Promise<any> => {
     try {
-      console.log("Getting current user, currentSessionUserId:", currentSessionUserId);
+      const sessionUserId = (req.session as any).userId;
+      console.log("Getting current user, sessionUserId:", sessionUserId);
       
-      if (!currentSessionUserId) {
-        console.log("No session user ID found, defaulting to teacher for demo");
-        // Default to teacher for demo - user can switch via login
-        currentSessionUserId = 12; // Jason Menjivar (teacher)
+      if (!sessionUserId) {
+        console.log("No session user ID found, user needs to log in");
+        return null;
       }
       
-      const user = await storage.getUser(currentSessionUserId);
+      const user = await storage.getUser(sessionUserId);
       console.log("Retrieved user from storage:", user ? `${user.firstName} ${user.lastName} (${user.role})` : "null");
-      
-      if (!user && currentSessionUserId === 12) {
-        console.log("Default teacher not found, attempting to find any teacher");
-        // Only use fallback if the default teacher (12) doesn't exist
-        const allUsers = await storage.getAllUsers();
-        const teacher = allUsers.find(u => u.role === 'teacher');
-        if (teacher) {
-          console.log("Found teacher:", teacher.firstName, teacher.lastName);
-          currentSessionUserId = teacher.id;
-          return teacher;
-        }
-      }
       
       return user;
     } catch (error) {
@@ -244,8 +232,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Initializing session for deployment environment");
       
       // Check if we already have a valid session
-      if (currentSessionUserId) {
-        const user = await storage.getUser(currentSessionUserId);
+      const sessionUserId = (req.session as any).userId;
+      if (sessionUserId) {
+        const user = await storage.getUser(sessionUserId);
         if (user && user.role === 'teacher') {
           console.log("Session already initialized with teacher:", user.firstName, user.lastName);
           const { password: _, ...userWithoutPassword } = user;
@@ -258,7 +247,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const teacher = allUsers.find(u => u.role === 'teacher' && u.isActive);
       
       if (teacher) {
-        currentSessionUserId = teacher.id;
+        (req.session as any).userId = teacher.id;
         console.log("Session initialized with teacher:", teacher.firstName, teacher.lastName);
         const { password: _, ...userWithoutPassword } = teacher;
         res.json({ user: userWithoutPassword, message: "Session initialized" });
@@ -325,7 +314,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/logout", async (req, res) => {
     try {
       // Clear session data
-      currentSessionUserId = null;
+      (req.session as any).userId = null;
       // Redirect to home page
       res.redirect("/");
     } catch (error) {
@@ -359,7 +348,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Set current session
-      currentSessionUserId = user.id;
+      (req.session as any).userId = user.id;
       await storage.updateUserStatus(user.id, true);
 
       // Remove password from response
