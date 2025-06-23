@@ -101,6 +101,10 @@ export default function SchoolAdminDashboard() {
     queryKey: ["/api/admin/writing-sessions"],
   });
 
+  const { data: allSubmissions = [] } = useQuery({
+    queryKey: ["/api/admin/submissions"],
+  });
+
   const { data: allClassrooms = [] } = useQuery({
     queryKey: ["/api/admin/classrooms"],
   });

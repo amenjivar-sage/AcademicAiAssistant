@@ -2063,13 +2063,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       for (const teacher of teachers) {
         const assignments = await storage.getTeacherAssignments(teacher.id);
-        allAssignments.push(...assignments);
+        // Add teacher info to each assignment
+        const assignmentsWithTeacher = assignments.map(assignment => ({
+          ...assignment,
+          teacherName: `${teacher.firstName} ${teacher.lastName}`
+        }));
+        allAssignments.push(...assignmentsWithTeacher);
       }
       
       res.json(allAssignments);
     } catch (error) {
       console.error("Error fetching all assignments:", error);
       res.status(500).json({ message: "Failed to fetch assignments" });
+    }
+  });
+
+  // Get all submissions with assignment and student details for school admin
+  app.get("/api/admin/submissions", async (req, res) => {
+    try {
+      const currentUser = await getCurrentUser(req);
+      if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'school_admin')) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const allUsers = await storage.getAllUsers();
+      const teachers = allUsers.filter(u => u.role === 'teacher');
+      const students = allUsers.filter(u => u.role === 'student');
+      let allSubmissions = [];
+      
+      // Get all assignments first
+      let allAssignments = [];
+      for (const teacher of teachers) {
+        const assignments = await storage.getTeacherAssignments(teacher.id);
+        const assignmentsWithTeacher = assignments.map(assignment => ({
+          ...assignment,
+          teacherName: `${teacher.firstName} ${teacher.lastName}`
+        }));
+        allAssignments.push(...assignmentsWithTeacher);
+      }
+      
+      // For each assignment, get submissions
+      for (const assignment of allAssignments) {
+        const submissions = await storage.getAssignmentSubmissions(assignment.id);
+        const submissionsWithDetails = submissions.map(submission => ({
+          ...submission,
+          assignmentTitle: assignment.title,
+          assignmentDueDate: assignment.dueDate,
+          teacherName: assignment.teacherName,
+          studentName: `${submission.student.firstName} ${submission.student.lastName}`,
+          studentGrade: submission.student.grade
+        }));
+        allSubmissions.push(...submissionsWithDetails);
+      }
+      
+      res.json(allSubmissions);
+    } catch (error) {
+      console.error("Error fetching all submissions:", error);
+      res.status(500).json({ message: "Failed to fetch submissions" });
     }
   });
 
