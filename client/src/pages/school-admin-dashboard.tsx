@@ -263,9 +263,10 @@ export default function SchoolAdminDashboard() {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="teachers" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="teachers">Teachers</TabsTrigger>
             <TabsTrigger value="students">Students</TabsTrigger>
+            <TabsTrigger value="submissions">Submissions</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
 
@@ -516,7 +517,116 @@ export default function SchoolAdminDashboard() {
             </div>
           </TabsContent>
 
+          {/* Submissions Tab - NEW READ-ONLY ACCESS */}
+          <TabsContent value="submissions" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold">Student Submissions</h2>
+              <div className="flex items-center space-x-2">
+                <Input
+                  placeholder="Search by student or assignment..."
+                  value={assignmentSearch}
+                  onChange={(e) => setAssignmentSearch(e.target.value)}
+                  className="w-64"
+                />
+                <Select value={assignmentStatusFilter} onValueChange={setAssignmentStatusFilter}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="submitted">Submitted</SelectItem>
+                    <SelectItem value="graded">Graded</SelectItem>
+                    <SelectItem value="draft">In Progress</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
 
+            <div className="grid gap-4">
+              {allSubmissions
+                .filter((submission: any) => {
+                  const matchesSearch = !assignmentSearch ||
+                    submission.studentName?.toLowerCase().includes(assignmentSearch.toLowerCase()) ||
+                    submission.assignmentTitle?.toLowerCase().includes(assignmentSearch.toLowerCase()) ||
+                    submission.teacherName?.toLowerCase().includes(assignmentSearch.toLowerCase());
+                  const matchesStatus = assignmentStatusFilter === 'all' || submission.status === assignmentStatusFilter;
+                  return matchesSearch && matchesStatus;
+                })
+                .sort((a: any, b: any) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+                .map((submission: any) => (
+                <Card key={`${submission.assignmentId}-${submission.userId}`} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-3">
+                          <FileText className="h-5 w-5 text-purple-600" />
+                          <div>
+                            <h3 className="font-semibold text-lg">{submission.assignmentTitle}</h3>
+                            <p className="text-gray-600 text-sm">Student: {submission.studentName} ({submission.studentGrade})</p>
+                            <div className="flex items-center space-x-4 mt-2">
+                              <span className="text-xs text-gray-500">
+                                Teacher: {submission.teacherName}
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                Submitted: {new Date(submission.updatedAt).toLocaleDateString()}
+                              </span>
+                              {submission.assignmentDueDate && (
+                                <span className="text-xs text-gray-500">
+                                  Due: {new Date(submission.assignmentDueDate).toLocaleDateString()}
+                                </span>
+                              )}
+                              {submission.grade && (
+                                <span className="text-xs font-medium text-green-600">
+                                  Grade: {submission.grade}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-4">
+                        <Badge 
+                          variant={submission.status === 'graded' ? 'default' : submission.status === 'submitted' ? 'secondary' : 'outline'}
+                          className={
+                            submission.status === 'graded' ? 'bg-green-100 text-green-800' :
+                            submission.status === 'submitted' ? 'bg-blue-100 text-blue-800' :
+                            'bg-yellow-100 text-yellow-800'
+                          }
+                        >
+                          {submission.status === 'graded' ? 'Graded' : 
+                           submission.status === 'submitted' ? 'Pending Review' : 'In Progress'}
+                        </Badge>
+                        <div className="text-right">
+                          <p className="text-sm font-medium">
+                            {submission.content ? `${submission.content.length} characters` : 'No content'}
+                          </p>
+                          {submission.teacherFeedback && (
+                            <p className="text-xs text-gray-500">Has feedback</p>
+                          )}
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSelectedSubmission(submission.id)}
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          View Details
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            
+            {allSubmissions.length === 0 && (
+              <div className="text-center py-8">
+                <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No Submissions Found</h3>
+                <p className="text-gray-600">Student submissions will appear here once assignments are created and submitted.</p>
+              </div>
+            )}
+          </TabsContent>
 
           {/* Analytics */}
           <TabsContent value="analytics" className="space-y-6">
