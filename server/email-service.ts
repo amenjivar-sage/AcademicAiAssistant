@@ -28,18 +28,28 @@ export class EmailService {
   
   private initializeEmailService() {
     const apiKey = process.env.SENDGRID_API_KEY;
+    console.log('🔍 Initializing email service...');
+    console.log('🔍 API key exists:', !!apiKey);
+    console.log('🔍 API key length:', apiKey?.length || 0);
+    console.log('🔍 API key starts with SG.:', apiKey?.startsWith('SG.') || false);
     
-    if (apiKey && apiKey.startsWith('SG.')) {
+    if (apiKey && apiKey.trim().startsWith('SG.')) {
       try {
         this.mailService = new MailService();
-        this.mailService.setApiKey(apiKey);
+        this.mailService.setApiKey(apiKey.trim());
         console.log('✅ SendGrid email service initialized successfully');
+        console.log('✅ API Key first 15 chars:', apiKey.substring(0, 15));
       } catch (error) {
         console.error('❌ Failed to initialize SendGrid:', error);
+        console.error('❌ Error details:', JSON.stringify(error, null, 2));
         this.mailService = undefined;
       }
     } else {
-      console.log('📧 Email service running in preview mode - no valid SendGrid API key');
+      console.log('📧 Email service running in preview mode');
+      console.log('📧 Reason: API key missing, empty, or invalid format');
+      if (apiKey) {
+        console.log('📧 Current API key preview:', apiKey.substring(0, 10) + '...');
+      }
     }
   }
 
@@ -351,10 +361,19 @@ export class EmailService {
         
         const emailData = {
           to: data.email,
-          from: this.fromEmail,
+          from: {
+            email: this.fromEmail,
+            name: 'Sage Education Platform'
+          },
           subject: subject,
           html: htmlContent,
         };
+        
+        console.log('📤 Sending email with data:', {
+          to: emailData.to,
+          from: emailData.from,
+          subject: emailData.subject
+        });
         
         const result = await this.mailService.send(emailData);
         console.log('✅ SendGrid response:', JSON.stringify(result, null, 2));
