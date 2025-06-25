@@ -20,7 +20,7 @@ interface PasswordResetEmailData extends WelcomeEmailData {
 
 export class EmailService {
   private mailService?: MailService;
-  private fromEmail = 'sage.platform.noreply@gmail.com'; // Verified sender email for Render deployment
+  private fromEmail = 'sage.edu21@gmail.com'; // Verified sender email
   
   constructor() {
     this.initializeEmailService();
