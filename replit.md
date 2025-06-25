@@ -101,7 +101,10 @@ The application is configured for Replit's autoscale deployment:
 
 ## Changelog
 
-- June 25, 2025. Initial setup
+- June 25, 2025: Fixed student feedback submission issue - feedback now properly appears in Sage admin dashboard
+- June 25, 2025: Added comprehensive school admin submissions access with read-only oversight
+- June 25, 2025: Simplified student formatting toolbar to only include spell check functionality
+- June 25, 2025: Initial setup
 
 ## User Preferences
 
