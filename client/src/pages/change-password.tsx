@@ -22,20 +22,29 @@ export default function ChangePassword() {
       return response.json();
     },
     onSuccess: () => {
-      // Get user from localStorage to determine redirect
+      // Get user from localStorage to determine appropriate redirect based on role
       const userStr = localStorage.getItem("user");
       if (userStr) {
         const user = JSON.parse(userStr);
-        if (user.role === "teacher") {
-          setLocation("/teacher");
-        } else if (user.role === "admin" || user.role === "sage_admin") {
-          setLocation("/admin");
-        } else if (user.role === "school_admin") {
-          setLocation("/school-admin");
-        } else {
-          setLocation("/student");
+        // Role-based routing to appropriate dashboard
+        switch (user.role) {
+          case "teacher":
+            setLocation("/teacher");
+            break;
+          case "admin":
+          case "sage_admin":
+            setLocation("/admin");
+            break;
+          case "school_admin":
+            setLocation("/school-admin");
+            break;
+          case "student":
+          default:
+            setLocation("/student");
+            break;
         }
       } else {
+        // Fallback to student dashboard if no user data
         setLocation("/student");
       }
     }
