@@ -54,6 +54,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Forgot credentials endpoint
+  app.post("/api/auth/forgot-credentials", async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+
+      // Check if user exists
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        // For security, don't reveal if email exists or not
+        return res.json({ 
+          success: true, 
+          message: "If an account with this email exists, you will receive recovery instructions shortly." 
+        });
+      }
+
+      // Generate temporary password
+      const { emailService } = await import('./email-service');
+      const temporaryPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8).toUpperCase();
+      
+      // Update user's password temporarily
+      await storage.updateUserPassword(user.id, temporaryPassword);
+      
+      // Send password reset email
+      const emailResult = await emailService.sendPasswordResetEmail({
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        username: user.username,
+        role: user.role,
+        temporaryPassword: temporaryPassword
+      });
+
+      console.log('Password reset email result:', emailResult);
+
+      res.json({ 
+        success: true, 
+        message: "Recovery email sent successfully. Please check your email for instructions.",
+        temporaryPassword: emailResult.temporaryPassword // For development/preview mode
+      });
+    } catch (error) {
+      console.error("Error in forgot credentials:", error);
+      res.status(500).json({ message: "Failed to process recovery request" });
+    }
+  });
+
   // Registration endpoint
   app.post("/api/auth/register", async (req, res) => {
     try {

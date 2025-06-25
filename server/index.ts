@@ -108,6 +108,6 @@ app.use((req, res, next) => {
     host: "0.0.0.0",
     reusePort: true,
   }, () => {
-    log(`serving on port ${port} - sage admin feedback access fix v11 deployed`);
+    log(`serving on port ${port} - forgot credentials API fix v12 deployed`);
   });
 })();
