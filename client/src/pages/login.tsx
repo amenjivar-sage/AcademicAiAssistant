@@ -32,6 +32,17 @@ export default function Login() {
     onSuccess: (data) => {
       localStorage.setItem("user", JSON.stringify(data.user));
       
+      // Check if user needs to change password (temporary password)
+      if (data.requiresPasswordChange) {
+        setLocation("/change-password");
+        toast({
+          title: "Password Change Required",
+          description: "Please set a new password to continue",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       if (data.user.role === "teacher") {
         setLocation("/teacher");
       } else if (data.user.role === "admin" || data.user.role === "sage_admin") {

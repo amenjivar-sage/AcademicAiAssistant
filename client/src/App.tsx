@@ -8,6 +8,7 @@ import InactivityWarning from "@/components/inactivity-warning";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
 import ForgotCredentials from "@/pages/forgot-credentials";
+import ChangePassword from "@/pages/change-password";
 import PrivacyNotice from "@/pages/privacy-notice";
 import TeacherDashboard from "@/pages/teacher-dashboard";
 import StudentDashboard from "@/pages/student-dashboard";
@@ -23,6 +24,7 @@ function Router() {
       <Route path="/" component={Login} />
       <Route path="/register" component={Register} />
       <Route path="/forgot-credentials" component={ForgotCredentials} />
+      <Route path="/change-password" component={ChangePassword} />
       <Route path="/privacy-notice" component={PrivacyNotice} />
       <Route path="/student" component={StudentDashboard} />
       <Route path="/teacher" component={TeacherDashboard} />
