@@ -101,6 +101,7 @@ The application is configured for Replit's autoscale deployment:
 
 ## Changelog
 
+- June 25, 2025: Successfully integrated SendGrid email service - password reset emails now automatically delivered
 - June 25, 2025: Fixed forgot credentials API endpoint - resolved "Unexpected token" JSON parsing error on Render deployment
 - June 25, 2025: Fixed student feedback submission issue - feedback now properly appears in Sage admin dashboard
 - June 25, 2025: Added comprehensive school admin submissions access with read-only oversight
