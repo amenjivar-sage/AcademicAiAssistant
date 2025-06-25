@@ -1,0 +1,157 @@
+Database lookup for email: amenjivar9@yahoo.com
+Database result: Found user: Alexander Menjivar
+Email service import successful, checking status...
+Email service configured: true
+📧 PASSWORD RESET EMAIL GENERATED:
+To: amenjivar9@yahoo.com
+Subject: Sage - Password Reset for Alexander Menjivar
+Username: amenjivar9
+Temporary Password: w3h76xmc03JWHXMC
+Role: student
+🚀 Attempting to send password reset email via SendGrid...
+To: amenjivar9@yahoo.com
+From: sage.edu21@gmail.com
+Subject: Sage - Password Reset for Alexander Menjivar
+MailService exists: true
+API Key configured: true
+📤 Sending email with data: {
+  to: 'amenjivar9@yahoo.com',
+  from: { email: 'sage.edu21@gmail.com', name: 'Sage Educational Platform' },
+  subject: 'Sage - Password Reset for Alexander Menjivar'
+}
+📬 SendGrid Response Details:
+- Status Code: 202
+- Headers: {
+  "server": "nginx",
+  "date": "Wed, 25 Jun 2025 18:03:13 GMT",
+  "content-length": "0",
+  "connection": "keep-alive",
+  "x-message-id": "jZXAPOKxT7SKkxZeG_MfSA",
+  "access-control-allow-origin": "https://sendgrid.api-docs.io",
+  "access-control-allow-methods": "POST",
+  "access-control-allow-headers": "Authorization, Content-Type, On-behalf-of, x-sg-elas-acl",
+  "access-control-max-age": "600",
+  "x-no-cors-reason": "https://sendgrid.com/docs/Classroom/Basics/API/cors.html",
+  "strict-transport-security": "max-age=31536000; includeSubDomains",
+  "content-security-policy": "frame-ancestors 'none'",
+  "cache-control": "no-cache",
+  "x-content-type-options": "no-sniff",
+  "referrer-policy": "strict-origin-when-cross-origin"
+}
+- Body: ""
+- Message ID: jZXAPOKxT7SKkxZeG_MfSA
+✅ Email queued successfully by SendGrid
+✅ Password reset email sent successfully to amenjivar9@yahoo.com
+Password reset email result: {
+  success: true,
+  message: 'Password reset email sent successfully',
+  emailContent: '\n' +
+    '<!DOCTYPE html>\n' +
+    '<html>\n' +
+    '<head>\n' +
+    '    <meta charset="utf-8">\n' +
+    '    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n' +
+    '    <title>Sage - Username Recovery & Password Reset</title>\n' +
+    '    <style>\n' +
+    "        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }\n" +
+    '        .container { max-width: 600px; margin: 0 auto; padding: 20px; }\n' +
+    '        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center; }\n' +
+    '        .logo { font-size: 32px; font-weight: bold; margin-bottom: 10px; }\n' +
+    '        .content { background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }\n' +
+    '        .username-box { background: #f8f9fa; border: 2px solid #e9ecef; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center; }\n' +
+    '        .username { font-size: 24px; font-weight: bold; color: #495057; margin-bottom: 5px; }\n' +
+    '        .instructions { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; }\n' +
+    '        .footer { text-align: center; color: #6c757d; margin-top: 30px; padding-top: 20px; border-top: 1px solid #dee2e6; }\n' +
+    '        .button { display: inline-block; background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 10px 0; }\n' +
+    '        .warning { background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 6px; padding: 15px; margin: 20px 0; color: #721c24; }\n' +
+    '    </style>\n' +
+    '</head>\n' +
+    '<body>\n' +
+    '    <div class="container">\n' +
+    '        <div class="header">\n' +
+    '            <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">\n' +
+    '                <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 12px;">\n' +
+    '                    <rect x="21" y="30" width="6" height="12" rx="3" fill="white"/>\n' +
+    '                    <path d="M24 6L30 12L24 18L18 12L24 6Z" fill="white"/>\n' +
+    '                    <path d="M12 18L18 24L12 30L6 24L12 18Z" fill="white"/>\n' +
+    '                    <path d="M36 18L42 24L36 30L30 24L36 18Z" fill="white"/>\n' +
+    '                    <circle cx="15" cy="15" r="3" fill="rgba(255,255,255,0.8)"/>\n' +
+    '                    <circle cx="33" cy="15" r="3" fill="rgba(255,255,255,0.8)"/>\n' +
+    '                    <circle cx="9" cy="27" r="2" fill="rgba(255,255,255,0.7)"/>\n' +
+    '                    <circle cx="39" cy="27" r="2" fill="rgba(255,255,255,0.7)"/>\n' +
+    '                </svg>\n' +
+    '                <div class="logo">Sage</div>\n' +
+    '            </div>\n' +
+    '            <p>AI-Powered Academic Writing Platform</p>\n' +
+    '        </div>\n' +
+    '        \n' +
+    '        <div class="content">\n' +
+    '            <h2>Username Recovery & Password Reset</h2>\n' +
+    '            \n' +
+    '            <p>Hello Alexander,</p>\n' +
+    '            \n' +
+    '            <p>You requested help recovering your login credentials for your Student account on Sage.</p>\n' +
+    '            \n' +
+    '            <div class="username-box">\n' +
+    '                <div>Your Username:</div>\n' +
+    '                <div class="username">amenjivar9</div>\n' +
+    '                <small style="color: #6c757d;">Use this username to log in</small>\n' +
+    '            </div>\n' +
+    '            \n' +
+    '            \n' +
+    '            <div style="background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center;">\n' +
+    '                <h3 style="color: #856404; margin-top: 0;">🔑 Temporary Password</h3>\n' +
+    '                <div style="font-size: 24px; font-weight: bold; color: #856404; margin: 10px 0; font-family: monospace; background: white; padding: 10px; border-radius: 4px; border: 1px solid #ffc107;">w3h76xmc03JWHXMC</div>\n' +
+    '                <small style="color: #856404;">This temporary password expires in 24 hours</small>\n' +
+    '            </div>\n' +
+    '            \n' +
+    '            \n' +
+    '            <div class="instructions">\n' +
+    '                <h3>🔑 How to Access Your Account:</h3>\n' +
+    '                <ol>\n' +
+    '                    <li>Go to the Sage platform login page</li>\n' +
+    '                    <li>Enter either your <strong>email address</strong> (amenjivar9@yahoo.com) or your <strong>username</strong> (amenjivar9)</li>\n' +
+    '                    <li>Use your <strong>temporary password</strong> above</li>\n' +
+    "                    <li>You'll be prompted to create a new password on first login</li>\n" +
+    '                </ol>\n' +
+    '            </div>\n' +
+    '            \n' +
+    '            <div class="warning">\n' +
+    '                <h3>⚠️ Important Security Information:</h3>\n' +
+    '                \n' +
+    '                <ul style="text-align: left; margin: 10px 0;">\n' +
+    '                    <li>This temporary password expires in 24 hours</li>\n' +
+    '                    <li>You must change it on your first login</li>\n' +
+    '                    <li>Do not share this password with anyone</li>\n' +
+    '                    <li>If you did not request this reset, contact your administrator immediately</li>\n' +
+    '                </ul>\n' +
+    '                \n' +
+    '            </div>\n' +
+    '            \n' +
+    '            <h3>📚 Your Sage Account Includes:</h3>\n' +
+    '            <ul>\n' +
+    '                \n' +
+    '                <li><strong>Smart Writing Assistance:</strong> AI-powered help with grammar, style, and structure</li>\n' +
+    '                <li><strong>Assignment Submissions:</strong> Complete and submit writing assignments</li>\n' +
+    '                <li><strong>Progress Tracking:</strong> Monitor your writing improvement</li>\n' +
+    '                <li><strong>Citation Help:</strong> Guidance on proper academic citations</li>\n' +
+    '                \n' +
+    '            </ul>\n' +
+    '            \n' +
+    '            <div style="text-align: center; margin: 30px 0;">\n' +
+    '                <a href="#" class="button">Access Sage Platform</a>\n' +
+    '            </div>\n' +
+    '            \n' +
+    '            <p><strong>Security Notice:</strong> If you did not request this recovery email, please contact your school administrator immediately.</p>\n' +
+    '        </div>\n' +
+    '        \n' +
+    '        <div class="footer">\n' +
+    '            <p>This recovery email was sent to amenjivar9@yahoo.com for the Sage platform.</p>\n' +
+    '            <p>Sage - Empowering Ethical Academic Writing with AI</p>\n' +
+    '        </div>\n' +
+    '    </div>\n' +
+    '</body>\n' +
+    '</html>',
+  temporaryPassword: 'w3h76xmc03JWHXMC'
+}
+6:03:13 PM [express] POST /api/auth/forgot-credentials 200 in 525ms :: {"success":true,"message":"Re…
