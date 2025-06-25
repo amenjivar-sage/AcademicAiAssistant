@@ -80,6 +80,10 @@ app.use((req, res, next) => {
   // Seed the database with initial data
   // await seedDatabase(); // Disabled to start with authentic data only
   
+  // Check email service status at startup
+  const { emailService } = await import('./email-service');
+  console.log('Email service status at startup:', emailService.isConfigured() ? 'CONFIGURED' : 'PREVIEW MODE');
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
