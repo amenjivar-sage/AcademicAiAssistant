@@ -401,12 +401,24 @@ export class EmailService {
         console.error('❌ Error message:', error.message);
         console.error('❌ Error code:', error.code);
         console.error('❌ Error response body:', error.response?.body);
-        console.error('❌ Full error:', JSON.stringify(error, null, 2));
+        
+        // Check for sender verification error specifically
+        if (error.code === 403 && error.response?.body?.errors?.[0]?.message?.includes('verified Sender Identity')) {
+          console.error('🚨 SENDER VERIFICATION REQUIRED:');
+          console.error('   Go to SendGrid Dashboard > Settings > Sender Authentication');
+          console.error('   Click "Verify a Single Sender" and verify:', this.fromEmail);
+          console.error('   Check your email for verification link');
+        }
+        
         return { 
           success: false, 
-          message: 'Failed to send email - saved for manual delivery',
+          message: 'Email configuration issue - password reset saved',
           emailContent: htmlContent,
-          temporaryPassword
+          temporaryPassword,
+          error: {
+            needsVerification: error.code === 403,
+            message: error.message
+          }
         };
       }
     } else {
