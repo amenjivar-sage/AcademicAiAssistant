@@ -28,6 +28,8 @@ export class EmailService {
       this.mailService = new MailService();
       this.mailService.setApiKey(process.env.SENDGRID_API_KEY);
       console.log('✅ Email service initialized with SendGrid');
+      console.log('SendGrid API key length:', process.env.SENDGRID_API_KEY.length);
+      console.log('SendGrid API key prefix:', process.env.SENDGRID_API_KEY.substring(0, 10));
     } else {
       console.log('📧 Email service running in preview mode (no SendGrid API key)');
     }
@@ -333,13 +335,21 @@ export class EmailService {
     
     if (this.mailService) {
       try {
-        await this.mailService.send({
+        console.log('🚀 Attempting to send password reset email via SendGrid...');
+        console.log('To:', data.email);
+        console.log('From:', this.fromEmail);
+        console.log('Subject:', subject);
+        console.log('MailService exists:', !!this.mailService);
+        
+        const emailData = {
           to: data.email,
           from: this.fromEmail,
           subject: subject,
           html: htmlContent,
-        });
+        };
         
+        const result = await this.mailService.send(emailData);
+        console.log('✅ SendGrid response:', JSON.stringify(result, null, 2));
         console.log('✅ Password reset email sent successfully to', data.email);
         return { 
           success: true, 
@@ -348,7 +358,11 @@ export class EmailService {
           temporaryPassword
         };
       } catch (error) {
-        console.error('❌ Failed to send password reset email:', error);
+        console.error('❌ SendGrid error details:', error);
+        console.error('❌ Error message:', error.message);
+        console.error('❌ Error code:', error.code);
+        console.error('❌ Error response body:', error.response?.body);
+        console.error('❌ Full error:', JSON.stringify(error, null, 2));
         return { 
           success: false, 
           message: 'Failed to send email - saved for manual delivery',
@@ -359,6 +373,8 @@ export class EmailService {
     } else {
       // No SendGrid - save email content for preview
       console.log('📧 Password reset email ready to send (add SendGrid API key to enable automatic delivery)');
+      console.log('📧 SENDGRID_API_KEY exists:', !!process.env.SENDGRID_API_KEY);
+      console.log('📧 MailService initialized:', !!this.mailService);
       return { 
         success: true, 
         message: 'Password reset email generated successfully - ready for delivery when SendGrid is configured',
