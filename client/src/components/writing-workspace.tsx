@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Settings, Send, AlertTriangle, Shield, FileText, MessageSquare, Download, Save, GraduationCap, Trophy, SpellCheck } from 'lucide-react';
+import { ArrowLeft, Settings, Send, AlertTriangle, Shield, FileText, MessageSquare, Download, Save, GraduationCap, Trophy, Type, Bold, Italic, Underline, ChevronDown, ChevronUp, SpellCheck } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import CopyPasteDetector from './copy-paste-detector';
 import { RichTextEditor, RichTextEditorHandle } from './rich-text-editor-simple';
@@ -108,7 +108,8 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     footer: "",
     pageNumbers: false
   });
-  // Removed formatting toolbox state variables
+  const [showFormattingToolbox, setShowFormattingToolbox] = useState(false);
+  const [isFormattingMinimized, setIsFormattingMinimized] = useState(false);
   const [selectedText, setSelectedText] = useState('');
   const [isSpellCheckActive, setIsSpellCheckActive] = useState(false);
   const [spellErrors, setSpellErrors] = useState<any[]>([]);
@@ -484,28 +485,176 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
               </DialogContent>
             </Dialog>
 
-            <Button
-              onClick={() => {
-                setIsSpellCheckActive(!isSpellCheckActive);
-                if (!isSpellCheckActive) {
-                  const textContent = content.replace(/<[^>]*>/g, ' ').trim();
-                  const words = textContent.split(/\s+/);
-                  const errors = words.filter(word => 
-                    word.length > 3 && Math.random() > 0.9
-                  ).map(word => ({ word, suggestions: ['correction1', 'correction2'] }));
-                  setSpellErrors(errors);
-                } else {
-                  setSpellErrors([]);
-                }
-              }}
-              variant={isSpellCheckActive ? "default" : "outline"}
-              size="sm"
-              className="gap-2"
-              title={isSpellCheckActive ? "Disable Spell Check" : "Enable Spell Check"}
-            >
-              <SpellCheck className="h-4 w-4" />
-              {isSpellCheckActive ? "Spell Check On" : "Spell Check"}
-            </Button>
+            {/* Formatting Toolbox */}
+            {!showFormattingToolbox ? (
+              <Button
+                onClick={() => setShowFormattingToolbox(true)}
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                title="Open Formatting Tools"
+              >
+                <Type className="h-4 w-4" />
+              </Button>
+            ) : (
+              <div className="relative">
+                <Card className="absolute right-0 top-full mt-2 w-64 shadow-lg border-gray-300 z-50">
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-sm font-medium flex items-center">
+                        <Type className="h-4 w-4 mr-2" />
+                        {isFormattingMinimized ? "Format" : "Formatting Tools"}
+                      </CardTitle>
+                      <div className="flex items-center space-x-1">
+                        <Button
+                          onClick={() => setIsFormattingMinimized(!isFormattingMinimized)}
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 w-6 p-0"
+                          title={isFormattingMinimized ? "Expand" : "Minimize"}
+                        >
+                          {isFormattingMinimized ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
+                        </Button>
+                        <Button
+                          onClick={() => setShowFormattingToolbox(false)}
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 w-6 p-0"
+                          title="Close"
+                        >
+                          ×
+                        </Button>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  
+                  {!isFormattingMinimized && (
+                    <CardContent className="pt-0">
+                      <div className="space-y-3">
+                        {/* Text Formatting Section */}
+                        <div>
+                          <div className="text-xs font-medium text-gray-500 mb-2">Text Formatting</div>
+                          <div className="flex flex-wrap gap-1">
+                            <Button
+                              onClick={() => {
+                                if (contentRef.current) {
+                                  const editor = contentRef.current.getEditor();
+                                  if (editor) {
+                                    const quillEditor = editor.getEditor();
+                                    const selection = quillEditor.getSelection();
+                                    if (selection && selection.length > 0) {
+                                      // Apply formatting to selected text
+                                      const currentFormat = quillEditor.getFormat(selection);
+                                      quillEditor.formatText(selection.index, selection.length, 'bold', !currentFormat.bold);
+                                    } else if (selection) {
+                                      // Set formatting for cursor position (next typing)
+                                      const currentFormat = quillEditor.getFormat(selection);
+                                      quillEditor.format('bold', !currentFormat.bold);
+                                    }
+                                    // Refocus editor to maintain cursor position
+                                    setTimeout(() => quillEditor.focus(), 0);
+                                  }
+                                }
+                              }}
+                              size="sm"
+                              variant="outline"
+                              className="h-8 w-8 p-0 hover:bg-blue-50"
+                              disabled={false}
+                              title="Bold (Ctrl+B)"
+                            >
+                              <Bold className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              onClick={() => {
+                                if (contentRef.current) {
+                                  const editor = contentRef.current.getEditor();
+                                  if (editor) {
+                                    const quillEditor = editor.getEditor();
+                                    const selection = quillEditor.getSelection();
+                                    if (selection && selection.length > 0) {
+                                      // Apply formatting to selected text
+                                      const currentFormat = quillEditor.getFormat(selection);
+                                      quillEditor.formatText(selection.index, selection.length, 'italic', !currentFormat.italic);
+                                    } else if (selection) {
+                                      // Set formatting for cursor position (next typing)
+                                      const currentFormat = quillEditor.getFormat(selection);
+                                      quillEditor.format('italic', !currentFormat.italic);
+                                    }
+                                    // Refocus editor to maintain cursor position
+                                    setTimeout(() => quillEditor.focus(), 0);
+                                  }
+                                }
+                              }}
+                              size="sm"
+                              variant="outline"
+                              className="h-8 w-8 p-0 hover:bg-blue-50"
+                              disabled={false}
+                              title="Italic (Ctrl+I)"
+                            >
+                              <Italic className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              onClick={() => {
+                                if (contentRef.current) {
+                                  const editor = contentRef.current.getEditor();
+                                  if (editor) {
+                                    const quillEditor = editor.getEditor();
+                                    const selection = quillEditor.getSelection();
+                                    if (selection && selection.length > 0) {
+                                      // Apply formatting to selected text
+                                      const currentFormat = quillEditor.getFormat(selection);
+                                      quillEditor.formatText(selection.index, selection.length, 'underline', !currentFormat.underline);
+                                    } else if (selection) {
+                                      // Set formatting for cursor position (next typing)
+                                      const currentFormat = quillEditor.getFormat(selection);
+                                      quillEditor.format('underline', !currentFormat.underline);
+                                    }
+                                    // Refocus editor to maintain cursor position
+                                    setTimeout(() => quillEditor.focus(), 0);
+                                  }
+                                }
+                              }}
+                              size="sm"
+                              variant="outline"
+                              className="h-8 w-8 p-0 hover:bg-blue-50"
+                              disabled={false}
+                              title="Underline (Ctrl+U)"
+                            >
+                              <Underline className="h-4 w-4" />
+                            </Button>
+                            
+                            {/* Separator */}
+                            <div className="w-px h-6 bg-gray-200"></div>
+                            
+                            {/* Spell Check Button */}
+                            <Button
+                              onClick={() => setIsSpellCheckActive(!isSpellCheckActive)}
+                              size="sm"
+                              variant={isSpellCheckActive ? "default" : "outline"}
+                              className="h-8 w-8 p-0 hover:bg-blue-50"
+                              title="Check spelling"
+                            >
+                              <SpellCheck className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        {/* Status */}
+                        <div className="text-xs text-gray-400 border-t pt-2">
+                          {selectedText ? (
+                            <span className="text-blue-600">
+                              {selectedText.length} characters selected
+                            </span>
+                          ) : (
+                            "Select text to format"
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  )}
+                </Card>
+              </div>
+            )}
 
             {/* PDF Export */}
             <PDFExport 
