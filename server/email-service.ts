@@ -20,7 +20,7 @@ interface PasswordResetEmailData extends WelcomeEmailData {
 
 export class EmailService {
   private mailService?: MailService;
-  private fromEmail = 'alexander.menjivar@pepperdine.edu'; // Verified institutional sender email
+  private fromEmail = 'sage.platform.noreply@gmail.com'; // Verified sender email for Render deployment
   
   constructor() {
     this.initializeEmailService();
@@ -364,7 +364,7 @@ export class EmailService {
           to: data.email,
           from: {
             email: this.fromEmail,
-            name: 'Sage Educational Platform - Pepperdine University'
+            name: 'Sage Educational Platform'
           },
           subject: subject,
           html: htmlContent,
