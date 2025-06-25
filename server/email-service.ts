@@ -20,28 +20,26 @@ interface PasswordResetEmailData extends WelcomeEmailData {
 
 export class EmailService {
   private mailService?: MailService;
-  private fromEmail = 'noreply@sage-edu.app'; // Default sender email
-
+  private fromEmail = 'noreply@sage-edu.app';
+  
   constructor() {
-    // Debug environment variables
-    console.log('🔍 Email service constructor called');
-    console.log('🔍 SENDGRID_API_KEY exists:', !!process.env.SENDGRID_API_KEY);
-    console.log('🔍 Environment keys:', Object.keys(process.env).filter(k => k.includes('SENDGRID')));
+    this.initializeEmailService();
+  }
+  
+  private initializeEmailService() {
+    const apiKey = process.env.SENDGRID_API_KEY;
     
-    // Only initialize SendGrid if API key is available
-    if (process.env.SENDGRID_API_KEY) {
+    if (apiKey && apiKey.startsWith('SG.')) {
       try {
         this.mailService = new MailService();
-        this.mailService.setApiKey(process.env.SENDGRID_API_KEY);
-        console.log('✅ Email service initialized with SendGrid');
-        console.log('SendGrid API key length:', process.env.SENDGRID_API_KEY.length);
-        console.log('SendGrid API key prefix:', process.env.SENDGRID_API_KEY.substring(0, 10));
+        this.mailService.setApiKey(apiKey);
+        console.log('✅ SendGrid email service initialized successfully');
       } catch (error) {
         console.error('❌ Failed to initialize SendGrid:', error);
         this.mailService = undefined;
       }
     } else {
-      console.log('📧 Email service running in preview mode (no SendGrid API key)');
+      console.log('📧 Email service running in preview mode - no valid SendGrid API key');
     }
   }
 
@@ -407,7 +405,5 @@ export class EmailService {
   }
 }
 
-// Initialize email service singleton
-console.log('📧 Creating EmailService instance...');
+// Create and export email service instance
 export const emailService = new EmailService();
-console.log('📧 EmailService instance created, configured:', emailService.isConfigured());
