@@ -2362,8 +2362,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       let feedback;
-      if (currentUser.role === 'admin') {
-        // Admins can see all feedback
+      if (currentUser.role === 'admin' || currentUser.role === 'sage_admin') {
+        // Admins and Sage admins can see all feedback
         feedback = await storage.getAllFeedback();
       } else {
         // Users can only see their own feedback
@@ -2392,7 +2392,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check access permissions
-      if (currentUser.role !== 'admin' && feedback.userId !== currentUser.id) {
+      if (currentUser.role !== 'admin' && currentUser.role !== 'sage_admin' && feedback.userId !== currentUser.id) {
         return res.status(403).json({ message: "Access denied" });
       }
 
@@ -2406,7 +2406,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/feedback/:id", async (req, res) => {
     try {
       const currentUser = await getCurrentUser(req);
-      if (!currentUser || currentUser.role !== 'admin') {
+      if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'sage_admin')) {
         return res.status(403).json({ message: "Admin access required" });
       }
 
@@ -2432,7 +2432,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/feedback-stats", async (req, res) => {
     try {
       const currentUser = await getCurrentUser(req);
-      if (!currentUser || currentUser.role !== 'admin') {
+      if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'sage_admin')) {
         return res.status(403).json({ message: "Admin access required" });
       }
 
