@@ -29,9 +29,19 @@ export class EmailService {
   private initializeEmailService() {
     const apiKey = process.env.SENDGRID_API_KEY;
     console.log('🔍 Initializing email service...');
+    console.log('🔍 Environment:', process.env.NODE_ENV || 'undefined');
     console.log('🔍 API key exists:', !!apiKey);
     console.log('🔍 API key length:', apiKey?.length || 0);
     console.log('🔍 API key starts with SG.:', apiKey?.startsWith('SG.') || false);
+    
+    // Additional debugging for production environment
+    if (process.env.NODE_ENV === 'production') {
+      console.log('🔍 Production environment detected');
+      console.log('🔍 All environment variables starting with SENDGRID:');
+      Object.keys(process.env).filter(key => key.includes('SENDGRID')).forEach(key => {
+        console.log(`🔍 ${key}: ${process.env[key] ? 'exists' : 'missing'}`);
+      });
+    }
     
     if (apiKey && apiKey.trim().startsWith('SG.')) {
       try {
