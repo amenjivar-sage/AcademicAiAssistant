@@ -23,13 +23,23 @@ export class EmailService {
   private fromEmail = 'noreply@sage-edu.app'; // Default sender email
 
   constructor() {
+    // Debug environment variables
+    console.log('🔍 Email service constructor called');
+    console.log('🔍 SENDGRID_API_KEY exists:', !!process.env.SENDGRID_API_KEY);
+    console.log('🔍 Environment keys:', Object.keys(process.env).filter(k => k.includes('SENDGRID')));
+    
     // Only initialize SendGrid if API key is available
     if (process.env.SENDGRID_API_KEY) {
-      this.mailService = new MailService();
-      this.mailService.setApiKey(process.env.SENDGRID_API_KEY);
-      console.log('✅ Email service initialized with SendGrid');
-      console.log('SendGrid API key length:', process.env.SENDGRID_API_KEY.length);
-      console.log('SendGrid API key prefix:', process.env.SENDGRID_API_KEY.substring(0, 10));
+      try {
+        this.mailService = new MailService();
+        this.mailService.setApiKey(process.env.SENDGRID_API_KEY);
+        console.log('✅ Email service initialized with SendGrid');
+        console.log('SendGrid API key length:', process.env.SENDGRID_API_KEY.length);
+        console.log('SendGrid API key prefix:', process.env.SENDGRID_API_KEY.substring(0, 10));
+      } catch (error) {
+        console.error('❌ Failed to initialize SendGrid:', error);
+        this.mailService = undefined;
+      }
     } else {
       console.log('📧 Email service running in preview mode (no SendGrid API key)');
     }
@@ -375,6 +385,11 @@ export class EmailService {
       console.log('📧 Password reset email ready to send (add SendGrid API key to enable automatic delivery)');
       console.log('📧 SENDGRID_API_KEY exists:', !!process.env.SENDGRID_API_KEY);
       console.log('📧 MailService initialized:', !!this.mailService);
+      console.log('📧 Environment check:', {
+        hasApiKey: !!process.env.SENDGRID_API_KEY,
+        apiKeyLength: process.env.SENDGRID_API_KEY?.length || 0,
+        mailServiceExists: !!this.mailService
+      });
       return { 
         success: true, 
         message: 'Password reset email generated successfully - ready for delivery when SendGrid is configured',
@@ -392,4 +407,7 @@ export class EmailService {
   }
 }
 
+// Initialize email service singleton
+console.log('📧 Creating EmailService instance...');
 export const emailService = new EmailService();
+console.log('📧 EmailService instance created, configured:', emailService.isConfigured());

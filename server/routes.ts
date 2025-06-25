@@ -73,8 +73,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Generate temporary password
+      // Import email service and generate temporary password
       const { emailService } = await import('./email-service');
+      console.log('Email service import successful, checking status...');
+      console.log('Email service configured:', emailService.isConfigured());
       const temporaryPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8).toUpperCase();
       
       // Update user's password temporarily
