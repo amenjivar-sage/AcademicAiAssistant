@@ -74,29 +74,13 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
   }));
 
   const modules = {
-    toolbar: [
-      [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-      ['bold', 'italic', 'underline', 'strike'],
-      [{ 'color': [] }, { 'background': [] }],
-      [{ 'font': [] }],
-      [{ 'align': [] }],
-      ['blockquote', 'code-block'],
-      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-      [{ 'indent': '-1'}, { 'indent': '+1' }],
-      ['link', 'image'],
-      ['clean']
-    ],
+    toolbar: false, // Disable toolbar completely to remove formatting options
     clipboard: {
       matchVisual: false
     }
   };
 
-  const formats = [
-    'header', 'font', 'size',
-    'bold', 'italic', 'underline', 'strike', 'blockquote',
-    'list', 'bullet', 'indent',
-    'link', 'color', 'background'
-  ];
+  const formats = []; // Remove all formatting options
 
   return (
     <div className="editor-wrapper" ref={editorRef}>

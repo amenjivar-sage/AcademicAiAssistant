@@ -108,6 +108,6 @@ app.use((req, res, next) => {
     host: "0.0.0.0",
     reusePort: true,
   }, () => {
-    log(`serving on port ${port} - school admin submissions access v10 deployed`);
+    log(`serving on port ${port} - simplified formatting tools v11 deployed`);
   });
 })();

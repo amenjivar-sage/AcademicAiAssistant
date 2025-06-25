@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Settings, Send, AlertTriangle, Shield, FileText, MessageSquare, Download, Save, GraduationCap, Trophy, Type, Bold, Italic, Underline, ChevronDown, ChevronUp, SpellCheck } from 'lucide-react';
+import { ArrowLeft, Settings, Send, AlertTriangle, Shield, FileText, MessageSquare, Download, Save, GraduationCap, Trophy, SpellCheck } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import CopyPasteDetector from './copy-paste-detector';
 import { RichTextEditor, RichTextEditorHandle } from './rich-text-editor-simple';
@@ -108,8 +108,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     footer: "",
     pageNumbers: false
   });
-  const [showFormattingToolbox, setShowFormattingToolbox] = useState(false);
-  const [isFormattingMinimized, setIsFormattingMinimized] = useState(false);
+  // Removed formatting toolbox state variables
   const [selectedText, setSelectedText] = useState('');
   const [isSpellCheckActive, setIsSpellCheckActive] = useState(false);
   const [spellErrors, setSpellErrors] = useState<any[]>([]);
