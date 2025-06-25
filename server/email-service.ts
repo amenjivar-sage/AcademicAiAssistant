@@ -57,6 +57,13 @@ export class EmailService {
     } else {
       console.log('📧 Email service running in preview mode');
       console.log('📧 Reason: API key missing, empty, or invalid format');
+      console.log('📧 SENDGRID_API_KEY exists:', !!apiKey);
+      console.log('📧 MailService initialized:', !!this.mailService);
+      console.log('📧 Environment check:', {
+        hasApiKey: !!apiKey,
+        apiKeyLength: apiKey?.length || 0,
+        mailServiceExists: !!this.mailService
+      });
       if (apiKey) {
         console.log('📧 Current API key preview:', apiKey.substring(0, 10) + '...');
       }

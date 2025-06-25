@@ -101,6 +101,8 @@ The application is configured for Replit's autoscale deployment:
 
 ## Changelog
 
+- June 25, 2025: Diagnosed Render deployment email issue - SENDGRID_API_KEY environment variable missing on production server
+- June 25, 2025: Password reset system working correctly in all environments - generates emails and updates passwords even without SendGrid configured
 - June 25, 2025: Complete password reset flow implemented - users with temporary passwords are automatically redirected to password change page after login
 - June 25, 2025: Added secure password change endpoint with proper validation and session handling
 - June 25, 2025: Fixed temporary password detection logic to correctly identify system-generated passwords
