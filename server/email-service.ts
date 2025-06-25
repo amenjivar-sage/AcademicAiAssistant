@@ -358,6 +358,7 @@ export class EmailService {
         console.log('From:', this.fromEmail);
         console.log('Subject:', subject);
         console.log('MailService exists:', !!this.mailService);
+        console.log('API Key configured:', !!process.env.SENDGRID_API_KEY);
         
         const emailData = {
           to: data.email,
@@ -376,7 +377,18 @@ export class EmailService {
         });
         
         const result = await this.mailService.send(emailData);
-        console.log('✅ SendGrid response:', JSON.stringify(result, null, 2));
+        console.log('📬 SendGrid Response Details:');
+        console.log('- Status Code:', result[0]?.statusCode);
+        console.log('- Headers:', JSON.stringify(result[0]?.headers, null, 2));
+        console.log('- Body:', JSON.stringify(result[0]?.body, null, 2));
+        console.log('- Message ID:', result[0]?.headers?.['x-message-id']);
+        
+        if (result[0]?.statusCode === 202) {
+          console.log('✅ Email queued successfully by SendGrid');
+        } else {
+          console.log('⚠️ Unexpected status code from SendGrid:', result[0]?.statusCode);
+        }
+        
         console.log('✅ Password reset email sent successfully to', data.email);
         return { 
           success: true, 
