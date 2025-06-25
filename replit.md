@@ -119,3 +119,11 @@ The application is configured for Replit's autoscale deployment:
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+
+## Mobile App Development Strategy
+
+User expressed interest in converting the Sage platform into Android and iOS mobile applications. Key considerations:
+- Leverage existing React/TypeScript codebase
+- Maintain feature parity with web platform
+- Consider hybrid vs native development approaches
+- Ensure seamless user experience across platforms
