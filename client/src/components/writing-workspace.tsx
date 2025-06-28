@@ -203,13 +203,17 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       setWordCount(currentWordCount);
       setIsSaving(false);
       setLastSaved(new Date());
-      queryClient.invalidateQueries({ queryKey: ['writing-session', currentSessionId] });
-      queryClient.invalidateQueries({ queryKey: ['/api/student/writing-sessions'] });
+      
+      // Only invalidate queries if user has stopped typing to prevent cursor jumping
+      if (!isUserTyping) {
+        queryClient.invalidateQueries({ queryKey: ['writing-session', currentSessionId] });
+        queryClient.invalidateQueries({ queryKey: ['/api/student/writing-sessions'] });
+      }
     } catch (error) {
       console.error('Save failed:', error);
       setIsSaving(false);
     }
-  }, [content, title, pastedContents, wordCount, sessionId, isSaving, assignmentId, createSessionMutation, queryClient]);
+  }, [content, title, pastedContents, wordCount, sessionId, isSaving, assignmentId, createSessionMutation, queryClient, isUserTyping]);
 
   // Fetch session data
   const { data: session, isLoading: sessionLoading } = useQuery({
@@ -269,9 +273,22 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     return () => clearTimeout(timer);
   }, [content, title, saveSession, isSaving, session]);
 
-  // Sync with session data when it loads
+  // Track if user is currently typing to prevent cursor jumping
+  const [isUserTyping, setIsUserTyping] = useState(false);
+  const typingTimeoutRef = useRef<NodeJS.Timeout>();
+
+  // Cleanup typing timeout on unmount
   useEffect(() => {
-    if (session && !sessionLoading) {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Sync with session data when it loads (but not when user is actively typing)
+  useEffect(() => {
+    if (session && !sessionLoading && !isUserTyping) {
       console.log('=== SESSION LOADING DEBUG ===');
       console.log('Session data received:', {
         id: session.id,
@@ -291,7 +308,12 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       const currentContent = content || '';
       console.log('Has current content:', currentContent.substring(0, 50));
 
-      if (session.content && session.content !== currentContent) {
+      // Only sync if this is the initial load (empty content) or if content is significantly different
+      const isInitialLoad = !currentContent.trim();
+      const hasSignificantDifference = session.content && 
+        Math.abs(session.content.length - currentContent.length) > 50;
+
+      if (session.content && (isInitialLoad || hasSignificantDifference)) {
         console.log('✓ Syncing with session content');
         setContent(session.content);
         setTitle(session.title || '');
@@ -313,10 +335,12 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
           actualWordCount,
           dbWordCount: session.wordCount
         });
+      } else {
+        console.log('✓ Skipping content sync - user is typing or content similar');
       }
       console.log('=== END SESSION LOADING DEBUG ===');
     }
-  }, [session, sessionLoading, sessionId]);
+  }, [session, sessionLoading, sessionId, isUserTyping]);
 
   // Copy-paste permissions
   const allowCopyPaste = assignment?.allowCopyPaste ?? true;
@@ -424,7 +448,20 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
           <div className="flex items-center gap-4">
             <Input
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                
+                // Mark user as typing for title changes too
+                setIsUserTyping(true);
+                if (typingTimeoutRef.current) {
+                  clearTimeout(typingTimeoutRef.current);
+                }
+                
+                // Clear typing flag after 3 seconds of no typing
+                typingTimeoutRef.current = setTimeout(() => {
+                  setIsUserTyping(false);
+                }, 3000);
+              }}
               placeholder="Document title..."
               className="text-lg font-medium border-none shadow-none px-0"
               disabled={isSubmitted || isGraded}
@@ -664,6 +701,17 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                 onContentChange={(newContent) => {
                   console.log('Content changed from rich editor:', newContent);
                   setContent(newContent);
+                  
+                  // Mark user as typing and reset the typing timeout
+                  setIsUserTyping(true);
+                  if (typingTimeoutRef.current) {
+                    clearTimeout(typingTimeoutRef.current);
+                  }
+                  
+                  // Clear typing flag after 3 seconds of no typing
+                  typingTimeoutRef.current = setTimeout(() => {
+                    setIsUserTyping(false);
+                  }, 3000);
                 }}
                 onTextSelection={setSelectedText}
                 readOnly={session?.status === 'graded'}
