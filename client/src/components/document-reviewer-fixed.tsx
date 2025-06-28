@@ -637,32 +637,61 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
         pastedSentences.forEach((sentence: string) => {
           const cleanSentence = sentence.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
           
-          if (cleanSentence.length > 5) {
-            console.log('Looking for sentence in content:', cleanSentence);
+          if (cleanSentence.length > 10) {
+            console.log('Looking for sentence in content:', cleanSentence.substring(0, 50) + '...');
             
-            // Create a more flexible regex that handles HTML tags
-            const words = cleanSentence.split(' ').filter((w: string) => w.length > 0);
-            if (words.length >= 3) {
-              // Build pattern that allows HTML tags between words
-              const pattern = words.map((word: string) => 
-                word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-              ).join('\\s*(?:<[^>]*>)*\\s*');
-              
-              console.log('Search pattern:', pattern);
-              
-              const regex = new RegExp(`(${pattern})`, 'gi');
-              const matches = content.match(regex);
-              
-              if (matches) {
-                console.log('Found matches:', matches);
-                result = result.replace(regex, (match) => {
-                  console.log('Highlighting match:', match);
-                  return `<span style="background-color: #fee2e2; border: 2px solid #dc2626; padding: 2px 4px; border-radius: 3px; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected on ${new Date(paste.timestamp).toLocaleString()}">${match}</span>`;
-                });
-              } else {
-                console.log('No matches found for:', cleanSentence);
+            // Strategy 1: Try exact matching first
+            if (result.includes(cleanSentence)) {
+              console.log('✓ Found exact sentence match');
+              result = result.replace(cleanSentence, `<span style="background-color: #fee2e2; border: 2px solid #dc2626; padding: 2px 4px; border-radius: 3px; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected on ${new Date(paste.timestamp).toLocaleString()}">${cleanSentence}</span>`);
+              return;
+            }
+            
+            // Strategy 2: Look for distinctive word sequences (3-5 words)
+            const words = cleanSentence.split(/\s+/).filter(w => w.length > 2);
+            if (words.length >= 4) {
+              for (let i = 0; i <= words.length - 4; i++) {
+                const phrase = words.slice(i, i + 4).join(' ');
+                const phraseWords = phrase.split(' ').map(w => w.replace(/[^\w]/g, '')).filter(w => w.length > 0);
+                
+                if (phraseWords.length >= 3) {
+                  // Create a flexible pattern that allows for minor variations
+                  const pattern = phraseWords.map(word => 
+                    word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+                  ).join('\\s+\\w*\\s*');
+                  
+                  const regex = new RegExp(`\\b${pattern}\\b`, 'gi');
+                  const matches = result.match(regex);
+                  
+                  if (matches && matches.length > 0) {
+                    console.log('✓ Found phrase match:', matches[0]);
+                    result = result.replace(regex, (match) => {
+                      return `<span style="background-color: #fee2e2; border: 2px solid #dc2626; padding: 2px 4px; border-radius: 3px; color: #991b1b; font-weight: 600;" title="Copy-pasted phrase detected on ${new Date(paste.timestamp).toLocaleString()}">${match}</span>`;
+                    });
+                    break; // Only highlight one match per phrase to avoid over-highlighting
+                  }
+                }
               }
             }
+            
+            // Strategy 3: Individual distinctive words (fallback)
+            const distinctiveWords = words.filter(word => 
+              word.length > 6 && 
+              !/^(the|and|that|this|with|from|they|have|will|been|were|said|each|which|their|time|about|after|before|here|when|where|why|how|all|any|may|had|has|was|his|her|him|she|you|can|now|get|way|use|man|new|just|old|see|come|make|many|over|such|take|than|only|think|know|work|life|also|back|little|good|right|still|way|even|another|while|because|without|since|against|around|between)$/i.test(word)
+            ).slice(0, 3);
+            
+            distinctiveWords.forEach(word => {
+              const cleanWord = word.replace(/[^\w]/g, '');
+              if (cleanWord.length > 5) {
+                const wordRegex = new RegExp(`\\b${cleanWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
+                if (result.match(wordRegex)) {
+                  console.log('✓ Found distinctive word:', cleanWord);
+                  result = result.replace(wordRegex, (match) => {
+                    return `<span style="background-color: #fef2f2; border-left: 4px solid #dc2626; padding: 1px 3px; color: #991b1b; font-weight: 500;" title="Copy-pasted word detected">${match}</span>`;
+                  });
+                }
+              }
+            });
           }
         });
       }
