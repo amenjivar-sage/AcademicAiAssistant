@@ -728,12 +728,8 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                 content={(() => {
                   let displayContent = content;
                   
-                  // Apply copy-paste highlighting first (red highlighting)
-                  if (pastedContents.length > 0) {
-                    displayContent = highlightPastedContent(displayContent, pastedContents);
-                  }
-                  
-                  // Apply teacher comment highlighting second (yellow highlighting)
+                  // Only apply teacher comment highlighting (yellow highlighting) for graded documents
+                  // Copy-paste highlighting removed from student view for better writing experience
                   if (session?.status === 'graded' && commentsArray.length > 0) {
                     displayContent = highlightCommentedText(displayContent, commentsArray);
                   }
