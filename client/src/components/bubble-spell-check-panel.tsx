@@ -39,6 +39,15 @@ export default function BubbleSpellCheckPanel({
     setIsLoading(true);
     setLastCheckedContent(content);
     
+    // Debug: Show what content we're spell checking
+    console.log('🔍 Spell Check Debug - Environment:', window.location.hostname);
+    console.log('🔍 Content being checked:', {
+      length: content.length,
+      preview: content.substring(0, 200) + '...',
+      hasHTML: content.includes('<'),
+      wordCount: content.split(/\s+/).filter(w => w.length > 0).length
+    });
+    
     // Apply auto-corrections for common typos first
     const autoCorrectResult = applyAutoCorrections(content);
     if (autoCorrectResult.changes.length > 0) {

@@ -58,6 +58,14 @@ export default function AiAssistant({ sessionId, currentContent }: AiAssistantPr
       // Allow AI assistant to work without session for general help
       const currentSessionId = sessionId && sessionId > 0 ? sessionId : null;
       
+      // Debug: Check what content we're sending to AI
+      console.log('🤖 AI Assistant - Content being sent:', {
+        contentLength: currentContent?.length || 0,
+        contentPreview: currentContent?.substring(0, 100) + '...',
+        hasContent: !!currentContent,
+        promptLength: promptText.length
+      });
+      
       const response = await apiRequest("POST", "/api/ai/chat", {
         sessionId: currentSessionId,
         prompt: promptText,

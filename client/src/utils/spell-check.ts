@@ -196,6 +196,8 @@ export function checkSpelling(text: string): SpellCheckResult[] {
 
   console.log('🔍 Spell check starting. Text length:', text.length, 'Words found:', words.length);
   console.log('🔍 Environment:', window.location.hostname, 'Production?', window.location.hostname.includes('replit.app') || window.location.hostname.includes('onrender.com'));
+  console.log('🔍 Sample words:', words.slice(0, 10));
+  console.log('🔍 Dictionary sample:', Object.keys(SPELL_CHECK_DICTIONARY).slice(0, 10));
 
   words.forEach(word => {
     const wordIndex = text.indexOf(word, currentIndex);
