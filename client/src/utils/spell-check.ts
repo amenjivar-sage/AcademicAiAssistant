@@ -12,6 +12,7 @@ export const SPELL_CHECK_DICTIONARY: Record<string, string> = {
   'recieve': 'receive',
   'seperate': 'separate',
   'definately': 'definitely',
+  'definatly': 'definitely',
   'occured': 'occurred',
   'necesary': 'necessary',
   'accomodate': 'accommodate',
@@ -48,6 +49,37 @@ export const SPELL_CHECK_DICTIONARY: Record<string, string> = {
   'knowlege': 'knowledge',
   'langauge': 'language',
   'maintainance': 'maintenance',
+  
+  // Additional common student misspellings for testing
+  'somthing': 'something',
+  'eveything': 'everything',
+  'becuase': 'because',
+  'beacuse': 'because',
+  'finlly': 'finally',
+  'manajed': 'managed',
+  'thouhg': 'though',
+  'errrors': 'errors',
+  'spces': 'spaces',
+  'teechur': 'teacher',
+  'paprs': 'papers',
+  'ahed': 'ahead',
+  'leest': 'least',
+  'tryed': 'tried',
+  'whisperd': 'whispered',
+  'mispellings': 'misspellings',
+  'sentenses': 'sentences',
+  'incohrent': 'incoherent',
+  'phrasis': 'phrases',
+  'promissed': 'promised',
+  'reed': 'read',
+  'proofreed': 'proofread',
+  'grammer': 'grammar',
+  'dosn\'t': 'doesn\'t',
+  'loade': 'load',
+  'mayby': 'maybe',
+  'servr': 'server',
+  'replyed': 'replied',
+  'evantually': 'eventually',
   'ocasionally': 'occasionally',
   'parliment': 'parliament',
   'priviledge': 'privilege',
@@ -162,12 +194,16 @@ export function checkSpelling(text: string): SpellCheckResult[] {
   const words = text.match(/\b[a-zA-Z]+\b/g) || [];
   let currentIndex = 0;
 
+  console.log('🔍 Spell check starting. Text length:', text.length, 'Words found:', words.length);
+  console.log('🔍 Environment:', window.location.hostname, 'Production?', window.location.hostname.includes('replit.app') || window.location.hostname.includes('onrender.com'));
+
   words.forEach(word => {
     const wordIndex = text.indexOf(word, currentIndex);
     const lowerWord = word.toLowerCase();
     
     // Check against our dictionary first
     if (SPELL_CHECK_DICTIONARY[lowerWord]) {
+      console.log('✓ Found misspelling in dictionary:', word, '->', SPELL_CHECK_DICTIONARY[lowerWord]);
       results.push({
         word,
         suggestion: SPELL_CHECK_DICTIONARY[lowerWord],
@@ -176,9 +212,15 @@ export function checkSpelling(text: string): SpellCheckResult[] {
       });
     } else {
       // Check against comprehensive English word list
-      if (!isValidEnglishWord(word)) {
+      const isValid = isValidEnglishWord(word);
+      console.log('🔍 Checking word:', word, 'Valid?', isValid);
+      
+      if (!isValid) {
         const suggestion = detectSpellingError(word) || generateSuggestion(word);
+        console.log('🔍 Generated suggestion for', word, ':', suggestion);
+        
         if (suggestion && suggestion !== lowerWord) {
+          console.log('✓ Adding spell check result:', word, '->', suggestion);
           results.push({
             word,
             suggestion,
@@ -192,6 +234,7 @@ export function checkSpelling(text: string): SpellCheckResult[] {
     currentIndex = wordIndex + word.length;
   });
 
+  console.log('🔍 Spell check complete. Found', results.length, 'issues:', results.map(r => `${r.word}->${r.suggestion}`));
   return results;
 }
 
