@@ -959,9 +959,10 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
             onContentChange={(newContent) => {
               console.log('Spellcheck applying content change:', newContent.length, 'chars');
               
-              // SAFETY: Only update if we have substantial content to prevent data loss
-              if (newContent && newContent.trim().length > 5) {
-                console.log('✓ Safe to apply spell check correction');
+              // SAFETY: Apply spell check corrections regardless of length
+              // as they are user-initiated corrections, not data loss scenarios
+              if (newContent !== undefined && newContent !== null) {
+                console.log('✓ Applying spell check correction');
                 setContent(newContent);
                 
                 // Mark user as typing to prevent auto-save conflicts
@@ -977,7 +978,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                   setIsUserTyping(false);
                 }, 1000);
               } else {
-                console.warn('⚠️ Spell check tried to apply unsafe content change - blocked to prevent data loss');
+                console.warn('⚠️ Spell check provided invalid content - blocked');
               }
             }}
             isOpen={isSpellCheckActive}
