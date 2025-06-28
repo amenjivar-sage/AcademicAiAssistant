@@ -67,13 +67,22 @@ export default function StudentDashboard() {
   console.log("=== END DASHBOARD DEBUG ===");
 
   // Get student's assignments across all classes with aggressive refresh
-  const { data: assignments = [], isLoading: assignmentsLoading } = useQuery<Assignment[]>({
+  const { data: assignments = [], isLoading: assignmentsLoading, error: assignmentsError } = useQuery<Assignment[]>({
     queryKey: ["/api/student/assignments"],
     staleTime: 0, // Always consider stale for immediate updates
     refetchOnMount: true,
     refetchOnWindowFocus: true,
     refetchInterval: 5000, // Refresh every 5 seconds to catch new assignments
   });
+
+  // Debug logging for assignments
+  console.log("=== ASSIGNMENTS DEBUG ===");
+  console.log("Assignments data:", assignments, "Loading:", assignmentsLoading, "Error:", assignmentsError);
+  console.log("Number of assignments:", assignments?.length || 0);
+  if (assignmentsError) {
+    console.error("Assignments error details:", assignmentsError);
+  }
+  console.log("=== END ASSIGNMENTS DEBUG ===");
 
   // Get student's writing sessions
   const { data: sessions = [], isLoading: sessionsLoading } = useQuery<WritingSession[]>({
@@ -349,6 +358,34 @@ export default function StudentDashboard() {
                       (a.classroomIds && a.classroomIds.includes(selectedClassroom.id))
                     ) || [];
                     
+                    if (assignmentsError) {
+                      return (
+                        <Card>
+                          <CardContent className="p-12 text-center">
+                            <AlertTriangle className="h-12 w-12 text-red-300 mx-auto mb-4" />
+                            <h3 className="text-lg font-medium text-gray-900 mb-2">Error loading assignments</h3>
+                            <p className="text-gray-500">There was a problem loading your assignments. Please refresh the page.</p>
+                            <details className="mt-4 text-left bg-gray-50 p-3 rounded text-sm">
+                              <summary className="cursor-pointer font-medium">Error details</summary>
+                              <pre className="mt-2 whitespace-pre-wrap">{JSON.stringify(assignmentsError, null, 2)}</pre>
+                            </details>
+                          </CardContent>
+                        </Card>
+                      );
+                    }
+
+                    if (assignmentsLoading) {
+                      return (
+                        <Card>
+                          <CardContent className="p-12 text-center">
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                            <h3 className="text-lg font-medium text-gray-900 mb-2">Loading assignments...</h3>
+                            <p className="text-gray-500">Please wait while we fetch your assignments</p>
+                          </CardContent>
+                        </Card>
+                      );
+                    }
+                    
                     if (classAssignments.length === 0) {
                       return (
                         <Card>
@@ -356,6 +393,9 @@ export default function StudentDashboard() {
                             <BookOpen className="h-12 w-12 text-gray-300 mx-auto mb-4" />
                             <h3 className="text-lg font-medium text-gray-900 mb-2">No assignments yet</h3>
                             <p className="text-gray-500">Your teacher hasn't posted any assignments for this class yet</p>
+                            <div className="mt-4 text-xs text-gray-400 bg-gray-50 p-2 rounded">
+                              Debug: {assignments?.length || 0} total assignments loaded, {classAssignments.length} for this class
+                            </div>
                           </CardContent>
                         </Card>
                       );
