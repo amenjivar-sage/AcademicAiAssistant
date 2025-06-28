@@ -549,6 +549,21 @@ export default function BubbleSpellCheckPanel({
                 </Button>
               )}
             </div>
+            
+            {/* Fix All Option */}
+            {spellErrors.length > 1 && (
+              <div className="pt-2 border-t">
+                <Button
+                  onClick={handleFixAll}
+                  variant="outline"
+                  size="sm"
+                  className="w-full text-green-600 border-green-300 hover:bg-green-50"
+                  disabled={isLoading}
+                >
+                  ✨ Fix All {spellErrors.length} Errors
+                </Button>
+              </div>
+            )}
           </div>
         ) : null}
       </CardContent>
