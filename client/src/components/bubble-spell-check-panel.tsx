@@ -96,13 +96,12 @@ export default function BubbleSpellCheckPanel({
     };
     
     performSpellCheck();
-  }, [content, isOpen, isLoading, lastCheckedContent, onContentChange, onSpellErrorsChange, onCurrentErrorChange]);
+  }, [content, isOpen, isLoading, lastCheckedContent]);
 
-  // Only run spell check when panel is first opened or content significantly changes
+  // Only run spell check when panel is first opened
   useEffect(() => {
-    if (isOpen && !isLoading && content !== lastCheckedContent && content.length > 10) {
-      const timer = setTimeout(debouncedSpellCheck, 3000); // Much longer debounce
-      return () => clearTimeout(timer);
+    if (isOpen && spellErrors.length === 0 && content.length > 10) {
+      debouncedSpellCheck();
     }
   }, [isOpen]); // Only trigger on panel open, not content changes
 
@@ -132,22 +131,27 @@ export default function BubbleSpellCheckPanel({
 
   const handleAcceptSuggestion = (suggestionText?: string) => {
     const error = spellErrors[currentErrorIndex];
-    if (!error) return;
+    if (!error) {
+      console.warn('❌ No error found at index', currentErrorIndex);
+      return;
+    }
 
     const replacement = suggestionText || (error.suggestions && error.suggestions[0]) || error.suggestion;
     
-    console.log('🔧 Applying spell correction:', {
+    console.log('🔧 DEBUG: handleAcceptSuggestion called', {
       original: error.word,
       replacement: replacement,
-      startIndex: error.startIndex,
-      endIndex: error.endIndex
+      panelWillRemainOpen: true
     });
     
     const newContent = applySpellCheckSuggestion(content, error, replacement);
     
     // Verify the correction was applied
     if (newContent !== content) {
-      console.log('✅ Spell correction applied successfully');
+      console.log('✅ Content changed - applying correction');
+      
+      // Apply the corrected content immediately
+      onContentChange(newContent);
       
       // Track the change for undo functionality
       setRecentChanges(prev => [...prev, {
@@ -156,9 +160,6 @@ export default function BubbleSpellCheckPanel({
         timestamp: Date.now()
       }]);
 
-      // Apply the corrected content
-      onContentChange(newContent);
-      
       // Show success message
       setShowSuccessMessage(`"${error.word}" → "${replacement}"`);
       setTimeout(() => setShowSuccessMessage(null), 2000);
@@ -170,20 +171,14 @@ export default function BubbleSpellCheckPanel({
       onSpellErrorsChange?.(newErrors);
       
       if (newErrors.length === 0) {
-        // All errors fixed! Show success message but keep panel open
-        console.log('✅ All spelling errors fixed!');
+        console.log('✅ All spelling errors fixed! Panel staying open.');
         // Panel stays open so user can run spell check again if needed
       } else {
-        // Auto-advance to next word - keep same index or adjust if needed
-        if (currentErrorIndex >= newErrors.length) {
-          const newIndex = Math.max(0, newErrors.length - 1);
-          setCurrentErrorIndex(newIndex);
-          onCurrentErrorChange?.(newIndex);
-          console.log('📍 Advanced to error', newIndex + 1, 'of', newErrors.length);
-        } else {
-          onCurrentErrorChange?.(currentErrorIndex);
-          console.log('📍 Advanced to error', currentErrorIndex + 1, 'of', newErrors.length);
-        }
+        // Auto-advance to next word
+        const nextIndex = Math.min(currentErrorIndex, newErrors.length - 1);
+        setCurrentErrorIndex(nextIndex);
+        onCurrentErrorChange?.(nextIndex);
+        console.log('📍 Advanced to error', nextIndex + 1, 'of', newErrors.length);
       }
     } else {
       console.warn('❌ Spell correction failed - content unchanged');
