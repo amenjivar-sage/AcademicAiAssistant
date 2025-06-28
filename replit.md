@@ -119,6 +119,8 @@ The application is configured for both Replit and Render deployment:
 
 ## Changelog
 
+- June 28, 2025: Fixed copy-paste detection in teacher review - improved algorithm to exclude spell-check corrections from false positive highlighting
+- June 28, 2025: Enhanced copy-paste detection criteria - stricter thresholds (75% similarity, 60% exact matches) to reduce interference from legitimate spell corrections
 - June 28, 2025: Successfully resolved spell check system issues - "Fix This Word" button now functions correctly for individual word corrections while "Fix All" handles multiple errors
 - June 28, 2025: Fixed spell check data format consistency - API responses and UI expectations now properly aligned with suggestions arrays
 - June 28, 2025: Enhanced spell check button clarity - distinct labeling prevents user confusion between single-word and bulk correction actions

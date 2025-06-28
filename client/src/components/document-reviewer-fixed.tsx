@@ -344,6 +344,13 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                     return;
                   }
                   
+                  // Skip content that shows signs of recent spell checking (multiple corrected words)
+                  const hasSpellCheckMarkers = /\b(misspelled|receive|separate|definitely|occurred|necessary|believe|friend|weird|which)\b/i.test(docSentTrimmed);
+                  if (hasSpellCheckMarkers) {
+                    console.log('Skipping content with spell check markers:', docSentTrimmed.substring(0, 30));
+                    return;
+                  }
+                  
                   // Skip already highlighted content - be more precise
                   const sentenceStart = docSentTrimmed.substring(0, Math.min(15, docSentTrimmed.length));
                   const isAlreadyHighlighted = result.includes(`<span style="background-color: #fecaca`) && 
