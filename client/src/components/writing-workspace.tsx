@@ -92,11 +92,45 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
         const escapedText = cleanText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         
         if (escapedText.length > 0) {
+          // More precise highlighting - only highlight content that hasn't been modified since paste
+          // Create a regex that looks for the exact pasted content within reasonable bounds
           const regex = new RegExp(`(${escapedText})`, 'gi');
           
-          highlightedContent = highlightedContent.replace(regex, (match) => {
-            return `<span style="background-color: #fee2e2; border: 2px solid #dc2626; padding: 2px 4px; border-radius: 3px; color: #991b1b;" title="Copy-pasted content detected on ${paste.timestamp.toLocaleString()}">${match}</span>`;
-          });
+          // Track if we've already highlighted this paste to avoid duplicate highlighting
+          let highlightApplied = false;
+          
+          // Use a simpler approach - only highlight the first occurrence of pasted content
+          // and track content age to avoid highlighting newly typed similar text
+          const currentTime = Date.now();
+          const pasteAge = currentTime - paste.timestamp.getTime();
+          
+          // Only apply highlighting if the paste is recent enough and we haven't highlighted it yet
+          if (pasteAge < 24 * 60 * 60 * 1000 && !highlightedContent.includes(`title="Copy-pasted content detected on ${paste.timestamp.toLocaleString()}"`)) {
+            // Find the first occurrence and replace only that one
+            const firstMatchIndex = highlightedContent.search(regex);
+            
+            if (firstMatchIndex !== -1) {
+              const match = highlightedContent.match(regex)?.[0];
+              if (match) {
+                // Calculate the clean text position to compare with paste position
+                const cleanTextBeforeMatch = highlightedContent.substring(0, firstMatchIndex).replace(/<[^>]*>/g, '');
+                const estimatedPosition = cleanTextBeforeMatch.length;
+                
+                // Only highlight if this appears to be near the original paste location
+                const isNearOriginalPosition = Math.abs(estimatedPosition - paste.startIndex) <= 50;
+                
+                if (isNearOriginalPosition) {
+                  // Replace only the first occurrence
+                  highlightedContent = highlightedContent.replace(regex, () => {
+                    return `<span style="background-color: #fee2e2; border: 2px solid #dc2626; padding: 2px 4px; border-radius: 3px; color: #991b1b;" title="Copy-pasted content detected on ${paste.timestamp.toLocaleString()}">${match}</span>`;
+                  });
+                  
+                  // Break the loop to avoid multiple replacements
+                  break;
+                }
+              }
+            }
+          }
         }
       }
     }
