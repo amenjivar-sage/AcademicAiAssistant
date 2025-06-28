@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +27,37 @@ export default function StudentDashboard() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   console.log("🎯 Student dashboard - user from useAuth:", user);
+  
+  // Backup method to fetch user data if useAuth fails
+  const [manualUser, setManualUser] = useState<any>(null);
+  
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        console.log("🔄 Manually fetching user data...");
+        const response = await fetch("/api/auth/user", {
+          credentials: "include",
+        });
+        
+        if (response.ok) {
+          const userData = await response.json();
+          console.log("✅ Manual fetch successful:", userData);
+          setManualUser(userData);
+        } else {
+          console.log("❌ Manual fetch failed:", response.status);
+        }
+      } catch (error) {
+        console.log("❌ Manual fetch error:", error);
+      }
+    };
+    
+    if (!user) {
+      fetchUserData();
+    }
+  }, [user]);
+  
+  // Use either the useAuth user or the manually fetched user
+  const currentUser = user || manualUser;
 
   // Logout function
   const handleLogout = async () => {
@@ -106,7 +137,7 @@ export default function StudentDashboard() {
               <SageLogo className="h-8 w-8" />
               <div>
                 <h1 className="text-xl font-bold text-gray-900">Student Dashboard</h1>
-                <p className="text-sm text-gray-600">Welcome back, {user?.firstName || 'Student'}!</p>
+                <p className="text-sm text-gray-600">Welcome back, {currentUser?.firstName || 'Student'}!</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
