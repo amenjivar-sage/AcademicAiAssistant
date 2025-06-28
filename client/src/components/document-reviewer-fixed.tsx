@@ -379,71 +379,46 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                         if (cleanPastedWord === docWord) {
                           exactMatches += 1;
                         }
-                        // Spell-corrected match (similar root words)
+                        // Only check for non-spell-check related similarities
                         else if (cleanPastedWord.length >= 3 && docWord.length >= 3) {
-                          // Enhanced spelling correction detection
-                          const corrections: Record<string, string[]> = {
-                            'fealing': ['feeling'], 'sandwitches': ['sandwiches'], 'promissed': ['promised'],
-                            'probbably': ['probably'], 'perfact': ['perfect'], 'reminde': ['remind'],
-                            'teh': ['the'], 'adn': ['and'], 'recieve': ['receive'], 'seperate': ['separate'],
-                            'definately': ['definitely'], 'occured': ['occurred'], 'necesary': ['necessary'],
-                            'beleive': ['believe'], 'freind': ['friend'], 'wierd': ['weird'], 'messed': ['messed'],
-                            'compass': ['compass'], 'exploring': ['exploring'], 'nature': ['nature'], 'friendship': ['friendship']
-                          };
+                          // Skip obvious spell check corrections to avoid false positives
+                          const commonSpellCheckPairs = [
+                            ['mispelled', 'misspelled'], ['recieve', 'receive'], ['seperate', 'separate'],
+                            ['definately', 'definitely'], ['occured', 'occurred'], ['necesary', 'necessary'],
+                            ['beleive', 'believe'], ['freind', 'friend'], ['wierd', 'weird'],
+                            ['teh', 'the'], ['adn', 'and'], ['wich', 'which'], ['alot', 'a lot'],
+                            ['there', 'their'], ['your', 'you\'re'], ['its', 'it\'s']
+                          ];
                           
-                          // Check direct corrections
-                          const isDirectCorrection = corrections[cleanPastedWord]?.includes(docWord) || 
-                                                    corrections[docWord]?.includes(cleanPastedWord);
-                          
-                          // Check reverse corrections  
-                          const isReverseCorrection = Object.entries(corrections).some(([incorrect, correctList]) => 
-                            (correctList.includes(cleanPastedWord) && docWord === incorrect) ||
-                            (correctList.includes(docWord) && cleanPastedWord === incorrect)
+                          // Check if this is a known spell check correction pair
+                          const isSpellCheckCorrection = commonSpellCheckPairs.some(([wrong, right]) => 
+                            (cleanPastedWord === wrong && docWord === right) ||
+                            (cleanPastedWord === right && docWord === wrong)
                           );
                           
-                          // Check phonetic/visual similarity for common errors
-                          const isPhoneticMatch = (
-                            (cleanPastedWord === 'fealing' && docWord === 'feeling') ||
-                            (cleanPastedWord === 'feeling' && docWord === 'fealing') ||
-                            (cleanPastedWord === 'sandwitches' && docWord === 'sandwiches') ||
-                            (cleanPastedWord === 'sandwiches' && docWord === 'sandwitches') ||
-                            (cleanPastedWord === 'promissed' && docWord === 'promised') ||
-                            (cleanPastedWord === 'promised' && docWord === 'promissed') ||
-                            (cleanPastedWord === 'probbably' && docWord === 'probably') ||
-                            (cleanPastedWord === 'probably' && docWord === 'probbably') ||
-                            (cleanPastedWord === 'perfact' && docWord === 'perfect') ||
-                            (cleanPastedWord === 'perfect' && docWord === 'perfact') ||
-                            (cleanPastedWord === 'reminde' && docWord === 'remind') ||
-                            (cleanPastedWord === 'remind' && docWord === 'reminde')
-                          );
-                          
-                          if (isDirectCorrection || isReverseCorrection || isPhoneticMatch) {
-                            exactMatches += 0.9; // Give high weight to spelling corrections
-                            console.log(`Found spelling correction: ${cleanPastedWord} <-> ${docWord}`);
-                          }
-                          
-                          const rootMatch = cleanPastedWord.substring(0, 3) === docWord.substring(0, 3) ||
-                                          (cleanPastedWord.includes('tr') && docWord.includes('tr')) ||
-                                          (cleanPastedWord.includes('ig') && docWord.includes('ig')) ||
-                                          (cleanPastedWord.includes('co') && docWord.includes('co'));
-                          
-                          if (rootMatch && Math.abs(cleanPastedWord.length - docWord.length) <= 3) {
-                            closeMatches += 1;
+                          // Only count as similarity match if it's NOT a spell check correction
+                          if (!isSpellCheckCorrection) {
+                            const rootMatch = cleanPastedWord.substring(0, 3) === docWord.substring(0, 3) &&
+                                            Math.abs(cleanPastedWord.length - docWord.length) <= 2;
+                            
+                            if (rootMatch) {
+                              closeMatches += 0.5; // Reduced weight for non-spell-check similarities
+                            }
                           }
                         }
                       });
                     });
                     
-                    // Calculate match strength - require mostly exact matches
-                    const totalMatches = exactMatches + (closeMatches * 0.7);
+                    // Calculate match strength - focus on exact matches to reduce spell-check false positives
+                    const totalMatches = exactMatches + (closeMatches * 0.3); // Reduced weight for close matches
                     const matchPercentage = totalMatches / pastedWords.length;
                     console.log('Match analysis for sentence:', docSentTrimmed, 
                                'Exact:', exactMatches, 'Close:', closeMatches, 'Percentage:', matchPercentage);
                     
-                    // More balanced criteria to catch large-scale copying while reducing false positives
-                    const meetsThreshold = matchPercentage >= 0.60; // Require 60% similarity (lowered for better detection)
-                    const hasEnoughExactMatches = exactMatches >= Math.max(2, Math.floor(pastedWords.length * 0.40)); // Require 40% exact matches
-                    const hasMinLength = pastedWords.length >= 4 && docWords.length >= 4; // Shorter minimum length
+                    // Stricter criteria to reduce false positives from spell-checked content
+                    const meetsThreshold = matchPercentage >= 0.75; // Require 75% similarity (increased from 60%)
+                    const hasEnoughExactMatches = exactMatches >= Math.max(3, Math.floor(pastedWords.length * 0.60)); // Require 60% exact matches (increased from 40%)
+                    const hasMinLength = pastedWords.length >= 5 && docWords.length >= 5; // Require longer sentences
                     
                     console.log('Criteria check for:', docSentTrimmed);
                     console.log('- Meets threshold (60%):', meetsThreshold, matchPercentage);
@@ -488,8 +463,8 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                           return;
                         }
                         
-                        // Highlight content based on stricter exact word matches and similarity percentage
-                        if ((matchPercentage >= 0.8 && exactMatches >= 8) || (matchPercentage >= 0.9 && exactMatches >= 6)) {
+                        // Only highlight with very strict criteria to avoid spell-check false positives
+                        if ((matchPercentage >= 0.85 && exactMatches >= 10) || (matchPercentage >= 0.95 && exactMatches >= 8)) {
                           console.log('✓ Highlighting detected copy-paste content:', docSentTrimmed.substring(0, 50));
                           const escapedSentence = docSentTrimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
                           const sentenceRegex = new RegExp(escapedSentence, 'gi');
