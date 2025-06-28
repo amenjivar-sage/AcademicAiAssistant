@@ -351,16 +351,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Get current authenticated user endpoint  
   app.get("/api/auth/user", async (req, res) => {
+    console.log("🚀 /api/auth/user endpoint hit! Session ID:", req.sessionID);
     try {
       const currentUser = await getCurrentUser(req);
       console.log("Auth check - current user:", currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : "null");
       
       if (!currentUser) {
+        console.log("❌ No current user found, returning 401");
         return res.status(401).json({ message: "Not authenticated" });
       }
       
       // Remove password from response
       const { password: _, ...userWithoutPassword } = currentUser;
+      console.log("✅ Returning user data:", userWithoutPassword.firstName, userWithoutPassword.lastName);
       res.json(userWithoutPassword);
     } catch (error) {
       console.error("Error fetching current user:", error);
