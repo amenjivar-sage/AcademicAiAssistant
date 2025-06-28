@@ -170,15 +170,19 @@ export default function BubbleSpellCheckPanel({
       onSpellErrorsChange?.(newErrors);
       
       if (newErrors.length === 0) {
-        onClose();
+        // All errors fixed! Show success message but keep panel open
+        console.log('✅ All spelling errors fixed!');
+        // Panel stays open so user can run spell check again if needed
       } else {
-        // Adjust current index
+        // Auto-advance to next word - keep same index or adjust if needed
         if (currentErrorIndex >= newErrors.length) {
           const newIndex = Math.max(0, newErrors.length - 1);
           setCurrentErrorIndex(newIndex);
           onCurrentErrorChange?.(newIndex);
+          console.log('📍 Advanced to error', newIndex + 1, 'of', newErrors.length);
         } else {
           onCurrentErrorChange?.(currentErrorIndex);
+          console.log('📍 Advanced to error', currentErrorIndex + 1, 'of', newErrors.length);
         }
       }
     } else {
@@ -235,15 +239,18 @@ export default function BubbleSpellCheckPanel({
     onSpellErrorsChange?.(newErrors);
     
     if (newErrors.length === 0) {
-      onClose();
+      // All errors processed! Keep panel open for new spell checks
+      console.log('✅ All spelling errors processed!');
     } else {
-      // Adjust current index
+      // Auto-advance to next word - keep same index or adjust if needed
       if (currentErrorIndex >= newErrors.length) {
         const newIndex = Math.max(0, newErrors.length - 1);
         setCurrentErrorIndex(newIndex);
         onCurrentErrorChange?.(newIndex);
+        console.log('📍 Advanced to error', newIndex + 1, 'of', newErrors.length);
       } else {
         onCurrentErrorChange?.(currentErrorIndex);
+        console.log('📍 Advanced to error', currentErrorIndex + 1, 'of', newErrors.length);
       }
     }
   };
@@ -362,7 +369,7 @@ export default function BubbleSpellCheckPanel({
                 title="Fix all spelling errors automatically"
               >
                 <CheckCircle className="h-3 w-3 mr-1" />
-                Fix
+                Fix All
               </Button>
             )}
             <Button
