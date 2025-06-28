@@ -1,0 +1,68 @@
+=== REQUEST DEBUG ===
+Method: PATCH
+URL: /api/writing-sessions/10
+Params: {}
+Route matched so far...
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-07-05T05:06:48.718Z,
+      originalMaxAge: 604799994,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+Retrieved user from storage: Alexander Menjivar (student)
+DatabaseStorage.getWritingSession called with ID: 10
+Found session: 10 Title:  Content length: 2703
+Auto-saving session: 10 with data: [ 'title', 'content', 'pastedContent', 'wordCount' ]
+DatabaseStorage: Updating writing session 10 with updates: [ 'title', 'content', 'pastedContent', 'wordCount' ]
+Session updated successfully: 10 Content length: 2703 Pasted content items: 1
+Session auto-saved successfully: 10 Status: draft
+5:06:52 AM [express] PATCH /api/writing-sessions/10 200 in 126ms :: {"id":10,"userId":1,"assignmentI…
+=== REQUEST DEBUG ===
+Method: GET
+URL: /api/writing-sessions/10
+Params: {}
+Route matched so far...
+Fetching session: 10
+DatabaseStorage.getWritingSession called with ID: 10
+Found session: 10 Title:  Content length: 2703
+Session retrieved: 10 Status: draft Grade: null
+Session debug: {
+  sessionID: 'Z-s0Hj3xshKH9hlTudXL7RSHJJNynKlO',
+  session: Session {
+    cookie: {
+      path: '/',
+      _expires: 2025-07-05T05:06:52.470Z,
+      originalMaxAge: 604799994,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    userId: 1
+  },
+  cookies: 'sage-session=s%3AZ-s0Hj3xshKH9hlTudXL7RSHJJNynKlO.7eamq0CXlYE%2FI22DQiaXXlB9czHimzP1VzrBY3gOW50'
+}
+Getting current user, sessionUserId: 1
+5:06:52 AM [express] GET /api/writing-sessions/10 200 in 76ms :: {"id":10,"userId":1,"assignmentId":…
+Retrieved user from storage: Alexander Menjivar (student)
+DatabaseStorage: Getting writing sessions for user 1
+Found 6 sessions for user 1
+Student sessions for user 1 : [
+  { id: 1, assignmentId: 1, hasContent: true },
+  { id: 4, assignmentId: 4, hasContent: true },
+  { id: 5, assignmentId: 3, hasContent: true },
+  { id: 9, assignmentId: 6, hasContent: true },
+  { id: 3, assignmentId: 2, hasContent: true },
+  { id: 10, assignmentId: 5, hasContent: true }
+]
+5:06:52 AM [express] GET /api/student/writing-sessions 200 in 96ms :: [{"id":1,"userId":1,"assignmen…
+Need better ways to work with logs? Try theRender CLIor set up a log stream integration 

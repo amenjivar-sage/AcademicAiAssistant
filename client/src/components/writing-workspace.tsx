@@ -119,6 +119,11 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
+  
+  // Track if user is currently typing to prevent cursor jumping
+  const [isUserTyping, setIsUserTyping] = useState(false);
+  const typingTimeoutRef = useRef<NodeJS.Timeout>();
+  const lastTypingTime = useRef<number>(Date.now());
 
   // Create session mutation
   const createSessionMutation = useMutation({
@@ -204,20 +209,21 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       setIsSaving(false);
       setLastSaved(new Date());
       
-      // Only invalidate queries if user has stopped typing to prevent cursor jumping
-      if (!isUserTyping) {
+      // Don't invalidate queries during auto-save to prevent content overwrite
+      // Only invalidate on manual save or when user has been idle for a while
+      const shouldInvalidate = !isUserTyping && (Date.now() - lastTypingTime.current > 5000);
+      if (shouldInvalidate) {
+        console.log('✓ Invalidating queries after save (user idle)');
         queryClient.invalidateQueries({ queryKey: ['writing-session', currentSessionId] });
         queryClient.invalidateQueries({ queryKey: ['/api/student/writing-sessions'] });
+      } else {
+        console.log('✓ Skipping query invalidation (user actively typing)');
       }
     } catch (error) {
       console.error('Save failed:', error);
       setIsSaving(false);
     }
   }, [content, title, pastedContents, wordCount, sessionId, isSaving, assignmentId, createSessionMutation, queryClient]);
-
-  // Track if user is currently typing to prevent cursor jumping
-  const [isUserTyping, setIsUserTyping] = useState(false);
-  const typingTimeoutRef = useRef<NodeJS.Timeout>();
 
   // Cleanup typing timeout on unmount
   useEffect(() => {
@@ -288,7 +294,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
 
   // Sync with session data when it loads (but not when user is actively typing)
   useEffect(() => {
-    if (session && !sessionLoading && !isUserTyping) {
+    if (session && !sessionLoading && !isUserTyping && !isSaving) {
       console.log('=== SESSION LOADING DEBUG ===');
       console.log('Session data received:', {
         id: session.id,
@@ -704,6 +710,8 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                   
                   // Mark user as typing and reset the typing timeout
                   setIsUserTyping(true);
+                  lastTypingTime.current = Date.now();
+                  
                   if (typingTimeoutRef.current) {
                     clearTimeout(typingTimeoutRef.current);
                   }
