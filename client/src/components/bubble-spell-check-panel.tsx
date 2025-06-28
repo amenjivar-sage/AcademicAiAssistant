@@ -547,7 +547,7 @@ export default function BubbleSpellCheckPanel({
                   onClick={() => handleAcceptSuggestion()}
                   className="flex-1"
                 >
-                  Fix → "{currentError.suggestions[0]}"
+                  Fix This Word → "{currentError.suggestions[0]}"
                 </Button>
               )}
             </div>
@@ -562,7 +562,7 @@ export default function BubbleSpellCheckPanel({
                   className="w-full text-green-600 border-green-300 hover:bg-green-50"
                   disabled={isLoading}
                 >
-                  ✨ Fix
+                  ✨ Fix All ({spellErrors.length} errors)
                 </Button>
               </div>
             )}
