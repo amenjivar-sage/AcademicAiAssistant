@@ -26,6 +26,7 @@ export default function StudentDashboard() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  console.log("🎯 Student dashboard - user from useAuth:", user);
 
   // Logout function
   const handleLogout = async () => {
