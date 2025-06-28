@@ -225,15 +225,17 @@ export default function InlineSpellCheck({
     setSpellErrors(updatedErrors);
     onContentChange(newContent);
     
-    // Move to next error or close if done
+    // Move to next error - keep panel open when all errors are processed
     if (updatedErrors.length === 0) {
-      // Re-enable auto-save when spell check is complete
+      // All errors processed! Panel stays open for new spell checks
+      console.log('✅ All spelling errors processed!');
       onSpellCheckStatusChange?.(false);
-      onClose();
+      // Panel stays open so user can run spell check again if needed
     } else {
-      // Keep the current index or move to the next available error
+      // Auto-advance to next error
       const newIndex = Math.min(currentErrorIndex, updatedErrors.length - 1);
       setCurrentErrorIndex(newIndex);
+      console.log('📍 Advanced to error', newIndex + 1, 'of', updatedErrors.length);
       
       // Recalculate tooltips for the updated errors
       setTimeout(() => {
@@ -253,12 +255,14 @@ export default function InlineSpellCheck({
     setSpellErrors(newErrors);
     
     if (newErrors.length === 0) {
-      onClose();
+      // All errors processed! Panel stays open for new spell checks
+      console.log('✅ All spelling errors processed!');
     } else {
-      // Stay at same index if possible, or go to previous if at end
+      // Auto-advance to next error
       if (currentErrorIndex >= newErrors.length) {
         setCurrentErrorIndex(Math.max(0, newErrors.length - 1));
       }
+      console.log('📍 Advanced to error', (currentErrorIndex >= newErrors.length ? newErrors.length : currentErrorIndex + 1), 'of', newErrors.length);
       calculateTooltipPositions(newErrors);
     }
   };
@@ -290,7 +294,8 @@ export default function InlineSpellCheck({
     setSpellErrors([]);
     setTooltips([]);
     onSpellCheckStatusChange?.(false);
-    onClose();
+    console.log('✅ All spelling errors fixed with Fix All!');
+    // Panel stays open so user can run spell check again if needed
   };
 
   const handleEditWord = () => {
