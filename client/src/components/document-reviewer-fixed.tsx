@@ -676,43 +676,77 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
   const addPageBreaksForTeacher = (content: string) => {
     if (!content) return content;
 
-    // Constants matching the student editor
+    // Clean content of existing HTML tags to get accurate character count
+    const cleanContent = content.replace(/<[^>]*>/g, '');
+
+    // Constants matching the student editor (adjusted for more visible page breaks)
     const PAGE_HEIGHT = 950; // 11 inches at 96 DPI minus margins
     const LINE_HEIGHT = 1.6;
     const FONT_SIZE = 14;
     const CHARS_PER_LINE = 85; // Average characters per line
     const LINES_PER_PAGE = Math.floor(PAGE_HEIGHT / (FONT_SIZE * LINE_HEIGHT));
-    const CHARS_PER_PAGE = CHARS_PER_LINE * LINES_PER_PAGE;
+    const CHARS_PER_PAGE = Math.max(1500, CHARS_PER_LINE * LINES_PER_PAGE); // Ensure reasonable page size, minimum 1500 chars
 
-    // Split content into lines and calculate approximate page breaks
-    const lines = content.split('\n');
-    let result = '';
+    console.log('Teacher page break calculation:', {
+      contentLength: content.length,
+      cleanContentLength: cleanContent.length,
+      charsPerPage: CHARS_PER_PAGE,
+      estimatedPages: Math.ceil(cleanContent.length / CHARS_PER_PAGE)
+    });
+
+    // Split clean content into lines for more accurate calculation
+    const lines = cleanContent.split('\n');
+    let result = content; // Start with the original highlighted content
     let currentPageChars = 0;
     let currentPage = 1;
+    let insertPositions = [];
 
     lines.forEach((line, lineIndex) => {
       const lineCharCount = line.length + 1; // +1 for the newline
       
       // Check if this line would overflow the current page
       if (currentPageChars + lineCharCount > CHARS_PER_PAGE && currentPageChars > 0) {
-        // Add page break marker
-        result += `<div style="width: 100%; height: 3px; background: linear-gradient(to right, #dc2626 0%, #dc2626 100%); margin: 10px 0; position: relative; clear: both;">
-          <div style="position: absolute; left: 50%; top: -12px; transform: translateX(-50%); background: white; padding: 0 8px; color: #dc2626; font-weight: bold; font-size: 12px; white-space: nowrap;">
-            Page ${currentPage} ends here - Page ${currentPage + 1} begins
-          </div>
-        </div>`;
+        // Calculate where to insert the page break in the original content
+        // This is approximate since we're working with clean content for calculation
+        const approximatePosition = Math.floor((currentPageChars / cleanContent.length) * content.length);
+        
+        insertPositions.push({
+          position: approximatePosition,
+          pageBreak: `<div style="width: 100%; height: 4px; background: linear-gradient(to right, #dc2626 0%, #dc2626 100%); margin: 15px 0; position: relative; clear: both; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <div style="position: absolute; left: 50%; top: -15px; transform: translateX(-50%); background: white; padding: 2px 12px; color: #dc2626; font-weight: bold; font-size: 13px; white-space: nowrap; border: 1px solid #dc2626; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+              📄 Page ${currentPage} ends here - Page ${currentPage + 1} begins
+            </div>
+          </div>`
+        });
         
         currentPage++;
         currentPageChars = 0;
       }
 
-      result += line;
-      if (lineIndex < lines.length - 1) {
-        result += '\n';
-      }
       currentPageChars += lineCharCount;
     });
 
+    // Insert page breaks from end to beginning to preserve positions
+    insertPositions.reverse().forEach(({ position, pageBreak }) => {
+      // Find a good insertion point (end of a paragraph or sentence)
+      let insertPoint = position;
+      const lookAhead = Math.min(200, content.length - position);
+      const searchText = content.substring(position, position + lookAhead);
+      
+      // Look for paragraph breaks or sentence endings
+      const paragraphBreak = searchText.indexOf('</p>');
+      const sentenceEnd = searchText.search(/[.!?]\s/);
+      
+      if (paragraphBreak !== -1 && paragraphBreak < 100) {
+        insertPoint = position + paragraphBreak + 4; // After </p>
+      } else if (sentenceEnd !== -1 && sentenceEnd < 50) {
+        insertPoint = position + sentenceEnd + 2; // After sentence
+      }
+      
+      result = result.slice(0, insertPoint) + pageBreak + result.slice(insertPoint);
+    });
+
+    console.log('Page breaks inserted:', insertPositions.length);
     return result;
   };
 
