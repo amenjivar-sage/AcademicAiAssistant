@@ -209,21 +209,25 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       setIsSaving(false);
       setLastSaved(new Date());
       
-      // Don't invalidate queries during auto-save to prevent content overwrite
-      // Only invalidate on manual save or when user has been idle for a while
-      const shouldInvalidate = !isUserTyping && (Date.now() - lastTypingTime.current > 5000);
-      if (shouldInvalidate) {
-        console.log('✓ Invalidating queries after save (user idle)');
-        queryClient.invalidateQueries({ queryKey: ['writing-session', currentSessionId] });
-        queryClient.invalidateQueries({ queryKey: ['/api/student/writing-sessions'] });
-      } else {
-        console.log('✓ Skipping query invalidation (user actively typing)');
-      }
+      // Never invalidate queries during auto-save to prevent content overwrite
+      // Only invalidate during manual save to prevent content loss
+      console.log('✓ Skipping query invalidation during auto-save to prevent content loss');
     } catch (error) {
       console.error('Save failed:', error);
       setIsSaving(false);
     }
   }, [content, title, pastedContents, wordCount, sessionId, isSaving, assignmentId, createSessionMutation, queryClient]);
+
+  // Manual save function (for the save button)
+  const manualSave = useCallback(async () => {
+    await saveSession();
+    // Refresh data after manual save
+    if (sessionId) {
+      queryClient.invalidateQueries({ queryKey: ['writing-session', sessionId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/student/writing-sessions'] });
+      console.log('✓ Manual save complete - refreshed data');
+    }
+  }, [saveSession, sessionId, queryClient]);
 
   // Cleanup typing timeout on unmount
   useEffect(() => {
@@ -314,12 +318,10 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       const currentContent = content || '';
       console.log('Has current content:', currentContent.substring(0, 50));
 
-      // Only sync if this is the initial load (empty content) or if content is significantly different
+      // Only sync on true initial load to prevent overwriting user input
       const isInitialLoad = !currentContent.trim();
-      const hasSignificantDifference = session.content && 
-        Math.abs(session.content.length - currentContent.length) > 50;
 
-      if (session.content && (isInitialLoad || hasSignificantDifference)) {
+      if (session.content && isInitialLoad) {
         console.log('✓ Syncing with session content');
         setContent(session.content);
         setTitle(session.title || '');
@@ -881,7 +883,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
             </Button>
 
             <Button
-              onClick={saveSession}
+              onClick={manualSave}
               disabled={isSaving || (!content.trim() && !title.trim())}
               variant="outline"
               className="gap-2"
