@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { CheckCircle, X, RefreshCw, Undo, ChevronLeft, ChevronRight, Edit } from 'lucide-react';
-import { checkSpelling, checkSpellingWithAI, applySpellCheckSuggestion, applyAutoCorrections, SpellCheckResult } from '@/utils/spell-check';
+import { checkSpelling, checkSpellingWithAI, checkSpellingWithDictionary, applySpellCheckSuggestion, applyAutoCorrections, SpellCheckResult } from '@/utils/spell-check';
 
 interface BubbleSpellCheckPanelProps {
   content: string;
@@ -57,23 +57,45 @@ export default function BubbleSpellCheckPanel({
       return;
     }
 
-    // Use AI-powered spell checking
-    checkSpellingWithAI(content).then(errors => {
-      setSpellErrors(errors);
-      onSpellErrorsChange?.(errors);
-      setCurrentErrorIndex(0);
-      onCurrentErrorChange?.(0);
-      setIsLoading(false);
-    }).catch(error => {
-      console.error('AI spell check failed, using fallback:', error);
-      // Fallback to basic spell checking if AI fails
-      const errors = checkSpelling(content);
-      setSpellErrors(errors);
-      onSpellErrorsChange?.(errors);
-      setCurrentErrorIndex(0);
-      onCurrentErrorChange?.(0);
-      setIsLoading(false);
-    });
+    // Try dictionary API first, then AI, then fallback
+    const performSpellCheck = async () => {
+      try {
+        // First try dictionary API if available
+        console.log('🔍 Attempting dictionary API spell check...');
+        const dictionaryErrors = await checkSpellingWithDictionary(content);
+        
+        if (dictionaryErrors.length > 0) {
+          console.log('✓ Dictionary API found', dictionaryErrors.length, 'issues');
+          setSpellErrors(dictionaryErrors);
+          onSpellErrorsChange?.(dictionaryErrors);
+          setCurrentErrorIndex(0);
+          onCurrentErrorChange?.(0);
+          setIsLoading(false);
+          return;
+        }
+        
+        // If no issues found with dictionary, try AI for more advanced checking
+        console.log('🔍 Dictionary clean, trying AI spell check...');
+        const aiErrors = await checkSpellingWithAI(content);
+        setSpellErrors(aiErrors);
+        onSpellErrorsChange?.(aiErrors);
+        setCurrentErrorIndex(0);
+        onCurrentErrorChange?.(0);
+        setIsLoading(false);
+        
+      } catch (error) {
+        console.error('Advanced spell check failed, using basic fallback:', error);
+        // Fallback to basic spell checking if both fail
+        const errors = checkSpelling(content);
+        setSpellErrors(errors);
+        onSpellErrorsChange?.(errors);
+        setCurrentErrorIndex(0);
+        onCurrentErrorChange?.(0);
+        setIsLoading(false);
+      }
+    };
+    
+    performSpellCheck();
   }, [content, isOpen, isLoading, lastCheckedContent, onContentChange, onSpellErrorsChange, onCurrentErrorChange]);
 
   // Only run spell check when panel is first opened or content significantly changes
