@@ -959,25 +959,26 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
             onContentChange={(newContent) => {
               console.log('Spellcheck applying content change:', newContent.length, 'chars');
               
-              // Update the content state directly
-              setContent(newContent);
-              
-              // Trigger a re-render by forcing the rich text editor to update
-              setTimeout(() => {
-                if (contentRef.current) {
-                  const editor = contentRef.current.getEditor();
-                  if (editor && editor.getEditor) {
-                    const quill = editor.getEditor();
-                    if (quill) {
-                      // Use Quill's proper API to set content
-                      const currentLength = quill.getLength();
-                      quill.deleteText(0, currentLength);
-                      quill.clipboard.dangerouslyPasteHTML(0, newContent);
-                      console.log('Updated editor with corrected content');
-                    }
-                  }
+              // SAFETY: Only update if we have substantial content to prevent data loss
+              if (newContent && newContent.trim().length > 5) {
+                console.log('✓ Safe to apply spell check correction');
+                setContent(newContent);
+                
+                // Mark user as typing to prevent auto-save conflicts
+                setIsUserTyping(true);
+                lastTypingTime.current = Date.now();
+                
+                if (typingTimeoutRef.current) {
+                  clearTimeout(typingTimeoutRef.current);
                 }
-              }, 10);
+                
+                // Clear typing flag after spell check completes
+                typingTimeoutRef.current = setTimeout(() => {
+                  setIsUserTyping(false);
+                }, 1000);
+              } else {
+                console.warn('⚠️ Spell check tried to apply unsafe content change - blocked to prevent data loss');
+              }
             }}
             isOpen={isSpellCheckActive}
             onClose={() => setIsSpellCheckActive(false)}

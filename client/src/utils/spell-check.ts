@@ -370,6 +370,17 @@ function generateTypingErrorSuggestions(word: string): string[] {
 }
 
 export function applySpellCheckSuggestion(text: string, result: SpellCheckResult, suggestion?: string): string {
+  // SAFETY: Validate inputs to prevent data loss
+  if (!text || text.trim().length === 0) {
+    console.warn('⚠️ Spell check: Empty text provided, returning original');
+    return text;
+  }
+  
+  if (!result || !result.word) {
+    console.warn('⚠️ Spell check: Invalid result object, returning original text');
+    return text;
+  }
+  
   const replacement = suggestion || result.suggestion || (result.suggestions && result.suggestions[0]) || result.word;
   
   console.log('Applying suggestion:', {
@@ -478,21 +489,39 @@ const COMMON_AUTO_CORRECTIONS: Record<string, string> = {
 };
 
 export function applyAutoCorrections(text: string): {corrected: string, changes: Array<{original: string, corrected: string, timestamp: number}>} {
+  // SAFETY: Validate input to prevent data loss
+  if (!text || typeof text !== 'string') {
+    console.warn('⚠️ Auto-correction: Invalid text input, returning empty result');
+    return { corrected: text || '', changes: [] };
+  }
+  
   let correctedText = text;
   const changes: Array<{original: string, corrected: string, timestamp: number}> = [];
   
-  // Find and replace common typos
-  Object.entries(COMMON_AUTO_CORRECTIONS).forEach(([incorrect, correct]) => {
-    const regex = new RegExp(`\\b${incorrect}\\b`, 'gi');
-    if (regex.test(correctedText)) {
-      correctedText = correctedText.replace(regex, correct);
-      changes.push({
-        original: incorrect,
-        corrected: correct,
-        timestamp: Date.now()
-      });
+  try {
+    // Find and replace common typos
+    Object.entries(COMMON_AUTO_CORRECTIONS).forEach(([incorrect, correct]) => {
+      const regex = new RegExp(`\\b${incorrect}\\b`, 'gi');
+      if (regex.test(correctedText)) {
+        correctedText = correctedText.replace(regex, correct);
+        changes.push({
+          original: incorrect,
+          corrected: correct,
+          timestamp: Date.now()
+        });
+      }
+    });
+    
+    // SAFETY: Ensure we don't return empty content unless input was empty
+    if (text.trim().length > 0 && correctedText.trim().length === 0) {
+      console.warn('⚠️ Auto-correction resulted in empty text, returning original');
+      return { corrected: text, changes: [] };
     }
-  });
+    
+  } catch (error) {
+    console.error('Error in auto-corrections:', error);
+    return { corrected: text, changes: [] };
+  }
   
   return { corrected: correctedText, changes };
 }
