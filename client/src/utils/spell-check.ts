@@ -282,7 +282,7 @@ export async function checkSpellingWithDictionary(text: string): Promise<SpellCh
       if (SPELL_CHECK_DICTIONARY[lowerWord]) {
         return {
           word,
-          suggestion: SPELL_CHECK_DICTIONARY[lowerWord],
+          suggestions: [SPELL_CHECK_DICTIONARY[lowerWord]], // Convert to array format
           startIndex: wordIndex,
           endIndex: wordIndex + word.length
         };
@@ -295,10 +295,10 @@ export async function checkSpellingWithDictionary(text: string): Promise<SpellCh
 
         // If the response is an array of suggestions (word not found)
         if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'string') {
-          console.log('✓ Dictionary API found misspelling:', word, '->', data[0]);
+          console.log('✓ Dictionary API found misspelling:', word, '->', data.slice(0, 3));
           return {
             word,
-            suggestion: data[0],
+            suggestions: data.slice(0, 3), // Take up to 3 suggestions
             startIndex: wordIndex,
             endIndex: wordIndex + word.length
           };
@@ -310,7 +310,7 @@ export async function checkSpellingWithDictionary(text: string): Promise<SpellCh
         if (localResult && localResult !== lowerWord) {
           return {
             word,
-            suggestion: localResult,
+            suggestions: [localResult], // Convert to array format
             startIndex: wordIndex,
             endIndex: wordIndex + word.length
           };
@@ -360,7 +360,7 @@ export function checkSpelling(text: string): SpellCheckResult[] {
       console.log('✓ Found misspelling in dictionary:', word, '->', SPELL_CHECK_DICTIONARY[lowerWord]);
       results.push({
         word,
-        suggestion: SPELL_CHECK_DICTIONARY[lowerWord],
+        suggestions: [SPELL_CHECK_DICTIONARY[lowerWord]], // Convert to array format
         startIndex: wordIndex,
         endIndex: wordIndex + word.length
       });

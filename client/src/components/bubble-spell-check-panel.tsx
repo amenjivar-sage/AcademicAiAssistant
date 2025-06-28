@@ -136,7 +136,7 @@ export default function BubbleSpellCheckPanel({
       return;
     }
 
-    const replacement = suggestionText || (error.suggestions && error.suggestions[0]) || error.suggestion;
+    const replacement = suggestionText || (error.suggestions && error.suggestions[0]);
     
     console.log('🔧 DEBUG: handleAcceptSuggestion called', {
       original: error.word,
