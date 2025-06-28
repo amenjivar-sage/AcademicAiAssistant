@@ -707,21 +707,24 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                   return displayContent;
                 })()}
                 onContentChange={(newContent) => {
-                  console.log('Content changed from rich editor:', newContent);
-                  setContent(newContent);
-                  
-                  // Mark user as typing and reset the typing timeout
-                  setIsUserTyping(true);
-                  lastTypingTime.current = Date.now();
-                  
-                  if (typingTimeoutRef.current) {
-                    clearTimeout(typingTimeoutRef.current);
+                  // Prevent infinite loops by checking if content actually changed
+                  if (newContent !== content) {
+                    console.log('Content changed from rich editor:', newContent);
+                    setContent(newContent);
+                    
+                    // Mark user as typing and reset the typing timeout
+                    setIsUserTyping(true);
+                    lastTypingTime.current = Date.now();
+                    
+                    if (typingTimeoutRef.current) {
+                      clearTimeout(typingTimeoutRef.current);
+                    }
+                    
+                    // Clear typing flag after 3 seconds of no typing
+                    typingTimeoutRef.current = setTimeout(() => {
+                      setIsUserTyping(false);
+                    }, 3000);
                   }
-                  
-                  // Clear typing flag after 3 seconds of no typing
-                  typingTimeoutRef.current = setTimeout(() => {
-                    setIsUserTyping(false);
-                  }, 3000);
                 }}
                 onTextSelection={setSelectedText}
                 readOnly={session?.status === 'graded'}

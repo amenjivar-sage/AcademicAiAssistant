@@ -37,17 +37,40 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
       const container = editor.querySelector('.ql-editor');
       if (!container) return;
 
-      // Add CSS for page boundaries
+      // Add CSS for page boundaries with better visibility
       const style = document.createElement('style');
       style.textContent = `
         .ql-editor {
           background: 
-            linear-gradient(transparent calc(${PAGE_HEIGHT}px - 1px), #ddd calc(${PAGE_HEIGHT}px), transparent calc(${PAGE_HEIGHT}px + 1px)),
-            linear-gradient(transparent calc(${PAGE_HEIGHT * 2}px - 1px), #ddd calc(${PAGE_HEIGHT * 2}px), transparent calc(${PAGE_HEIGHT * 2}px + 1px)),
-            linear-gradient(transparent calc(${PAGE_HEIGHT * 3}px - 1px), #ddd calc(${PAGE_HEIGHT * 3}px), transparent calc(${PAGE_HEIGHT * 3}px + 1px)),
-            linear-gradient(transparent calc(${PAGE_HEIGHT * 4}px - 1px), #ddd calc(${PAGE_HEIGHT * 4}px), transparent calc(${PAGE_HEIGHT * 4}px + 1px)),
-            linear-gradient(transparent calc(${PAGE_HEIGHT * 5}px - 1px), #ddd calc(${PAGE_HEIGHT * 5}px), transparent calc(${PAGE_HEIGHT * 5}px + 1px)),
+            linear-gradient(transparent calc(${PAGE_HEIGHT}px - 2px), #ff6b6b 1px calc(${PAGE_HEIGHT}px), #ff6b6b calc(${PAGE_HEIGHT}px + 1px), transparent calc(${PAGE_HEIGHT}px + 3px)),
+            linear-gradient(transparent calc(${PAGE_HEIGHT * 2}px - 2px), #ff6b6b calc(${PAGE_HEIGHT * 2}px), #ff6b6b calc(${PAGE_HEIGHT * 2}px + 1px), transparent calc(${PAGE_HEIGHT * 2}px + 3px)),
+            linear-gradient(transparent calc(${PAGE_HEIGHT * 3}px - 2px), #ff6b6b calc(${PAGE_HEIGHT * 3}px), #ff6b6b calc(${PAGE_HEIGHT * 3}px + 1px), transparent calc(${PAGE_HEIGHT * 3}px + 3px)),
+            linear-gradient(transparent calc(${PAGE_HEIGHT * 4}px - 2px), #ff6b6b calc(${PAGE_HEIGHT * 4}px), #ff6b6b calc(${PAGE_HEIGHT * 4}px + 1px), transparent calc(${PAGE_HEIGHT * 4}px + 3px)),
+            linear-gradient(transparent calc(${PAGE_HEIGHT * 5}px - 2px), #ff6b6b calc(${PAGE_HEIGHT * 5}px), #ff6b6b calc(${PAGE_HEIGHT * 5}px + 1px), transparent calc(${PAGE_HEIGHT * 5}px + 3px)),
             white;
+          position: relative;
+        }
+        .ql-editor::before {
+          content: "";
+          position: absolute;
+          top: ${PAGE_HEIGHT}px;
+          left: 0;
+          right: 0;
+          height: 2px;
+          background: #ff6b6b;
+          z-index: 1;
+        }
+        .ql-editor::after {
+          content: "Page 1 ends here - Page 2 begins";
+          position: absolute;
+          top: ${PAGE_HEIGHT - 15}px;
+          right: 10px;
+          font-size: 10px;
+          color: #ff6b6b;
+          background: white;
+          padding: 2px 5px;
+          border-radius: 3px;
+          z-index: 2;
         }
       `;
       
