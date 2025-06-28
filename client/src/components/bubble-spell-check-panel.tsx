@@ -541,11 +541,18 @@ export default function BubbleSpellCheckPanel({
               >
                 Ignore
               </Button>
-              {currentError.suggestions && currentError.suggestions.length > 0 && 
-               currentError.suggestions[0].toLowerCase() !== currentError.word.toLowerCase() && (
+              {currentError.suggestions && currentError.suggestions.length > 0 && (
                 <Button
-                  onClick={() => handleAcceptSuggestion()}
-                  className="flex-1"
+                  onClick={() => {
+                    console.log('🔧 Fix This Word button clicked!', {
+                      currentError,
+                      suggestion: currentError.suggestions[0]
+                    });
+                    handleAcceptSuggestion();
+                  }}
+                  className="flex-1 cursor-pointer bg-blue-500 hover:bg-blue-600 text-white"
+                  disabled={false}
+                  type="button"
                 >
                   Fix This Word → "{currentError.suggestions[0]}"
                 </Button>
