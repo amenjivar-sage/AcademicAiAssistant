@@ -198,13 +198,18 @@ export default function BubbleSpellCheckPanel({
     
     errorsToFix.forEach(error => {
       const replacement = (error.suggestions && error.suggestions[0]) || error.suggestion;
-      if (replacement) {
+      
+      // Only apply correction if replacement is different from original word
+      if (replacement && replacement.toLowerCase() !== error.word.toLowerCase()) {
+        console.log('🔧 Fixing:', error.word, '->', replacement);
         updatedContent = applySpellCheckSuggestion(updatedContent, error, replacement);
         allChanges.push({
           original: error.word,
           corrected: replacement,
           timestamp: Date.now()
         });
+      } else {
+        console.log('⚠️ Skipping:', error.word, '- no valid replacement');
       }
     });
     
@@ -539,10 +544,24 @@ export default function BubbleSpellCheckPanel({
                   onClick={() => handleAcceptSuggestion()}
                   className="flex-1"
                 >
-                  Accept "{currentError.suggestions[0]}"
+                  Fix → "{currentError.suggestions[0]}"
                 </Button>
               )}
             </div>
+            
+            {/* Fix All Button */}
+            {spellErrors.length > 1 && (
+              <div className="pt-2 border-t">
+                <Button
+                  onClick={handleFixAll}
+                  variant="default"
+                  className="w-full"
+                  disabled={isLoading}
+                >
+                  Fix All {spellErrors.length} Errors
+                </Button>
+              </div>
+            )}
           </div>
         ) : null}
       </CardContent>
