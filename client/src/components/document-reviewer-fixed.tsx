@@ -672,12 +672,59 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
     return result;
   };
 
+  // Helper function to add page breaks for teachers
+  const addPageBreaksForTeacher = (content: string) => {
+    if (!content) return content;
+
+    // Constants matching the student editor
+    const PAGE_HEIGHT = 950; // 11 inches at 96 DPI minus margins
+    const LINE_HEIGHT = 1.6;
+    const FONT_SIZE = 14;
+    const CHARS_PER_LINE = 85; // Average characters per line
+    const LINES_PER_PAGE = Math.floor(PAGE_HEIGHT / (FONT_SIZE * LINE_HEIGHT));
+    const CHARS_PER_PAGE = CHARS_PER_LINE * LINES_PER_PAGE;
+
+    // Split content into lines and calculate approximate page breaks
+    const lines = content.split('\n');
+    let result = '';
+    let currentPageChars = 0;
+    let currentPage = 1;
+
+    lines.forEach((line, lineIndex) => {
+      const lineCharCount = line.length + 1; // +1 for the newline
+      
+      // Check if this line would overflow the current page
+      if (currentPageChars + lineCharCount > CHARS_PER_PAGE && currentPageChars > 0) {
+        // Add page break marker
+        result += `<div style="width: 100%; height: 3px; background: linear-gradient(to right, #dc2626 0%, #dc2626 100%); margin: 10px 0; position: relative; clear: both;">
+          <div style="position: absolute; left: 50%; top: -12px; transform: translateX(-50%); background: white; padding: 0 8px; color: #dc2626; font-weight: bold; font-size: 12px; white-space: nowrap;">
+            Page ${currentPage} ends here - Page ${currentPage + 1} begins
+          </div>
+        </div>`;
+        
+        currentPage++;
+        currentPageChars = 0;
+      }
+
+      result += line;
+      if (lineIndex < lines.length - 1) {
+        result += '\n';
+      }
+      currentPageChars += lineCharCount;
+    });
+
+    return result;
+  };
+
   // Render content with highlights
   const renderContentWithHighlights = () => {
     if (!session.content) return <p className="text-gray-500">No content available</p>;
 
     // First apply red highlighting for copy-pasted content
     let contentWithPasteHighlights = highlightPastedContentSimple(session.content);
+    
+    // Add page breaks for teachers to see page count
+    contentWithPasteHighlights = addPageBreaksForTeacher(contentWithPasteHighlights);
 
     const sortedComments = [...comments].sort((a, b) => a.startIndex - b.startIndex);
     const elements = [];
