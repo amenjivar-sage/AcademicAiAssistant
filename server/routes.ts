@@ -891,12 +891,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get student's enrolled classes
       const studentClasses = await storage.getStudentClassrooms(currentUser.id);
+      console.log(`Student ${currentUser.id} enrolled in ${studentClasses.length} classes`);
+      
+      // If no classes found, this might be a deployment issue where enrollments are missing
+      if (studentClasses.length === 0) {
+        console.log('No classes found for student - checking for existing classrooms and auto-enrolling');
+        const allClassrooms = await storage.getAllClassrooms();
+        if (allClassrooms.length > 0) {
+          // Auto-enroll student in the first classroom as a workaround for deployment
+          const firstClassroom = allClassrooms[0];
+          console.log(`Auto-enrolling student ${currentUser.id} in classroom ${firstClassroom.id}`);
+          try {
+            await storage.enrollStudentInClassroom(currentUser.id, firstClassroom.id);
+            console.log('Auto-enrollment successful');
+          } catch (enrollError) {
+            console.log('Auto-enrollment failed (student might already be enrolled):', enrollError);
+          }
+        }
+        
+        // Re-fetch classes after potential enrollment
+        const updatedStudentClasses = await storage.getStudentClassrooms(currentUser.id);
+        console.log(`After auto-enrollment: ${updatedStudentClasses.length} classes`);
+      }
+      
+      // Re-fetch to get updated enrollment
+      const finalStudentClasses = await storage.getStudentClassrooms(currentUser.id);
       
       // Get all assignments for classes the student is enrolled in
       let allAssignments: any[] = [];
       const seenAssignmentIds = new Set();
       
-      for (const classroom of studentClasses) {
+      for (const classroom of finalStudentClasses) {
         console.log(`Getting assignments for classroom ${classroom.id} (teacher ${classroom.teacherId})`);
         const assignments = await storage.getTeacherAssignments(classroom.teacherId || 1);
         console.log(`Teacher ${classroom.teacherId} has ${assignments.length} total assignments`);
@@ -1938,6 +1963,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching writing stats:", error);
       res.status(500).json({ message: "Failed to fetch writing statistics" });
+    }
+  });
+
+  // Fix missing student enrollments (admin endpoint)
+  app.post("/api/admin/fix-enrollments", async (req, res) => {
+    try {
+      const currentUser = await getCurrentUser(req);
+      if (!currentUser || !['admin', 'sage_admin', 'school_admin'].includes(currentUser.role)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      console.log('Fixing missing student enrollments...');
+      
+      // Get all students
+      const allUsers = await storage.getAllUsers();
+      const students = allUsers.filter(u => u.role === 'student');
+      
+      // Get all classrooms
+      const allClassrooms = await storage.getAllClassrooms();
+      
+      let enrollmentsCreated = 0;
+      
+      for (const student of students) {
+        const existingClassrooms = await storage.getStudentClassrooms(student.id);
+        
+        if (existingClassrooms.length === 0 && allClassrooms.length > 0) {
+          // Enroll student in the first available classroom
+          const firstClassroom = allClassrooms[0];
+          try {
+            await storage.enrollStudentInClassroom(student.id, firstClassroom.id);
+            console.log(`Enrolled student ${student.id} (${student.firstName} ${student.lastName}) in classroom ${firstClassroom.id}`);
+            enrollmentsCreated++;
+          } catch (error) {
+            console.log(`Failed to enroll student ${student.id}:`, error);
+          }
+        }
+      }
+      
+      res.json({ 
+        message: `Fixed enrollments for ${enrollmentsCreated} students`,
+        enrollmentsCreated 
+      });
+    } catch (error) {
+      console.error("Error fixing enrollments:", error);
+      res.status(500).json({ message: "Failed to fix enrollments" });
     }
   });
 
