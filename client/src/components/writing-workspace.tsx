@@ -213,7 +213,20 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       console.error('Save failed:', error);
       setIsSaving(false);
     }
-  }, [content, title, pastedContents, wordCount, sessionId, isSaving, assignmentId, createSessionMutation, queryClient, isUserTyping]);
+  }, [content, title, pastedContents, wordCount, sessionId, isSaving, assignmentId, createSessionMutation, queryClient]);
+
+  // Track if user is currently typing to prevent cursor jumping
+  const [isUserTyping, setIsUserTyping] = useState(false);
+  const typingTimeoutRef = useRef<NodeJS.Timeout>();
+
+  // Cleanup typing timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Fetch session data
   const { data: session, isLoading: sessionLoading } = useQuery({
@@ -272,19 +285,6 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
 
     return () => clearTimeout(timer);
   }, [content, title, saveSession, isSaving, session]);
-
-  // Track if user is currently typing to prevent cursor jumping
-  const [isUserTyping, setIsUserTyping] = useState(false);
-  const typingTimeoutRef = useRef<NodeJS.Timeout>();
-
-  // Cleanup typing timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
-      }
-    };
-  }, []);
 
   // Sync with session data when it loads (but not when user is actively typing)
   useEffect(() => {

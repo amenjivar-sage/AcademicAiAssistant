@@ -33,7 +33,7 @@ export async function seedDatabase() {
       password: "demo123",
     }).returning();
 
-    await db.insert(users).values({
+    const [maria] = await db.insert(users).values({
       username: "maria.rodriguez",
       email: "maria.rodriguez@student.edu",
       firstName: "Maria",
@@ -41,9 +41,9 @@ export async function seedDatabase() {
       role: "student", 
       grade: "Junior",
       password: "demo123",
-    });
+    }).returning();
 
-    await db.insert(users).values({
+    const [alexander] = await db.insert(users).values({
       username: "alexander.menjivar",
       email: "alexander.menjivar@student.edu",
       firstName: "Alexander",
@@ -51,10 +51,11 @@ export async function seedDatabase() {
       role: "student", 
       grade: "Senior",
       password: "Dodgers23",
-    });
+    }).returning();
 
     // Create demo classroom
     const [classroom] = await db.insert(classrooms).values({
+      teacherId: teacher.id,
       name: "Creative Writing Workshop",
       description: "An advanced course in creative writing techniques and storytelling",
       subject: "English",
@@ -63,13 +64,28 @@ export async function seedDatabase() {
       joinCode: "CW2024",
     }).returning();
 
+    // Enroll students in the classroom
+    await db.insert(classroomEnrollments).values([
+      {
+        classroomId: classroom.id,
+        studentId: student.id,
+      },
+      {
+        classroomId: classroom.id,
+        studentId: maria.id,
+      },
+      {
+        classroomId: classroom.id,
+        studentId: alexander.id,
+      }
+    ]);
+
     // Create demo assignment
     await db.insert(assignments).values({
       teacherId: teacher.id,
       classroomId: classroom.id,
       title: "Character Development Essay",
       description: "Write a 500-word essay analyzing character development in your favorite novel. Focus on how the author uses dialogue, actions, and internal thoughts to reveal personality traits.",
-      wordCount: 500,
       status: "active",
       aiPermissions: "limited",
       allowCopyPaste: false,
