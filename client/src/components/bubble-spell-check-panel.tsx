@@ -362,7 +362,7 @@ export default function BubbleSpellCheckPanel({
                 title="Fix all spelling errors automatically"
               >
                 <CheckCircle className="h-3 w-3 mr-1" />
-                Fix All
+                Fix
               </Button>
             )}
             <Button
@@ -560,7 +560,7 @@ export default function BubbleSpellCheckPanel({
                   className="w-full text-green-600 border-green-300 hover:bg-green-50"
                   disabled={isLoading}
                 >
-                  ✨ Fix All {spellErrors.length} Errors
+                  ✨ Fix
                 </Button>
               </div>
             )}

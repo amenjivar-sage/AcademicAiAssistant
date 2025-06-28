@@ -260,66 +260,79 @@ export async function checkSpellingWithDictionary(text: string): Promise<SpellCh
 
   console.log('🔍 Using Merriam-Webster API for spell check. Words to check:', words.length);
 
-  // Process words in batches to avoid rate limits
-  for (let i = 0; i < words.length; i++) {
-    const word = words[i];
-    const wordIndex = text.indexOf(word, currentIndex);
-    const lowerWord = word.toLowerCase();
-
+  // Process words in parallel batches for much faster checking
+  const batchSize = 15; // Process 15 words simultaneously
+  const wordDetails = words.map((word, i) => {
+    const wordIndex = text.indexOf(word, i === 0 ? 0 : text.indexOf(words[i-1]) + words[i-1].length);
+    return { word, wordIndex, lowerWord: word.toLowerCase() };
+  }).filter(({ word }) => {
     // Skip very short words and proper nouns
-    if (word.length < 3 || /^[A-Z][a-z]+$/.test(word)) {
-      currentIndex = wordIndex + word.length;
-      continue;
-    }
+    return word.length >= 3 && !/^[A-Z][a-z]+$/.test(word);
+  });
 
-    // Check our dictionary first for common misspellings
-    if (SPELL_CHECK_DICTIONARY[lowerWord]) {
-      results.push({
-        word,
-        suggestion: SPELL_CHECK_DICTIONARY[lowerWord],
-        startIndex: wordIndex,
-        endIndex: wordIndex + word.length
-      });
-      currentIndex = wordIndex + word.length;
-      continue;
-    }
+  console.log('🔍 Processing', wordDetails.length, 'words in parallel batches of', batchSize);
 
-    // Check with Merriam-Webster API
-    try {
-      const response = await fetch(`https://www.dictionaryapi.com/api/v3/references/collegiate/json/${encodeURIComponent(word)}?key=${apiKey}`);
-      const data = await response.json();
-
-      // If the response is an array of suggestions (word not found)
-      if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'string') {
-        // Word not found, use the first suggestion
-        const suggestion = data[0];
-        results.push({
-          word,
-          suggestion,
-          startIndex: wordIndex,
-          endIndex: wordIndex + word.length
-        });
-        console.log('✓ Dictionary API found misspelling:', word, '->', suggestion);
-      }
-    } catch (error) {
-      console.log('Dictionary API error for word:', word, error);
-      // Fallback to local checking
-      const localResult = detectSpellingError(word);
-      if (localResult && localResult !== lowerWord) {
-        results.push({
-          word,
-          suggestion: localResult,
-          startIndex: wordIndex,
-          endIndex: wordIndex + word.length
-        });
-      }
-    }
-
-    currentIndex = wordIndex + word.length;
+  // Process in batches for faster performance
+  for (let i = 0; i < wordDetails.length; i += batchSize) {
+    const batch = wordDetails.slice(i, i + batchSize);
     
-    // Add small delay to respect rate limits
-    if (i % 10 === 0) {
-      await new Promise(resolve => setTimeout(resolve, 100));
+    // Process this batch in parallel
+    const batchPromises = batch.map(async ({ word, wordIndex, lowerWord }) => {
+      // Check our dictionary first for common misspellings
+      if (SPELL_CHECK_DICTIONARY[lowerWord]) {
+        return {
+          word,
+          suggestion: SPELL_CHECK_DICTIONARY[lowerWord],
+          startIndex: wordIndex,
+          endIndex: wordIndex + word.length
+        };
+      }
+
+      // Check with Merriam-Webster API
+      try {
+        const response = await fetch(`https://www.dictionaryapi.com/api/v3/references/collegiate/json/${encodeURIComponent(word)}?key=${apiKey}`);
+        const data = await response.json();
+
+        // If the response is an array of suggestions (word not found)
+        if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'string') {
+          console.log('✓ Dictionary API found misspelling:', word, '->', data[0]);
+          return {
+            word,
+            suggestion: data[0],
+            startIndex: wordIndex,
+            endIndex: wordIndex + word.length
+          };
+        }
+      } catch (error) {
+        console.log('Dictionary API error for word:', word, error);
+        // Fallback to local checking
+        const localResult = detectSpellingError(word);
+        if (localResult && localResult !== lowerWord) {
+          return {
+            word,
+            suggestion: localResult,
+            startIndex: wordIndex,
+            endIndex: wordIndex + word.length
+          };
+        }
+      }
+      
+      return null; // No error found
+    });
+
+    // Wait for this batch to complete
+    const batchResults = await Promise.all(batchPromises);
+    
+    // Add valid results to our results array
+    batchResults.forEach(result => {
+      if (result) {
+        results.push(result);
+      }
+    });
+    
+    // Very small delay between batches to be respectful to the API
+    if (i + batchSize < wordDetails.length) {
+      await new Promise(resolve => setTimeout(resolve, 50));
     }
   }
 
