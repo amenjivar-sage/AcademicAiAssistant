@@ -539,7 +539,8 @@ export default function BubbleSpellCheckPanel({
               >
                 Ignore
               </Button>
-              {currentError.suggestions && currentError.suggestions.length > 0 && (
+              {currentError.suggestions && currentError.suggestions.length > 0 && 
+               currentError.suggestions[0].toLowerCase() !== currentError.word.toLowerCase() && (
                 <Button
                   onClick={() => handleAcceptSuggestion()}
                   className="flex-1"
@@ -548,20 +549,6 @@ export default function BubbleSpellCheckPanel({
                 </Button>
               )}
             </div>
-            
-            {/* Fix All Button */}
-            {spellErrors.length > 1 && (
-              <div className="pt-2 border-t">
-                <Button
-                  onClick={handleFixAll}
-                  variant="default"
-                  className="w-full"
-                  disabled={isLoading}
-                >
-                  Fix All {spellErrors.length} Errors
-                </Button>
-              </div>
-            )}
           </div>
         ) : null}
       </CardContent>
