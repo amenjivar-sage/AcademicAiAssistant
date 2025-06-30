@@ -141,19 +141,31 @@ export default function SimpleHighlighter({
           `;
           ignoreBtn.title = 'Dismiss this suggestion';
           
-          // Add button click handlers
+          // Add button click handlers with proper event handling
           applyBtn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            console.log('✅ Applying suggestion:', suggestion.originalText, '→', suggestion.suggestedText);
-            onApplySuggestion(suggestion);
+            e.stopImmediatePropagation();
+            
+            try {
+              console.log('✅ Applying suggestion:', suggestion.originalText, '→', suggestion.suggestedText);
+              onApplySuggestion(suggestion);
+            } catch (error) {
+              console.error('Error applying suggestion:', error);
+            }
           });
           
           ignoreBtn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            console.log('❌ Ignoring suggestion:', suggestion.id);
-            onDismissSuggestion(suggestion.id);
+            e.stopImmediatePropagation();
+            
+            try {
+              console.log('❌ Ignoring suggestion:', suggestion.id);
+              onDismissSuggestion(suggestion.id);
+            } catch (error) {
+              console.error('Error ignoring suggestion:', error);
+            }
           });
           
           // Assemble the components

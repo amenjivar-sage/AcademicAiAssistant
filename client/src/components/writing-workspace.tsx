@@ -1063,6 +1063,33 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
         onApplySuggestion={handleApplySuggestion}
         onDismissSuggestion={handleDismissSuggestion}
       />
+      
+      {/* Bulk Apply/Ignore Panel */}
+      {aiSuggestions.length > 0 && (
+        <div className="fixed bottom-4 right-4 bg-white border rounded-lg shadow-lg p-4 z-50">
+          <div className="text-sm font-medium mb-2">
+            {aiSuggestions.length} spelling suggestions found
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                aiSuggestions.forEach(suggestion => handleApplySuggestion(suggestion));
+              }}
+              className="bg-green-500 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-600"
+            >
+              Apply All
+            </button>
+            <button
+              onClick={() => {
+                aiSuggestions.forEach(suggestion => handleDismissSuggestion(suggestion.id));
+              }}
+              className="bg-red-500 text-white px-4 py-2 rounded text-sm font-medium hover:bg-red-600"
+            >
+              Ignore All
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
