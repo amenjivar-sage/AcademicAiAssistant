@@ -278,33 +278,56 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     });
   }, [toast]);
 
-  const handleApplySuggestion = useCallback((suggestionId: string, newText: string) => {
-    const suggestion = aiSuggestions.find(s => s.id === suggestionId);
-    if (!suggestion) return;
-
-    // Apply the suggestion to the content
-    const before = content.substring(0, suggestion.startIndex);
-    const after = content.substring(suggestion.endIndex);
-    const updatedContent = before + newText + after;
+  const handleApplySuggestion = useCallback(async (suggestion: AiSuggestion) => {
+    console.log('✅ Applying suggestion:', suggestion.id);
+    
+    // Replace the original text with the suggested text in the content
+    const updatedContent = content.replace(
+      new RegExp(suggestion.originalText, 'gi'),
+      suggestion.suggestedText
+    );
     
     setContent(updatedContent);
     
-    // Remove the applied suggestion
-    setAiSuggestions(prev => prev.filter(s => s.id !== suggestionId));
+    // Remove the applied suggestion from the list
+    setAiSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
     
     toast({
       title: "Suggestion Applied",
-      description: `Changed "${suggestion.originalText}" to "${newText}"`,
+      description: `Changed "${suggestion.originalText}" to "${suggestion.suggestedText}"`,
+    });
+  }, [content, toast]);
+
+  const handleDismissSuggestion = useCallback((suggestionId: string) => {
+    console.log('❌ Dismissing suggestion:', suggestionId);
+    setAiSuggestions(prev => prev.filter(s => s.id !== suggestionId));
+  }, []);
+
+  const handleApplyAllSuggestions = useCallback(async () => {
+    console.log('✅ Applying all suggestions');
+    let updatedContent = content;
+    
+    // Apply all suggestions sequentially
+    aiSuggestions.forEach(suggestion => {
+      updatedContent = updatedContent.replace(
+        new RegExp(suggestion.originalText, 'gi'),
+        suggestion.suggestedText
+      );
+    });
+    
+    setContent(updatedContent);
+    setAiSuggestions([]);
+    setShowAiSuggestions(false);
+    
+    toast({
+      title: "All Suggestions Applied",
+      description: `Applied ${aiSuggestions.length} suggestions to your document`,
     });
   }, [content, aiSuggestions, toast]);
 
-  const handleDismissSuggestion = useCallback((suggestionId: string) => {
-    setAiSuggestions(prev => prev.filter(s => s.id !== suggestionId));
-    toast({
-      title: "Suggestion Dismissed",
-      description: "Suggestion removed from document",
-    });
-  }, [toast]);
+  const handleCloseSuggestions = useCallback(() => {
+    setShowAiSuggestions(false);
+  }, []);
 
   // Cleanup typing timeout on unmount
   useEffect(() => {
@@ -1030,6 +1053,19 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
             isOpen={isSpellCheckActive}
             onClose={() => setIsSpellCheckActive(false)}
             onSpellErrorsChange={(errors) => setSpellErrors(errors)}
+          />
+        </div>
+      )}
+      
+      {/* AI Suggestions Panel */}
+      {showAiSuggestions && aiSuggestions.length > 0 && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <AiSuggestionsPanel
+            suggestions={aiSuggestions}
+            onApplySuggestion={handleApplySuggestion}
+            onDismissSuggestion={handleDismissSuggestion}
+            onApplyAll={handleApplyAllSuggestions}
+            onClose={handleCloseSuggestions}
           />
         </div>
       )}

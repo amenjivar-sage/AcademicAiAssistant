@@ -95,7 +95,7 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
         const suggestions = extractSuggestionsFromAiResponse(data.response, cleanContent);
         console.log('📝 Extracted suggestions:', suggestions);
         
-        if (suggestions.length > 0) {
+        if (suggestions.length > 0 && onSuggestionsGenerated) {
           console.log('✅ Calling onSuggestionsGenerated with', suggestions.length, 'suggestions');
           onSuggestionsGenerated(suggestions);
         } else {
