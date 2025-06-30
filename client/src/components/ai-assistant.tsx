@@ -562,49 +562,60 @@ Text to check: ${cleanContent}`
                   
                   // Try to parse the JSON response
                   let spellingErrors = [];
+                  // Enhanced contraction detection - always run first
+                  const apostrophe = String.fromCharCode(39); // Standard ASCII apostrophe
+                  const contractions = [
+                    { find: 'didnt', replace: `didn${apostrophe}t` },
+                    { find: 'wont', replace: `won${apostrophe}t` },
+                    { find: 'cant', replace: `can${apostrophe}t` },
+                    { find: 'dont', replace: `don${apostrophe}t` },
+                    { find: 'isnt', replace: `isn${apostrophe}t` },
+                    { find: 'wasnt', replace: `wasn${apostrophe}t` },
+                    { find: 'werent', replace: `weren${apostrophe}t` },
+                    { find: 'youre', replace: `you${apostrophe}re` },
+                    { find: 'theyre', replace: `they${apostrophe}re` },
+                    { find: 'were', replace: `we${apostrophe}re` },
+                    { find: 'im', replace: `I${apostrophe}m` },
+                    { find: 'hes', replace: `he${apostrophe}s` },
+                    { find: 'shes', replace: `she${apostrophe}s` }
+                  ];
+                  
+                  // Find contractions that exist in the content
+                  console.log('🔍 Checking content for contractions:', cleanContent);
+                  console.log('🔍 Available contractions to check:', contractions.map(c => c.find));
+                  
+                  const contractionErrors = contractions
+                    .filter(contraction => {
+                      const lowerContent = cleanContent.toLowerCase();
+                      // Look for exact word matches to avoid false positives
+                      const wordPattern = new RegExp(`\\b${contraction.find}\\b`, 'i');
+                      const matches = wordPattern.test(lowerContent);
+                      if (matches) {
+                        console.log(`✅ Found "${contraction.find}" in content - will suggest "${contraction.replace}"`);
+                      }
+                      return matches;
+                    })
+                    .map(contraction => ({
+                      original: contraction.find,
+                      correct: contraction.replace
+                    }));
+                  
+                  console.log('📝 Found contractions needing fixes:', contractionErrors);
+
+                  // Try to parse AI response for additional errors
+                  let aiErrors = [];
                   try {
                     // Look for JSON array in the response
                     const jsonMatch = data.response.match(/\[[\s\S]*\]/);
                     if (jsonMatch) {
-                      spellingErrors = JSON.parse(jsonMatch[0]);
+                      aiErrors = JSON.parse(jsonMatch[0]);
                     }
                   } catch (parseError) {
-                    console.log('⚠️ JSON parsing failed, using contraction detection fallback');
-                    
-                    // Enhanced fallback: directly check for common contractions
-                    // Build contractions with safe apostrophe character
-                    const apostrophe = String.fromCharCode(39); // Standard ASCII apostrophe
-                    const contractions = [
-                      { find: 'didnt', replace: `didn${apostrophe}t` },
-                      { find: 'wont', replace: `won${apostrophe}t` },
-                      { find: 'cant', replace: `can${apostrophe}t` },
-                      { find: 'dont', replace: `don${apostrophe}t` },
-                      { find: 'isnt', replace: `isn${apostrophe}t` },
-                      { find: 'wasnt', replace: `wasn${apostrophe}t` },
-                      { find: 'werent', replace: `weren${apostrophe}t` },
-                      { find: 'youre', replace: `you${apostrophe}re` },
-                      { find: 'theyre', replace: `they${apostrophe}re` },
-                      { find: 'were', replace: `we${apostrophe}re` },
-                      { find: 'im', replace: `I${apostrophe}m` },
-                      { find: 'hes', replace: `he${apostrophe}s` },
-                      { find: 'shes', replace: `she${apostrophe}s` }
-                    ];
-                    
-                    // Find contractions that exist in the content
-                    spellingErrors = contractions
-                      .filter(contraction => {
-                        const lowerContent = cleanContent.toLowerCase();
-                        // Look for exact word matches to avoid false positives
-                        const wordPattern = new RegExp(`\\b${contraction.find}\\b`, 'i');
-                        return wordPattern.test(lowerContent);
-                      })
-                      .map(contraction => ({
-                        original: contraction.find,
-                        correct: contraction.replace
-                      }));
-                    
-                    console.log('📝 Found contractions needing fixes:', spellingErrors);
+                    console.log('⚠️ JSON parsing failed, using contraction-only detection');
                   }
+
+                  // Combine contraction errors with AI errors
+                  spellingErrors = [...contractionErrors, ...aiErrors];
 
                   console.log('📝 Parsed spelling errors:', spellingErrors);
 
