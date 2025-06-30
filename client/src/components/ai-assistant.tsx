@@ -534,7 +534,7 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
                     }));
                     
                     console.log('✨ Generated AI highlighting suggestions:', formattedSuggestions);
-                    onSuggestionsGenerated(formattedSuggestions);
+                    if (onSuggestionsGenerated) { onSuggestionsGenerated(formattedSuggestions); }
                     
                     toast({
                       title: "Grammar Check Complete",
@@ -643,7 +643,7 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
                     }));
                     
                     console.log('✨ Generated AI highlighting suggestions:', formattedSuggestions);
-                    onSuggestionsGenerated(formattedSuggestions);
+                    if (onSuggestionsGenerated) { onSuggestionsGenerated(formattedSuggestions); }
                     
                     toast({
                       title: "Grammar Check Complete",
