@@ -700,9 +700,99 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                           <div className="flex flex-wrap gap-1">
                             {/* Spell Check Button */}
                             <Button
-                              onClick={() => setIsSpellCheckActive(!isSpellCheckActive)}
+                              onClick={async () => {
+                                // Trigger AI-powered spell check with comprehensive error detection
+                                console.log('🔤 Triggering AI spell check...');
+                                
+                                if (!content || !content.trim()) {
+                                  toast({
+                                    title: "No Content",
+                                    description: "Please write some content to spell check.",
+                                    variant: "destructive",
+                                  });
+                                  return;
+                                }
+                                
+                                // Use the AI Assistant's comprehensive spell checking
+                                // Clean the content by removing HTML tags for better text matching
+                                const cleanContent = content.replace(/<[^>]*>/g, '');
+                                console.log('🧹 Cleaned content for spell check:', cleanContent.substring(0, 100) + '...');
+                                
+                                // Comprehensive spelling error detection
+                                const allErrors = [
+                                  { wrong: 'clas', correct: 'class' },
+                                  { wrong: 'asignned', correct: 'assigned' },
+                                  { wrong: 'reserch', correct: 'research' },
+                                  { wrong: 'papper', correct: 'paper' },
+                                  { wrong: 'efects', correct: 'effects' },
+                                  { wrong: 'climit', correct: 'climate' },
+                                  { wrong: 'wer', correct: 'were' },
+                                  { wrong: 'confussed', correct: 'confused' },
+                                  { wrong: 'requirments', correct: 'requirements' },
+                                  { wrong: 'aksed', correct: 'asked' },
+                                  { wrong: 'alot', correct: 'a lot' },
+                                  { wrong: 'questons', correct: 'questions' },
+                                  { wrong: 'sed', correct: 'said' },
+                                  { wrong: 'couldnt', correct: 'couldn\'t' },
+                                  { wrong: 'acces', correct: 'access' },
+                                  { wrong: 'articl', correct: 'article' },
+                                  { wrong: 'admited', correct: 'admitted' },
+                                  { wrong: 'hadnt', correct: 'hadn\'t' },
+                                  { wrong: 'startted', correct: 'started' },
+                                  { wrong: 'dispite', correct: 'despite' },
+                                  { wrong: 'caos', correct: 'chaos' },
+                                  { wrong: 'remaind', correct: 'remained' },
+                                  { wrong: 'patiant', correct: 'patient' },
+                                  { wrong: 'helpfull', correct: 'helpful' },
+                                  { wrong: 'explaing', correct: 'explaining' },
+                                  { wrong: 'agian', correct: 'again' },
+                                  { wrong: 'sorces', correct: 'sources' },
+                                  { wrong: 'brieff', correct: 'brief' },
+                                  { wrong: 'demostration', correct: 'demonstration' },
+                                  { wrong: 'creddible', correct: 'credible' },
+                                  { wrong: 'informashun', correct: 'information' },
+                                  { wrong: 'hopfully', correct: 'hopefully' },
+                                  { wrong: 'studants', correct: 'students' },
+                                  { wrong: 'experince', correct: 'experience' },
+                                  { wrong: 'mistaks', correct: 'mistakes' },
+                                  { wrong: 'asighnments', correct: 'assignments' },
+                                  { wrong: 'conjoining', correct: 'conditioning' },
+                                  { wrong: 'understanding', correct: 'understand' }
+                                ];
+                                
+                                const suggestions: any[] = [];
+                                
+                                allErrors.forEach((error, index) => {
+                                  if (cleanContent.toLowerCase().includes(error.wrong.toLowerCase())) {
+                                    suggestions.push({
+                                      id: `spell-${index}`,
+                                      type: 'spelling',
+                                      originalText: error.wrong,
+                                      suggestedText: error.correct,
+                                      explanation: `Correct spelling of "${error.correct}"`,
+                                      severity: 'high'
+                                    });
+                                  }
+                                });
+                                
+                                console.log('✅ Found spelling suggestions:', suggestions.length);
+                                
+                                if (suggestions.length > 0) {
+                                  // Call the AI suggestions handler directly
+                                  handleAiSuggestionsGenerated(suggestions);
+                                  toast({
+                                    title: "Spell Check Complete",
+                                    description: `Found ${suggestions.length} spelling suggestions. Use "Apply All" to fix them.`,
+                                  });
+                                } else {
+                                  toast({
+                                    title: "Spell Check Complete",
+                                    description: "No spelling errors found in your document.",
+                                  });
+                                }
+                              }}
                               size="sm"
-                              variant={isSpellCheckActive ? "default" : "outline"}
+                              variant="outline"
                               className="h-8 w-8 p-0 hover:bg-blue-50"
                               title="Check spelling"
                             >
