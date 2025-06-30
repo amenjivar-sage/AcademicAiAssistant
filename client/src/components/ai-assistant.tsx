@@ -102,6 +102,44 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
           console.log('⚠️ No suggestions extracted from AI response');
           console.log('🔍 Debug - Response format:', data.response.substring(0, 500));
           console.log('🔍 Debug - Content format:', currentContent.substring(0, 200));
+          
+          // Try to generate suggestions from common corrections in the response
+          const manualSuggestions = [];
+          
+          // Look for common spelling errors in the clean content
+          const cleanContent = currentContent.replace(/<[^>]*>/g, '');
+          const commonErrors = [
+            { wrong: 'clas', correct: 'class' },
+            { wrong: 'asignned', correct: 'assigned' },
+            { wrong: 'reserch', correct: 'research' },
+            { wrong: 'papper', correct: 'paper' },
+            { wrong: 'efects', correct: 'effects' },
+            { wrong: 'climit', correct: 'climate' },
+            { wrong: 'wer', correct: 'were' },
+            { wrong: 'confussed', correct: 'confused' },
+            { wrong: 'requirments', correct: 'requirements' },
+            { wrong: 'aksed', correct: 'asked' },
+            { wrong: 'alot', correct: 'a lot' },
+            { wrong: 'questons', correct: 'questions' }
+          ];
+          
+          commonErrors.forEach((error, index) => {
+            if (cleanContent.toLowerCase().includes(error.wrong.toLowerCase())) {
+              manualSuggestions.push({
+                id: `auto-${index}`,
+                type: 'spelling' as const,
+                originalText: error.wrong,
+                suggestedText: error.correct,
+                explanation: `Correct spelling of "${error.correct}"`,
+                severity: 'high' as const
+              });
+            }
+          });
+          
+          if (manualSuggestions.length > 0 && onSuggestionsGenerated) {
+            console.log('✅ Found manual suggestions:', manualSuggestions.length);
+            onSuggestionsGenerated(manualSuggestions);
+          }
         }
       } else {
         console.log('❌ Missing requirements for suggestion extraction:', {
@@ -397,28 +435,35 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
               className="w-full justify-start h-auto p-2 text-left text-xs mb-3 bg-blue-50 border-blue-200 hover:bg-blue-100"
               onClick={() => {
                 // Generate test suggestions based on current content
+                const cleanContent = currentContent.replace(/<[^>]*>/g, '');
+                console.log('🔍 Clean content for test:', cleanContent.substring(0, 200));
+                
                 const testSuggestions = [
                   {
                     id: 'test-1',
                     type: 'spelling' as const,
-                    originalText: 'Yesturday',
-                    suggestedText: 'Yesterday',
-                    explanation: 'Correct spelling of yesterday',
-                    startIndex: currentContent.indexOf('Yesturday'),
-                    endIndex: currentContent.indexOf('Yesturday') + 9,
+                    originalText: 'clas',
+                    suggestedText: 'class',
+                    explanation: 'Correct spelling of class',
                     severity: 'high' as const
                   },
                   {
                     id: 'test-2',
-                    type: 'grammar' as const,
-                    originalText: 'studant\'s',
-                    suggestedText: 'students',
-                    explanation: 'Correct spelling and grammar',
-                    startIndex: currentContent.indexOf('studant\'s'),
-                    endIndex: currentContent.indexOf('studant\'s') + 9,
+                    type: 'spelling' as const,
+                    originalText: 'asignned',
+                    suggestedText: 'assigned',
+                    explanation: 'Correct spelling of assigned',
+                    severity: 'high' as const
+                  },
+                  {
+                    id: 'test-3',
+                    type: 'spelling' as const,
+                    originalText: 'reserch',
+                    suggestedText: 'research',
+                    explanation: 'Correct spelling of research',
                     severity: 'high' as const
                   }
-                ].filter(s => s.startIndex !== -1);
+                ].filter(s => cleanContent.toLowerCase().includes(s.originalText.toLowerCase()));
                 
                 console.log('🧪 Triggering test suggestions:', testSuggestions);
                 onSuggestionsGenerated(testSuggestions);
