@@ -119,6 +119,8 @@ The application is configured for both Replit and Render deployment:
 
 ## Changelog
 
+- June 28, 2025: Added AI-powered interactive feedback highlighting - Zoe's suggestions now appear as clickable highlights in documents with apply/dismiss options
+- June 28, 2025: Enhanced AI prompts for structured feedback - responses now formatted for automatic parsing and highlighting integration
 - June 28, 2025: Fixed copy-paste detection in teacher review - improved algorithm to exclude spell-check corrections from false positive highlighting
 - June 28, 2025: Enhanced copy-paste detection criteria - stricter thresholds (75% similarity, 60% exact matches) to reduce interference from legitimate spell corrections
 - June 28, 2025: Successfully resolved spell check system issues - "Fix This Word" button now functions correctly for individual word corrections while "Fix All" handles multiple errors
