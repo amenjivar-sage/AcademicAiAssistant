@@ -52,6 +52,24 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   const [aiSuggestions, setAiSuggestions] = useState<any[]>([]);
   const [showAiSuggestions, setShowAiSuggestions] = useState(false);
 
+  // Auto-cleanup highlights on initial load
+  useEffect(() => {
+    if (content && content.includes('style="background-color: rgb(254, 243, 199)')) {
+      console.log('🧹 Auto-cleaning old highlights immediately');
+      const cleanContent = content.replace(
+        /<span[^>]*style="background-color:\s*rgb\(254,\s*243,\s*199\)[^"]*"[^>]*>(.*?)<\/span>/gi,
+        '$1'
+      );
+      if (cleanContent !== content) {
+        console.log('🧹 Cleaned content:', cleanContent);
+        setContent(cleanContent);
+        // Also clear any old AI suggestions since they don't match current content
+        setAiSuggestions([]);
+        setShowAiSuggestions(false);
+      }
+    }
+  }, [content]);
+
   // Function to highlight text that has teacher comments
   const highlightCommentedText = (content: string, comments: any[]): string => {
     if (!content || !comments || comments.length === 0) return content;
@@ -520,41 +538,24 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     }
   }, [content]);
 
-  // Auto-filter AI suggestions when content changes (remove suggestions for corrected words)
+  // Auto-clear old AI suggestions when content changes significantly
   useEffect(() => {
     if (aiSuggestions.length === 0) return;
     
     // Clean content for text matching
     const cleanContent = content.replace(/<[^>]*>/g, '').toLowerCase();
     
-    console.log('🔍 Content filtering debug:', {
-      contentLength: content.length,
-      cleanContentLength: cleanContent.length,
-      cleanContentPreview: cleanContent.substring(0, 200) + '...',
-      currentSuggestions: aiSuggestions.map(s => s.originalText)
-    });
+    // If content is completely different from suggestions, clear all suggestions
+    const anyValidSuggestions = aiSuggestions.some(suggestion => 
+      cleanContent.includes(suggestion.originalText.toLowerCase())
+    );
     
-    // Filter out suggestions for words that no longer exist
-    const validSuggestions = aiSuggestions.filter(suggestion => {
-      const originalTextExists = cleanContent.includes(suggestion.originalText.toLowerCase());
-      console.log(`🔍 Checking "${suggestion.originalText}": exists = ${originalTextExists}`);
-      if (!originalTextExists) {
-        console.log(`🧹 Auto-removing suggestion for "${suggestion.originalText}" - word no longer exists`);
-      }
-      return originalTextExists;
-    });
-    
-    // Update suggestions only if there's a change (avoid infinite loops)
-    if (validSuggestions.length !== aiSuggestions.length) {
-      console.log(`📝 Auto-filtered AI suggestions: ${aiSuggestions.length} → ${validSuggestions.length}`);
-      setAiSuggestions(validSuggestions);
-      
-      // Hide suggestions panel if no suggestions remain
-      if (validSuggestions.length === 0) {
-        setShowAiSuggestions(false);
-      }
+    if (!anyValidSuggestions) {
+      console.log('🧹 Clearing all AI suggestions - content completely changed');
+      setAiSuggestions([]);
+      setShowAiSuggestions(false);
     }
-  }, [content, aiSuggestions.length]); // Watch content and suggestion count changes
+  }, [content, aiSuggestions.length]);
 
   // Cleanup typing timeout on unmount
   useEffect(() => {
