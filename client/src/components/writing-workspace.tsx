@@ -165,6 +165,8 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   // Handle applying AI suggestions
   const handleApplySuggestion = useCallback((suggestion: any) => {
     console.log('🔄 Applying suggestion:', suggestion.originalText, '→', suggestion.suggestedText);
+    console.log('📄 Current content length:', content.length);
+    console.log('🎯 Content preview:', content.substring(0, 200) + '...');
     
     // Work with both HTML content and clean text to ensure proper replacement
     const originalText = suggestion.originalText;
@@ -174,6 +176,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     const escapedOriginal = originalText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const directRegex = new RegExp(`\\b${escapedOriginal}\\b`, 'gi');
     let updatedContent = content.replace(directRegex, suggestedText);
+    console.log('🔍 Direct replacement result - changed:', updatedContent !== content);
     
     // If no change, try replacing within text nodes while preserving HTML structure
     if (updatedContent === content) {
@@ -189,8 +192,9 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
           const textContent = node.textContent || '';
           const textRegex = new RegExp(`\\b${escapedOriginal}\\b`, 'gi');
           if (textRegex.test(textContent)) {
-            node.textContent = textContent.replace(textRegex, suggestedText);
-            console.log('✏️ Replaced in text node:', textContent, '→', node.textContent);
+            const newContent = textContent.replace(textRegex, suggestedText);
+            node.textContent = newContent;
+            console.log('✏️ Replaced in text node:', textContent, '→', newContent);
           }
         } else {
           // Recursively process child nodes
@@ -201,11 +205,44 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       // Process all text nodes
       replaceInTextNodes(tempDiv);
       updatedContent = tempDiv.innerHTML;
+      console.log('🔍 HTML-aware replacement result - changed:', updatedContent !== content);
+    }
+    
+    // If still no change, try handling highlighted text specifically
+    if (updatedContent === content) {
+      console.log('🔍 HTML-aware replacement failed, trying highlighted text replacement...');
+      
+      // Look for the word wrapped in highlighting tags
+      const highlightPatterns = [
+        // Yellow highlighting (copy-paste detection)
+        `<strong style="background-color: rgb\\(254, 243, 199\\);">${escapedOriginal}</strong>`,
+        // Any strong tag with the word
+        `<strong[^>]*>${escapedOriginal}</strong>`,
+        // Any em tag with the word
+        `<em[^>]*>${escapedOriginal}</em>`,
+        // Any span with background color
+        `<span[^>]*background-color[^>]*>${escapedOriginal}</span>`
+      ];
+      
+      for (const pattern of highlightPatterns) {
+        const highlightRegex = new RegExp(pattern, 'gi');
+        if (highlightRegex.test(content)) {
+          // Replace while preserving the highlighting on the corrected word
+          updatedContent = content.replace(highlightRegex, (match) => {
+            console.log('🎯 Found highlighted word:', match);
+            return match.replace(new RegExp(escapedOriginal, 'gi'), suggestedText);
+          });
+          if (updatedContent !== content) {
+            console.log('✅ Successfully replaced highlighted text');
+            break;
+          }
+        }
+      }
     }
     
     // If still no change, try simpler word boundary replacement
     if (updatedContent === content) {
-      console.log('🔍 HTML-aware replacement failed, trying simple word replacement...');
+      console.log('🔍 Highlighted text replacement failed, trying simple word replacement...');
       const simpleRegex = new RegExp(escapedOriginal, 'gi');
       updatedContent = content.replace(simpleRegex, suggestedText);
     }
@@ -805,6 +842,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                                 
                                 allErrors.forEach((error, index) => {
                                   if (cleanContent.toLowerCase().includes(error.wrong.toLowerCase())) {
+                                    console.log('🔍 Found spelling error:', error.wrong, '→', error.correct);
                                     suggestions.push({
                                       id: `spell-${index}`,
                                       type: 'spelling',
