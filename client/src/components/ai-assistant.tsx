@@ -479,10 +479,84 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
               variant="outline"
               size="sm"
               className="w-full justify-start h-auto p-2 text-left text-xs mb-3 bg-green-50 border-green-200 hover:bg-green-100"
-              onClick={() => {
-                setPrompt("Please check my grammar and provide specific corrections with highlighting");
-                setActiveTab("assistant");
-                setTimeout(() => handleSubmit(), 100);
+              onClick={async () => {
+                if (!currentContent || !sessionId) {
+                  toast({
+                    title: "Error",
+                    description: "No content available to check or session not found.",
+                    variant: "destructive",
+                  });
+                  return;
+                }
+                
+                setIsLoading(true);
+                try {
+                  // Clear old suggestions to prevent interference
+                  if (onSuggestionsGenerated) {
+                    onSuggestionsGenerated([]);
+                  }
+                  
+                  // Call AI assistance with a prompt that works with the highlighting system
+                  const response = await fetch('/api/ai-assistance', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      sessionId: sessionId,
+                      prompt: 'Please check my grammar and provide specific corrections with highlighting',
+                      content: currentContent
+                    })
+                  });
+
+                  if (!response.ok) {
+                    throw new Error('Failed to get AI assistance');
+                  }
+
+                  const data = await response.json();
+                  console.log('🤖 AI assistance response for highlighting:', data.response);
+                  
+                  // Parse AI response using the highlighting suggestion parser
+                  const { extractSuggestionsFromAiResponse } = await import('../utils/ai-suggestion-parser');
+                  const extractedSuggestions = extractSuggestionsFromAiResponse(data.response, currentContent);
+                  
+                  console.log('📝 Extracted suggestions for highlighting:', extractedSuggestions);
+                  
+                  if (extractedSuggestions.length > 0) {
+                    // Convert to the format expected by the highlighting system
+                    const formattedSuggestions = extractedSuggestions.map((suggestion, index) => ({
+                      id: `ai-highlight-${index}`,
+                      type: suggestion.type,
+                      originalText: suggestion.originalText,
+                      suggestedText: suggestion.suggestedText,
+                      explanation: suggestion.explanation,
+                      severity: suggestion.severity,
+                      startIndex: 0,
+                      endIndex: 0
+                    }));
+                    
+                    console.log('✨ Generated AI highlighting suggestions:', formattedSuggestions);
+                    onSuggestionsGenerated(formattedSuggestions);
+                    
+                    toast({
+                      title: "Grammar Check Complete",
+                      description: `Found ${formattedSuggestions.length} suggestions with highlighting.`,
+                    });
+                  } else {
+                    toast({
+                      title: "Grammar Check Complete",
+                      description: "No errors found in your document.",
+                    });
+                  }
+
+                } catch (error) {
+                  console.error('Error in AI grammar check:', error);
+                  toast({
+                    title: "Grammar Check Error",
+                    description: "Failed to check grammar. Please try again.",
+                    variant: "destructive"
+                  });
+                } finally {
+                  setIsLoading(false);
+                }
               }}
             >
               <SpellCheck className="h-4 w-4 mr-2 text-green-600" />
@@ -531,129 +605,56 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
                     onSuggestionsGenerated([]);
                   }
                   
-                  // Call OpenAI directly for grammar check with fresh context  
+                  // Call AI assistance with a prompt that works with the highlighting system
                   const response = await fetch('/api/ai-assistance', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                       sessionId: sessionId,
-                      prompt: `SPELLING AND GRAMMAR CHECK: Return ONLY a JSON array of corrections for this text. Find ALL errors including missing apostrophes in contractions.
-
-Examples of what to find:
-- "didnt" should be "didn't" 
-- "wont" should be "won't"
-- "cant" should be "can't"
-- "Im" should be "I'm"
-- "youre" should be "you're"
-- "dont" should be "don't"
-
-Return format: [{"original": "didnt", "correct": "didn't"}, {"original": "wont", "correct": "won't"}]
-
-Text to check: ${cleanContent}`
+                      prompt: 'Please check my grammar and provide specific corrections with highlighting',
+                      content: currentContent
                     })
                   });
 
                   if (!response.ok) {
-                    throw new Error('Failed to get AI spell check');
+                    throw new Error('Failed to get AI assistance');
                   }
 
                   const data = await response.json();
-                  console.log('🤖 AI spell check response:', data.response);
+                  console.log('🤖 AI assistance response for highlighting:', data.response);
                   
-                  // Try to parse the JSON response
-                  let spellingErrors = [];
-                  // Enhanced contraction detection - always run first
-                  const apostrophe = String.fromCharCode(39); // Standard ASCII apostrophe
-                  const contractions = [
-                    { find: 'didnt', replace: `didn${apostrophe}t` },
-                    { find: 'wont', replace: `won${apostrophe}t` },
-                    { find: 'cant', replace: `can${apostrophe}t` },
-                    { find: 'dont', replace: `don${apostrophe}t` },
-                    { find: 'isnt', replace: `isn${apostrophe}t` },
-                    { find: 'wasnt', replace: `wasn${apostrophe}t` },
-                    { find: 'werent', replace: `weren${apostrophe}t` },
-                    { find: 'youre', replace: `you${apostrophe}re` },
-                    { find: 'theyre', replace: `they${apostrophe}re` },
-                    { find: 'were', replace: `we${apostrophe}re` },
-                    { find: 'im', replace: `I${apostrophe}m` },
-                    { find: 'hes', replace: `he${apostrophe}s` },
-                    { find: 'shes', replace: `she${apostrophe}s` }
-                  ];
+                  // Parse AI response using the highlighting suggestion parser
+                  const { extractSuggestionsFromAiResponse } = await import('../utils/ai-suggestion-parser');
+                  const extractedSuggestions = extractSuggestionsFromAiResponse(data.response, currentContent);
                   
-                  // Find contractions that exist in the content
-                  console.log('🔍 Checking content for contractions:', cleanContent);
-                  console.log('🔍 Available contractions to check:', contractions.map(c => c.find));
+                  console.log('📝 Extracted suggestions for highlighting:', extractedSuggestions);
                   
-                  const contractionErrors = contractions
-                    .filter(contraction => {
-                      const lowerContent = cleanContent.toLowerCase();
-                      // Look for exact word matches to avoid false positives
-                      const wordPattern = new RegExp(`\\b${contraction.find}\\b`, 'i');
-                      const matches = wordPattern.test(lowerContent);
-                      if (matches) {
-                        console.log(`✅ Found "${contraction.find}" in content - will suggest "${contraction.replace}"`);
-                      }
-                      return matches;
-                    })
-                    .map(contraction => ({
-                      original: contraction.find,
-                      correct: contraction.replace
+                  if (extractedSuggestions.length > 0) {
+                    // Convert to the format expected by the highlighting system
+                    const formattedSuggestions = extractedSuggestions.map((suggestion, index) => ({
+                      id: `ai-highlight-${index}`,
+                      type: suggestion.type,
+                      originalText: suggestion.originalText,
+                      suggestedText: suggestion.suggestedText,
+                      explanation: suggestion.explanation,
+                      severity: suggestion.severity,
+                      startIndex: 0,
+                      endIndex: 0
                     }));
-                  
-                  console.log('📝 Found contractions needing fixes:', contractionErrors);
-
-                  // Try to parse AI response for additional errors
-                  let aiErrors = [];
-                  try {
-                    // Look for JSON array in the response
-                    const jsonMatch = data.response.match(/\[[\s\S]*\]/);
-                    if (jsonMatch) {
-                      aiErrors = JSON.parse(jsonMatch[0]);
-                    }
-                  } catch (parseError) {
-                    console.log('⚠️ JSON parsing failed, using contraction-only detection');
-                  }
-
-                  // Combine contraction errors with AI errors
-                  spellingErrors = [...contractionErrors, ...aiErrors];
-
-                  console.log('📝 Parsed spelling errors:', spellingErrors);
-
-                  // Convert to suggestions format
-                  const suggestions = spellingErrors
-                    .filter(error => {
-                      // Check for exact match or case-insensitive match for contractions/apostrophes
-                      const original = error.original.toLowerCase();
-                      const content = cleanContent.toLowerCase();
-                      return content.includes(original) || 
-                             content.includes(original.replace(/'/g, '')) || // Match without apostrophe
-                             content.includes(original.replace(/'/g, "'")); // Match with different apostrophe
-                    })
-                    .map((error, index) => {
-                      // Determine error type based on the correction
-                      let errorType: 'spelling' | 'grammar' | 'style' = 'spelling';
-                      if (error.original.match(/['']/g) || error.correct.match(/['']/g)) {
-                        errorType = 'style'; // Apostrophe/contraction issues
-                      } else if (error.original.toLowerCase() !== error.correct.toLowerCase()) {
-                        errorType = 'spelling';
-                      } else {
-                        errorType = 'grammar';
-                      }
-                      
-                      return {
-                        id: `ai-grammar-${index}`,
-                        type: errorType,
-                        originalText: error.original,
-                        suggestedText: error.correct,
-                        explanation: `${errorType === 'style' ? 'Style' : errorType === 'grammar' ? 'Grammar' : 'Spelling'} correction: "${error.original}" → "${error.correct}"`,
-                        severity: 'high' as const,
-                        startIndex: 0,
-                        endIndex: 0
-                      };
+                    
+                    console.log('✨ Generated AI highlighting suggestions:', formattedSuggestions);
+                    onSuggestionsGenerated(formattedSuggestions);
+                    
+                    toast({
+                      title: "Grammar Check Complete",
+                      description: `Found ${formattedSuggestions.length} suggestions with highlighting.`,
                     });
-
-                  console.log('✨ Generated AI suggestions:', suggestions);
-                  onSuggestionsGenerated(suggestions);
+                  } else {
+                    toast({
+                      title: "Grammar Check Complete",
+                      description: "No errors found in your document.",
+                    });
+                  }
 
                 } catch (error) {
                   console.error('Error in AI spell check:', error);
