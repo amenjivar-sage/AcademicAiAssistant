@@ -496,6 +496,34 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     setShowAiSuggestions(false);
   }, []);
 
+  // Auto-filter AI suggestions when content changes (remove suggestions for corrected words)
+  useEffect(() => {
+    if (aiSuggestions.length === 0) return;
+    
+    // Clean content for text matching
+    const cleanContent = content.replace(/<[^>]*>/g, '').toLowerCase();
+    
+    // Filter out suggestions for words that no longer exist
+    const validSuggestions = aiSuggestions.filter(suggestion => {
+      const originalTextExists = cleanContent.includes(suggestion.originalText.toLowerCase());
+      if (!originalTextExists) {
+        console.log(`🧹 Auto-removing suggestion for "${suggestion.originalText}" - word no longer exists`);
+      }
+      return originalTextExists;
+    });
+    
+    // Update suggestions only if there's a change
+    if (validSuggestions.length !== aiSuggestions.length) {
+      console.log(`📝 Auto-filtered AI suggestions: ${aiSuggestions.length} → ${validSuggestions.length}`);
+      setAiSuggestions(validSuggestions);
+      
+      // Hide suggestions panel if no suggestions remain
+      if (validSuggestions.length === 0) {
+        setShowAiSuggestions(false);
+      }
+    }
+  }, [content, aiSuggestions]);
+
   // Cleanup typing timeout on unmount
   useEffect(() => {
     return () => {
