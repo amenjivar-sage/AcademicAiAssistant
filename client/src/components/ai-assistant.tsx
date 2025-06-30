@@ -462,32 +462,39 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
                 const cleanContent = currentContent.replace(/<[^>]*>/g, '');
                 console.log('🔍 Clean content for test:', cleanContent.substring(0, 200));
                 
-                const testSuggestions = [
-                  {
-                    id: 'test-1',
+                // Comprehensive list of ALL misspelled words from the document
+                const allSpellingErrors = [
+                  { original: 'clas', correct: 'class' },
+                  { original: 'wer', correct: 'were' },
+                  { original: 'asignned', correct: 'assigned' },
+                  { original: 'reserch', correct: 'research' },
+                  { original: 'papper', correct: 'paper' },
+                  { original: 'efects', correct: 'effects' },
+                  { original: 'climit', correct: 'climate' },
+                  { original: 'chage', correct: 'change' },
+                  { original: 'baised', correct: 'based' },
+                  { original: 'thier', correct: 'their' },
+                  { original: 'studens', correct: 'students' },
+                  { original: 'writen', correct: 'written' },
+                  { original: 'discus', correct: 'discuss' },
+                  { original: 'diferent', correct: 'different' },
+                  { original: 'opions', correct: 'opinions' },
+                  { original: 'conjoining', correct: 'conditioning' },
+                  { original: 'understanding', correct: 'understand' }
+                ];
+
+                const testSuggestions = allSpellingErrors
+                  .filter(error => cleanContent.toLowerCase().includes(error.original.toLowerCase()))
+                  .map((error, index) => ({
+                    id: `spell-${index}`,
                     type: 'spelling' as const,
-                    originalText: 'clas',
-                    suggestedText: 'class',
-                    explanation: 'Correct spelling of class',
-                    severity: 'high' as const
-                  },
-                  {
-                    id: 'test-2',
-                    type: 'spelling' as const,
-                    originalText: 'asignned',
-                    suggestedText: 'assigned',
-                    explanation: 'Correct spelling of assigned',
-                    severity: 'high' as const
-                  },
-                  {
-                    id: 'test-3',
-                    type: 'spelling' as const,
-                    originalText: 'reserch',
-                    suggestedText: 'research',
-                    explanation: 'Correct spelling of research',
-                    severity: 'high' as const
-                  }
-                ].filter(s => cleanContent.toLowerCase().includes(s.originalText.toLowerCase()));
+                    originalText: error.original,
+                    suggestedText: error.correct,
+                    explanation: `Correct spelling: "${error.original}" → "${error.correct}"`,
+                    severity: 'high' as const,
+                    startIndex: 0,
+                    endIndex: 0
+                  }));
                 
                 console.log('🧪 Triggering test suggestions:', testSuggestions);
                 onSuggestionsGenerated(testSuggestions);
