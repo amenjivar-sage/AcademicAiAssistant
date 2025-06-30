@@ -1,13 +1,14 @@
 import { db } from './db';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import { sql } from 'drizzle-orm';
+import { withRetry } from './db-retry';
 
 export async function runMigrations() {
   console.log('Running database migrations...');
   
   try {
-    // Create tables if they don't exist using raw SQL
-    await db.execute(sql`
+    // Create tables if they don't exist using raw SQL with retry
+    await withRetry(() => db.execute(sql`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
         username TEXT NOT NULL UNIQUE,
@@ -22,9 +23,9 @@ export async function runMigrations() {
         created_at TIMESTAMP NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMP NOT NULL DEFAULT NOW()
       );
-    `);
+    `));
 
-    await db.execute(sql`
+    await withRetry(() => db.execute(sql`
       CREATE TABLE IF NOT EXISTS assignments (
         id SERIAL PRIMARY KEY,
         teacher_id INTEGER NOT NULL,
@@ -43,9 +44,9 @@ export async function runMigrations() {
         created_at TIMESTAMP NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMP NOT NULL DEFAULT NOW()
       );
-    `);
+    `));
 
-    await db.execute(sql`
+    await withRetry(() => db.execute(sql`
       CREATE TABLE IF NOT EXISTS writing_sessions (
         id SERIAL PRIMARY KEY,
         user_id INTEGER,
@@ -61,9 +62,9 @@ export async function runMigrations() {
         created_at TIMESTAMP NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMP NOT NULL DEFAULT NOW()
       );
-    `);
+    `));
 
-    await db.execute(sql`
+    await withRetry(() => db.execute(sql`
       CREATE TABLE IF NOT EXISTS ai_interactions (
         id SERIAL PRIMARY KEY,
         session_id INTEGER,
@@ -72,9 +73,9 @@ export async function runMigrations() {
         is_restricted BOOLEAN NOT NULL DEFAULT false,
         created_at TIMESTAMP NOT NULL DEFAULT NOW()
       );
-    `);
+    `));
 
-    await db.execute(sql`
+    await withRetry(() => db.execute(sql`
       CREATE TABLE IF NOT EXISTS classrooms (
         id SERIAL PRIMARY KEY,
         teacher_id INTEGER NOT NULL,
@@ -88,9 +89,9 @@ export async function runMigrations() {
         created_at TIMESTAMP NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMP NOT NULL DEFAULT NOW()
       );
-    `);
+    `));
 
-    await db.execute(sql`
+    await withRetry(() => db.execute(sql`
       CREATE TABLE IF NOT EXISTS classroom_enrollments (
         id SERIAL PRIMARY KEY,
         classroom_id INTEGER NOT NULL,
@@ -98,9 +99,9 @@ export async function runMigrations() {
         enrolled_at TIMESTAMP NOT NULL DEFAULT NOW(),
         is_active BOOLEAN NOT NULL DEFAULT true
       );
-    `);
+    `));
 
-    await db.execute(sql`
+    await withRetry(() => db.execute(sql`
       CREATE TABLE IF NOT EXISTS messages (
         id SERIAL PRIMARY KEY,
         sender_id INTEGER NOT NULL,
@@ -110,9 +111,9 @@ export async function runMigrations() {
         is_read BOOLEAN NOT NULL DEFAULT false,
         created_at TIMESTAMP NOT NULL DEFAULT NOW()
       );
-    `);
+    `));
 
-    await db.execute(sql`
+    await withRetry(() => db.execute(sql`
       CREATE TABLE IF NOT EXISTS feedback (
         id SERIAL PRIMARY KEY,
         user_id INTEGER NOT NULL,
@@ -133,14 +134,14 @@ export async function runMigrations() {
         created_at TIMESTAMP NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMP NOT NULL DEFAULT NOW()
       );
-    `);
+    `));
 
     // Handle inline_comments table with proper schema migration
-    await db.execute(sql`
+    await withRetry(() => db.execute(sql`
       DROP TABLE IF EXISTS inline_comments;
-    `);
+    `));
     
-    await db.execute(sql`
+    await withRetry(() => db.execute(sql`
       CREATE TABLE inline_comments (
         id SERIAL PRIMARY KEY,
         session_id INTEGER NOT NULL REFERENCES writing_sessions(id),
@@ -152,20 +153,20 @@ export async function runMigrations() {
         created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
         updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW()
       );
-    `);
+    `));
 
     // Create session table for multi-user support
-    await db.execute(sql`
+    await withRetry(() => db.execute(sql`
       CREATE TABLE IF NOT EXISTS user_sessions (
         sid VARCHAR NOT NULL COLLATE "default" PRIMARY KEY,
         sess JSON NOT NULL,
         expire TIMESTAMP(6) NOT NULL
       ) WITH (OIDS=FALSE);
-    `);
+    `));
     
-    await db.execute(sql`
+    await withRetry(() => db.execute(sql`
       CREATE INDEX IF NOT EXISTS IDX_session_expire ON user_sessions(expire);
-    `);
+    `));
 
     console.log('Database migrations completed successfully');
   } catch (error) {
