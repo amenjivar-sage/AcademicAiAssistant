@@ -23,20 +23,20 @@ export function extractSuggestionsFromAiResponse(
   
   // Pattern to match corrections in various formats
   const patterns = [
-    // Numbered format like "1. Replace **X** with **Y** - explanation" (prioritized first)
-    /\d+\.\s*Replace\s+\*\*['""]([^'""*]+)['""]?\*\*\s+with\s+\*\*['""]([^'""*]+)['""]?\*\*\s*[-–—]?\s*(.+?)(?:\n|$)/gi,
-    // Numbered format like "1. Change X to Y - explanation"
-    /\d+\.\s*Change\s+['""]([^'""]+)['""]?\s+to\s+['""]([^'""]+)['""]?\s*[-–—]?\s*(.+?)(?:\n|$)/gi,
-    // "Replace X with Y" format (with bold markdown)
-    /Replace\s+\*\*['""]([^'""*]+)['""]?\*\*\s+with\s+\*\*['""]([^'""*]+)['""]?\*\*\s*[-–—]?\s*(.+?)(?:\n|$)/gi,
-    // "Replace X with Y" format (without bold)
-    /Replace\s+['""]([^'""]+)['""]?\s+with\s+['""]([^'""]+)['""]?\s*[-–—]?\s*(.+?)(?:\n|$)/gi,
-    // "Change X to Y" format (without numbers)
-    /Change\s+['""]([^'""]+)['""]?\s+to\s+['""]([^'""]+)['""]?\s*[-–—]?\s*(.+?)(?:\n|$)/gi,
-    // "X should be Y" format
-    /['""]([^'""]+)['""]?\s+should\s+be\s+['""]([^'""]+)['""]?\s*[-–—]?\s*(.+?)(?:\n|$)/gi,
-    // Bold markdown format **X** to **Y**
-    /\*\*([^*]+)\*\*\s+to\s+\*\*([^*]+)\*\*\s*[-–—]?\s*(.+?)(?:\n|$)/gi
+    // Priority 1: Numbered format "1. Replace **"X"** with **"Y"** - explanation" (exact match for current AI format)
+    /\d+\.\s*Replace\s+\*\*['""]([^'""\*]+)['""]?\*\*\s+with\s+\*\*['""]([^'""\*]+)['""]?\*\*\s*[-–—]?\s*(.+?)(?=\n\d+\.|$)/gi,
+    
+    // Priority 2: Numbered format without quotes "1. Replace **X** with **Y** - explanation"
+    /\d+\.\s*Replace\s+\*\*([^*]+)\*\*\s+with\s+\*\*([^*]+)\*\*\s*[-–—]?\s*(.+?)(?=\n\d+\.|$)/gi,
+    
+    // Priority 3: Numbered format "1. Change X to Y - explanation"
+    /\d+\.\s*Change\s+['""]?([^'""\n]+)['""]?\s+to\s+['""]?([^'""\n]+)['""]?\s*[-–—]?\s*(.+?)(?=\n\d+\.|$)/gi,
+    
+    // Priority 4: Simple "Replace X with Y" format
+    /Replace\s+['""]?([^'""\n]+)['""]?\s+with\s+['""]?([^'""\n]+)['""]?\s*[-–—]?\s*(.+?)(?=\n|$)/gi,
+    
+    // Priority 5: "Change X to Y" format
+    /Change\s+['""]?([^'""\n]+)['""]?\s+to\s+['""]?([^'""\n]+)['""]?\s*[-–—]?\s*(.+?)(?=\n|$)/gi
   ];
   
   patterns.forEach((pattern, patternIndex) => {
