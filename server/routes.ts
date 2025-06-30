@@ -1712,7 +1712,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Raw OpenAI response:', response);
       
       if (!response) {
-        return res.json([]);
+        return res.json({ suggestions: [] });
       }
       
       // Try to parse the AI response as JSON
@@ -1727,11 +1727,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         errors = [];
       }
       
-      res.json(errors);
+      // Convert OpenAI errors format to the format expected by the frontend
+      const suggestions = errors.map(error => ({
+        originalText: error.word,
+        suggestedText: error.suggestions && error.suggestions.length > 0 ? error.suggestions[0] : error.word,
+        explanation: `Spelling correction: "${error.word}" → "${error.suggestions?.[0] || error.word}"`
+      }));
+      
+      console.log(`✅ Converted ${errors.length} spell check errors to suggestions format`);
+      
+      res.json({ suggestions });
       
     } catch (error) {
       console.error("Spell check error:", error);
-      res.json([]); // Return empty array instead of error to prevent UI issues
+      res.json({ suggestions: [] }); // Return empty suggestions instead of error to prevent UI issues
     }
   });
 
