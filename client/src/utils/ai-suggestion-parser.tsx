@@ -15,41 +15,22 @@ export function extractSuggestionsFromAiResponse(
   
   console.log('🔍 Parsing AI response for suggestions...');
   console.log('📄 Document content sample:', documentContent.substring(0, 200));
-  console.log('🤖 AI response sample:', aiResponse.substring(0, 300));
-  
-  // Test simple regex on the known AI response format
-  const testResponse = `1. Replace **"yesterdya"** with **"yesterday"** - Corrects the spelling of "yesterday."
-
-2. Replace **"respones"** with **"responses"** - Corrects the spelling of "responses."`;
-  
-  console.log('🧪 Testing with sample response:', testResponse);
-  const simplePattern = /Replace\s+\*\*['""]([^'""\*]+)['""]?\*\*\s+with\s+\*\*['""]([^'""\*]+)['""]?\*\*/gi;
-  let testMatch;
-  console.log('🔧 Testing simple pattern:', simplePattern.source);
-  while ((testMatch = simplePattern.exec(testResponse)) !== null) {
-    console.log('✅ Test pattern matched:', testMatch);
-  }
+  console.log('🤖 AI response sample:', aiResponse.substring(0, 500));
   
   // Clean document content by removing HTML tags
   const cleanContent = documentContent.replace(/<[^>]*>/g, '');
   console.log('🧹 Cleaned content sample:', cleanContent.substring(0, 200));
   
-  // Pattern to match corrections in various formats
+  // Simplified robust patterns for OpenAI's exact format
   const patterns = [
-    // Priority 1: Numbered format "1. Replace **"X"** with **"Y"** - explanation" (exact match for current AI format)
-    /\d+\.\s*Replace\s+\*\*['""]([^'""\*]+)['""]?\*\*\s+with\s+\*\*['""]([^'""\*]+)['""]?\*\*\s*[-–—]?\s*(.+?)(?=\n\d+\.|$)/gi,
+    // Primary pattern: "Replace **"word"** with **"correction"**" 
+    /Replace\s+\*\*["']([^"'*]+)["']?\*\*\s+with\s+\*\*["']([^"'*]+)["']?\*\*[^.]*[.-]\s*(.+?)(?=\n\d+\.|$)/gi,
     
-    // Priority 2: Numbered format without quotes "1. Replace **X** with **Y** - explanation"
-    /\d+\.\s*Replace\s+\*\*([^*]+)\*\*\s+with\s+\*\*([^*]+)\*\*\s*[-–—]?\s*(.+?)(?=\n\d+\.|$)/gi,
+    // Secondary pattern: "Change **"word"** to **"correction"**"
+    /Change\s+\*\*["']([^"'*]+)["']?\*\*\s+to\s+\*\*["']([^"'*]+)["']?\*\*[^.]*[.-]\s*(.+?)(?=\n\d+\.|$)/gi,
     
-    // Priority 3: Numbered format "1. Change X to Y - explanation"
-    /\d+\.\s*Change\s+['""]?([^'""\n]+)['""]?\s+to\s+['""]?([^'""\n]+)['""]?\s*[-–—]?\s*(.+?)(?=\n\d+\.|$)/gi,
-    
-    // Priority 4: Simple "Replace X with Y" format
-    /Replace\s+['""]?([^'""\n]+)['""]?\s+with\s+['""]?([^'""\n]+)['""]?\s*[-–—]?\s*(.+?)(?=\n|$)/gi,
-    
-    // Priority 5: "Change X to Y" format
-    /Change\s+['""]?([^'""\n]+)['""]?\s+to\s+['""]?([^'""\n]+)['""]?\s*[-–—]?\s*(.+?)(?=\n|$)/gi
+    // Fallback pattern without bold markdown: "Replace "word" with "correction""
+    /Replace\s+["']([^"']+)["']?\s+with\s+["']([^"']+)["']?[^.]*[.-]\s*(.+?)(?=\n|$)/gi
   ];
   
   patterns.forEach((pattern, patternIndex) => {
