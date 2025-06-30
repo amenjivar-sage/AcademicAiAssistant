@@ -41,8 +41,22 @@ export default function SimpleHighlighter({
       highlight.parentNode?.replaceChild(textNode, highlight);
     });
     
+    // Get current document text to check which errors still exist
+    const currentDocumentText = quillContainer.textContent || '';
+    
+    // Filter suggestions to only include words that still exist in the document
+    const validSuggestions = suggestions.filter(suggestion => {
+      const exists = currentDocumentText.toLowerCase().includes(suggestion.originalText.toLowerCase());
+      if (!exists) {
+        console.log(`⚡ Skipping suggestion for "${suggestion.originalText}" - already corrected`);
+      }
+      return exists;
+    });
+    
+    console.log(`✅ Processing ${validSuggestions.length}/${suggestions.length} valid suggestions`);
+    
     // Add simple highlights without buttons (to avoid Quill conflicts)
-    suggestions.forEach((suggestion, index) => {
+    validSuggestions.forEach((suggestion, index) => {
       console.log(`📍 Processing suggestion ${index + 1}:`, suggestion.originalText);
       
       // Find text nodes containing the suggestion text
