@@ -171,7 +171,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
 
   const contentRef = useRef<RichTextEditorHandle>(null);
   const formatRef = useRef<((command: string, value?: string) => void) | null>(null);
-  const aiAssistantRef = useRef<any>(null);
+  const aiAssistantRef = useRef<{ sendMessage: (message: string) => Promise<void> } | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
@@ -964,18 +964,61 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                                 const cleanContent = content.replace(/<[^>]*>/g, '');
                                 console.log('🧹 Cleaned content for spell check:', cleanContent.substring(0, 100) + '...');
                                 
-                                // Use the AI Assistant to get real OpenAI spell checking
-                                if (aiAssistantRef.current) {
-                                  console.log('🤖 Triggering AI Assistant spell check');
-                                  // Send a specific spell check prompt to OpenAI
-                                  await aiAssistantRef.current.sendMessage(
-                                    "Please check my document for spelling errors and provide specific corrections in this format: 'Replace \"misspelled\" with \"corrected\"'. Focus only on spelling mistakes, not grammar or style."
-                                  );
-                                } else {
-                                  console.log('❌ AI Assistant ref not available');
+                                // Use OpenAI directly for spell checking
+                                try {
+                                  console.log('🤖 Calling OpenAI for spell check...');
+                                  const response = await apiRequest("POST", "/api/ai/chat", {
+                                    sessionId: sessionId,
+                                    prompt: `Please check the following text for spelling errors only. Do not fix grammar or style - only spelling mistakes. For each spelling error found, respond in this exact format: "Replace 'misspelled' with 'corrected'". If no spelling errors are found, respond with "No spelling errors found."
+
+Text to check:
+${cleanContent}`,
+                                    userId: 2, // Demo student ID
+                                    documentContent: cleanContent,
+                                  });
+                                  
+                                  const data = await response.json();
+                                  console.log('🔍 OpenAI spell check response:', data.response);
+                                  
+                                  // Parse the response to extract spelling corrections
+                                  const corrections = [];
+                                  const lines = data.response.split('\n');
+                                  
+                                  for (const line of lines) {
+                                    const match = line.match(/Replace ['"](.+?)['"] with ['"](.+?)['"]/)
+                                    if (match) {
+                                      corrections.push({
+                                        id: `spell-${corrections.length}`,
+                                        type: 'spelling',
+                                        originalText: match[1],
+                                        suggestedText: match[2],
+                                        explanation: `Spelling correction: "${match[1]}" should be "${match[2]}"`,
+                                        startIndex: cleanContent.indexOf(match[1]),
+                                        endIndex: cleanContent.indexOf(match[1]) + match[1].length,
+                                        severity: 'medium'
+                                      });
+                                    }
+                                  }
+                                  
+                                  if (corrections.length > 0) {
+                                    console.log('✅ Found', corrections.length, 'spelling corrections');
+                                    handleAiSuggestionsGenerated(corrections);
+                                    toast({
+                                      title: "Spell Check Complete",
+                                      description: `Found ${corrections.length} spelling errors to fix.`,
+                                    });
+                                  } else {
+                                    console.log('✅ No spelling errors found');
+                                    toast({
+                                      title: "Spell Check Complete",
+                                      description: "No spelling errors found in your document.",
+                                    });
+                                  }
+                                } catch (error) {
+                                  console.error('❌ OpenAI spell check error:', error);
                                   toast({
                                     title: "Error",
-                                    description: "AI spell checker is not available. Please try again.",
+                                    description: "Failed to check spelling. Please try again.",
                                     variant: "destructive",
                                   });
                                 }
@@ -1229,7 +1272,6 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
             {!isAiSidebarMinimized && (
               <div className="flex-1 overflow-hidden">
                 <AiAssistant
-                  ref={aiAssistantRef}
                   sessionId={sessionId}
                   currentContent={content}
                   onSuggestionsGenerated={handleAiSuggestionsGenerated}
