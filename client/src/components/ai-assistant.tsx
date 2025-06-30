@@ -457,47 +457,83 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
               variant="outline"
               size="sm"
               className="w-full justify-start h-auto p-2 text-left text-xs mb-3 bg-blue-50 border-blue-200 hover:bg-blue-100"
-              onClick={() => {
-                // Generate test suggestions based on current content
-                const cleanContent = currentContent.replace(/<[^>]*>/g, '');
-                console.log('🔍 Clean content for test:', cleanContent.substring(0, 200));
-                
-                // Comprehensive list of ALL misspelled words from the document
-                const allSpellingErrors = [
-                  { original: 'clas', correct: 'class' },
-                  { original: 'wer', correct: 'were' },
-                  { original: 'asignned', correct: 'assigned' },
-                  { original: 'reserch', correct: 'research' },
-                  { original: 'papper', correct: 'paper' },
-                  { original: 'efects', correct: 'effects' },
-                  { original: 'climit', correct: 'climate' },
-                  { original: 'chage', correct: 'change' },
-                  { original: 'baised', correct: 'based' },
-                  { original: 'thier', correct: 'their' },
-                  { original: 'studens', correct: 'students' },
-                  { original: 'writen', correct: 'written' },
-                  { original: 'discus', correct: 'discuss' },
-                  { original: 'diferent', correct: 'different' },
-                  { original: 'opions', correct: 'opinions' },
-                  { original: 'conjoining', correct: 'conditioning' },
-                  { original: 'understanding', correct: 'understand' }
-                ];
+              onClick={async () => {
+                setIsLoading(true);
+                try {
+                  // Get clean content for spell checking
+                  const cleanContent = currentContent.replace(/<[^>]*>/g, '');
+                  console.log('🔍 Starting AI spell check for content:', cleanContent.substring(0, 200));
+                  
+                  // Call OpenAI to identify and correct all spelling errors
+                  const response = await fetch('/api/ai-assistance', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      sessionId: sessionId,
+                      prompt: `Please identify ALL spelling errors in this text and provide corrections. Format your response as a JSON array of objects with "original" and "correct" properties. Only include actual spelling errors, not grammar or style changes. Text: ${cleanContent}`
+                    })
+                  });
 
-                const testSuggestions = allSpellingErrors
-                  .filter(error => cleanContent.toLowerCase().includes(error.original.toLowerCase()))
-                  .map((error, index) => ({
-                    id: `spell-${index}`,
-                    type: 'spelling' as const,
-                    originalText: error.original,
-                    suggestedText: error.correct,
-                    explanation: `Correct spelling: "${error.original}" → "${error.correct}"`,
-                    severity: 'high' as const,
-                    startIndex: 0,
-                    endIndex: 0
-                  }));
-                
-                console.log('🧪 Triggering test suggestions:', testSuggestions);
-                onSuggestionsGenerated(testSuggestions);
+                  if (!response.ok) {
+                    throw new Error('Failed to get AI spell check');
+                  }
+
+                  const data = await response.json();
+                  console.log('🤖 AI spell check response:', data.response);
+                  
+                  // Try to parse the JSON response
+                  let spellingErrors = [];
+                  try {
+                    // Look for JSON array in the response
+                    const jsonMatch = data.response.match(/\[[\s\S]*\]/);
+                    if (jsonMatch) {
+                      spellingErrors = JSON.parse(jsonMatch[0]);
+                    }
+                  } catch (parseError) {
+                    console.log('Could not parse JSON, falling back to text parsing');
+                    // Fallback: parse text response for spelling corrections
+                    const lines = data.response.split('\n');
+                    spellingErrors = lines
+                      .filter(line => line.includes('→') || line.includes('->'))
+                      .map((line, index) => {
+                        const parts = line.split(/→|->/).map(p => p.trim().replace(/['"]/g, ''));
+                        return {
+                          original: parts[0]?.replace(/^\d+\.\s*/, ''),
+                          correct: parts[1]
+                        };
+                      })
+                      .filter(item => item.original && item.correct);
+                  }
+
+                  console.log('📝 Parsed spelling errors:', spellingErrors);
+
+                  // Convert to suggestions format
+                  const suggestions = spellingErrors
+                    .filter(error => cleanContent.toLowerCase().includes(error.original.toLowerCase()))
+                    .map((error, index) => ({
+                      id: `ai-spell-${index}`,
+                      type: 'spelling' as const,
+                      originalText: error.original,
+                      suggestedText: error.correct,
+                      explanation: `AI correction: "${error.original}" → "${error.correct}"`,
+                      severity: 'high' as const,
+                      startIndex: 0,
+                      endIndex: 0
+                    }));
+
+                  console.log('✨ Generated AI suggestions:', suggestions);
+                  onSuggestionsGenerated(suggestions);
+
+                } catch (error) {
+                  console.error('Error in AI spell check:', error);
+                  toast({
+                    title: "Spell Check Error",
+                    description: "Failed to get AI spell checking. Please try again.",
+                    variant: "destructive"
+                  });
+                } finally {
+                  setIsLoading(false);
+                }
               }}
             >
               <Target className="h-4 w-4 mr-2 text-blue-600" />
