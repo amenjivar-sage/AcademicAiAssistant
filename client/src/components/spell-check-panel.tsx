@@ -1,197 +1,364 @@
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { SpellCheck, CheckCircle, XCircle, Loader2, AlertCircle } from "lucide-react";
-
-interface SpellingSuggestion {
-  word: string;
-  suggestions: string[];
-  context?: string;
-  severity: 'high' | 'medium' | 'low';
-}
+import React, { useState, useEffect, useCallback } from 'react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { CheckCircle, X, RefreshCw, Undo, ChevronLeft, ChevronRight, Edit } from 'lucide-react';
+import { checkSpelling, checkSpellingWithAI, applySpellCheckSuggestion, applyAutoCorrections, SpellCheckResult } from '@/utils/spell-check';
 
 interface SpellCheckPanelProps {
-  suggestions: SpellingSuggestion[];
-  isAnalyzing: boolean;
-  currentWord?: string;
-  onApplySuggestion: (originalWord: string, newWord: string) => void;
-  onIgnoreSuggestion: (word: string) => void;
-  onClearAll: () => void;
+  content: string;
+  onContentChange: (newContent: string) => void;
+  isOpen: boolean;
+  onClose: () => void;
+  onSpellErrorsChange?: (errors: SpellCheckResult[]) => void;
+  onCurrentErrorChange?: (index: number) => void;
 }
 
-export default function SpellCheckPanel({
-  suggestions,
-  isAnalyzing,
-  currentWord,
-  onApplySuggestion,
-  onIgnoreSuggestion,
-  onClearAll
-}: SpellCheckPanelProps) {
-  const [ignoredWords, setIgnoredWords] = useState<Set<string>>(new Set());
+export default function SpellCheckPanel({ content, onContentChange, isOpen, onClose, onSpellErrorsChange, onCurrentErrorChange }: SpellCheckPanelProps) {
+  const [spellErrors, setSpellErrors] = useState<SpellCheckResult[]>([]);
+  const [currentErrorIndex, setCurrentErrorIndex] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [editingWord, setEditingWord] = useState<string>("");
+  const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [recentChanges, setRecentChanges] = useState<Array<{original: string, corrected: string, timestamp: number}>>([]);
+  const [showSuccessMessage, setShowSuccessMessage] = useState<string | null>(null);
 
-  const handleIgnore = (word: string) => {
-    setIgnoredWords(prev => {
-      const newSet = new Set(prev);
-      newSet.add(word);
-      return newSet;
-    });
-    onIgnoreSuggestion(word);
-  };
-
-  const handleApply = (originalWord: string, newWord: string) => {
-    onApplySuggestion(originalWord, newWord);
-    // Remove from ignored list if it was there
-    setIgnoredWords(prev => {
-      const newSet = new Set(prev);
-      newSet.delete(originalWord);
-      return newSet;
-    });
-  };
-
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case 'high': return 'bg-red-100 text-red-800 border-red-200';
-      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'low': return 'bg-blue-100 text-blue-800 border-blue-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+  // Debounced spell checking
+  const debouncedSpellCheck = useCallback(() => {
+    if (!isOpen) return;
+    
+    setIsLoading(true);
+    // Apply auto-corrections for common typos first
+    const autoCorrections = applyAutoCorrections(content);
+    if (autoCorrections.corrected !== content) {
+      onContentChange(autoCorrections.corrected);
+      setRecentChanges(prev => [...prev, ...autoCorrections.changes]);
+      return;
     }
-  };
 
-  const getSeverityIcon = (severity: string) => {
-    switch (severity) {
-      case 'high': return <AlertCircle className="h-3 w-3" />;
-      case 'medium': return <AlertCircle className="h-3 w-3" />;
-      case 'low': return <SpellCheck className="h-3 w-3" />;
-      default: return <SpellCheck className="h-3 w-3" />;
+    // Use AI-powered spell checking
+    checkSpellingWithAI(content).then(errors => {
+      setSpellErrors(errors);
+      onSpellErrorsChange?.(errors);
+      setCurrentErrorIndex(0);
+      onCurrentErrorChange?.(0);
+      setIsLoading(false);
+    }).catch(error => {
+      console.error('AI spell check failed, using fallback:', error);
+      // Fallback to basic spell checking if AI fails
+      const errors = checkSpelling(content);
+      setSpellErrors(errors);
+      onSpellErrorsChange?.(errors);
+      setCurrentErrorIndex(0);
+      onCurrentErrorChange?.(0);
+      setIsLoading(false);
+    });
+  }, [content, isOpen, onContentChange]);
+
+  useEffect(() => {
+    if (isOpen) {
+      const timer = setTimeout(debouncedSpellCheck, 300);
+      return () => clearTimeout(timer);
     }
+  }, [debouncedSpellCheck]);
+
+  const handleAcceptSuggestion = (errorIndex: number, suggestionText?: string) => {
+    const error = spellErrors[errorIndex];
+    if (!error) return;
+
+    const originalText = content;
+    const replacement = suggestionText || (error.suggestions && error.suggestions[0]) || error.suggestion;
+    const newContent = applySpellCheckSuggestion(content, error, suggestionText);
+    
+    // Track the change for undo functionality
+    setRecentChanges(prev => [...prev, {
+      original: error.word,
+      corrected: replacement || error.word,
+      timestamp: Date.now()
+    }]);
+
+    onContentChange(newContent);
+    
+    // Show success message
+    setShowSuccessMessage(`"${error.word}" → "${replacement}"`);
+    setTimeout(() => setShowSuccessMessage(null), 2000);
+    
+    // Mark this error as processed
+    const newProcessed = new Set(processedErrors);
+    newProcessed.add(errorIndex);
+    setProcessedErrors(newProcessed);
+
+    // Remove this error from the list immediately for faster UX
+    setSpellErrors(prev => prev.filter((_, index) => index !== errorIndex));
   };
 
-  const visibleSuggestions = suggestions.filter(s => !ignoredWords.has(s.word));
+  const handleIgnore = (errorIndex: number) => {
+    const newProcessed = new Set(processedErrors);
+    newProcessed.add(errorIndex);
+    setProcessedErrors(newProcessed);
+    
+    // Remove this error from the list immediately
+    setSpellErrors(prev => prev.filter((_, index) => index !== errorIndex));
+  };
+
+  const handleRefreshCheck = () => {
+    setIsLoading(true);
+    checkSpellingWithAI(content).then(errors => {
+      setSpellErrors(errors);
+      setProcessedErrors(new Set());
+      setIsLoading(false);
+    }).catch(error => {
+      console.error('AI spell check failed, using fallback:', error);
+      const errors = checkSpelling(content);
+      setSpellErrors(errors);
+      setProcessedErrors(new Set());
+      setIsLoading(false);
+    });
+  };
+
+  const handleEditWord = (errorIndex: number) => {
+    const error = spellErrors[errorIndex];
+    setEditingIndex(errorIndex);
+    setEditingWord(error.word);
+  };
+
+  const handleGetNewSuggestions = async (errorIndex: number) => {
+    if (editingWord.trim() === "") return;
+    
+    setIsLoading(true);
+    try {
+      const newSuggestions = await checkSpellingWithAI(editingWord);
+      if (newSuggestions.length === 0) {
+        // Word is spelled correctly, apply it directly
+        const error = spellErrors[errorIndex];
+        const newContent = applySpellCheckSuggestion(content, error, editingWord);
+        onContentChange(newContent);
+        
+        // Remove this error from the list
+        setSpellErrors(prev => prev.filter((_, index) => index !== errorIndex));
+      } else {
+        // Update the error with new suggestions for the edited word
+        setSpellErrors(prev => prev.map((error, index) => 
+          index === errorIndex 
+            ? { ...error, word: editingWord, suggestions: newSuggestions[0].suggestions || [editingWord] }
+            : error
+        ));
+      }
+    } catch (error) {
+      console.error('Failed to get new suggestions:', error);
+    }
+    setIsLoading(false);
+    setEditingIndex(null);
+    setEditingWord("");
+  };
+
+  const handleCancelEdit = () => {
+    setEditingIndex(null);
+    setEditingWord("");
+  };
+
+  // Undo functionality
+  const handleUndo = () => {
+    if (recentChanges.length === 0) return;
+    
+    const lastChange = recentChanges[recentChanges.length - 1];
+    const updatedContent = content.replace(new RegExp(`\\b${lastChange.corrected}\\b`, 'g'), lastChange.original);
+    onContentChange(updatedContent);
+    
+    setRecentChanges(prev => prev.slice(0, -1));
+    setShowSuccessMessage(`Undid: "${lastChange.corrected}" → "${lastChange.original}"`);
+    setTimeout(() => setShowSuccessMessage(null), 2000);
+  };
+
+  // Keyboard shortcuts
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (!isOpen) return;
+    
+    if (e.key === 'Escape') {
+      if (editingIndex !== null) {
+        handleCancelEdit();
+      } else {
+        onClose();
+      }
+    } else if (e.key === 'Enter' && editingIndex !== null) {
+      e.preventDefault();
+      handleGetNewSuggestions(editingIndex);
+    } else if (e.ctrlKey && e.key === 'z') {
+      e.preventDefault();
+      handleUndo();
+    }
+  }, [isOpen, editingIndex, handleCancelEdit, onClose]);
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
+
+  if (!isOpen) return null;
+
+  const activeErrors = spellErrors.filter((_, index) => !processedErrors.has(index));
 
   return (
     <Card className="w-80 h-96 flex flex-col">
       <CardHeader className="pb-3">
-        <CardTitle className="text-sm flex items-center justify-between">
-          <div className="flex items-center">
-            <SpellCheck className="h-4 w-4 mr-2" />
-            Spell Check
-          </div>
-          {suggestions.length > 0 && (
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg">Spell Check</CardTitle>
+          <div className="flex items-center gap-2">
+            {recentChanges.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleUndo}
+                className="h-8 px-2 text-xs text-blue-600 hover:bg-blue-50"
+                title="Undo last correction (Ctrl+Z)"
+              >
+                <Undo className="h-3 w-3 mr-1" />
+                Undo
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="sm"
-              onClick={onClearAll}
-              className="text-xs h-6 px-2"
+              onClick={handleRefreshCheck}
+              disabled={isLoading}
+              className="h-8 w-8 p-0"
+              title="Refresh spell check"
             >
-              Clear All
+              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
             </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+              className="h-8 w-8 p-0"
+              title="Close spell check (Esc)"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {showSuccessMessage && (
+            <div className="flex items-center gap-2 text-green-600 text-sm">
+              <CheckCircle className="h-4 w-4" />
+              <span>{showSuccessMessage}</span>
+            </div>
           )}
-        </CardTitle>
-        
-        {/* Status indicator */}
-        <div className="text-xs text-gray-600 flex items-center">
-          {isAnalyzing ? (
-            <>
-              <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-              Analyzing{currentWord ? `: "${currentWord}"` : '...'}
-            </>
-          ) : (
-            <>
-              {visibleSuggestions.length === 0 ? (
-                <>
-                  <CheckCircle className="h-3 w-3 mr-1 text-green-500" />
-                  No spelling issues found
-                </>
-              ) : (
-                <>
-                  <AlertCircle className="h-3 w-3 mr-1 text-orange-500" />
-                  {visibleSuggestions.length} issue{visibleSuggestions.length !== 1 ? 's' : ''} found
-                </>
-              )}
-            </>
+          {!showSuccessMessage && activeErrors.length === 0 ? (
+            <div className="flex items-center gap-2 text-green-600">
+              <CheckCircle className="h-4 w-4" />
+              <span className="text-sm">No spelling errors found</span>
+            </div>
+          ) : !showSuccessMessage && (
+            <Badge variant="destructive" className="text-xs">
+              {activeErrors.length} error{activeErrors.length !== 1 ? 's' : ''} found
+            </Badge>
           )}
         </div>
       </CardHeader>
-
-      <CardContent className="flex-1 p-3 pt-0">
-        <ScrollArea className="h-full">
-          {visibleSuggestions.length === 0 && !isAnalyzing ? (
-            <div className="text-center text-gray-500 py-8">
-              <SpellCheck className="h-8 w-8 mx-auto mb-2 text-gray-300" />
-              <p className="text-sm">Click "AI Spell Check" to analyze your writing</p>
+      
+      <CardContent className="flex-1 p-0">
+        <ScrollArea className="h-full px-4 pb-4">
+          {isLoading ? (
+            <div className="text-center text-gray-500 mt-8">
+              <RefreshCw className="h-8 w-8 mx-auto mb-2 animate-spin" />
+              <p className="text-sm">Checking for spelling errors...</p>
+            </div>
+          ) : activeErrors.length === 0 ? (
+            <div className="text-center text-gray-500 mt-8">
+              <CheckCircle className="h-12 w-12 mx-auto mb-2 text-green-500" />
+              <p className="text-sm">Great job! No spelling errors detected.</p>
             </div>
           ) : (
             <div className="space-y-3">
-              {visibleSuggestions.map((suggestion, index) => (
-                <div key={index} className="border rounded-lg p-3 bg-gray-50">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center">
-                      <Badge 
-                        variant="outline" 
-                        className={`text-xs mr-2 ${getSeverityColor(suggestion.severity)}`}
-                      >
-                        {getSeverityIcon(suggestion.severity)}
-                        <span className="ml-1 capitalize">{suggestion.severity}</span>
-                      </Badge>
-                    </div>
-                  </div>
-                  
+              {activeErrors.map((error, index) => (
+                <div key={`${error.startIndex}-${error.word}`} className="border rounded-lg p-3 bg-gray-50">
                   <div className="mb-2">
-                    <span className="text-sm font-medium text-red-600 bg-red-50 px-2 py-1 rounded">
-                      "{suggestion.word}"
+                    {editingIndex === index ? (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={editingWord}
+                          onChange={(e) => setEditingWord(e.target.value)}
+                          className="text-sm font-medium px-2 py-1 border rounded flex-1"
+                          placeholder="Edit word..."
+                          autoFocus
+                        />
+                        <Button
+                          size="sm"
+                          onClick={() => handleGetNewSuggestions(index)}
+                          disabled={isLoading}
+                          className="h-7 text-xs"
+                        >
+                          Apply/Check
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={handleCancelEdit}
+                          className="h-7 text-xs"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-red-600">"{error.word}"</span>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleEditWord(index)}
+                          className="h-6 text-xs px-2 text-blue-600 hover:bg-blue-50"
+                        >
+                          Edit
+                        </Button>
+                      </div>
+                    )}
+                    <span className="text-xs text-gray-500">
+                      Position: {error.startIndex}-{error.endIndex}
                     </span>
                   </div>
                   
-                  {suggestion.context && (
-                    <div className="mb-2 text-xs text-gray-600 italic">
-                      Context: {suggestion.context}
-                    </div>
-                  )}
-                  
-                  {suggestion.suggestions.length > 0 && (
-                    <div className="mb-3">
-                      <div className="text-xs text-gray-600 mb-1">Suggestions:</div>
+                  <div className="mb-3">
+                    <p className="text-xs text-gray-600 mb-1">
+                      {error.suggestions && error.suggestions.length > 1 ? 'Suggestions:' : 'Suggestion:'}
+                    </p>
+                    {error.suggestions && error.suggestions.length > 0 ? (
                       <div className="flex flex-wrap gap-1">
-                        {suggestion.suggestions.slice(0, 3).map((sug, sugIndex) => (
+                        {error.suggestions.map((suggestion, suggIndex) => (
                           <Button
-                            key={sugIndex}
-                            variant="outline"
+                            key={suggIndex}
                             size="sm"
-                            className="text-xs h-6 px-2 hover:bg-green-50 hover:border-green-300"
-                            onClick={() => handleApply(suggestion.word, sug)}
+                            variant="outline"
+                            onClick={() => handleAcceptSuggestion(index, suggestion)}
+                            className="h-7 text-xs px-2 text-green-600 border-green-200 hover:bg-green-50"
                           >
-                            "{sug}"
+                            "{suggestion}"
                           </Button>
                         ))}
                       </div>
-                    </div>
-                  )}
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleAcceptSuggestion(index)}
+                        className="h-7 text-xs px-2 text-green-600 border-green-200 hover:bg-green-50"
+                      >
+                        "{error.suggestion}"
+                      </Button>
+                    )}
+                  </div>
                   
-                  <div className="flex justify-between">
+                  <div className="flex gap-2 justify-end">
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-xs h-6 px-2 text-gray-500 hover:text-gray-700"
-                      onClick={() => handleIgnore(suggestion.word)}
+                      onClick={() => handleIgnore(index)}
+                      className="h-7 text-xs text-gray-500 hover:bg-gray-100"
                     >
-                      <XCircle className="h-3 w-3 mr-1" />
                       Ignore
                     </Button>
-                    
-                    {suggestion.suggestions.length > 0 && (
-                      <Button
-                        variant="default"
-                        size="sm"
-                        className="text-xs h-6 px-2 bg-green-600 hover:bg-green-700"
-                        onClick={() => handleApply(suggestion.word, suggestion.suggestions[0])}
-                      >
-                        <CheckCircle className="h-3 w-3 mr-1" />
-                        Apply "{suggestion.suggestions[0]}"
-                      </Button>
-                    )}
                   </div>
                 </div>
               ))}

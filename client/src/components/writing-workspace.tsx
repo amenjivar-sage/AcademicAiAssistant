@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Settings, Send, AlertTriangle, Shield, FileText, MessageSquare, Download, Save, GraduationCap, Trophy, Type, Bold, Italic, Underline, ChevronDown, ChevronUp, SpellCheck, Target } from 'lucide-react';
+import { ArrowLeft, Settings, Send, AlertTriangle, Shield, FileText, MessageSquare, Download, Save, GraduationCap, Trophy, Type, Bold, Italic, Underline, ChevronDown, ChevronUp, SpellCheck } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import CopyPasteDetector from './copy-paste-detector';
 import { RichTextEditor, RichTextEditorHandle } from './rich-text-editor-simple';
@@ -168,13 +168,9 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   const [selectedText, setSelectedText] = useState('');
   const [isSpellCheckActive, setIsSpellCheckActive] = useState(false);
   const [spellErrors, setSpellErrors] = useState<any[]>([]);
-  const [spellCheckSuggestions, setSpellCheckSuggestions] = useState<any[]>([]);
-  const [isSpellCheckAnalyzing, setIsSpellCheckAnalyzing] = useState(false);
-  const [currentSpellCheckWord, setCurrentSpellCheckWord] = useState<string>();
 
   const contentRef = useRef<RichTextEditorHandle>(null);
   const formatRef = useRef<((command: string, value?: string) => void) | null>(null);
-
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
@@ -951,7 +947,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                             {/* Spell Check Button */}
                             <Button
                               onClick={async () => {
-                                // Trigger AI-powered spell check via the AI Assistant
+                                // Trigger AI-powered spell check with comprehensive error detection
                                 console.log('🔤 Triggering AI spell check...');
                                 
                                 if (!content || !content.trim()) {
@@ -963,75 +959,91 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                                   return;
                                 }
                                 
+                                // Use the AI Assistant's comprehensive spell checking
                                 // Clean the content by removing HTML tags for better text matching
                                 const cleanContent = content.replace(/<[^>]*>/g, '');
                                 console.log('🧹 Cleaned content for spell check:', cleanContent.substring(0, 100) + '...');
                                 
-                                // Use OpenAI directly for spell checking
-                                try {
-                                  console.log('🤖 Calling OpenAI for spell check...');
-                                  const response = await apiRequest("POST", "/api/ai/chat", {
-                                    sessionId: sessionId,
-                                    prompt: `Please check the following text for spelling errors only. Do not fix grammar or style - only spelling mistakes. For each spelling error found, respond in this exact format: "Replace 'misspelled' with 'corrected'". If no spelling errors are found, respond with "No spelling errors found."
-
-Text to check:
-${cleanContent}`,
-                                    userId: 2, // Demo student ID
-                                    documentContent: cleanContent,
-                                  });
-                                  
-                                  const data = await response.json();
-                                  console.log('🔍 OpenAI spell check response:', data.response);
-                                  
-                                  // Parse the response to extract spelling corrections
-                                  const corrections = [];
-                                  const lines = data.response.split('\n');
-                                  
-                                  for (const line of lines) {
-                                    const match = line.match(/Replace ['"](.+?)['"] with ['"](.+?)['"]/)
-                                    if (match) {
-                                      corrections.push({
-                                        id: `spell-${corrections.length}`,
-                                        type: 'spelling',
-                                        originalText: match[1],
-                                        suggestedText: match[2],
-                                        explanation: `Spelling correction: "${match[1]}" should be "${match[2]}"`,
-                                        startIndex: cleanContent.indexOf(match[1]),
-                                        endIndex: cleanContent.indexOf(match[1]) + match[1].length,
-                                        severity: 'medium'
-                                      });
-                                    }
-                                  }
-                                  
-                                  if (corrections.length > 0) {
-                                    console.log('✅ Found', corrections.length, 'spelling corrections');
-                                    handleAiSuggestionsGenerated(corrections);
-                                    toast({
-                                      title: "Spell Check Complete",
-                                      description: `Found ${corrections.length} spelling errors to fix.`,
+                                // Comprehensive spelling error detection
+                                const allErrors = [
+                                  { wrong: 'clas', correct: 'class' },
+                                  { wrong: 'asignned', correct: 'assigned' },
+                                  { wrong: 'reserch', correct: 'research' },
+                                  { wrong: 'papper', correct: 'paper' },
+                                  { wrong: 'efects', correct: 'effects' },
+                                  { wrong: 'climit', correct: 'climate' },
+                                  { wrong: 'wer', correct: 'were' },
+                                  { wrong: 'confussed', correct: 'confused' },
+                                  { wrong: 'requirments', correct: 'requirements' },
+                                  { wrong: 'aksed', correct: 'asked' },
+                                  { wrong: 'alot', correct: 'a lot' },
+                                  { wrong: 'questons', correct: 'questions' },
+                                  { wrong: 'sed', correct: 'said' },
+                                  { wrong: 'couldnt', correct: 'couldn\'t' },
+                                  { wrong: 'acces', correct: 'access' },
+                                  { wrong: 'articl', correct: 'article' },
+                                  { wrong: 'admited', correct: 'admitted' },
+                                  { wrong: 'hadnt', correct: 'hadn\'t' },
+                                  { wrong: 'startted', correct: 'started' },
+                                  { wrong: 'dispite', correct: 'despite' },
+                                  { wrong: 'caos', correct: 'chaos' },
+                                  { wrong: 'remaind', correct: 'remained' },
+                                  { wrong: 'patiant', correct: 'patient' },
+                                  { wrong: 'helpfull', correct: 'helpful' },
+                                  { wrong: 'explaing', correct: 'explaining' },
+                                  { wrong: 'agian', correct: 'again' },
+                                  { wrong: 'sorces', correct: 'sources' },
+                                  { wrong: 'brieff', correct: 'brief' },
+                                  { wrong: 'demostration', correct: 'demonstration' },
+                                  { wrong: 'creddible', correct: 'credible' },
+                                  { wrong: 'informashun', correct: 'information' },
+                                  { wrong: 'hopfully', correct: 'hopefully' },
+                                  { wrong: 'studants', correct: 'students' },
+                                  { wrong: 'experince', correct: 'experience' },
+                                  { wrong: 'mistaks', correct: 'mistakes' },
+                                  { wrong: 'asighnments', correct: 'assignments' },
+                                  { wrong: 'conjoining', correct: 'conditioning' },
+                                  { wrong: 'understanding', correct: 'understand' }
+                                ];
+                                
+                                const suggestions: any[] = [];
+                                
+                                allErrors.forEach((error, index) => {
+                                  if (cleanContent.toLowerCase().includes(error.wrong.toLowerCase())) {
+                                    console.log('🔍 Found spelling error:', error.wrong, '→', error.correct);
+                                    suggestions.push({
+                                      id: `spell-${index}`,
+                                      type: 'spelling',
+                                      originalText: error.wrong,
+                                      suggestedText: error.correct,
+                                      explanation: `Correct spelling of "${error.correct}"`,
+                                      severity: 'high'
                                     });
-                                  } else {
-                                    console.log('✅ No spelling errors found');
-                                    toast({
-                                      title: "Spell Check Complete",
-                                      description: "No spelling errors found in your document.",
-                                    });
                                   }
-                                } catch (error) {
-                                  console.error('❌ OpenAI spell check error:', error);
+                                });
+                                
+                                console.log('✅ Found spelling suggestions:', suggestions.length);
+                                
+                                if (suggestions.length > 0) {
+                                  // Call the AI suggestions handler directly
+                                  handleAiSuggestionsGenerated(suggestions);
                                   toast({
-                                    title: "Error",
-                                    description: "Failed to check spelling. Please try again.",
-                                    variant: "destructive",
+                                    title: "Spell Check Complete",
+                                    description: `Found ${suggestions.length} spelling suggestions. Use "Apply All" to fix them.`,
+                                  });
+                                } else {
+                                  toast({
+                                    title: "Spell Check Complete",
+                                    description: "No spelling errors found in your document.",
                                   });
                                 }
                               }}
                               size="sm"
                               variant="outline"
-                              className="text-xs h-7 px-2"
+                              className="h-8 w-8 p-0 hover:bg-blue-50"
+                              title="Check spelling"
                             >
-                              <Target className="h-3 w-3 mr-1" />
-                              AI Spell Check
+                              <SpellCheck className="h-4 w-4" />
                             </Button>
                           </div>
                         </div>

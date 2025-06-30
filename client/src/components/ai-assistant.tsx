@@ -61,7 +61,7 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
           hasContent: !!currentContent,
           hasCallback: !!onSuggestionsGenerated
         });
-        
+
         // Clean the content by removing HTML tags for better text matching
         const cleanContent = currentContent.replace(/<[^>]*>/g, '');
         console.log('🧹 Cleaned content for suggestion matching:', cleanContent.substring(0, 100) + '...');
@@ -184,6 +184,7 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
             { wrong: 'climit', correct: 'climate' }
           ];
           
+          // Find errors in the content and create suggestions
           commonErrors.forEach((error, index) => {
             if (cleanContent.includes(error.wrong)) {
               manualSuggestions.push({
@@ -194,14 +195,14 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
                 explanation: `Spelling correction: "${error.wrong}" should be "${error.correct}"`,
                 startIndex: cleanContent.indexOf(error.wrong),
                 endIndex: cleanContent.indexOf(error.wrong) + error.wrong.length,
-                severity: 'high'
+                severity: 'medium'
               });
             }
           });
           
-          console.log('🔧 Created manual suggestions from AI response:', manualSuggestions);
+          console.log('🔧 Created manual suggestions:', manualSuggestions);
           
-          if (manualSuggestions.length > 0) {
+          if (manualSuggestions.length > 0 && onSuggestionsGenerated) {
             console.log('✅ Calling onSuggestionsGenerated with manual suggestions');
             onSuggestionsGenerated(manualSuggestions);
           }
@@ -276,94 +277,148 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
     return isRestricted ? "destructive" : "default";
   };
 
-  // Generate relevant prompts based on content
-  useEffect(() => {
-    if (currentContent) {
-      const prompts: SmartPrompt[] = [
-        {
-          text: "Help me improve this paragraph's clarity",
-          icon: Lightbulb,
-          category: "clarity",
-          relevance: 95
-        },
-        {
-          text: "Check my thesis statement",
-          icon: Target,
-          category: "structure",
-          relevance: 90
-        },
-        {
-          text: "Suggest better transitions between ideas",
-          icon: PenTool,
-          category: "flow",
-          relevance: 85
-        },
-        {
-          text: "Help me brainstorm supporting evidence",
-          icon: Search,
-          category: "evidence",
-          relevance: 80
-        },
-        {
-          text: "Review my conclusion",
-          icon: FileText,
-          category: "conclusion",
-          relevance: 75
-        }
-      ];
+  // Generate smart prompts based on conversation history
+  const generateSmartPrompts = (chatHistory: any[]) => {
+    const basePrompts = [
+      { icon: Lightbulb, text: "Help me brainstorm ideas for this topic", category: "brainstorming", relevance: 1 },
+      { icon: BookOpen, text: "Review my thesis statement and suggest improvements", category: "feedback", relevance: 1 },
+      { icon: PenTool, text: "Help me organize my thoughts into an outline", category: "structure", relevance: 1 },
+      { icon: Search, text: "What are key points I should research?", category: "research", relevance: 1 },
+      { icon: Zap, text: "Improve the flow and transitions in this paragraph", category: "editing", relevance: 1 },
+      { icon: CheckCircle, text: "Check my grammar and writing style", category: "grammar", relevance: 1 },
+    ];
 
-      setSmartPrompts(prompts.sort((a, b) => b.relevance - a.relevance));
-    } else {
-      setSmartPrompts([
-        {
-          text: "Help me brainstorm ideas for my essay",
-          icon: Lightbulb,
-          category: "brainstorming",
-          relevance: 100
-        },
-        {
-          text: "How do I structure my introduction?",
-          icon: Target,
-          category: "structure",
-          relevance: 90
-        },
-        {
-          text: "What makes a strong thesis statement?",
-          icon: PenTool,
-          category: "thesis",
-          relevance: 85
-        }
-      ]);
+    if (!chatHistory || chatHistory.length === 0) {
+      return basePrompts;
     }
-  }, [currentContent]);
+
+    // Analyze recent questions to suggest contextual prompts
+    const recentTopics = chatHistory.slice(-3).map((interaction: any) => interaction.prompt.toLowerCase());
+    const contextualPrompts: SmartPrompt[] = [];
+
+    if (recentTopics.some(topic => topic.includes('character') || topic.includes('story') || topic.includes('creative'))) {
+      contextualPrompts.push({ 
+        icon: BookOpen, 
+        text: "Help me develop my characters further", 
+        category: "character", 
+        relevance: 2 
+      });
+      contextualPrompts.push({ 
+        icon: PenTool, 
+        text: "What makes dialogue feel natural?", 
+        category: "dialogue", 
+        relevance: 2 
+      });
+    }
+
+    if (recentTopics.some(topic => topic.includes('research') || topic.includes('source') || topic.includes('evidence'))) {
+      contextualPrompts.push({ 
+        icon: Search, 
+        text: "How do I find credible sources?", 
+        category: "research", 
+        relevance: 2 
+      });
+      contextualPrompts.push({ 
+        icon: BookOpen, 
+        text: "Help me organize my research notes", 
+        category: "organization", 
+        relevance: 2 
+      });
+    }
+
+    if (recentTopics.some(topic => topic.includes('conclusion') || topic.includes('ending') || topic.includes('finish'))) {
+      contextualPrompts.push({ 
+        icon: CheckCircle, 
+        text: "How can I write a stronger conclusion?", 
+        category: "conclusion", 
+        relevance: 2 
+      });
+    }
+
+    if (recentTopics.some(topic => topic.includes('stuck') || topic.includes('block') || topic.includes('help'))) {
+      contextualPrompts.push({ 
+        icon: Zap, 
+        text: "I have writer's block, help me get unstuck", 
+        category: "motivation", 
+        relevance: 2 
+      });
+    }
+
+    if (recentTopics.some(topic => topic.includes('introduction') || topic.includes('intro') || topic.includes('start'))) {
+      contextualPrompts.push({ 
+        icon: Lightbulb, 
+        text: "How do I write a compelling introduction?", 
+        category: "introduction", 
+        relevance: 2 
+      });
+    }
+
+    if (recentTopics.some(topic => topic.includes('argument') || topic.includes('persuasive') || topic.includes('convince'))) {
+      contextualPrompts.push({ 
+        icon: PenTool, 
+        text: "Help me strengthen my argument", 
+        category: "argument", 
+        relevance: 2 
+      });
+    }
+
+    // Combine and sort by relevance, then limit to 6
+    return [...contextualPrompts, ...basePrompts]
+      .sort((a, b) => b.relevance - a.relevance)
+      .slice(0, 6);
+  };
+
+  const quickPrompts = generateSmartPrompts(typedChatHistory);
 
   return (
     <div className="h-full flex flex-col bg-white">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-        <TabsList className="grid w-full grid-cols-2 bg-gray-100 p-1 m-2 rounded-lg">
-          <TabsTrigger 
-            value="assistant" 
-            className="text-xs py-2 px-3 data-[state=active]:bg-white data-[state=active]:shadow-sm"
-          >
-            <Bot className="h-3 w-3 mr-1" />
-            ZoË Assistant
-          </TabsTrigger>
-          <TabsTrigger 
-            value="citations" 
-            className="text-xs py-2 px-3 data-[state=active]:bg-white data-[state=active]:shadow-sm"
-          >
-            <BookOpen className="h-3 w-3 mr-1" />
-            Citations
-          </TabsTrigger>
+      {/* Header */}
+      <div className="p-3 border-b border-gray-200 bg-gradient-to-r from-purple-500 to-purple-600 text-white flex-shrink-0">
+        <div className="flex items-center gap-2">
+          <Bot className="h-4 w-4" />
+          <h3 className="font-medium text-sm">ZoË AI Assistant</h3>
+        </div>
+        <p className="text-xs text-purple-100 mt-1">
+          Get ethical writing help and guidance
+        </p>
+      </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+        <TabsList className="grid w-full grid-cols-3 h-auto m-2 flex-shrink-0">
+          <TabsTrigger value="assistant" className="text-xs px-2">Chat</TabsTrigger>
+          <TabsTrigger value="prompts" className="text-xs px-2">Help</TabsTrigger>
+          <TabsTrigger value="citations" className="text-xs px-2">Cite</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="assistant" className="flex-1 flex flex-col p-3 space-y-3">
-          {/* Chat History */}
-          <ScrollArea className="flex-1 min-h-0 max-h-48 border rounded-md p-2 bg-gray-50">
-            {!historyLoading && displayChatHistory.length === 0 && (
-              <div className="text-center text-gray-500 py-4">
-                <Bot className="h-8 w-8 mx-auto mb-2 text-purple-300" />
-                <p className="text-sm">Ask ZoË for help with your writing</p>
+        <TabsContent value="assistant" className="flex-1 flex flex-col min-h-0">
+          {/* Chat History Area */}
+          <div className="flex-1 overflow-y-auto p-3 space-y-3" style={{ height: 'calc(100vh - 320px)' }}>
+            {displayChatHistory && displayChatHistory.length > 0 ? (
+              <>
+                <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
+                  <Bot className="h-4 w-4 mr-2" />
+                  Conversation History
+                </h4>
+                {displayChatHistory.map((interaction: any, index: number) => (
+                  <div key={index} className="space-y-2">
+                    <div className="bg-blue-50 p-3 rounded-lg">
+                      <p className="text-sm font-medium text-blue-900 mb-1">You asked:</p>
+                      <p className="text-sm text-blue-800">{interaction.prompt}</p>
+                    </div>
+                    <div className="bg-purple-50 p-3 rounded-lg">
+                      <p className="text-sm font-medium text-purple-900 mb-2">ZoË replied:</p>
+                      <div className="text-sm text-purple-800 whitespace-pre-line leading-relaxed bg-white p-3 rounded-lg border w-full">
+                        {interaction.response}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </>
+            ) : (
+              <div className="text-center text-gray-500 text-sm">
+                <Bot className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p>Start a conversation with ZoË!</p>
+                <p className="text-xs mt-1">Ask questions about your writing</p>
               </div>
             )}
 
@@ -388,71 +443,256 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
                 </AlertDescription>
               </Alert>
             )}
+          </div>
 
-            {/* Chat History Items */}
-            {displayChatHistory.map((interaction: any, index: number) => (
-              <div key={interaction.id || index} className="mb-3 last:mb-0">
-                <div className="text-xs text-gray-500 mb-1">
-                  Student:
-                </div>
-                <div className="bg-blue-50 p-2 rounded text-sm mb-2">
-                  {interaction.prompt}
-                </div>
-                
-                <div className="text-xs text-gray-500 mb-1 flex items-center">
-                  <Bot className="h-3 w-3 mr-1" />
-                  ZoË:
-                </div>
-                <div className="bg-white border p-2 rounded text-sm whitespace-pre-line leading-relaxed">
-                  {interaction.response}
-                </div>
-              </div>
-            ))}
-          </ScrollArea>
-
-          {/* Input Area */}
-          <div className="space-y-2">
+          {/* Input Area - Compact horizontal layout */}
+          <div className="border-t bg-white p-2 flex gap-2 flex-shrink-0">
             <Textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Ask ZoË for help with your writing..."
-              className="min-h-[60px] text-sm resize-none"
-              disabled={aiHelpMutation.isPending}
+              placeholder="Ask ZoË a question..."
+              className="flex-1 resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+              rows={1}
             />
-            
-            <div className="flex justify-between items-center">
-              <div className="text-xs text-gray-500">
-                Ctrl+Enter to send
-              </div>
-              <Button
-                onClick={handleSubmit}
-                disabled={!prompt.trim() || aiHelpMutation.isPending}
-                size="sm"
-                className="h-8 px-3 text-xs"
-              >
-                {aiHelpMutation.isPending ? (
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                ) : (
-                  <Send className="h-3 w-3" />
-                )}
-              </Button>
-            </div>
+            <Button 
+              onClick={handleSubmit}
+              disabled={aiHelpMutation.isPending || !prompt.trim()}
+              className="bg-purple-600 hover:bg-purple-700 px-3"
+              size="sm"
+            >
+              {aiHelpMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+            </Button>
           </div>
+        </TabsContent>
 
-          {/* Quick Prompts */}
+        <TabsContent value="prompts" className="overflow-y-auto" style={{ height: 'calc(100vh - 260px)', padding: '12px' }}>
+          <h4 className="font-medium text-gray-700 mb-3 text-sm">Quick Writing Help</h4>
+          
+          {/* Quick Grammar Check Button */}
+          {currentContent && currentContent.trim().length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full justify-start h-auto p-2 text-left text-xs mb-3 bg-green-50 border-green-200 hover:bg-green-100"
+              onClick={() => {
+                setPrompt("Please check my grammar and provide specific corrections with highlighting");
+                setActiveTab("assistant");
+                setTimeout(() => handleSubmit(), 100);
+              }}
+            >
+              <SpellCheck className="h-4 w-4 mr-2 text-green-600" />
+              <div>
+                <div className="font-medium text-green-800">Check Grammar & Spelling</div>
+                <div className="text-green-600">Get highlighted corrections in your document</div>
+              </div>
+            </Button>
+          )}
+          
+          {/* Test Highlighting Button */}
+          {currentContent && currentContent.trim().length > 0 && onSuggestionsGenerated && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full justify-start h-auto p-2 text-left text-xs mb-3 bg-blue-50 border-blue-200 hover:bg-blue-100"
+              onClick={async () => {
+                if (!currentContent || !sessionId) {
+                  toast({
+                    title: "Error",
+                    description: "No content available to check or session not found.",
+                    variant: "destructive",
+                  });
+                  return;
+                }
+                
+                setIsLoading(true);
+                try {
+                  // Get clean content for spell checking
+                  const cleanContent = currentContent.replace(/<[^>]*>/g, '').trim();
+                  
+                  if (!cleanContent) {
+                    toast({
+                      title: "No content",
+                      description: "Please write some text first before checking spelling and grammar.",
+                      variant: "destructive",
+                    });
+                    setIsLoading(false);
+                    return;
+                  }
+                  
+                  console.log('🔍 Starting AI spell check for content:', cleanContent.substring(0, 200));
+                  
+                  // Clear old suggestions to prevent interference
+                  if (onSuggestionsGenerated) {
+                    onSuggestionsGenerated([]);
+                  }
+                  
+                  // Call OpenAI directly for grammar check with fresh context  
+                  const response = await fetch('/api/ai-assistance', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      sessionId: sessionId,
+                      prompt: `SPELLING AND GRAMMAR CHECK: Return ONLY a JSON array of corrections for this text. Find ALL errors including missing apostrophes in contractions.
+
+Examples of what to find:
+- "didnt" should be "didn't" 
+- "wont" should be "won't"
+- "cant" should be "can't"
+- "Im" should be "I'm"
+- "youre" should be "you're"
+- "dont" should be "don't"
+
+Return format: [{"original": "didnt", "correct": "didn't"}, {"original": "wont", "correct": "won't"}]
+
+Text to check: ${cleanContent}`
+                    })
+                  });
+
+                  if (!response.ok) {
+                    throw new Error('Failed to get AI spell check');
+                  }
+
+                  const data = await response.json();
+                  console.log('🤖 AI spell check response:', data.response);
+                  
+                  // Try to parse the JSON response
+                  let spellingErrors = [];
+                  // Enhanced contraction detection - always run first
+                  const apostrophe = String.fromCharCode(39); // Standard ASCII apostrophe
+                  const contractions = [
+                    { find: 'didnt', replace: `didn${apostrophe}t` },
+                    { find: 'wont', replace: `won${apostrophe}t` },
+                    { find: 'cant', replace: `can${apostrophe}t` },
+                    { find: 'dont', replace: `don${apostrophe}t` },
+                    { find: 'isnt', replace: `isn${apostrophe}t` },
+                    { find: 'wasnt', replace: `wasn${apostrophe}t` },
+                    { find: 'werent', replace: `weren${apostrophe}t` },
+                    { find: 'youre', replace: `you${apostrophe}re` },
+                    { find: 'theyre', replace: `they${apostrophe}re` },
+                    { find: 'were', replace: `we${apostrophe}re` },
+                    { find: 'im', replace: `I${apostrophe}m` },
+                    { find: 'hes', replace: `he${apostrophe}s` },
+                    { find: 'shes', replace: `she${apostrophe}s` }
+                  ];
+                  
+                  // Find contractions that exist in the content
+                  console.log('🔍 Checking content for contractions:', cleanContent);
+                  console.log('🔍 Available contractions to check:', contractions.map(c => c.find));
+                  
+                  const contractionErrors = contractions
+                    .filter(contraction => {
+                      const lowerContent = cleanContent.toLowerCase();
+                      // Look for exact word matches to avoid false positives
+                      const wordPattern = new RegExp(`\\b${contraction.find}\\b`, 'i');
+                      const matches = wordPattern.test(lowerContent);
+                      if (matches) {
+                        console.log(`✅ Found "${contraction.find}" in content - will suggest "${contraction.replace}"`);
+                      }
+                      return matches;
+                    })
+                    .map(contraction => ({
+                      original: contraction.find,
+                      correct: contraction.replace
+                    }));
+                  
+                  console.log('📝 Found contractions needing fixes:', contractionErrors);
+
+                  // Try to parse AI response for additional errors
+                  let aiErrors = [];
+                  try {
+                    // Look for JSON array in the response
+                    const jsonMatch = data.response.match(/\[[\s\S]*\]/);
+                    if (jsonMatch) {
+                      aiErrors = JSON.parse(jsonMatch[0]);
+                    }
+                  } catch (parseError) {
+                    console.log('⚠️ JSON parsing failed, using contraction-only detection');
+                  }
+
+                  // Combine contraction errors with AI errors
+                  spellingErrors = [...contractionErrors, ...aiErrors];
+
+                  console.log('📝 Parsed spelling errors:', spellingErrors);
+
+                  // Convert to suggestions format
+                  const suggestions = spellingErrors
+                    .filter(error => {
+                      // Check for exact match or case-insensitive match for contractions/apostrophes
+                      const original = error.original.toLowerCase();
+                      const content = cleanContent.toLowerCase();
+                      return content.includes(original) || 
+                             content.includes(original.replace(/'/g, '')) || // Match without apostrophe
+                             content.includes(original.replace(/'/g, "'")); // Match with different apostrophe
+                    })
+                    .map((error, index) => {
+                      // Determine error type based on the correction
+                      let errorType: 'spelling' | 'grammar' | 'punctuation' = 'spelling';
+                      if (error.original.match(/['']/g) || error.correct.match(/['']/g)) {
+                        errorType = 'punctuation'; // Apostrophe/contraction issues
+                      } else if (error.original.toLowerCase() !== error.correct.toLowerCase()) {
+                        errorType = 'spelling';
+                      } else {
+                        errorType = 'grammar';
+                      }
+                      
+                      return {
+                        id: `ai-grammar-${index}`,
+                        type: errorType,
+                        originalText: error.original,
+                        suggestedText: error.correct,
+                        explanation: `${errorType === 'punctuation' ? 'Punctuation' : errorType === 'grammar' ? 'Grammar' : 'Spelling'} correction: "${error.original}" → "${error.correct}"`,
+                        severity: 'high' as const,
+                        startIndex: 0,
+                        endIndex: 0
+                      };
+                    });
+
+                  console.log('✨ Generated AI suggestions:', suggestions);
+                  onSuggestionsGenerated(suggestions);
+
+                } catch (error) {
+                  console.error('Error in AI spell check:', error);
+                  toast({
+                    title: "Spell Check Error",
+                    description: "Failed to get AI spell checking. Please try again.",
+                    variant: "destructive"
+                  });
+                } finally {
+                  setIsLoading(false);
+                }
+              }}
+            >
+              <Target className="h-4 w-4 mr-2 text-blue-600" />
+              <div>
+                <div className="font-medium text-blue-800">Test Highlighting</div>
+                <div className="text-blue-600">Manual test of highlight system</div>
+              </div>
+            </Button>
+          )}
+          
           <div className="space-y-2">
-            <h5 className="text-xs font-medium text-gray-600">Suggested prompts:</h5>
-            {smartPrompts.slice(0, 4).map((quickPrompt, index) => {
+            {quickPrompts.map((quickPrompt, index) => {
               const Icon = quickPrompt.icon;
               return (
                 <Button
                   key={index}
                   variant="outline"
                   size="sm"
-                  className="w-full justify-start h-auto p-2 text-left text-xs hover:bg-purple-50"
-                  onClick={() => setPrompt(quickPrompt.text)}
-                  disabled={aiHelpMutation.isPending}
+                  className="w-full justify-start h-auto p-2 text-left text-xs"
+                  onClick={() => {
+                    setPrompt(quickPrompt.text);
+                    // Switch to assistant tab and auto-submit
+                    setActiveTab("assistant");
+                    // Auto-submit the prompt after a brief delay
+                    setTimeout(() => {
+                      aiHelpMutation.mutate(quickPrompt.text);
+                    }, 100);
+                  }}
                 >
                   <Icon className="h-3 w-3 mr-2 flex-shrink-0" />
                   <span className="text-wrap leading-tight">{quickPrompt.text}</span>
