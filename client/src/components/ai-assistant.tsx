@@ -11,7 +11,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import CitationAssistant from "@/components/citation-assistant";
 import AiDisclosure from "./ai-disclosure";
-import { extractSuggestionsFromAiResponse, AiFeedbackSuggestion } from "./ai-feedback-highlights";
+import { AiFeedbackSuggestion, extractSuggestionsFromAiResponse } from "./ai-feedback-highlights";
 
 interface AiAssistantProps {
   sessionId?: number;
@@ -81,11 +81,28 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
       
       // Extract suggestions from AI response if document content is available
       if (currentContent && data.response && onSuggestionsGenerated) {
+        console.log('🔍 Attempting to extract suggestions from AI response:', {
+          hasContent: !!currentContent,
+          hasResponse: !!data.response,
+          hasCallback: !!onSuggestionsGenerated,
+          responsePreview: data.response.substring(0, 200) + '...'
+        });
+        
         const suggestions = extractSuggestionsFromAiResponse(data.response, currentContent);
+        console.log('📝 Extracted suggestions:', suggestions);
+        
         if (suggestions.length > 0) {
-          console.log('Generated AI suggestions:', suggestions);
+          console.log('✅ Calling onSuggestionsGenerated with', suggestions.length, 'suggestions');
           onSuggestionsGenerated(suggestions);
+        } else {
+          console.log('⚠️ No suggestions extracted from AI response');
         }
+      } else {
+        console.log('❌ Missing requirements for suggestion extraction:', {
+          hasContent: !!currentContent,
+          hasResponse: !!data.response,
+          hasCallback: !!onSuggestionsGenerated
+        });
       }
       
       // If we have a valid session, refresh the chat history and don't show duplicate response
