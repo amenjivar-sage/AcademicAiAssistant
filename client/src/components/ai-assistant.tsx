@@ -94,19 +94,32 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
       // Allow AI assistant to work without session for general help
       const currentSessionId = sessionId && sessionId > 0 ? sessionId : null;
       
+      // Get the most current content from the editor DOM
+      let latestContent = currentContent;
+      try {
+        const editorElement = document.querySelector('.ql-editor');
+        if (editorElement) {
+          latestContent = editorElement.innerHTML;
+          console.log('🔄 Using live editor content instead of prop content');
+        }
+      } catch (error) {
+        console.log('⚠️ Could not get live content, using prop content');
+      }
+      
       // Debug: Check what content we're sending to AI
       console.log('🤖 AI Assistant - Content being sent:', {
-        contentLength: currentContent?.length || 0,
-        contentPreview: currentContent?.substring(0, 100) + '...',
-        hasContent: !!currentContent,
-        promptLength: promptText.length
+        contentLength: latestContent?.length || 0,
+        contentPreview: latestContent?.substring(0, 100) + '...',
+        hasContent: !!latestContent,
+        promptLength: promptText.length,
+        usingLiveContent: latestContent !== currentContent
       });
       
       const response = await apiRequest("POST", "/api/ai/chat", {
         sessionId: currentSessionId,
         prompt: promptText,
         userId: 2, // Demo student ID - in real app, get from auth context
-        documentContent: currentContent, // Include current document content for context
+        documentContent: latestContent, // Include current document content for context
       });
       return response.json();
     },
