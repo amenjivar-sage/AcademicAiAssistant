@@ -1752,6 +1752,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { sessionId, prompt, documentContent } = req.body;
       
+      // Debug logging for document content
+      console.log('🤖 AI Chat Request:', {
+        sessionId,
+        prompt: prompt.substring(0, 100) + '...',
+        hasDocumentContent: !!documentContent,
+        documentLength: documentContent?.length || 0,
+        documentPreview: documentContent ? documentContent.substring(0, 100) + '...' : 'None'
+      });
+      
       if (!prompt) {
         return res.status(400).json({ message: "Prompt is required" });
       }

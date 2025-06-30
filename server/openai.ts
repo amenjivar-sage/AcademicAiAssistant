@@ -65,7 +65,19 @@ CONVERSATION CONTEXT RULES:
 - If the student changes topics, acknowledge the shift but stay engaged
 - Reference earlier parts of the conversation when relevant
 
-CURRENT DOCUMENT CONTEXT: ${documentContent ? `The student is working on: "${documentContent.substring(0, 200)}..."` : "No document content provided"}
+DOCUMENT ANALYSIS CAPABILITIES:
+${documentContent && documentContent.trim() ? `
+CURRENT DOCUMENT CONTENT:
+"${documentContent}"
+
+When the student asks for:
+- Grammar checks: Analyze the above document content for grammar issues and provide specific corrections with explanations
+- Spell checking: Review the document for spelling errors and suggest corrections
+- Writing feedback: Provide specific feedback on the document's structure, clarity, and style
+- Content review: Analyze and comment on the document's content, organization, and flow
+
+Always reference the actual document content when providing feedback. Give specific examples from their writing and concrete suggestions for improvement.
+` : "No document content available. When students ask for document analysis, request them to ensure their document content is being shared properly."}
 
 Provide helpful, educational responses that guide students toward better writing while maintaining the flow of conversation.`
       }
@@ -148,10 +160,17 @@ Tailor your response to their level and focus on their specific improvement area
     let documentContext = "";
     if (documentContent && documentContent.trim()) {
       documentContext = `
-Current Document Content:
+CURRENT DOCUMENT CONTENT:
 "${documentContent}"
 
-You can now see and analyze the student's current document. When they ask for help like "check the document", "spell check", or "review my work", refer directly to this content and provide specific feedback.
+DOCUMENT ANALYSIS INSTRUCTIONS:
+When the student asks for grammar, spelling, or writing feedback, analyze the above document content directly. Provide:
+- Specific corrections with explanations
+- Examples from their actual writing
+- Concrete suggestions for improvement
+- Line-by-line feedback when appropriate
+
+Do not ask them to paste content - you already have access to their document.
 `;
     }
 
