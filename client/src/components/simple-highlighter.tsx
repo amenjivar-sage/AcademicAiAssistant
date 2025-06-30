@@ -75,27 +75,98 @@ export default function SimpleHighlighter({
           const highlightSpan = document.createElement('span');
           highlightSpan.className = 'ai-highlight';
           highlightSpan.style.cssText = `
-            background-color: #fef3c7;
-            border-bottom: 2px solid #f59e0b;
-            cursor: pointer;
+            background-color: #fef3c7 !important;
+            border-bottom: 3px wavy #f59e0b !important;
+            cursor: pointer !important;
             position: relative;
-            padding: 1px 2px;
-            border-radius: 2px;
+            padding: 2px 4px !important;
+            border-radius: 3px;
+            font-weight: bold;
+            text-decoration: underline;
+            text-decoration-color: #f59e0b;
           `;
           highlightSpan.textContent = matchText;
           highlightSpan.setAttribute('data-suggestion-id', suggestion.id);
           highlightSpan.setAttribute('title', `${suggestion.originalText} → ${suggestion.suggestedText}: ${suggestion.explanation}`);
           
-          // Add click handler
+          // Add click handler to show tooltip
           highlightSpan.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
             
-            if (confirm(`Change "${suggestion.originalText}" to "${suggestion.suggestedText}"?\n\n${suggestion.explanation}`)) {
+            // Remove any existing tooltips
+            document.querySelectorAll('.suggestion-tooltip').forEach(tooltip => tooltip.remove());
+            
+            // Create tooltip
+            const tooltip = document.createElement('div');
+            tooltip.className = 'suggestion-tooltip';
+            tooltip.style.cssText = `
+              position: absolute;
+              background: white;
+              border: 1px solid #ddd;
+              border-radius: 8px;
+              padding: 12px;
+              box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+              z-index: 1000;
+              max-width: 300px;
+              font-size: 14px;
+              top: ${e.pageY + 10}px;
+              left: ${e.pageX}px;
+            `;
+            
+            tooltip.innerHTML = `
+              <div style="margin-bottom: 8px;">
+                <strong>Suggestion:</strong> ${suggestion.originalText} → ${suggestion.suggestedText}
+              </div>
+              <div style="margin-bottom: 12px; color: #666;">
+                ${suggestion.explanation}
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <button class="apply-btn" style="
+                  background: #22c55e;
+                  color: white;
+                  border: none;
+                  padding: 6px 12px;
+                  border-radius: 4px;
+                  cursor: pointer;
+                  font-size: 12px;
+                ">Apply</button>
+                <button class="ignore-btn" style="
+                  background: #ef4444;
+                  color: white;
+                  border: none;
+                  padding: 6px 12px;
+                  border-radius: 4px;
+                  cursor: pointer;
+                  font-size: 12px;
+                ">Ignore</button>
+              </div>
+            `;
+            
+            // Add button handlers
+            const applyBtn = tooltip.querySelector('.apply-btn');
+            const ignoreBtn = tooltip.querySelector('.ignore-btn');
+            
+            applyBtn?.addEventListener('click', () => {
               onApplySuggestion(suggestion);
-            } else {
+              tooltip.remove();
+            });
+            
+            ignoreBtn?.addEventListener('click', () => {
               onDismissSuggestion(suggestion.id);
-            }
+              tooltip.remove();
+            });
+            
+            // Close tooltip when clicking elsewhere
+            const closeTooltip = (event: Event) => {
+              if (!tooltip.contains(event.target as Node)) {
+                tooltip.remove();
+                document.removeEventListener('click', closeTooltip);
+              }
+            };
+            
+            document.addEventListener('click', closeTooltip);
+            document.body.appendChild(tooltip);
           });
           
           // Replace the text node
