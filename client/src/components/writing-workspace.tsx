@@ -166,14 +166,52 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   const handleApplySuggestion = useCallback((suggestion: any) => {
     console.log('🔄 Applying suggestion:', suggestion.originalText, '→', suggestion.suggestedText);
     
-    // Use global flag to replace ALL instances of the word
-    const escapedOriginal = suggestion.originalText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const globalRegex = new RegExp(escapedOriginal, 'gi');
+    // Work with both HTML content and clean text to ensure proper replacement
+    const originalText = suggestion.originalText;
+    const suggestedText = suggestion.suggestedText;
     
-    const updatedContent = content.replace(globalRegex, suggestion.suggestedText);
+    // First try direct HTML replacement (case insensitive)
+    const escapedOriginal = originalText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const directRegex = new RegExp(`\\b${escapedOriginal}\\b`, 'gi');
+    let updatedContent = content.replace(directRegex, suggestedText);
+    
+    // If no change, try replacing within text nodes while preserving HTML structure
+    if (updatedContent === content) {
+      console.log('🔍 Direct replacement failed, trying HTML-aware replacement...');
+      
+      // Create a temporary div to parse HTML
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = content;
+      
+      // Function to replace text in text nodes
+      const replaceInTextNodes = (node: Node) => {
+        if (node.nodeType === Node.TEXT_NODE) {
+          const textContent = node.textContent || '';
+          const textRegex = new RegExp(`\\b${escapedOriginal}\\b`, 'gi');
+          if (textRegex.test(textContent)) {
+            node.textContent = textContent.replace(textRegex, suggestedText);
+            console.log('✏️ Replaced in text node:', textContent, '→', node.textContent);
+          }
+        } else {
+          // Recursively process child nodes
+          node.childNodes.forEach(child => replaceInTextNodes(child));
+        }
+      };
+      
+      // Process all text nodes
+      replaceInTextNodes(tempDiv);
+      updatedContent = tempDiv.innerHTML;
+    }
+    
+    // If still no change, try simpler word boundary replacement
+    if (updatedContent === content) {
+      console.log('🔍 HTML-aware replacement failed, trying simple word replacement...');
+      const simpleRegex = new RegExp(escapedOriginal, 'gi');
+      updatedContent = content.replace(simpleRegex, suggestedText);
+    }
     
     if (updatedContent !== content) {
-      console.log('✅ Content updated, applying change - replaced all instances');
+      console.log('✅ Content updated, applying change');
       setContent(updatedContent);
       
       // Mark user as typing to prevent auto-save conflicts
@@ -190,10 +228,13 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       }, 1000);
       
       // Log how many replacements were made
-      const matches = content.match(globalRegex);
+      const testRegex = new RegExp(escapedOriginal, 'gi');
+      const matches = content.match(testRegex);
       if (matches) {
         console.log(`Applied ${matches.length} replacements of "${suggestion.originalText}" → "${suggestion.suggestedText}"`);
       }
+    } else {
+      console.log('❌ No replacements made for:', suggestion.originalText);
     }
     
     // Remove the suggestion from the list
