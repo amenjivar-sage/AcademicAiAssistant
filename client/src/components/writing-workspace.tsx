@@ -20,6 +20,7 @@ import AiAssistant from './ai-assistant';
 import { PDFExport } from './pdf-export';
 import BubbleSpellCheckPanel from './bubble-spell-check-panel';
 import SimpleHighlighter from './simple-highlighter';
+import SpellCheckSuggestionsPanel, { SpellCheckSuggestion } from './spell-check-suggestions-panel';
 
 interface PastedContent {
   text: string;
@@ -51,6 +52,110 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   const [openCommentId, setOpenCommentId] = useState<number | null>(null);
   const [aiSuggestions, setAiSuggestions] = useState<any[]>([]);
   const [showAiSuggestions, setShowAiSuggestions] = useState(false);
+  const [spellCheckSuggestions, setSpellCheckSuggestions] = useState<SpellCheckSuggestion[]>([]);
+  const [showSpellCheckSuggestions, setShowSpellCheckSuggestions] = useState(false);
+
+  // Handler for applying individual spell check suggestions
+  const handleApplySpellCheckSuggestion = useCallback((suggestion: SpellCheckSuggestion) => {
+    console.log('🔄 Applying spell check suggestion:', suggestion.originalText, '→', suggestion.suggestedText);
+    
+    const originalText = suggestion.originalText;
+    const suggestedText = suggestion.suggestedText;
+    const escapedOriginal = originalText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    
+    // Try multiple replacement strategies for different HTML contexts
+    let updatedContent = content;
+    
+    // 1. Try direct word boundary replacement first
+    const wordBoundaryRegex = new RegExp(`\\b${escapedOriginal}\\b`, 'gi');
+    const directReplacement = updatedContent.replace(wordBoundaryRegex, suggestedText);
+    
+    if (directReplacement !== updatedContent) {
+      console.log('✅ Direct replacement successful');
+      setContent(directReplacement);
+      // Remove the applied suggestion
+      setSpellCheckSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
+      return;
+    }
+    
+    // 2. Try HTML-aware replacement
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = updatedContent;
+    
+    const replaceInTextNodes = (node: Node) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const textContent = node.textContent || '';
+        const textRegex = new RegExp(`\\b${escapedOriginal}\\b`, 'gi');
+        if (textRegex.test(textContent)) {
+          const newContent = textContent.replace(textRegex, suggestedText);
+          node.textContent = newContent;
+          console.log('✅ HTML-aware replacement successful');
+        }
+      } else {
+        node.childNodes.forEach(child => replaceInTextNodes(child));
+      }
+    };
+    
+    replaceInTextNodes(tempDiv);
+    const htmlAwareReplacement = tempDiv.innerHTML;
+    
+    if (htmlAwareReplacement !== updatedContent) {
+      setContent(htmlAwareReplacement);
+      setSpellCheckSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
+      return;
+    }
+    
+    console.warn('⚠️ Spell check replacement failed for:', originalText);
+    toast({
+      title: "Replacement Failed", 
+      description: `Could not find "${originalText}" in document to replace.`,
+      variant: "destructive"
+    });
+  }, [content, toast]);
+
+  // Handler for dismissing spell check suggestions
+  const handleDismissSpellCheckSuggestion = useCallback((suggestionId: string) => {
+    setSpellCheckSuggestions(prev => prev.filter(s => s.id !== suggestionId));
+  }, []);
+
+  // Handler for applying all spell check suggestions
+  const handleApplyAllSpellCheckSuggestions = useCallback(() => {
+    console.log('🔄 Applying all spell check suggestions:', spellCheckSuggestions.length);
+    
+    let updatedContent = content;
+    let appliedCount = 0;
+    
+    // Apply all suggestions
+    spellCheckSuggestions.forEach(suggestion => {
+      const originalText = suggestion.originalText;
+      const suggestedText = suggestion.suggestedText;
+      const escapedOriginal = originalText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      
+      // Try direct replacement
+      const wordBoundaryRegex = new RegExp(`\\b${escapedOriginal}\\b`, 'gi');
+      const newContent = updatedContent.replace(wordBoundaryRegex, suggestedText);
+      
+      if (newContent !== updatedContent) {
+        updatedContent = newContent;
+        appliedCount++;
+      }
+    });
+    
+    if (appliedCount > 0) {
+      setContent(updatedContent);
+      setSpellCheckSuggestions([]);
+      toast({
+        title: "Suggestions Applied",
+        description: `Applied ${appliedCount} out of ${spellCheckSuggestions.length} spelling corrections.`,
+      });
+    } else {
+      toast({
+        title: "No Changes Applied",
+        description: "Could not apply any suggestions. The text may have changed.",
+        variant: "destructive"
+      });
+    }
+  }, [content, spellCheckSuggestions, toast]);
 
   // Auto-cleanup highlights on initial load
   useEffect(() => {
@@ -1060,9 +1165,14 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
               variant={showAiSidebar ? "default" : "outline"}
               size="sm"
               className="gap-2"
+              disabled={assignment?.aiPermissions === 'none'}
+              title={assignment?.aiPermissions === 'none' ? 'AI assistance is disabled for this assignment' : 'Open AI Assistant'}
             >
               <MessageSquare className="h-4 w-4" />
               ZoË
+              {assignment?.aiPermissions === 'none' && (
+                <span className="text-xs text-gray-400">(Disabled)</span>
+              )}
             </Button>
           </div>
         </div>
