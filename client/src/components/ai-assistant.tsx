@@ -32,11 +32,17 @@ interface SmartPrompt {
   relevance: number;
 }
 
+interface SpellingError {
+  original: string;
+  correct: string;
+}
+
 export default function AiAssistant({ sessionId, currentContent, onSuggestionsGenerated }: AiAssistantProps) {
   const [prompt, setPrompt] = useState("");
   const [lastResponse, setLastResponse] = useState<AiResponse | null>(null);
   const [smartPrompts, setSmartPrompts] = useState<SmartPrompt[]>([]);
   const [activeTab, setActiveTab] = useState("assistant");
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -51,7 +57,7 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
 
   // Extract suggestions from the latest AI response in chat history
   useEffect(() => {
-    if (chatHistory && chatHistory.length > 0 && currentContent && onSuggestionsGenerated) {
+    if (Array.isArray(chatHistory) && chatHistory.length > 0 && currentContent && onSuggestionsGenerated) {
       const latestResponse = chatHistory[chatHistory.length - 1];
       if (latestResponse && latestResponse.response) {
         console.log('🔍 Processing latest AI response for suggestions:', {
@@ -535,23 +541,23 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
                     // Fallback: parse text response for spelling corrections
                     const lines = data.response.split('\n');
                     spellingErrors = lines
-                      .filter(line => line.includes('→') || line.includes('->'))
-                      .map((line, index) => {
-                        const parts = line.split(/→|->/).map(p => p.trim().replace(/['"]/g, ''));
+                      .filter((line: string) => line.includes('→') || line.includes('->'))
+                      .map((line: string, index: number) => {
+                        const parts = line.split(/→|->/).map((p: string) => p.trim().replace(/['"]/g, ''));
                         return {
-                          original: parts[0]?.replace(/^\d+\.\s*/, ''),
-                          correct: parts[1]
+                          original: parts[0]?.replace(/^\d+\.\s*/, '') || '',
+                          correct: parts[1] || ''
                         };
                       })
-                      .filter(item => item.original && item.correct);
+                      .filter((item: SpellingError) => item.original && item.correct);
                   }
 
                   console.log('📝 Parsed spelling errors:', spellingErrors);
 
                   // Convert to suggestions format
                   const suggestions = spellingErrors
-                    .filter(error => cleanContent.toLowerCase().includes(error.original.toLowerCase()))
-                    .map((error, index) => ({
+                    .filter((error: SpellingError) => cleanContent.toLowerCase().includes(error.original.toLowerCase()))
+                    .map((error: SpellingError, index: number) => ({
                       id: `ai-spell-${index}`,
                       type: 'spelling' as const,
                       originalText: error.original,
