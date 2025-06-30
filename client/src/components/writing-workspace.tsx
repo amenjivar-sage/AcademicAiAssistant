@@ -177,6 +177,27 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     console.log('📄 Current content length:', content.length);
     console.log('🎯 Content preview:', content.substring(0, 200) + '...');
     
+    // Check if the original text exists anywhere in content (for debugging)
+    const originalExists = content.toLowerCase().includes(suggestion.originalText.toLowerCase());
+    console.log('🔍 Original text exists in content:', originalExists);
+    
+    if (originalExists) {
+      // Find all positions where the text appears
+      const regex = new RegExp(suggestion.originalText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+      const matches = [...content.matchAll(regex)];
+      console.log('🎯 Found', matches.length, 'potential matches at positions:', matches.map(m => m.index));
+      
+      // Show context around each match
+      matches.forEach((match, i) => {
+        if (match.index !== undefined) {
+          const start = Math.max(0, match.index - 30);
+          const end = Math.min(content.length, match.index + match[0].length + 30);
+          const context = content.substring(start, end);
+          console.log(`🔍 Match ${i + 1} context: "${context}"`);
+        }
+      });
+    }
+    
     // First clean up any bold highlighting
     let workingContent = cleanupBoldHighlighting(content);
     console.log('🧹 Cleaned up bold highlighting:', workingContent !== content);
@@ -251,6 +272,11 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
         {
           pattern: `<span([^>]*background-color[^>]*)>${escapedOriginal}</span>`,
           replacement: `<span$1>${suggestedText}</span>`
+        },
+        // Try with span and specific yellow background
+        {
+          pattern: `<span style="background-color: rgb\\(254, 243, 199\\);">${escapedOriginal}</span>`,
+          replacement: `<span style="background-color: rgb(254, 243, 199);">${suggestedText}</span>`
         }
       ];
       
