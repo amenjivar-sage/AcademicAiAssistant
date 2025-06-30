@@ -54,25 +54,12 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
 
   // Auto-cleanup highlights on initial load
   useEffect(() => {
-    if (content && content.includes('background-color: rgb(254, 243, 199)')) {
+    if (content && content.includes('style="background-color: rgb(254, 243, 199)')) {
       console.log('🧹 Auto-cleaning old highlights immediately');
-      let cleanContent = content;
-      
-      // Remove highlight spans
-      cleanContent = cleanContent.replace(
+      const cleanContent = content.replace(
         /<span[^>]*style="background-color:\s*rgb\(254,\s*243,\s*199\)[^"]*"[^>]*>(.*?)<\/span>/gi,
         '$1'
       );
-      
-      // Remove highlight styles from other tags (like <strong>, <em>, etc.)
-      cleanContent = cleanContent.replace(
-        /(<[^>]+)style="[^"]*background-color:\s*rgb\(254,\s*243,\s*199\)[^"]*"([^>]*>)/gi,
-        '$1$2'
-      );
-      
-      // Clean up any empty style attributes
-      cleanContent = cleanContent.replace(/\s*style=""\s*/gi, '');
-      
       if (cleanContent !== content) {
         console.log('🧹 Cleaned content:', cleanContent);
         setContent(cleanContent);
@@ -540,22 +527,10 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     setShowAiSuggestions(false);
     
     // Remove all yellow highlighting from content
-    let cleanContent = content;
-    
-    // Remove highlight spans
-    cleanContent = cleanContent.replace(
+    const cleanContent = content.replace(
       /<span[^>]*style="background-color:\s*rgb\(254,\s*243,\s*199\)[^"]*"[^>]*>(.*?)<\/span>/gi,
       '$1'
     );
-    
-    // Remove highlight styles from other tags (like <strong>, <em>, etc.)
-    cleanContent = cleanContent.replace(
-      /(<[^>]+)style="[^"]*background-color:\s*rgb\(254,\s*243,\s*199\)[^"]*"([^>]*>)/gi,
-      '$1$2'
-    );
-    
-    // Clean up any empty style attributes
-    cleanContent = cleanContent.replace(/\s*style=""\s*/gi, '');
     
     if (cleanContent !== content) {
       console.log('🧹 Removing old highlights from content');
