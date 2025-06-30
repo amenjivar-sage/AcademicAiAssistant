@@ -184,7 +184,11 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     if (originalExists) {
       // Find all positions where the text appears
       const regex = new RegExp(suggestion.originalText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-      const matches = [...content.matchAll(regex)];
+      const matches: RegExpExecArray[] = [];
+      let match;
+      while ((match = regex.exec(content)) !== null) {
+        matches.push(match);
+      }
       console.log('🎯 Found', matches.length, 'potential matches at positions:', matches.map(m => m.index));
       
       // Show context around each match
@@ -1328,6 +1332,8 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
           <div className="flex gap-2">
             <button
               onClick={() => {
+                console.log('🔥 Apply All clicked! Processing', aiSuggestions.length, 'suggestions');
+                console.log('📝 Suggestions to apply:', aiSuggestions.map(s => ({ original: s.originalText, suggested: s.suggestedText })));
                 aiSuggestions.forEach(suggestion => handleApplySuggestion(suggestion));
               }}
               className="bg-green-500 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-600"
