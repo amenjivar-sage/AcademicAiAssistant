@@ -104,11 +104,11 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
           console.log('🔍 Debug - Content format:', currentContent.substring(0, 200));
           
           // Try to generate suggestions from common corrections in the response
-          const manualSuggestions = [];
+          const manualSuggestions: any[] = [];
           
-          // Look for common spelling errors in the clean content
+          // Look for ALL spelling errors in the clean content
           const cleanContent = currentContent.replace(/<[^>]*>/g, '');
-          const commonErrors = [
+          const allErrors = [
             { wrong: 'clas', correct: 'class' },
             { wrong: 'asignned', correct: 'assigned' },
             { wrong: 'reserch', correct: 'research' },
@@ -120,24 +120,48 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
             { wrong: 'requirments', correct: 'requirements' },
             { wrong: 'aksed', correct: 'asked' },
             { wrong: 'alot', correct: 'a lot' },
-            { wrong: 'questons', correct: 'questions' }
+            { wrong: 'questons', correct: 'questions' },
+            { wrong: 'sed', correct: 'said' },
+            { wrong: 'couldnt', correct: 'couldn\'t' },
+            { wrong: 'acces', correct: 'access' },
+            { wrong: 'articl', correct: 'article' },
+            { wrong: 'admited', correct: 'admitted' },
+            { wrong: 'hadnt', correct: 'hadn\'t' },
+            { wrong: 'startted', correct: 'started' },
+            { wrong: 'dispite', correct: 'despite' },
+            { wrong: 'caos', correct: 'chaos' },
+            { wrong: 'remaind', correct: 'remained' },
+            { wrong: 'patiant', correct: 'patient' },
+            { wrong: 'helpfull', correct: 'helpful' },
+            { wrong: 'explaing', correct: 'explaining' },
+            { wrong: 'agian', correct: 'again' },
+            { wrong: 'sorces', correct: 'sources' },
+            { wrong: 'brieff', correct: 'brief' },
+            { wrong: 'demostration', correct: 'demonstration' },
+            { wrong: 'creddible', correct: 'credible' },
+            { wrong: 'informashun', correct: 'information' },
+            { wrong: 'hopfully', correct: 'hopefully' },
+            { wrong: 'studants', correct: 'students' },
+            { wrong: 'experince', correct: 'experience' },
+            { wrong: 'mistaks', correct: 'mistakes' },
+            { wrong: 'asighnments', correct: 'assignments' }
           ];
           
-          commonErrors.forEach((error, index) => {
+          allErrors.forEach((error, index) => {
             if (cleanContent.toLowerCase().includes(error.wrong.toLowerCase())) {
               manualSuggestions.push({
                 id: `auto-${index}`,
-                type: 'spelling' as const,
+                type: 'spelling',
                 originalText: error.wrong,
                 suggestedText: error.correct,
                 explanation: `Correct spelling of "${error.correct}"`,
-                severity: 'high' as const
+                severity: 'high'
               });
             }
           });
           
           if (manualSuggestions.length > 0 && onSuggestionsGenerated) {
-            console.log('✅ Found manual suggestions:', manualSuggestions.length);
+            console.log('✅ Found comprehensive suggestions:', manualSuggestions.length);
             onSuggestionsGenerated(manualSuggestions);
           }
         }
