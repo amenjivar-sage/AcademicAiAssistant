@@ -21,14 +21,15 @@ export function extractSuggestionsFromAiResponse(
   const cleanContent = documentContent.replace(/<[^>]*>/g, '');
   console.log('🧹 Cleaned content sample:', cleanContent.substring(0, 200));
   
-  // Super simplified pattern to match the exact current format from logs
-  // Format: 1. Replace **"word"** with **"correction"** - explanation
-  const simplePattern = /\d+\.\s+Replace\s+\*\*\"([^"]+)\"\*\*\s+with\s+\*\*\"([^"]+)\"\*\*\s*[-–—]\s*(.+?)(?=\n\d+\.|$)/gi;
+  // Pattern to match both numbered and non-numbered Replace formats
+  // Format 1: "Replace **"word"** with **"correction"** - explanation"
+  // Format 2: "1. Replace **"word"** with **"correction"** - explanation"
+  const replacePattern = /(?:\d+\.\s+)?Replace\s+\*\*\"([^"]+)\"\*\*\s+with\s+\*\*\"([^"]+)\"\*\*\s*[-–—]?\s*(.+?)(?=\n(?:\d+\.|Replace)|$)/gi;
   
-  console.log('🔍 Testing simple pattern:', simplePattern.source);
+  console.log('🔍 Testing replace pattern:', replacePattern.source);
   
   let match;
-  while ((match = simplePattern.exec(aiResponse)) !== null) {
+  while ((match = replacePattern.exec(aiResponse)) !== null) {
     console.log('✅ Match found:', match);
     const [fullMatch, originalText, suggestedText, explanation] = match;
     
