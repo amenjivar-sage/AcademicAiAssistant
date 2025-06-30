@@ -87,9 +87,17 @@ Provide helpful, educational responses that guide students toward better writing
       }
     ];
 
-    // Limit conversation history to avoid confusion with old content
-    // Only include the most recent interaction if it's about general help, not document analysis
-    if (conversationHistory.length > 0 && !prompt.toLowerCase().includes('check') && !prompt.toLowerCase().includes('grammar') && !prompt.toLowerCase().includes('feedback')) {
+    // For document analysis, completely skip conversation history to avoid confusion
+    // Only include conversation history for general help questions
+    const isDocumentAnalysis = prompt.toLowerCase().includes('check') || 
+                               prompt.toLowerCase().includes('grammar') || 
+                               prompt.toLowerCase().includes('feedback') ||
+                               prompt.toLowerCase().includes('think') ||
+                               prompt.toLowerCase().includes('paper') ||
+                               prompt.toLowerCase().includes('intro') ||
+                               prompt.toLowerCase().includes('writing');
+    
+    if (!isDocumentAnalysis && conversationHistory.length > 0) {
       const recentInteraction = conversationHistory[conversationHistory.length - 1];
       messages.push({
         role: "user",
