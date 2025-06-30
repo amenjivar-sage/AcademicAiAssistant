@@ -52,7 +52,7 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
 
   // Extract suggestions from the latest AI response in chat history
   useEffect(() => {
-    if (chatHistory && chatHistory.length > 0 && currentContent && onSuggestionsGenerated) {
+    if (Array.isArray(chatHistory) && chatHistory.length > 0 && currentContent && onSuggestionsGenerated) {
       const latestResponse = chatHistory[chatHistory.length - 1];
       if (latestResponse && latestResponse.response) {
         console.log('🔍 Processing latest AI response for suggestions:', {

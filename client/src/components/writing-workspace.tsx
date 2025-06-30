@@ -493,12 +493,31 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     console.log('✅ Applying all suggestions');
     let updatedContent = content;
     
-    // Apply all suggestions sequentially
+    // Apply all suggestions sequentially with better text matching
     aiSuggestions.forEach(suggestion => {
-      updatedContent = updatedContent.replace(
-        new RegExp(suggestion.originalText, 'gi'),
-        suggestion.suggestedText
-      );
+      console.log(`🔄 Applying: "${suggestion.originalText}" → "${suggestion.suggestedText}"`);
+      
+      // Escape special regex characters in the original text
+      const escapedOriginal = suggestion.originalText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      
+      // Use word boundaries to ensure exact word matches (not partial matches)
+      const wordBoundaryRegex = new RegExp(`\\b${escapedOriginal}\\b`, 'gi');
+      
+      // Check if the text exists before replacing
+      const matches = updatedContent.match(wordBoundaryRegex);
+      if (matches) {
+        console.log(`✅ Found ${matches.length} matches for "${suggestion.originalText}"`);
+        updatedContent = updatedContent.replace(wordBoundaryRegex, suggestion.suggestedText);
+      } else {
+        console.log(`⚠️ No matches found for "${suggestion.originalText}" in content`);
+        // Try fallback without word boundaries for contractions
+        const fallbackRegex = new RegExp(escapedOriginal, 'gi');
+        const fallbackMatches = updatedContent.match(fallbackRegex);
+        if (fallbackMatches) {
+          console.log(`✅ Found ${fallbackMatches.length} fallback matches for "${suggestion.originalText}"`);
+          updatedContent = updatedContent.replace(fallbackRegex, suggestion.suggestedText);
+        }
+      }
     });
     
     setContent(updatedContent);
