@@ -23,16 +23,16 @@ export function extractSuggestionsFromAiResponse(
   
   // Pattern to match corrections in various formats
   const patterns = [
-    // "Change X to Y" format
-    /Change\s+['""]([^'""]+)['""]?\s+to\s+['""]([^'""]+)['""]?\s*[-–—]?\s*(.+?)(?:\.|$|\n)/gi,
+    // Numbered format like "1. Change X to Y - explanation" (prioritized first)
+    /\d+\.\s*Change\s+['""]([^'""]+)['""]?\s+to\s+['""]([^'""]+)['""]?\s*[-–—]?\s*(.+?)(?:\n|$)/gi,
+    // "Change X to Y" format (without numbers)
+    /Change\s+['""]([^'""]+)['""]?\s+to\s+['""]([^'""]+)['""]?\s*[-–—]?\s*(.+?)(?:\n|$)/gi,
     // "Replace X with Y" format  
-    /Replace\s+['""]([^'""]+)['""]?\s+with\s+['""]([^'""]+)['""]?\s*[-–—]?\s*(.+?)(?:\.|$|\n)/gi,
+    /Replace\s+['""]([^'""]+)['""]?\s+with\s+['""]([^'""]+)['""]?\s*[-–—]?\s*(.+?)(?:\n|$)/gi,
     // "X should be Y" format
-    /['""]([^'""]+)['""]?\s+should\s+be\s+['""]([^'""]+)['""]?\s*[-–—]?\s*(.+?)(?:\.|$|\n)/gi,
-    // Numbered format like "1. Change X to Y - explanation"
-    /\d+\.\s*Change\s+['""]([^'""]+)['""]?\s+to\s+['""]([^'""]+)['""]?\s*[-–—]?\s*(.+?)(?:\.|$|\n)/gi,
+    /['""]([^'""]+)['""]?\s+should\s+be\s+['""]([^'""]+)['""]?\s*[-–—]?\s*(.+?)(?:\n|$)/gi,
     // Bold markdown format **X** to **Y**
-    /\*\*([^*]+)\*\*\s+to\s+\*\*([^*]+)\*\*\s*[-–—]?\s*(.+?)(?:\.|$|\n)/gi
+    /\*\*([^*]+)\*\*\s+to\s+\*\*([^*]+)\*\*\s*[-–—]?\s*(.+?)(?:\n|$)/gi
   ];
   
   patterns.forEach((pattern, patternIndex) => {

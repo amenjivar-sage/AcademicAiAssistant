@@ -85,15 +85,17 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
           hasContent: !!currentContent,
           hasResponse: !!data.response,
           hasCallback: !!onSuggestionsGenerated,
-          responsePreview: data.response.substring(0, 200) + '...'
+          responsePreview: data.response.substring(0, 400) + '...'
         });
         
         // Clean the content by removing HTML tags for better text matching
         const cleanContent = currentContent.replace(/<[^>]*>/g, '');
-        console.log('🧹 Cleaned content for matching:', cleanContent.substring(0, 100) + '...');
+        console.log('🧹 Cleaned content for matching:', cleanContent.substring(0, 200) + '...');
+        console.log('🤖 Full AI response for parsing:', data.response);
         
         const suggestions = extractSuggestionsFromAiResponse(data.response, cleanContent);
-        console.log('📝 Extracted suggestions:', suggestions);
+        console.log('📝 Extracted suggestions count:', suggestions.length);
+        console.log('📝 Extracted suggestions details:', suggestions);
         
         if (suggestions.length > 0 && onSuggestionsGenerated) {
           console.log('✅ Calling onSuggestionsGenerated with', suggestions.length, 'suggestions');
