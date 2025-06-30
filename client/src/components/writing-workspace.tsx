@@ -19,6 +19,7 @@ import DocumentDownload from './document-download';
 import AiAssistant from './ai-assistant';
 import { PDFExport } from './pdf-export';
 import BubbleSpellCheckPanel from './bubble-spell-check-panel';
+import AiFeedbackHighlights, { AiFeedbackSuggestion } from './ai-feedback-highlights';
 
 interface PastedContent {
   text: string;
@@ -48,6 +49,8 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   const [showAiSidebar, setShowAiSidebar] = useState(false);
   const [isAiSidebarMinimized, setIsAiSidebarMinimized] = useState(false);
   const [openCommentId, setOpenCommentId] = useState<number | null>(null);
+  const [aiSuggestions, setAiSuggestions] = useState<AiFeedbackSuggestion[]>([]);
+  const [showAiHighlights, setShowAiHighlights] = useState(false);
 
   // Function to highlight text that has teacher comments
   const highlightCommentedText = (content: string, comments: any[]): string => {

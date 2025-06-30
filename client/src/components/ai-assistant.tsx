@@ -11,11 +11,13 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import CitationAssistant from "@/components/citation-assistant";
 import AiDisclosure from "./ai-disclosure";
+import { extractSuggestionsFromAiResponse, AiFeedbackSuggestion } from "./ai-feedback-highlights";
 
 interface AiAssistantProps {
   sessionId?: number;
   assignmentType?: string;
   currentContent?: string;
+  onSuggestionsGenerated?: (suggestions: AiFeedbackSuggestion[]) => void;
 }
 
 interface AiResponse {
@@ -30,7 +32,7 @@ interface SmartPrompt {
   relevance: number;
 }
 
-export default function AiAssistant({ sessionId, currentContent }: AiAssistantProps) {
+export default function AiAssistant({ sessionId, currentContent, onSuggestionsGenerated }: AiAssistantProps) {
   const [prompt, setPrompt] = useState("");
   const [lastResponse, setLastResponse] = useState<AiResponse | null>(null);
   const [smartPrompts, setSmartPrompts] = useState<SmartPrompt[]>([]);
@@ -76,6 +78,15 @@ export default function AiAssistant({ sessionId, currentContent }: AiAssistantPr
     },
     onSuccess: (data: AiResponse) => {
       setPrompt("");
+      
+      // Extract suggestions from AI response if document content is available
+      if (currentContent && data.response && onSuggestionsGenerated) {
+        const suggestions = extractSuggestionsFromAiResponse(data.response, currentContent);
+        if (suggestions.length > 0) {
+          console.log('Generated AI suggestions:', suggestions);
+          onSuggestionsGenerated(suggestions);
+        }
+      }
       
       // If we have a valid session, refresh the chat history and don't show duplicate response
       if (sessionId && sessionId > 0) {
