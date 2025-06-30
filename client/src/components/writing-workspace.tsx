@@ -19,7 +19,8 @@ import DocumentDownload from './document-download';
 import AiAssistant from './ai-assistant';
 import { PDFExport } from './pdf-export';
 import BubbleSpellCheckPanel from './bubble-spell-check-panel';
-import AiFeedbackHighlights, { AiFeedbackSuggestion } from './ai-feedback-highlights';
+import AiSuggestionsPanel, { AiSuggestion } from './ai-suggestions-panel';
+import { extractSuggestionsFromAiResponse } from '@/utils/ai-suggestion-parser';
 
 interface PastedContent {
   text: string;
@@ -49,8 +50,8 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   const [showAiSidebar, setShowAiSidebar] = useState(false);
   const [isAiSidebarMinimized, setIsAiSidebarMinimized] = useState(false);
   const [openCommentId, setOpenCommentId] = useState<number | null>(null);
-  const [aiSuggestions, setAiSuggestions] = useState<AiFeedbackSuggestion[]>([]);
-  const [showAiHighlights, setShowAiHighlights] = useState(false);
+  const [aiSuggestions, setAiSuggestions] = useState<AiSuggestion[]>([]);
+  const [showAiSuggestions, setShowAiSuggestions] = useState(false);
 
   // Function to highlight text that has teacher comments
   const highlightCommentedText = (content: string, comments: any[]): string => {
@@ -267,12 +268,13 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   }, [saveSession, sessionId, queryClient]);
 
   // AI Suggestion handlers
-  const handleAiSuggestionsGenerated = useCallback((suggestions: AiFeedbackSuggestion[]) => {
+  const handleAiSuggestionsGenerated = useCallback((suggestions: AiSuggestion[]) => {
+    console.log('📝 Received AI suggestions in WritingWorkspace:', suggestions);
     setAiSuggestions(suggestions);
-    setShowAiHighlights(true);
+    setShowAiSuggestions(true);
     toast({
       title: "AI Suggestions Available",
-      description: `${suggestions.length} writing suggestions generated. Click highlighted text to review.`,
+      description: `${suggestions.length} writing suggestions generated.`,
     });
   }, [toast]);
 
@@ -802,32 +804,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                 placeholder="Start writing your assignment..."
               />
               
-              {/* AI Feedback Highlights Overlay */}
-              {showAiHighlights && aiSuggestions.length > 0 && (
-                <div className="absolute inset-0 pointer-events-none">
-                  <AiFeedbackHighlights
-                    content={content}
-                    suggestions={aiSuggestions}
-                    onApplySuggestion={handleApplySuggestion}
-                    onDismissSuggestion={handleDismissSuggestion}
-                    onContentChange={setContent}
-                  />
-                </div>
-              )}
-              
-              {/* AI Suggestions Control */}
-              {showAiHighlights && aiSuggestions.length > 0 && (
-                <div className="absolute top-2 right-2">
-                  <Button
-                    onClick={() => setShowAiHighlights(false)}
-                    variant="outline"
-                    size="sm"
-                    className="bg-white/90 backdrop-blur-sm"
-                  >
-                    Hide AI Suggestions ({aiSuggestions.length})
-                  </Button>
-                </div>
-              )}
+
               
               {/* Inline Comments Display for Students */}
               {session?.status === 'graded' && commentsArray.length > 0 && (
