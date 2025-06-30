@@ -162,11 +162,24 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   const typingTimeoutRef = useRef<NodeJS.Timeout>();
   const lastTypingTime = useRef<number>(Date.now());
 
+  // Function to clean up bold highlighting in content
+  const cleanupBoldHighlighting = useCallback((content: string) => {
+    // Replace all strong tags with yellow highlighting to span tags
+    return content.replace(
+      /<strong style="background-color: rgb\(254, 243, 199\);">(.*?)<\/strong>/gi,
+      '<span style="background-color: rgb(254, 243, 199);">$1</span>'
+    );
+  }, []);
+
   // Handle applying AI suggestions
   const handleApplySuggestion = useCallback((suggestion: any) => {
     console.log('🔄 Applying suggestion:', suggestion.originalText, '→', suggestion.suggestedText);
     console.log('📄 Current content length:', content.length);
     console.log('🎯 Content preview:', content.substring(0, 200) + '...');
+    
+    // First clean up any bold highlighting
+    let workingContent = cleanupBoldHighlighting(content);
+    console.log('🧹 Cleaned up bold highlighting:', workingContent !== content);
     
     // Work with both HTML content and clean text to ensure proper replacement
     const originalText = suggestion.originalText;
@@ -175,16 +188,16 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     // First try direct HTML replacement (case insensitive)
     const escapedOriginal = originalText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const directRegex = new RegExp(`\\b${escapedOriginal}\\b`, 'gi');
-    let updatedContent = content.replace(directRegex, suggestedText);
-    console.log('🔍 Direct replacement result - changed:', updatedContent !== content);
+    let updatedContent = workingContent.replace(directRegex, suggestedText);
+    console.log('🔍 Direct replacement result - changed:', updatedContent !== workingContent);
     
     // If no change, try replacing within text nodes while preserving HTML structure
-    if (updatedContent === content) {
+    if (updatedContent === workingContent) {
       console.log('🔍 Direct replacement failed, trying HTML-aware replacement...');
       
       // Create a temporary div to parse HTML
       const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = content;
+      tempDiv.innerHTML = workingContent;
       
       // Function to replace text in text nodes
       const replaceInTextNodes = (node: Node) => {
@@ -205,33 +218,47 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       // Process all text nodes
       replaceInTextNodes(tempDiv);
       updatedContent = tempDiv.innerHTML;
-      console.log('🔍 HTML-aware replacement result - changed:', updatedContent !== content);
+      console.log('🔍 HTML-aware replacement result - changed:', updatedContent !== workingContent);
     }
     
     // If still no change, try handling highlighted text specifically
-    if (updatedContent === content) {
+    if (updatedContent === workingContent) {
       console.log('🔍 HTML-aware replacement failed, trying highlighted text replacement...');
       
-      // Look for the word wrapped in highlighting tags
+      // Look for the word wrapped in highlighting tags and replace with span (non-bold)
       const highlightPatterns = [
-        // Yellow highlighting (copy-paste detection)
-        `<strong style="background-color: rgb\\(254, 243, 199\\);">${escapedOriginal}</strong>`,
-        // Any strong tag with the word
-        `<strong[^>]*>${escapedOriginal}</strong>`,
+        // Yellow highlighting (copy-paste detection) - replace with span instead of strong
+        {
+          pattern: `<strong style="background-color: rgb\\(254, 243, 199\\);">${escapedOriginal}</strong>`,
+          replacement: `<span style="background-color: rgb(254, 243, 199);">${suggestedText}</span>`
+        },
+        // Any strong tag with background color - replace with span
+        {
+          pattern: `<strong([^>]*background-color[^>]*)>${escapedOriginal}</strong>`,
+          replacement: `<span$1>${suggestedText}</span>`
+        },
+        // Any strong tag with the word - replace with span
+        {
+          pattern: `<strong([^>]*)>${escapedOriginal}</strong>`,
+          replacement: `<span$1>${suggestedText}</span>`
+        },
         // Any em tag with the word
-        `<em[^>]*>${escapedOriginal}</em>`,
+        {
+          pattern: `<em([^>]*)>${escapedOriginal}</em>`,
+          replacement: `<em$1>${suggestedText}</em>`
+        },
         // Any span with background color
-        `<span[^>]*background-color[^>]*>${escapedOriginal}</span>`
+        {
+          pattern: `<span([^>]*background-color[^>]*)>${escapedOriginal}</span>`,
+          replacement: `<span$1>${suggestedText}</span>`
+        }
       ];
       
-      for (const pattern of highlightPatterns) {
+      for (const {pattern, replacement} of highlightPatterns) {
         const highlightRegex = new RegExp(pattern, 'gi');
         if (highlightRegex.test(content)) {
-          // Replace while preserving the highlighting on the corrected word
-          updatedContent = content.replace(highlightRegex, (match) => {
-            console.log('🎯 Found highlighted word:', match);
-            return match.replace(new RegExp(escapedOriginal, 'gi'), suggestedText);
-          });
+          console.log('🎯 Found highlighted word with pattern:', pattern);
+          updatedContent = content.replace(highlightRegex, replacement);
           if (updatedContent !== content) {
             console.log('✅ Successfully replaced highlighted text');
             break;
@@ -240,11 +267,25 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       }
     }
     
-    // If still no change, try simpler word boundary replacement
+    // If still no change, try more aggressive replacements
     if (updatedContent === content) {
-      console.log('🔍 Highlighted text replacement failed, trying simple word replacement...');
+      console.log('🔍 Highlighted text replacement failed, trying more aggressive replacements...');
+      
+      // Try without word boundaries first
       const simpleRegex = new RegExp(escapedOriginal, 'gi');
       updatedContent = content.replace(simpleRegex, suggestedText);
+      
+      // If still no change, try replacing partial words (for cases like incomplete highlighting)
+      if (updatedContent === content) {
+        console.log('🔍 Simple replacement failed, trying partial word replacement...');
+        // This will catch cases where the word might be split across HTML tags
+        const partialRegex = new RegExp(originalText.split('').join('[^a-zA-Z]*'), 'gi');
+        const matches = content.match(partialRegex);
+        if (matches) {
+          console.log('🎯 Found partial matches:', matches);
+          updatedContent = content.replace(partialRegex, suggestedText);
+        }
+      }
     }
     
     if (updatedContent !== content) {
