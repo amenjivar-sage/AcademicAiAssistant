@@ -15,61 +15,58 @@ export function extractSuggestionsFromAiResponse(
   
   console.log('🔍 Parsing AI response for suggestions...');
   console.log('📄 Document content sample:', documentContent.substring(0, 200));
-  console.log('🤖 AI response sample:', aiResponse.substring(0, 500));
+  console.log('🤖 Full AI response:', aiResponse);
   
   // Clean document content by removing HTML tags
   const cleanContent = documentContent.replace(/<[^>]*>/g, '');
   console.log('🧹 Cleaned content sample:', cleanContent.substring(0, 200));
   
-  // Simplified robust patterns for OpenAI's exact format
-  const patterns = [
-    // Primary pattern: "Replace **"word"** with **"correction"**" 
-    /Replace\s+\*\*["']([^"'*]+)["']?\*\*\s+with\s+\*\*["']([^"'*]+)["']?\*\*[^.]*[.-]\s*(.+?)(?=\n\d+\.|$)/gi,
-    
-    // Secondary pattern: "Change **"word"** to **"correction"**"
-    /Change\s+\*\*["']([^"'*]+)["']?\*\*\s+to\s+\*\*["']([^"'*]+)["']?\*\*[^.]*[.-]\s*(.+?)(?=\n\d+\.|$)/gi,
-    
-    // Fallback pattern without bold markdown: "Replace "word" with "correction""
-    /Replace\s+["']([^"']+)["']?\s+with\s+["']([^"']+)["']?[^.]*[.-]\s*(.+?)(?=\n|$)/gi
-  ];
+  // Super simplified pattern to match the exact current format from logs
+  // Format: Replace **\"word\"** with **\"correction\"** - explanation
+  const simplePattern = /Replace\s+\*\*[""\\]*([^"*\\]+)[""\\]*\*\*\s+with\s+\*\*[""\\]*([^"*\\]+)[""\\]*\*\*\s*[-–—]\s*(.+?)(?=\n\d+\.|$)/gi;
   
-  patterns.forEach((pattern, patternIndex) => {
-    console.log(`🔍 Testing pattern ${patternIndex + 1}: ${pattern.source}`);
-    console.log(`📝 Sample AI response to match against:`, aiResponse.substring(0, 500));
-    let match;
-    const regex = new RegExp(pattern.source, pattern.flags);
+  console.log('🔍 Testing simple pattern:', simplePattern.source);
+  
+  let match;
+  while ((match = simplePattern.exec(aiResponse)) !== null) {
+    console.log('✅ Match found:', match);
+    const [fullMatch, originalText, suggestedText, explanation] = match;
     
-    while ((match = regex.exec(aiResponse)) !== null) {
-      console.log(`✅ Pattern ${patternIndex + 1} matched:`, match);
-      const [, originalText, suggestedText, explanation] = match;
+    console.log('✅ Found correction match:', {
+      fullMatch,
+      original: originalText,
+      suggested: suggestedText,
+      explanation: explanation?.trim()
+    });
+    
+    // Check if the original text exists in the document
+    const cleanOriginal = originalText.trim();
+    const textIndex = cleanContent.toLowerCase().indexOf(cleanOriginal.toLowerCase());
+    
+    console.log('🔍 Looking for text in document:', cleanOriginal, 'in', cleanContent);
+    
+    if (textIndex !== -1) {
+      console.log('✅ Text found in document at index:', textIndex);
       
-      console.log('✅ Found correction match:', {
-        original: originalText,
-        suggested: suggestedText,
-        explanation: explanation?.trim()
+      suggestions.push({
+        id: `suggestion-${suggestions.length + 1}`,
+        type: determineType(originalText, suggestedText, explanation || ''),
+        originalText: cleanOriginal,
+        suggestedText: suggestedText.trim(),
+        explanation: explanation?.trim() || 'AI suggested correction',
+        severity: determineSeverity(originalText, explanation || '')
       });
+    } else {
+      console.log('❌ Text not found in document:', cleanOriginal);
+      console.log('🔍 Document contains:', cleanContent.substring(0, 300));
       
-      // Check if the original text exists in the document
-      const cleanOriginal = originalText.trim();
-      const textIndex = cleanContent.toLowerCase().indexOf(cleanOriginal.toLowerCase());
-      
-      if (textIndex !== -1) {
-        console.log('✅ Text found in document at index:', textIndex);
-        
-        suggestions.push({
-          id: `suggestion-${suggestions.length + 1}`,
-          type: determineType(originalText, suggestedText, explanation || ''),
-          originalText: cleanOriginal,
-          suggestedText: suggestedText.trim(),
-          explanation: explanation?.trim() || 'AI suggested correction',
-          severity: determineSeverity(originalText, explanation || '')
-        });
-      } else {
-        console.log('❌ Text not found in document:', cleanOriginal);
-        console.log('🔍 Document contains:', cleanContent.substring(0, 300));
-      }
+      // Try to find partial matches for debugging
+      const words = cleanContent.toLowerCase().split(/\s+/);
+      const targetWord = cleanOriginal.toLowerCase();
+      const partialMatches = words.filter(word => word.includes(targetWord) || targetWord.includes(word));
+      console.log('🔍 Partial word matches:', partialMatches);
     }
-  });
+  }
   
   console.log(`📝 Final suggestions extracted: ${suggestions.length}`);
   return suggestions;
