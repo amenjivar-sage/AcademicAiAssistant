@@ -526,19 +526,28 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
                   
                   console.log('🔍 Starting AI spell check for content:', cleanContent.substring(0, 200));
                   
-                  // Call OpenAI to identify and correct all spelling and grammar errors
+                  // Clear old suggestions to prevent interference
+                  if (onSuggestionsGenerated) {
+                    onSuggestionsGenerated([]);
+                  }
+                  
+                  // Call OpenAI directly for grammar check with fresh context  
                   const response = await fetch('/api/ai-assistance', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                       sessionId: sessionId,
-                      prompt: `Please check this text for ALL errors including spelling, grammar, punctuation, contractions, and apostrophes. Provide specific corrections that should be highlighted in the document. Format your response as a list of corrections with the original text and the corrected version. Be thorough and include:
-- Spelling errors
-- Grammar mistakes  
-- Missing or incorrect apostrophes (like "Didnt" → "Didn't")
-- Punctuation errors
-- Contractions that need apostrophes
-- Capitalization issues
+                      prompt: `SPELLING AND GRAMMAR CHECK: Return ONLY a JSON array of corrections for this text. Find ALL errors including missing apostrophes in contractions.
+
+Examples of what to find:
+- "didnt" should be "didn't" 
+- "wont" should be "won't"
+- "cant" should be "can't"
+- "Im" should be "I'm"
+- "youre" should be "you're"
+- "dont" should be "don't"
+
+Return format: [{"original": "didnt", "correct": "didn't"}, {"original": "wont", "correct": "won't"}]
 
 Text to check: ${cleanContent}`
                     })
@@ -560,19 +569,39 @@ Text to check: ${cleanContent}`
                       spellingErrors = JSON.parse(jsonMatch[0]);
                     }
                   } catch (parseError) {
-                    console.log('Could not parse JSON, falling back to text parsing');
-                    // Fallback: parse text response for spelling corrections
-                    const lines = data.response.split('\n');
-                    spellingErrors = lines
-                      .filter(line => line.includes('→') || line.includes('->'))
-                      .map((line, index) => {
-                        const parts = line.split(/→|->/).map(p => p.trim().replace(/['"]/g, ''));
-                        return {
-                          original: parts[0]?.replace(/^\d+\.\s*/, ''),
-                          correct: parts[1]
-                        };
+                    console.log('⚠️ JSON parsing failed, using contraction detection fallback');
+                    
+                    // Enhanced fallback: directly check for common contractions
+                    const contractions = [
+                      { find: 'didnt', replace: "didn't" },
+                      { find: 'wont', replace: "won't" },
+                      { find: 'cant', replace: "can't" },
+                      { find: 'dont', replace: "don't" },
+                      { find: 'isnt', replace: "isn't" },
+                      { find: 'wasnt', replace: "wasn't" },
+                      { find: 'werent', replace: "weren't" },
+                      { find: 'youre', replace: "you're" },
+                      { find: 'theyre', replace: "they're" },
+                      { find: 'were', replace: "we're" },
+                      { find: 'im', replace: "I'm" },
+                      { find: 'hes', replace: "he's" },
+                      { find: 'shes', replace: "she's" }
+                    ];
+                    
+                    // Find contractions that exist in the content
+                    spellingErrors = contractions
+                      .filter(contraction => {
+                        const lowerContent = cleanContent.toLowerCase();
+                        // Look for exact word matches to avoid false positives
+                        const wordPattern = new RegExp(`\\b${contraction.find}\\b`, 'i');
+                        return wordPattern.test(lowerContent);
                       })
-                      .filter(item => item.original && item.correct);
+                      .map(contraction => ({
+                        original: contraction.find,
+                        correct: contraction.replace
+                      }));
+                    
+                    console.log('📝 Found contractions needing fixes:', spellingErrors);
                   }
 
                   console.log('📝 Parsed spelling errors:', spellingErrors);
