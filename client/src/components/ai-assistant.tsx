@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -32,7 +32,11 @@ interface SmartPrompt {
   relevance: number;
 }
 
-export default function AiAssistant({ sessionId, currentContent, onSuggestionsGenerated }: AiAssistantProps) {
+export interface AiAssistantRef {
+  sendMessage: (message: string) => Promise<void>;
+}
+
+const AiAssistant = forwardRef<AiAssistantRef, AiAssistantProps>(({ sessionId, currentContent, onSuggestionsGenerated }, ref) => {
   const [prompt, setPrompt] = useState("");
   const [lastResponse, setLastResponse] = useState<AiResponse | null>(null);
   const [smartPrompts, setSmartPrompts] = useState<SmartPrompt[]>([]);
@@ -40,6 +44,67 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Define AI mutation first before using it in useImperativeHandle
+  const aiHelpMutation = useMutation({
+    mutationFn: async (promptText: string) => {
+      // Allow AI assistant to work without session for general help
+      const currentSessionId = sessionId && sessionId > 0 ? sessionId : null;
+      
+      // Debug: Check what content we're sending to AI
+      console.log('🤖 AI Assistant - Content being sent:', {
+        contentLength: currentContent?.length || 0,
+        contentPreview: currentContent?.substring(0, 100) + '...',
+        hasContent: !!currentContent,
+        promptLength: promptText.length
+      });
+      
+      const response = await apiRequest("POST", "/api/ai/chat", {
+        sessionId: currentSessionId,
+        prompt: promptText,
+        userId: 2, // Demo student ID - in real app, get from auth context
+        documentContent: currentContent, // Include current document content for context
+      });
+      return response.json();
+    },
+    onSuccess: (data: AiResponse) => {
+      setPrompt("");
+      
+      // Extract suggestions from AI response if document content is available
+      if (currentContent && onSuggestionsGenerated) {
+        console.log('🔍 Extracting AI suggestions from response:', {
+          responsePreview: data.response.substring(0, 200) + '...',
+          documentLength: currentContent.length
+        });
+        
+        const suggestions = extractSuggestionsFromAiResponse(data.response, currentContent);
+        console.log('✅ Extracted suggestions:', suggestions.length, 'items');
+        
+        if (suggestions.length > 0) {
+          onSuggestionsGenerated(suggestions);
+        }
+      }
+      
+      setLastResponse(data);
+      queryClient.invalidateQueries({ queryKey: [`/api/session/${sessionId}/interactions`] });
+    },
+    onError: (error) => {
+      console.error('❌ AI mutation error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to get AI assistance. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Expose sendMessage method to parent components
+  useImperativeHandle(ref, () => ({
+    sendMessage: async (message: string) => {
+      setPrompt(message);
+      await aiHelpMutation.mutateAsync(message);
+    }
+  }), [aiHelpMutation]);
 
   // Fetch chat history for this session - only if we have a valid sessionId
   const { data: chatHistory = [], isLoading: historyLoading } = useQuery({
@@ -751,4 +816,8 @@ Text to check: ${cleanContent}`
       </div>
     </div>
   );
-}
+});
+
+AiAssistant.displayName = 'AiAssistant';
+
+export default AiAssistant;

@@ -1229,6 +1229,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
             {!isAiSidebarMinimized && (
               <div className="flex-1 overflow-hidden">
                 <AiAssistant
+                  ref={aiAssistantRef}
                   sessionId={sessionId}
                   currentContent={content}
                   onSuggestionsGenerated={handleAiSuggestionsGenerated}
