@@ -17,6 +17,19 @@ export function extractSuggestionsFromAiResponse(
   console.log('📄 Document content sample:', documentContent.substring(0, 200));
   console.log('🤖 AI response sample:', aiResponse.substring(0, 300));
   
+  // Test simple regex on the known AI response format
+  const testResponse = `1. Replace **"yesterdya"** with **"yesterday"** - Corrects the spelling of "yesterday."
+
+2. Replace **"respones"** with **"responses"** - Corrects the spelling of "responses."`;
+  
+  console.log('🧪 Testing with sample response:', testResponse);
+  const simplePattern = /Replace\s+\*\*['""]([^'""\*]+)['""]?\*\*\s+with\s+\*\*['""]([^'""\*]+)['""]?\*\*/gi;
+  let testMatch;
+  console.log('🔧 Testing simple pattern:', simplePattern.source);
+  while ((testMatch = simplePattern.exec(testResponse)) !== null) {
+    console.log('✅ Test pattern matched:', testMatch);
+  }
+  
   // Clean document content by removing HTML tags
   const cleanContent = documentContent.replace(/<[^>]*>/g, '');
   console.log('🧹 Cleaned content sample:', cleanContent.substring(0, 200));
@@ -40,11 +53,13 @@ export function extractSuggestionsFromAiResponse(
   ];
   
   patterns.forEach((pattern, patternIndex) => {
-    console.log(`🔍 Testing pattern ${patternIndex + 1}...`);
+    console.log(`🔍 Testing pattern ${patternIndex + 1}: ${pattern.source}`);
+    console.log(`📝 Sample AI response to match against:`, aiResponse.substring(0, 500));
     let match;
     const regex = new RegExp(pattern.source, pattern.flags);
     
     while ((match = regex.exec(aiResponse)) !== null) {
+      console.log(`✅ Pattern ${patternIndex + 1} matched:`, match);
       const [, originalText, suggestedText, explanation] = match;
       
       console.log('✅ Found correction match:', {
