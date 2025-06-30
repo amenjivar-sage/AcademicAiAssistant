@@ -168,6 +168,9 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   const [selectedText, setSelectedText] = useState('');
   const [isSpellCheckActive, setIsSpellCheckActive] = useState(false);
   const [spellErrors, setSpellErrors] = useState<any[]>([]);
+  const [spellCheckSuggestions, setSpellCheckSuggestions] = useState<any[]>([]);
+  const [isSpellCheckAnalyzing, setIsSpellCheckAnalyzing] = useState(false);
+  const [currentSpellCheckWord, setCurrentSpellCheckWord] = useState<string>();
 
   const contentRef = useRef<RichTextEditorHandle>(null);
   const formatRef = useRef<((command: string, value?: string) => void) | null>(null);
