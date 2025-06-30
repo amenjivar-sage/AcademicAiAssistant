@@ -22,8 +22,8 @@ export function extractSuggestionsFromAiResponse(
   console.log('🧹 Cleaned content sample:', cleanContent.substring(0, 200));
   
   // Super simplified pattern to match the exact current format from logs
-  // Format: Replace **\"word\"** with **\"correction\"** - explanation
-  const simplePattern = /Replace\s+\*\*[""\\]*([^"*\\]+)[""\\]*\*\*\s+with\s+\*\*[""\\]*([^"*\\]+)[""\\]*\*\*\s*[-–—]\s*(.+?)(?=\n\d+\.|$)/gi;
+  // Format: 1. Replace **"word"** with **"correction"** - explanation
+  const simplePattern = /\d+\.\s+Replace\s+\*\*\"([^"]+)\"\*\*\s+with\s+\*\*\"([^"]+)\"\*\*\s*[-–—]\s*(.+?)(?=\n\d+\.|$)/gi;
   
   console.log('🔍 Testing simple pattern:', simplePattern.source);
   

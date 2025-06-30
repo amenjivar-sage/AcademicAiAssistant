@@ -11,13 +11,13 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import CitationAssistant from "@/components/citation-assistant";
 import AiDisclosure from "./ai-disclosure";
-import { AiFeedbackSuggestion, extractSuggestionsFromAiResponse } from "./ai-feedback-highlights";
+import { extractSuggestionsFromAiResponse, AiSuggestion } from "../utils/ai-suggestion-parser";
 
 interface AiAssistantProps {
   sessionId?: number;
   assignmentType?: string;
   currentContent?: string;
-  onSuggestionsGenerated?: (suggestions: AiFeedbackSuggestion[]) => void;
+  onSuggestionsGenerated?: (suggestions: AiSuggestion[]) => void;
 }
 
 interface AiResponse {
@@ -549,6 +549,8 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
 
                 } catch (error) {
                   console.error('Error in AI grammar check:', error);
+                  console.error('Error details:', error instanceof Error ? error.message : 'Unknown error');
+                  console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
                   toast({
                     title: "Grammar Check Error",
                     description: "Failed to check grammar. Please try again.",
