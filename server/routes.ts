@@ -1791,8 +1791,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           conversationHistory = await storage.getSessionInteractions(sessionId);
         }
         
+        // Clean HTML tags from document content before sending to AI
+        const cleanDocumentContent = documentContent ? documentContent.replace(/<[^>]*>/g, '').trim() : undefined;
+        
+        // Debug logging for cleaned content
+        console.log('🧹 Cleaned document content for AI:', {
+          originalLength: documentContent?.length || 0,
+          cleanedLength: cleanDocumentContent?.length || 0,
+          cleanedPreview: cleanDocumentContent ? cleanDocumentContent.substring(0, 200) + '...' : 'None'
+        });
+        
         // Generate helpful AI response using OpenAI with conversation history and document context
-        response = await generateAiResponseWithHistory(prompt, conversationHistory, documentContent);
+        response = await generateAiResponseWithHistory(prompt, conversationHistory, cleanDocumentContent);
       }
 
       // Store the interaction if we have a valid session
