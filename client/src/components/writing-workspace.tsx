@@ -256,10 +256,10 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       
       for (const {pattern, replacement} of highlightPatterns) {
         const highlightRegex = new RegExp(pattern, 'gi');
-        if (highlightRegex.test(content)) {
+        if (highlightRegex.test(workingContent)) {
           console.log('🎯 Found highlighted word with pattern:', pattern);
-          updatedContent = content.replace(highlightRegex, replacement);
-          if (updatedContent !== content) {
+          updatedContent = workingContent.replace(highlightRegex, replacement);
+          if (updatedContent !== workingContent) {
             console.log('✅ Successfully replaced highlighted text');
             break;
           }
@@ -268,27 +268,27 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     }
     
     // If still no change, try more aggressive replacements
-    if (updatedContent === content) {
+    if (updatedContent === workingContent) {
       console.log('🔍 Highlighted text replacement failed, trying more aggressive replacements...');
       
       // Try without word boundaries first
       const simpleRegex = new RegExp(escapedOriginal, 'gi');
-      updatedContent = content.replace(simpleRegex, suggestedText);
+      updatedContent = workingContent.replace(simpleRegex, suggestedText);
       
       // If still no change, try replacing partial words (for cases like incomplete highlighting)
-      if (updatedContent === content) {
+      if (updatedContent === workingContent) {
         console.log('🔍 Simple replacement failed, trying partial word replacement...');
         // This will catch cases where the word might be split across HTML tags
         const partialRegex = new RegExp(originalText.split('').join('[^a-zA-Z]*'), 'gi');
-        const matches = content.match(partialRegex);
+        const matches = workingContent.match(partialRegex);
         if (matches) {
           console.log('🎯 Found partial matches:', matches);
-          updatedContent = content.replace(partialRegex, suggestedText);
+          updatedContent = workingContent.replace(partialRegex, suggestedText);
         }
       }
     }
     
-    if (updatedContent !== content) {
+    if (updatedContent !== workingContent) {
       console.log('✅ Content updated, applying change');
       setContent(updatedContent);
       
