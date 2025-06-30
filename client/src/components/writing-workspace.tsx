@@ -51,43 +51,6 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   const [openCommentId, setOpenCommentId] = useState<number | null>(null);
   const [aiSuggestions, setAiSuggestions] = useState<any[]>([]);
   const [showAiSuggestions, setShowAiSuggestions] = useState(false);
-  
-  // Handle applying AI suggestions
-  const handleApplySuggestion = useCallback((suggestion: any) => {
-    console.log('🔄 Applying suggestion:', suggestion.originalText, '→', suggestion.suggestedText);
-    
-    const updatedContent = content.replace(
-      new RegExp(suggestion.originalText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'),
-      suggestion.suggestedText
-    );
-    
-    if (updatedContent !== content) {
-      console.log('✅ Content updated, applying change');
-      setContent(updatedContent);
-      
-      // Mark user as typing to prevent auto-save conflicts
-      setIsUserTyping(true);
-      lastTypingTime.current = Date.now();
-      
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
-      }
-      
-      // Clear typing flag after suggestion applies
-      typingTimeoutRef.current = setTimeout(() => {
-        setIsUserTyping(false);
-      }, 1000);
-    }
-    
-    // Remove the suggestion from the list
-    setAiSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
-  }, [content, setContent, setIsUserTyping, lastTypingTime, typingTimeoutRef, setAiSuggestions]);
-  
-  // Handle dismissing AI suggestions
-  const handleDismissSuggestion = useCallback((suggestionId: string) => {
-    console.log('❌ Dismissing suggestion:', suggestionId);
-    setAiSuggestions(prev => prev.filter(s => s.id !== suggestionId));
-  }, [setAiSuggestions]);
 
   // Function to highlight text that has teacher comments
   const highlightCommentedText = (content: string, comments: any[]): string => {
@@ -198,6 +161,43 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   const [isUserTyping, setIsUserTyping] = useState(false);
   const typingTimeoutRef = useRef<NodeJS.Timeout>();
   const lastTypingTime = useRef<number>(Date.now());
+
+  // Handle applying AI suggestions
+  const handleApplySuggestion = useCallback((suggestion: any) => {
+    console.log('🔄 Applying suggestion:', suggestion.originalText, '→', suggestion.suggestedText);
+    
+    const updatedContent = content.replace(
+      new RegExp(suggestion.originalText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'),
+      suggestion.suggestedText
+    );
+    
+    if (updatedContent !== content) {
+      console.log('✅ Content updated, applying change');
+      setContent(updatedContent);
+      
+      // Mark user as typing to prevent auto-save conflicts
+      setIsUserTyping(true);
+      lastTypingTime.current = Date.now();
+      
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      
+      // Clear typing flag after suggestion applies
+      typingTimeoutRef.current = setTimeout(() => {
+        setIsUserTyping(false);
+      }, 1000);
+    }
+    
+    // Remove the suggestion from the list
+    setAiSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
+  }, [content]);
+  
+  // Handle dismissing AI suggestions
+  const handleDismissSuggestion = useCallback((suggestionId: string) => {
+    console.log('❌ Dismissing suggestion:', suggestionId);
+    setAiSuggestions(prev => prev.filter(s => s.id !== suggestionId));
+  }, []);
 
   // Create session mutation
   const createSessionMutation = useMutation({
