@@ -171,7 +171,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
 
   const contentRef = useRef<RichTextEditorHandle>(null);
   const formatRef = useRef<((command: string, value?: string) => void) | null>(null);
-  const aiAssistantRef = useRef<{ sendMessage: (message: string) => Promise<void> } | null>(null);
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
