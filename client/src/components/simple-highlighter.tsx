@@ -32,7 +32,7 @@ export default function SimpleHighlighter({
       return;
     }
     
-    console.log('✅ Found Quill editor, adding highlights');
+    console.log('✅ Found Quill editor, adding simple highlights');
     
     // Remove existing highlights
     const existingHighlights = quillContainer.querySelectorAll('.ai-highlight');
@@ -41,7 +41,7 @@ export default function SimpleHighlighter({
       highlight.parentNode?.replaceChild(textNode, highlight);
     });
     
-    // Add new highlights
+    // Add simple highlights without buttons (to avoid Quill conflicts)
     suggestions.forEach((suggestion, index) => {
       console.log(`📍 Processing suggestion ${index + 1}:`, suggestion.originalText);
       
@@ -71,114 +71,25 @@ export default function SimpleHighlighter({
           const matchText = nodeText.substring(startIndex, startIndex + suggestion.originalText.length);
           const afterText = nodeText.substring(startIndex + suggestion.originalText.length);
           
-          // Create a container for the highlighted word and buttons
-          const container = document.createElement('span');
-          container.className = 'ai-suggestion-container';
-          container.style.cssText = `
-            display: inline-block;
-            position: relative;
-            margin: 0 2px;
-          `;
-          
-          // Create highlight span
+          // Create simple highlight span (no buttons to avoid conflicts)
           const highlightSpan = document.createElement('span');
           highlightSpan.className = 'ai-highlight';
           highlightSpan.style.cssText = `
             background-color: #fef3c7 !important;
-            border: 2px solid #f59e0b !important;
-            padding: 2px 4px !important;
-            border-radius: 4px;
+            border-bottom: 3px wavy #f59e0b !important;
+            padding: 1px 2px !important;
+            border-radius: 3px;
             font-weight: bold;
-            display: inline-block;
           `;
           highlightSpan.textContent = matchText;
+          highlightSpan.setAttribute('data-suggestion-id', suggestion.id);
+          highlightSpan.setAttribute('title', `Suggestion: ${suggestion.originalText} → ${suggestion.suggestedText}`);
           
-          // Create buttons container
-          const buttonsContainer = document.createElement('div');
-          buttonsContainer.className = 'suggestion-buttons';
-          buttonsContainer.style.cssText = `
-            position: absolute;
-            top: -35px;
-            left: 0;
-            display: flex;
-            gap: 4px;
-            z-index: 1000;
-            background: white;
-            padding: 4px;
-            border-radius: 6px;
-            border: 1px solid #ddd;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            white-space: nowrap;
-          `;
-          
-          // Create Apply button
-          const applyBtn = document.createElement('button');
-          applyBtn.textContent = 'Apply';
-          applyBtn.style.cssText = `
-            background: #22c55e;
-            color: white;
-            border: none;
-            padding: 4px 8px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 11px;
-            font-weight: bold;
-          `;
-          applyBtn.title = `Change "${suggestion.originalText}" to "${suggestion.suggestedText}"`;
-          
-          // Create Ignore button
-          const ignoreBtn = document.createElement('button');
-          ignoreBtn.textContent = 'Ignore';
-          ignoreBtn.style.cssText = `
-            background: #ef4444;
-            color: white;
-            border: none;
-            padding: 4px 8px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 11px;
-            font-weight: bold;
-          `;
-          ignoreBtn.title = 'Dismiss this suggestion';
-          
-          // Add button click handlers with proper event handling
-          applyBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            e.stopImmediatePropagation();
-            
-            try {
-              console.log('✅ Applying suggestion:', suggestion.originalText, '→', suggestion.suggestedText);
-              onApplySuggestion(suggestion);
-            } catch (error) {
-              console.error('Error applying suggestion:', error);
-            }
-          });
-          
-          ignoreBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            e.stopImmediatePropagation();
-            
-            try {
-              console.log('❌ Ignoring suggestion:', suggestion.id);
-              onDismissSuggestion(suggestion.id);
-            } catch (error) {
-              console.error('Error ignoring suggestion:', error);
-            }
-          });
-          
-          // Assemble the components
-          buttonsContainer.appendChild(applyBtn);
-          buttonsContainer.appendChild(ignoreBtn);
-          container.appendChild(highlightSpan);
-          container.appendChild(buttonsContainer);
-          
-          // Replace the text node with the complete container
+          // Replace the text node
           const parent = textNode.parentNode;
           if (parent) {
             if (beforeText) parent.insertBefore(document.createTextNode(beforeText), textNode);
-            parent.insertBefore(container, textNode);
+            parent.insertBefore(highlightSpan, textNode);
             if (afterText) parent.insertBefore(document.createTextNode(afterText), textNode);
             parent.removeChild(textNode);
           }
