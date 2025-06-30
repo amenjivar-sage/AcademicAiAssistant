@@ -67,8 +67,10 @@ CONVERSATION CONTEXT RULES:
 
 DOCUMENT ANALYSIS CAPABILITIES:
 ${documentContent && documentContent.trim() ? `
-CURRENT DOCUMENT CONTENT:
+CURRENT DOCUMENT CONTENT (ANALYZE ONLY THIS):
 "${documentContent}"
+
+CRITICAL: Only analyze the CURRENT DOCUMENT CONTENT shown above. Ignore any previous document versions or conversation history about different content. Base ALL feedback on what is currently in the document.
 
 When the student asks for:
 - Grammar checks: Analyze the above document content for grammar issues and provide specific corrections using this format: 'Change "incorrect text" to "corrected text" - explanation'
@@ -76,7 +78,7 @@ When the student asks for:
 - Writing feedback: Provide specific feedback using this format: 'Consider changing "original phrase" to "improved phrase" - explanation'
 - Content review: Analyze and comment on content, suggesting improvements in the format: 'Instead of "current text", use "better text" - explanation'
 
-IMPORTANT: When providing corrections, always use exact quotes from the document and format your suggestions as: 'Action "exact original text" with/to "exact replacement text" - brief explanation'
+IMPORTANT: When providing corrections, always use exact quotes from the CURRENT document and format your suggestions as: 'Action "exact original text" with/to "exact replacement text" - brief explanation'
 
 This format allows the system to highlight and apply your suggestions directly in the document.
 ` : "No document content available. When students ask for document analysis, request them to ensure their document content is being shared properly."}
@@ -85,17 +87,19 @@ Provide helpful, educational responses that guide students toward better writing
       }
     ];
 
-    // Add conversation history to maintain context
-    conversationHistory.forEach((interaction: any) => {
+    // Limit conversation history to avoid confusion with old content
+    // Only include the most recent interaction if it's about general help, not document analysis
+    if (conversationHistory.length > 0 && !prompt.toLowerCase().includes('check') && !prompt.toLowerCase().includes('grammar') && !prompt.toLowerCase().includes('feedback')) {
+      const recentInteraction = conversationHistory[conversationHistory.length - 1];
       messages.push({
         role: "user",
-        content: interaction.prompt
+        content: recentInteraction.prompt
       });
       messages.push({
         role: "assistant",
-        content: interaction.response
+        content: recentInteraction.response
       });
-    });
+    }
 
     // Add the current prompt
     messages.push({
