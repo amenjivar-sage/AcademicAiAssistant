@@ -631,9 +631,9 @@ Text to check: ${cleanContent}`
                     })
                     .map((error, index) => {
                       // Determine error type based on the correction
-                      let errorType: 'spelling' | 'grammar' | 'punctuation' = 'spelling';
+                      let errorType: 'spelling' | 'grammar' | 'style' = 'spelling';
                       if (error.original.match(/['']/g) || error.correct.match(/['']/g)) {
-                        errorType = 'punctuation'; // Apostrophe/contraction issues
+                        errorType = 'style'; // Apostrophe/contraction issues
                       } else if (error.original.toLowerCase() !== error.correct.toLowerCase()) {
                         errorType = 'spelling';
                       } else {
@@ -645,7 +645,7 @@ Text to check: ${cleanContent}`
                         type: errorType,
                         originalText: error.original,
                         suggestedText: error.correct,
-                        explanation: `${errorType === 'punctuation' ? 'Punctuation' : errorType === 'grammar' ? 'Grammar' : 'Spelling'} correction: "${error.original}" → "${error.correct}"`,
+                        explanation: `${errorType === 'style' ? 'Style' : errorType === 'grammar' ? 'Grammar' : 'Spelling'} correction: "${error.original}" → "${error.correct}"`,
                         severity: 'high' as const,
                         startIndex: 0,
                         endIndex: 0
