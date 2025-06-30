@@ -802,7 +802,20 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                 placeholder="Start writing your assignment..."
               />
               
-              {/* AI Suggestions Overlay */}
+              {/* AI Feedback Highlights Overlay */}
+              {showAiHighlights && aiSuggestions.length > 0 && (
+                <div className="absolute inset-0 pointer-events-none">
+                  <AiFeedbackHighlights
+                    content={content}
+                    suggestions={aiSuggestions}
+                    onApplySuggestion={handleApplySuggestion}
+                    onDismissSuggestion={handleDismissSuggestion}
+                    onContentChange={handleContentChange}
+                  />
+                </div>
+              )}
+              
+              {/* AI Suggestions Control */}
               {showAiHighlights && aiSuggestions.length > 0 && (
                 <div className="absolute top-2 right-2">
                   <Button
