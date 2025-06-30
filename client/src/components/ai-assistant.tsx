@@ -37,6 +37,7 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
   const [lastResponse, setLastResponse] = useState<AiResponse | null>(null);
   const [smartPrompts, setSmartPrompts] = useState<SmartPrompt[]>([]);
   const [activeTab, setActiveTab] = useState("assistant");
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -499,10 +500,30 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
               size="sm"
               className="w-full justify-start h-auto p-2 text-left text-xs mb-3 bg-blue-50 border-blue-200 hover:bg-blue-100"
               onClick={async () => {
+                if (!currentContent || !sessionId) {
+                  toast({
+                    title: "Error",
+                    description: "No content available to check or session not found.",
+                    variant: "destructive",
+                  });
+                  return;
+                }
+                
                 setIsLoading(true);
                 try {
                   // Get clean content for spell checking
-                  const cleanContent = currentContent.replace(/<[^>]*>/g, '');
+                  const cleanContent = currentContent.replace(/<[^>]*>/g, '').trim();
+                  
+                  if (!cleanContent) {
+                    toast({
+                      title: "No content",
+                      description: "Please write some text first before checking spelling and grammar.",
+                      variant: "destructive",
+                    });
+                    setIsLoading(false);
+                    return;
+                  }
+                  
                   console.log('🔍 Starting AI spell check for content:', cleanContent.substring(0, 200));
                   
                   // Call OpenAI to identify and correct all spelling errors
@@ -511,7 +532,7 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                       sessionId: sessionId,
-                      prompt: `Please identify ALL spelling errors in this text and provide corrections. Format your response as a JSON array of objects with "original" and "correct" properties. Only include actual spelling errors, not grammar or style changes. Text: ${cleanContent}`
+                      prompt: `Please check my grammar and provide specific corrections with highlighting for this text: ${cleanContent}`
                     })
                   });
 
