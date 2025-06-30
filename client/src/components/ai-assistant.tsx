@@ -497,7 +497,7 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
                   }
                   
                   // Call AI assistance with a prompt that works with the highlighting system
-                  const response = await fetch('/api/ai-assistance', {
+                  const response = await fetch('/api/ai/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -608,7 +608,7 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
                   }
                   
                   // Call AI assistance with a prompt that works with the highlighting system
-                  const response = await fetch('/api/ai-assistance', {
+                  const response = await fetch('/api/ai/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
