@@ -75,39 +75,6 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
           onSuggestionsGenerated(suggestions);
         } else {
           console.log('⚠️ No suggestions extracted from latest chat response');
-          
-          // Create manual suggestions from visible spelling errors in the document
-          const manualSuggestions: AiFeedbackSuggestion[] = [];
-          const commonErrors = [
-            { wrong: 'yesterdya', correct: 'yesterday' },
-            { wrong: 'functionailty', correct: 'functionality' },
-            { wrong: 'teh', correct: 'the' },
-            { wrong: 'recieve', correct: 'receive' },
-            { wrong: 'seperate', correct: 'separate' },
-            { wrong: 'definately', correct: 'definitely' }
-          ];
-          
-          commonErrors.forEach((error, index) => {
-            if (cleanContent.includes(error.wrong)) {
-              manualSuggestions.push({
-                id: `manual-${index}`,
-                type: 'spelling',
-                originalText: error.wrong,
-                suggestedText: error.correct,
-                explanation: `Spelling correction: "${error.wrong}" should be "${error.correct}"`,
-                startIndex: cleanContent.indexOf(error.wrong),
-                endIndex: cleanContent.indexOf(error.wrong) + error.wrong.length,
-                severity: 'medium'
-              });
-            }
-          });
-          
-          console.log('🔧 Created manual suggestions from chat history:', manualSuggestions);
-          
-          if (manualSuggestions.length > 0) {
-            console.log('✅ Calling onSuggestionsGenerated with manual suggestions from chat');
-            onSuggestionsGenerated(manualSuggestions);
-          }
         }
       }
     }
@@ -168,44 +135,6 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
           console.log('⚠️ No suggestions extracted from AI response');
           console.log('🔍 Debug - Response format:', data.response.substring(0, 500));
           console.log('🔍 Debug - Content format:', currentContent.substring(0, 200));
-          
-          // Create manual suggestions from visible spelling errors in the document
-          const manualSuggestions: AiFeedbackSuggestion[] = [];
-          const cleanContent = currentContent.replace(/<[^>]*>/g, '');
-          
-          // Common spelling errors I can see in the document
-          const commonErrors = [
-            { wrong: 'clas', correct: 'class' },
-            { wrong: 'wer', correct: 'were' },
-            { wrong: 'asignned', correct: 'assigned' },
-            { wrong: 'reserch', correct: 'research' },
-            { wrong: 'papper', correct: 'paper' },
-            { wrong: 'efects', correct: 'effects' },
-            { wrong: 'climit', correct: 'climate' }
-          ];
-          
-          // Find errors in the content and create suggestions
-          commonErrors.forEach((error, index) => {
-            if (cleanContent.includes(error.wrong)) {
-              manualSuggestions.push({
-                id: `manual-${index}`,
-                type: 'spelling',
-                originalText: error.wrong,
-                suggestedText: error.correct,
-                explanation: `Spelling correction: "${error.wrong}" should be "${error.correct}"`,
-                startIndex: cleanContent.indexOf(error.wrong),
-                endIndex: cleanContent.indexOf(error.wrong) + error.wrong.length,
-                severity: 'medium'
-              });
-            }
-          });
-          
-          console.log('🔧 Created manual suggestions:', manualSuggestions);
-          
-          if (manualSuggestions.length > 0 && onSuggestionsGenerated) {
-            console.log('✅ Calling onSuggestionsGenerated with manual suggestions');
-            onSuggestionsGenerated(manualSuggestions);
-          }
         }
       } else {
         console.log('❌ Missing requirements for suggestion extraction:', {
