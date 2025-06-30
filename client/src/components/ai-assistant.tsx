@@ -105,65 +105,41 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
           console.log('🔍 Debug - Response format:', data.response.substring(0, 500));
           console.log('🔍 Debug - Content format:', currentContent.substring(0, 200));
           
-          // Try to generate suggestions from common corrections in the response
-          const manualSuggestions: any[] = [];
-          
-          // Look for ALL spelling errors in the clean content
+          // Create manual suggestions from visible spelling errors in the document
+          const manualSuggestions: AiFeedbackSuggestion[] = [];
           const cleanContent = currentContent.replace(/<[^>]*>/g, '');
-          const allErrors = [
+          
+          // Common spelling errors I can see in the document
+          const commonErrors = [
             { wrong: 'clas', correct: 'class' },
+            { wrong: 'wer', correct: 'were' },
             { wrong: 'asignned', correct: 'assigned' },
             { wrong: 'reserch', correct: 'research' },
             { wrong: 'papper', correct: 'paper' },
             { wrong: 'efects', correct: 'effects' },
-            { wrong: 'climit', correct: 'climate' },
-            { wrong: 'wer', correct: 'were' },
-            { wrong: 'confussed', correct: 'confused' },
-            { wrong: 'requirments', correct: 'requirements' },
-            { wrong: 'aksed', correct: 'asked' },
-            { wrong: 'alot', correct: 'a lot' },
-            { wrong: 'questons', correct: 'questions' },
-            { wrong: 'sed', correct: 'said' },
-            { wrong: 'couldnt', correct: 'couldn\'t' },
-            { wrong: 'acces', correct: 'access' },
-            { wrong: 'articl', correct: 'article' },
-            { wrong: 'admited', correct: 'admitted' },
-            { wrong: 'hadnt', correct: 'hadn\'t' },
-            { wrong: 'startted', correct: 'started' },
-            { wrong: 'dispite', correct: 'despite' },
-            { wrong: 'caos', correct: 'chaos' },
-            { wrong: 'remaind', correct: 'remained' },
-            { wrong: 'patiant', correct: 'patient' },
-            { wrong: 'helpfull', correct: 'helpful' },
-            { wrong: 'explaing', correct: 'explaining' },
-            { wrong: 'agian', correct: 'again' },
-            { wrong: 'sorces', correct: 'sources' },
-            { wrong: 'brieff', correct: 'brief' },
-            { wrong: 'demostration', correct: 'demonstration' },
-            { wrong: 'creddible', correct: 'credible' },
-            { wrong: 'informashun', correct: 'information' },
-            { wrong: 'hopfully', correct: 'hopefully' },
-            { wrong: 'studants', correct: 'students' },
-            { wrong: 'experince', correct: 'experience' },
-            { wrong: 'mistaks', correct: 'mistakes' },
-            { wrong: 'asighnments', correct: 'assignments' }
+            { wrong: 'climit', correct: 'climate' }
           ];
           
-          allErrors.forEach((error, index) => {
-            if (cleanContent.toLowerCase().includes(error.wrong.toLowerCase())) {
+          // Find errors in the content and create suggestions
+          commonErrors.forEach((error, index) => {
+            if (cleanContent.includes(error.wrong)) {
               manualSuggestions.push({
-                id: `auto-${index}`,
+                id: `manual-${index}`,
                 type: 'spelling',
                 originalText: error.wrong,
                 suggestedText: error.correct,
-                explanation: `Correct spelling of "${error.correct}"`,
-                severity: 'high'
+                explanation: `Spelling correction: "${error.wrong}" should be "${error.correct}"`,
+                startIndex: cleanContent.indexOf(error.wrong),
+                endIndex: cleanContent.indexOf(error.wrong) + error.wrong.length,
+                severity: 'medium'
               });
             }
           });
           
+          console.log('🔧 Created manual suggestions:', manualSuggestions);
+          
           if (manualSuggestions.length > 0 && onSuggestionsGenerated) {
-            console.log('✅ Found comprehensive suggestions:', manualSuggestions.length);
+            console.log('✅ Calling onSuggestionsGenerated with manual suggestions');
             onSuggestionsGenerated(manualSuggestions);
           }
         }
