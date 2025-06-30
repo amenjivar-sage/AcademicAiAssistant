@@ -166,13 +166,14 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   const handleApplySuggestion = useCallback((suggestion: any) => {
     console.log('🔄 Applying suggestion:', suggestion.originalText, '→', suggestion.suggestedText);
     
-    const updatedContent = content.replace(
-      new RegExp(suggestion.originalText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'),
-      suggestion.suggestedText
-    );
+    // Use global flag to replace ALL instances of the word
+    const escapedOriginal = suggestion.originalText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const globalRegex = new RegExp(escapedOriginal, 'gi');
+    
+    const updatedContent = content.replace(globalRegex, suggestion.suggestedText);
     
     if (updatedContent !== content) {
-      console.log('✅ Content updated, applying change');
+      console.log('✅ Content updated, applying change - replaced all instances');
       setContent(updatedContent);
       
       // Mark user as typing to prevent auto-save conflicts
@@ -187,6 +188,12 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       typingTimeoutRef.current = setTimeout(() => {
         setIsUserTyping(false);
       }, 1000);
+      
+      // Log how many replacements were made
+      const matches = content.match(globalRegex);
+      if (matches) {
+        console.log(`Applied ${matches.length} replacements of "${suggestion.originalText}" → "${suggestion.suggestedText}"`);
+      }
     }
     
     // Remove the suggestion from the list
