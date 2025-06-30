@@ -88,7 +88,11 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
           responsePreview: data.response.substring(0, 200) + '...'
         });
         
-        const suggestions = extractSuggestionsFromAiResponse(data.response, currentContent);
+        // Clean the content by removing HTML tags for better text matching
+        const cleanContent = currentContent.replace(/<[^>]*>/g, '');
+        console.log('🧹 Cleaned content for matching:', cleanContent.substring(0, 100) + '...');
+        
+        const suggestions = extractSuggestionsFromAiResponse(data.response, cleanContent);
         console.log('📝 Extracted suggestions:', suggestions);
         
         if (suggestions.length > 0) {
@@ -96,6 +100,8 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
           onSuggestionsGenerated(suggestions);
         } else {
           console.log('⚠️ No suggestions extracted from AI response');
+          console.log('🔍 Debug - Response format:', data.response.substring(0, 500));
+          console.log('🔍 Debug - Content format:', currentContent.substring(0, 200));
         }
       } else {
         console.log('❌ Missing requirements for suggestion extraction:', {
@@ -379,6 +385,49 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
               <div>
                 <div className="font-medium text-green-800">Check Grammar & Spelling</div>
                 <div className="text-green-600">Get highlighted corrections in your document</div>
+              </div>
+            </Button>
+          )}
+          
+          {/* Test Highlighting Button */}
+          {currentContent && currentContent.trim().length > 0 && onSuggestionsGenerated && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full justify-start h-auto p-2 text-left text-xs mb-3 bg-blue-50 border-blue-200 hover:bg-blue-100"
+              onClick={() => {
+                // Generate test suggestions based on current content
+                const testSuggestions = [
+                  {
+                    id: 'test-1',
+                    type: 'spelling' as const,
+                    originalText: 'Yesturday',
+                    suggestedText: 'Yesterday',
+                    explanation: 'Correct spelling of yesterday',
+                    startIndex: currentContent.indexOf('Yesturday'),
+                    endIndex: currentContent.indexOf('Yesturday') + 9,
+                    severity: 'high' as const
+                  },
+                  {
+                    id: 'test-2',
+                    type: 'grammar' as const,
+                    originalText: 'studant\'s',
+                    suggestedText: 'students',
+                    explanation: 'Correct spelling and grammar',
+                    startIndex: currentContent.indexOf('studant\'s'),
+                    endIndex: currentContent.indexOf('studant\'s') + 9,
+                    severity: 'high' as const
+                  }
+                ].filter(s => s.startIndex !== -1);
+                
+                console.log('🧪 Triggering test suggestions:', testSuggestions);
+                onSuggestionsGenerated(testSuggestions);
+              }}
+            >
+              <Target className="h-4 w-4 mr-2 text-blue-600" />
+              <div>
+                <div className="font-medium text-blue-800">Test Highlighting</div>
+                <div className="text-blue-600">Manual test of highlight system</div>
               </div>
             </Button>
           )}

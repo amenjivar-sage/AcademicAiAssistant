@@ -810,7 +810,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                     suggestions={aiSuggestions}
                     onApplySuggestion={handleApplySuggestion}
                     onDismissSuggestion={handleDismissSuggestion}
-                    onContentChange={handleContentChange}
+                    onContentChange={setContent}
                   />
                 </div>
               )}
