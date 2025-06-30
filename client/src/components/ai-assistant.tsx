@@ -404,13 +404,13 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
           </div>
 
           {/* Input Area - Compact horizontal layout */}
-          <div className="border-t bg-white p-2 flex gap-2 flex-shrink-0">
+          <div className="border-t bg-white p-1.5 flex gap-2 flex-shrink-0">
             <Textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Ask ZoË a question..."
-              className="flex-1 resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+              className="flex-1 resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm min-h-8"
               rows={1}
             />
             <Button 

@@ -119,6 +119,7 @@ The application is configured for both Replit and Render deployment:
 
 ## Changelog
 
+- June 30, 2025: Improved ZoË AI assistant interface design - removed white header, moved controls to purple header, increased chat history space from 320px to 200px height, made AI disclosure collapsible, and reduced input box size for better suggestion visibility
 - June 28, 2025: Added AI-powered interactive feedback highlighting - Zoe's suggestions now appear as clickable highlights in documents with apply/dismiss options
 - June 28, 2025: Enhanced AI prompts for structured feedback - responses now formatted for automatic parsing and highlighting integration
 - June 28, 2025: Fixed copy-paste detection in teacher review - improved algorithm to exclude spell-check corrections from false positive highlighting
