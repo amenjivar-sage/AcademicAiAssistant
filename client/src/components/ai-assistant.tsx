@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Bot, Send, CheckCircle, XCircle, AlertTriangle, Loader2, BookOpen, PenTool, Search, Zap, Lightbulb, Users, Play, Shield, Target, FileText } from "lucide-react";
+import { Bot, Send, CheckCircle, XCircle, AlertTriangle, Loader2, BookOpen, PenTool, Search, Zap, Lightbulb, Users, Play, Shield, Target, FileText, SpellCheck } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import CitationAssistant from "@/components/citation-assistant";
@@ -345,6 +345,27 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
 
         <TabsContent value="prompts" className="overflow-y-auto" style={{ height: 'calc(100vh - 260px)', padding: '12px' }}>
           <h4 className="font-medium text-gray-700 mb-3 text-sm">Quick Writing Help</h4>
+          
+          {/* Quick Grammar Check Button */}
+          {currentContent && currentContent.trim().length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full justify-start h-auto p-2 text-left text-xs mb-3 bg-green-50 border-green-200 hover:bg-green-100"
+              onClick={() => {
+                setPrompt("Please check my grammar and provide specific corrections with highlighting");
+                setActiveTab("assistant");
+                setTimeout(() => handleSubmit(), 100);
+              }}
+            >
+              <SpellCheck className="h-4 w-4 mr-2 text-green-600" />
+              <div>
+                <div className="font-medium text-green-800">Check Grammar & Spelling</div>
+                <div className="text-green-600">Get highlighted corrections in your document</div>
+              </div>
+            </Button>
+          )}
+          
           <div className="space-y-2">
             {quickPrompts.map((quickPrompt, index) => {
               const Icon = quickPrompt.icon;

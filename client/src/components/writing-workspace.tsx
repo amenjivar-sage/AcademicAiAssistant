@@ -765,42 +765,55 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
           >
             <div className="relative">
               <RichTextEditor
-                  ref={contentRef}
-                  content={(() => {
-                    let displayContent = content;
+                ref={contentRef}
+                content={(() => {
+                  let displayContent = content;
+                  
+                  // Only apply teacher comment highlighting (yellow highlighting) for graded documents
+                  // Copy-paste highlighting removed from student view for better writing experience
+                  if (session?.status === 'graded' && commentsArray.length > 0) {
+                    displayContent = highlightCommentedText(displayContent, commentsArray);
+                  }
+                  
+                  return displayContent;
+                })()}
+                onContentChange={(newContent) => {
+                  // Prevent infinite loops by checking if content actually changed
+                  if (newContent !== content) {
+                    console.log('Content changed from rich editor:', newContent);
+                    setContent(newContent);
                     
-                    // Only apply teacher comment highlighting (yellow highlighting) for graded documents
-                    // Copy-paste highlighting removed from student view for better writing experience
-                    if (session?.status === 'graded' && commentsArray.length > 0) {
-                      displayContent = highlightCommentedText(displayContent, commentsArray);
+                    // Mark user as typing and reset the typing timeout
+                    setIsUserTyping(true);
+                    lastTypingTime.current = Date.now();
+                    
+                    if (typingTimeoutRef.current) {
+                      clearTimeout(typingTimeoutRef.current);
                     }
                     
-                    return displayContent;
-                  })()}
-                  onContentChange={(newContent) => {
-                    // Prevent infinite loops by checking if content actually changed
-                    if (newContent !== content) {
-                      console.log('Content changed from rich editor:', newContent);
-                      setContent(newContent);
-                      
-                      // Mark user as typing and reset the typing timeout
-                      setIsUserTyping(true);
-                      lastTypingTime.current = Date.now();
-                      
-                      if (typingTimeoutRef.current) {
-                        clearTimeout(typingTimeoutRef.current);
-                      }
-                      
-                      // Clear typing flag after 3 seconds of no typing
-                      typingTimeoutRef.current = setTimeout(() => {
-                        setIsUserTyping(false);
-                      }, 3000);
-                    }
-                  }}
+                    // Clear typing flag after 3 seconds of no typing
+                    typingTimeoutRef.current = setTimeout(() => {
+                      setIsUserTyping(false);
+                    }, 3000);
+                  }
+                }}
                 onTextSelection={setSelectedText}
                 readOnly={session?.status === 'graded'}
                 placeholder="Start writing your assignment..."
               />
+              
+              {/* AI Suggestions Overlay */}
+              {showAiHighlights && aiSuggestions.length > 0 && (
+                <div className="absolute top-2 right-2">
+                  <Button
+                    onClick={() => setShowAiHighlights(false)}
+                    variant="outline"
+                    size="sm"
+                    className="bg-white/90 backdrop-blur-sm"
+                  >
+                    Hide AI Suggestions ({aiSuggestions.length})
+                  </Button>
+                </div>
               )}
               
               {/* Inline Comments Display for Students */}

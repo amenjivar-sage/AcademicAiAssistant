@@ -71,12 +71,14 @@ CURRENT DOCUMENT CONTENT:
 "${documentContent}"
 
 When the student asks for:
-- Grammar checks: Analyze the above document content for grammar issues and provide specific corrections with explanations
-- Spell checking: Review the document for spelling errors and suggest corrections
-- Writing feedback: Provide specific feedback on the document's structure, clarity, and style
-- Content review: Analyze and comment on the document's content, organization, and flow
+- Grammar checks: Analyze the above document content for grammar issues and provide specific corrections using this format: 'Change "incorrect text" to "corrected text" - explanation'
+- Spell checking: Review the document for spelling errors using this format: 'Replace "misspelled" with "correct" - explanation'
+- Writing feedback: Provide specific feedback using this format: 'Consider changing "original phrase" to "improved phrase" - explanation'
+- Content review: Analyze and comment on content, suggesting improvements in the format: 'Instead of "current text", use "better text" - explanation'
 
-Always reference the actual document content when providing feedback. Give specific examples from their writing and concrete suggestions for improvement.
+IMPORTANT: When providing corrections, always use exact quotes from the document and format your suggestions as: 'Action "exact original text" with/to "exact replacement text" - brief explanation'
+
+This format allows the system to highlight and apply your suggestions directly in the document.
 ` : "No document content available. When students ask for document analysis, request them to ensure their document content is being shared properly."}
 
 Provide helpful, educational responses that guide students toward better writing while maintaining the flow of conversation.`
@@ -164,13 +166,15 @@ CURRENT DOCUMENT CONTENT:
 "${documentContent}"
 
 DOCUMENT ANALYSIS INSTRUCTIONS:
-When the student asks for grammar, spelling, or writing feedback, analyze the above document content directly. Provide:
-- Specific corrections with explanations
-- Examples from their actual writing
-- Concrete suggestions for improvement
-- Line-by-line feedback when appropriate
+When the student asks for grammar, spelling, or writing feedback, analyze the above document content directly. Provide feedback using these exact formats:
+- Grammar: 'Change "incorrect text" to "corrected text" - explanation'
+- Spelling: 'Replace "misspelled" with "correct" - explanation'  
+- Style: 'Consider changing "original phrase" to "improved phrase" - explanation'
+- Content: 'Instead of "current text", use "better text" - explanation'
 
-Do not ask them to paste content - you already have access to their document.
+CRITICAL: Always use exact quotes from the document. Format suggestions as: 'Action "exact original text" with/to "exact replacement text" - brief explanation'
+
+This structured format enables automatic highlighting and one-click corrections in the document.
 `;
     }
 
