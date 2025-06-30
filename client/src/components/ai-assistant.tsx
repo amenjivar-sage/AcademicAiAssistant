@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Bot, Send, CheckCircle, XCircle, AlertTriangle, Loader2, BookOpen, PenTool, Search, Zap, Lightbulb, Users, Play, Shield, Target, FileText, SpellCheck } from "lucide-react";
+import { Bot, Send, CheckCircle, XCircle, AlertTriangle, Loader2, BookOpen, PenTool, Search, Zap, Lightbulb, Users, Play, Shield, Target, FileText, SpellCheck, Minimize2, X, ChevronDown, ChevronUp } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import CitationAssistant from "@/components/citation-assistant";
@@ -18,6 +18,8 @@ interface AiAssistantProps {
   assignmentType?: string;
   currentContent?: string;
   onSuggestionsGenerated?: (suggestions: AiSuggestion[]) => void;
+  onMinimize?: () => void;
+  onClose?: () => void;
 }
 
 interface AiResponse {
@@ -32,12 +34,13 @@ interface SmartPrompt {
   relevance: number;
 }
 
-export default function AiAssistant({ sessionId, currentContent, onSuggestionsGenerated }: AiAssistantProps) {
+export default function AiAssistant({ sessionId, currentContent, onSuggestionsGenerated, onMinimize, onClose }: AiAssistantProps) {
   const [prompt, setPrompt] = useState("");
   const [lastResponse, setLastResponse] = useState<AiResponse | null>(null);
   const [smartPrompts, setSmartPrompts] = useState<SmartPrompt[]>([]);
   const [activeTab, setActiveTab] = useState("assistant");
   const [isLoading, setIsLoading] = useState(false);
+  const [isDisclosureCollapsed, setIsDisclosureCollapsed] = useState(true);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -301,15 +304,41 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
 
   return (
     <div className="h-full flex flex-col bg-white">
-      {/* Header */}
+      {/* Header with controls */}
       <div className="p-3 border-b border-gray-200 bg-gradient-to-r from-purple-500 to-purple-600 text-white flex-shrink-0">
-        <div className="flex items-center gap-2">
-          <Bot className="h-4 w-4" />
-          <h3 className="font-medium text-sm">ZoË AI Assistant</h3>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Bot className="h-4 w-4" />
+            <div>
+              <h3 className="font-medium text-sm">ZoË AI Assistant</h3>
+              <p className="text-xs text-purple-100">Get ethical writing help and guidance</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1">
+            {onMinimize && (
+              <Button
+                onClick={onMinimize}
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0 text-purple-100 hover:text-white hover:bg-purple-700"
+                title="Minimize ZoË"
+              >
+                <Minimize2 className="h-3 w-3" />
+              </Button>
+            )}
+            {onClose && (
+              <Button
+                onClick={onClose}
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0 text-purple-100 hover:text-white hover:bg-purple-700"
+                title="Close ZoË"
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
         </div>
-        <p className="text-xs text-purple-100 mt-1">
-          Get ethical writing help and guidance
-        </p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
@@ -320,8 +349,8 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
         </TabsList>
 
         <TabsContent value="assistant" className="flex-1 flex flex-col min-h-0">
-          {/* Chat History Area */}
-          <div className="flex-1 overflow-y-auto p-3 space-y-3" style={{ height: 'calc(100vh - 320px)' }}>
+          {/* Chat History Area - Expanded for more space */}
+          <div className="flex-1 overflow-y-auto p-3 space-y-3" style={{ height: 'calc(100vh - 200px)' }}>
             {displayChatHistory && displayChatHistory.length > 0 ? (
               <>
                 <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
