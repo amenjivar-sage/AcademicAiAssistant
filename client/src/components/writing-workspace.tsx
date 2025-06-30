@@ -19,8 +19,7 @@ import DocumentDownload from './document-download';
 import AiAssistant from './ai-assistant';
 import { PDFExport } from './pdf-export';
 import BubbleSpellCheckPanel from './bubble-spell-check-panel';
-import DocumentHighlighter from './document-highlighter';
-import { extractSuggestionsFromAiResponse, AiSuggestion } from '@/utils/ai-suggestion-parser';
+import SimpleHighlighter from './simple-highlighter';
 
 interface PastedContent {
   text: string;
@@ -50,7 +49,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   const [showAiSidebar, setShowAiSidebar] = useState(false);
   const [isAiSidebarMinimized, setIsAiSidebarMinimized] = useState(false);
   const [openCommentId, setOpenCommentId] = useState<number | null>(null);
-  const [aiSuggestions, setAiSuggestions] = useState<AiSuggestion[]>([]);
+  const [aiSuggestions, setAiSuggestions] = useState<any[]>([]);
   const [showAiSuggestions, setShowAiSuggestions] = useState(false);
 
   // Function to highlight text that has teacher comments
@@ -268,7 +267,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   }, [saveSession, sessionId, queryClient]);
 
   // AI Suggestion handlers
-  const handleAiSuggestionsGenerated = useCallback((suggestions: AiSuggestion[]) => {
+  const handleAiSuggestionsGenerated = useCallback((suggestions: any[]) => {
     console.log('📝 Received AI suggestions in WritingWorkspace:', suggestions);
     setAiSuggestions(suggestions);
     setShowAiSuggestions(true);
@@ -278,7 +277,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     });
   }, [toast]);
 
-  const handleApplySuggestion = useCallback(async (suggestion: AiSuggestion) => {
+  const handleApplySuggestion = useCallback(async (suggestion: any) => {
     console.log('✅ Applying suggestion:', suggestion.id);
     
     // Replace the original text with the suggested text in the content
@@ -1057,16 +1056,13 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
         </div>
       )}
       
-      {/* Document Highlighter for AI Suggestions */}
-      {showAiSuggestions && aiSuggestions.length > 0 && (
-        <DocumentHighlighter
-          content={content}
-          suggestions={aiSuggestions}
-          onApplySuggestion={handleApplySuggestion}
-          onDismissSuggestion={handleDismissSuggestion}
-          editorRef={contentRef}
-        />
-      )}
+      {/* Simple Highlighter for AI Suggestions */}
+      <SimpleHighlighter
+        content={content}
+        suggestions={aiSuggestions}
+        onApplySuggestion={handleApplySuggestion}
+        onDismissSuggestion={handleDismissSuggestion}
+      />
     </div>
   );
 }
