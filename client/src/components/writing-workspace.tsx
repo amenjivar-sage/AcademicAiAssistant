@@ -641,35 +641,6 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     setShowAiSuggestions(false);
   }, []);
 
-  const handleClearAllSuggestions = useCallback(() => {
-    console.log('🧹 Manually clearing all AI suggestions, highlights, and chat history');
-    
-    // Clear AI suggestions
-    setAiSuggestions([]);
-    setShowAiSuggestions(false);
-    
-    // Remove all yellow highlighting from content
-    const cleanContent = content.replace(
-      /<span[^>]*style="background-color:\s*rgb\(254,\s*243,\s*199\)[^"]*"[^>]*>(.*?)<\/span>/gi,
-      '$1'
-    );
-    
-    if (cleanContent !== content) {
-      console.log('🧹 Removing old highlights from content');
-      setContent(cleanContent);
-    }
-    
-    // Clear chat history to prevent repeated grammar checks
-    if (sessionId && queryClient) {
-      console.log('🧹 Clearing chat history for session:', sessionId);
-      queryClient.setQueryData([`/api/session/${sessionId}/interactions`], []);
-    }
-    
-    toast({
-      title: "Cleared",
-      description: "All AI suggestions and highlights have been removed.",
-    });
-  }, [content, sessionId, queryClient, toast]);
 
   // Auto-clear old AI suggestions when content changes significantly
   useEffect(() => {
@@ -947,16 +918,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
               </div>
             )}
             
-            <Button 
-              onClick={handleClearAllSuggestions}
-              variant="outline" 
-              size="sm" 
-              className="gap-2"
-              title="Clear all AI suggestions and highlights"
-            >
-              Clear Highlights
-            </Button>
-            
+
             <Dialog>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-2">
