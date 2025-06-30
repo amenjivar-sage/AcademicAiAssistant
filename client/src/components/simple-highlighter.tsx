@@ -44,9 +44,12 @@ export default function SimpleHighlighter({
     // Get current document text to check which errors still exist
     const currentDocumentText = quillContainer.textContent || '';
     
+    console.log('🔍 SimpleHighlighter current document text:', currentDocumentText.substring(0, 200) + '...');
+    
     // Filter suggestions to only include words that still exist in the document
     const validSuggestions = suggestions.filter(suggestion => {
       const exists = currentDocumentText.toLowerCase().includes(suggestion.originalText.toLowerCase());
+      console.log(`🔍 Checking suggestion "${suggestion.originalText}": exists in document = ${exists}`);
       if (!exists) {
         console.log(`⚡ Skipping suggestion for "${suggestion.originalText}" - already corrected`);
       }

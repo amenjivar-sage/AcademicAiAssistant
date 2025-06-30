@@ -503,16 +503,24 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     // Clean content for text matching
     const cleanContent = content.replace(/<[^>]*>/g, '').toLowerCase();
     
+    console.log('🔍 Content filtering debug:', {
+      contentLength: content.length,
+      cleanContentLength: cleanContent.length,
+      cleanContentPreview: cleanContent.substring(0, 200) + '...',
+      currentSuggestions: aiSuggestions.map(s => s.originalText)
+    });
+    
     // Filter out suggestions for words that no longer exist
     const validSuggestions = aiSuggestions.filter(suggestion => {
       const originalTextExists = cleanContent.includes(suggestion.originalText.toLowerCase());
+      console.log(`🔍 Checking "${suggestion.originalText}": exists = ${originalTextExists}`);
       if (!originalTextExists) {
         console.log(`🧹 Auto-removing suggestion for "${suggestion.originalText}" - word no longer exists`);
       }
       return originalTextExists;
     });
     
-    // Update suggestions only if there's a change
+    // Update suggestions only if there's a change (avoid infinite loops)
     if (validSuggestions.length !== aiSuggestions.length) {
       console.log(`📝 Auto-filtered AI suggestions: ${aiSuggestions.length} → ${validSuggestions.length}`);
       setAiSuggestions(validSuggestions);
@@ -522,7 +530,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
         setShowAiSuggestions(false);
       }
     }
-  }, [content, aiSuggestions]);
+  }, [content, aiSuggestions.length]); // Watch content and suggestion count changes
 
   // Cleanup typing timeout on unmount
   useEffect(() => {
