@@ -572,20 +572,22 @@ Text to check: ${cleanContent}`
                     console.log('⚠️ JSON parsing failed, using contraction detection fallback');
                     
                     // Enhanced fallback: directly check for common contractions
+                    // Build contractions with safe apostrophe character
+                    const apostrophe = String.fromCharCode(39); // Standard ASCII apostrophe
                     const contractions = [
-                      { find: 'didnt', replace: "didn't" },
-                      { find: 'wont', replace: "won't" },
-                      { find: 'cant', replace: "can't" },
-                      { find: 'dont', replace: "don't" },
-                      { find: 'isnt', replace: "isn't" },
-                      { find: 'wasnt', replace: "wasn't" },
-                      { find: 'werent', replace: "weren't" },
-                      { find: 'youre', replace: "you're" },
-                      { find: 'theyre', replace: "they're" },
-                      { find: 'were', replace: "we're" },
-                      { find: 'im', replace: "I'm" },
-                      { find: 'hes', replace: "he's" },
-                      { find: 'shes', replace: "she's" }
+                      { find: 'didnt', replace: `didn${apostrophe}t` },
+                      { find: 'wont', replace: `won${apostrophe}t` },
+                      { find: 'cant', replace: `can${apostrophe}t` },
+                      { find: 'dont', replace: `don${apostrophe}t` },
+                      { find: 'isnt', replace: `isn${apostrophe}t` },
+                      { find: 'wasnt', replace: `wasn${apostrophe}t` },
+                      { find: 'werent', replace: `weren${apostrophe}t` },
+                      { find: 'youre', replace: `you${apostrophe}re` },
+                      { find: 'theyre', replace: `they${apostrophe}re` },
+                      { find: 'were', replace: `we${apostrophe}re` },
+                      { find: 'im', replace: `I${apostrophe}m` },
+                      { find: 'hes', replace: `he${apostrophe}s` },
+                      { find: 'shes', replace: `she${apostrophe}s` }
                     ];
                     
                     // Find contractions that exist in the content
