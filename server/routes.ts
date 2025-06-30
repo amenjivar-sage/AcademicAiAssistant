@@ -1785,9 +1785,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (isRestricted) {
         response = "❌ Sorry! This type of AI help isn't allowed. Try asking for brainstorming, outlining, or feedback instead. I'm here to help you learn and improve your own writing skills, not to do the work for you.";
       } else {
-        // Get conversation history for context if we have a session
+        // Skip conversation history for document analysis to prevent confusion with old content
         let conversationHistory: any[] = [];
-        if (sessionId && sessionId > 0) {
+        const isDocumentAnalysis = prompt.toLowerCase().includes('check') || 
+                                   prompt.toLowerCase().includes('grammar') || 
+                                   prompt.toLowerCase().includes('feedback') ||
+                                   prompt.toLowerCase().includes('think') ||
+                                   prompt.toLowerCase().includes('paper') ||
+                                   prompt.toLowerCase().includes('intro') ||
+                                   prompt.toLowerCase().includes('writing') ||
+                                   prompt.toLowerCase().includes('current');
+        
+        if (sessionId && sessionId > 0 && !isDocumentAnalysis) {
           conversationHistory = await storage.getSessionInteractions(sessionId);
         }
         
