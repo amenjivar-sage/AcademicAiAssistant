@@ -19,8 +19,8 @@ import DocumentDownload from './document-download';
 import AiAssistant from './ai-assistant';
 import { PDFExport } from './pdf-export';
 import BubbleSpellCheckPanel from './bubble-spell-check-panel';
-import AiSuggestionsPanel, { AiSuggestion } from './ai-suggestions-panel';
-import { extractSuggestionsFromAiResponse } from '@/utils/ai-suggestion-parser';
+import DocumentHighlighter from './document-highlighter';
+import { extractSuggestionsFromAiResponse, AiSuggestion } from '@/utils/ai-suggestion-parser';
 
 interface PastedContent {
   text: string;
@@ -1057,17 +1057,15 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
         </div>
       )}
       
-      {/* AI Suggestions Panel */}
+      {/* Document Highlighter for AI Suggestions */}
       {showAiSuggestions && aiSuggestions.length > 0 && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <AiSuggestionsPanel
-            suggestions={aiSuggestions}
-            onApplySuggestion={handleApplySuggestion}
-            onDismissSuggestion={handleDismissSuggestion}
-            onApplyAll={handleApplyAllSuggestions}
-            onClose={handleCloseSuggestions}
-          />
-        </div>
+        <DocumentHighlighter
+          content={content}
+          suggestions={aiSuggestions}
+          onApplySuggestion={handleApplySuggestion}
+          onDismissSuggestion={handleDismissSuggestion}
+          editorRef={contentRef}
+        />
       )}
     </div>
   );
