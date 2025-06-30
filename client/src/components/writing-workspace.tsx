@@ -266,6 +266,44 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     }
   }, [saveSession, sessionId, queryClient]);
 
+  // AI Suggestion handlers
+  const handleAiSuggestionsGenerated = useCallback((suggestions: AiFeedbackSuggestion[]) => {
+    setAiSuggestions(suggestions);
+    setShowAiHighlights(true);
+    toast({
+      title: "AI Suggestions Available",
+      description: `${suggestions.length} writing suggestions generated. Click highlighted text to review.`,
+    });
+  }, [toast]);
+
+  const handleApplySuggestion = useCallback((suggestionId: string, newText: string) => {
+    const suggestion = aiSuggestions.find(s => s.id === suggestionId);
+    if (!suggestion) return;
+
+    // Apply the suggestion to the content
+    const before = content.substring(0, suggestion.startIndex);
+    const after = content.substring(suggestion.endIndex);
+    const updatedContent = before + newText + after;
+    
+    setContent(updatedContent);
+    
+    // Remove the applied suggestion
+    setAiSuggestions(prev => prev.filter(s => s.id !== suggestionId));
+    
+    toast({
+      title: "Suggestion Applied",
+      description: `Changed "${suggestion.originalText}" to "${newText}"`,
+    });
+  }, [content, aiSuggestions, toast]);
+
+  const handleDismissSuggestion = useCallback((suggestionId: string) => {
+    setAiSuggestions(prev => prev.filter(s => s.id !== suggestionId));
+    toast({
+      title: "Suggestion Dismissed",
+      description: "Suggestion removed from document",
+    });
+  }, [toast]);
+
   // Cleanup typing timeout on unmount
   useEffect(() => {
     return () => {
@@ -727,42 +765,43 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
           >
             <div className="relative">
               <RichTextEditor
-                ref={contentRef}
-                content={(() => {
-                  let displayContent = content;
-                  
-                  // Only apply teacher comment highlighting (yellow highlighting) for graded documents
-                  // Copy-paste highlighting removed from student view for better writing experience
-                  if (session?.status === 'graded' && commentsArray.length > 0) {
-                    displayContent = highlightCommentedText(displayContent, commentsArray);
-                  }
-                  
-                  return displayContent;
-                })()}
-                onContentChange={(newContent) => {
-                  // Prevent infinite loops by checking if content actually changed
-                  if (newContent !== content) {
-                    console.log('Content changed from rich editor:', newContent);
-                    setContent(newContent);
+                  ref={contentRef}
+                  content={(() => {
+                    let displayContent = content;
                     
-                    // Mark user as typing and reset the typing timeout
-                    setIsUserTyping(true);
-                    lastTypingTime.current = Date.now();
-                    
-                    if (typingTimeoutRef.current) {
-                      clearTimeout(typingTimeoutRef.current);
+                    // Only apply teacher comment highlighting (yellow highlighting) for graded documents
+                    // Copy-paste highlighting removed from student view for better writing experience
+                    if (session?.status === 'graded' && commentsArray.length > 0) {
+                      displayContent = highlightCommentedText(displayContent, commentsArray);
                     }
                     
-                    // Clear typing flag after 3 seconds of no typing
-                    typingTimeoutRef.current = setTimeout(() => {
-                      setIsUserTyping(false);
-                    }, 3000);
-                  }
-                }}
+                    return displayContent;
+                  })()}
+                  onContentChange={(newContent) => {
+                    // Prevent infinite loops by checking if content actually changed
+                    if (newContent !== content) {
+                      console.log('Content changed from rich editor:', newContent);
+                      setContent(newContent);
+                      
+                      // Mark user as typing and reset the typing timeout
+                      setIsUserTyping(true);
+                      lastTypingTime.current = Date.now();
+                      
+                      if (typingTimeoutRef.current) {
+                        clearTimeout(typingTimeoutRef.current);
+                      }
+                      
+                      // Clear typing flag after 3 seconds of no typing
+                      typingTimeoutRef.current = setTimeout(() => {
+                        setIsUserTyping(false);
+                      }, 3000);
+                    }
+                  }}
                 onTextSelection={setSelectedText}
                 readOnly={session?.status === 'graded'}
                 placeholder="Start writing your assignment..."
               />
+              )}
               
               {/* Inline Comments Display for Students */}
               {session?.status === 'graded' && commentsArray.length > 0 && (
@@ -869,6 +908,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                 <AiAssistant
                   sessionId={sessionId}
                   currentContent={content}
+                  onSuggestionsGenerated={handleAiSuggestionsGenerated}
                 />
               </div>
             )}
