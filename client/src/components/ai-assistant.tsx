@@ -526,13 +526,21 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
                   
                   console.log('🔍 Starting AI spell check for content:', cleanContent.substring(0, 200));
                   
-                  // Call OpenAI to identify and correct all spelling errors
+                  // Call OpenAI to identify and correct all spelling and grammar errors
                   const response = await fetch('/api/ai-assistance', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                       sessionId: sessionId,
-                      prompt: `Please check my grammar and provide specific corrections with highlighting for this text: ${cleanContent}`
+                      prompt: `Please check this text for ALL errors including spelling, grammar, punctuation, contractions, and apostrophes. Provide specific corrections that should be highlighted in the document. Format your response as a list of corrections with the original text and the corrected version. Be thorough and include:
+- Spelling errors
+- Grammar mistakes  
+- Missing or incorrect apostrophes (like "Didnt" → "Didn't")
+- Punctuation errors
+- Contractions that need apostrophes
+- Capitalization issues
+
+Text to check: ${cleanContent}`
                     })
                   });
 
@@ -571,17 +579,37 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
 
                   // Convert to suggestions format
                   const suggestions = spellingErrors
-                    .filter(error => cleanContent.toLowerCase().includes(error.original.toLowerCase()))
-                    .map((error, index) => ({
-                      id: `ai-spell-${index}`,
-                      type: 'spelling' as const,
-                      originalText: error.original,
-                      suggestedText: error.correct,
-                      explanation: `AI correction: "${error.original}" → "${error.correct}"`,
-                      severity: 'high' as const,
-                      startIndex: 0,
-                      endIndex: 0
-                    }));
+                    .filter(error => {
+                      // Check for exact match or case-insensitive match for contractions/apostrophes
+                      const original = error.original.toLowerCase();
+                      const content = cleanContent.toLowerCase();
+                      return content.includes(original) || 
+                             content.includes(original.replace(/'/g, '')) || // Match without apostrophe
+                             content.includes(original.replace(/'/g, "'")) || // Match with different apostrophe
+                             content.includes(original.replace(/'/g, '''));   // Match curly apostrophe
+                    })
+                    .map((error, index) => {
+                      // Determine error type based on the correction
+                      let errorType: 'spelling' | 'grammar' | 'punctuation' = 'spelling';
+                      if (error.original.match(/['']/g) || error.correct.match(/['']/g)) {
+                        errorType = 'punctuation'; // Apostrophe/contraction issues
+                      } else if (error.original.toLowerCase() !== error.correct.toLowerCase()) {
+                        errorType = 'spelling';
+                      } else {
+                        errorType = 'grammar';
+                      }
+                      
+                      return {
+                        id: `ai-grammar-${index}`,
+                        type: errorType,
+                        originalText: error.original,
+                        suggestedText: error.correct,
+                        explanation: `${errorType === 'punctuation' ? 'Punctuation' : errorType === 'grammar' ? 'Grammar' : 'Spelling'} correction: "${error.original}" → "${error.correct}"`,
+                        severity: 'high' as const,
+                        startIndex: 0,
+                        endIndex: 0
+                      };
+                    });
 
                   console.log('✨ Generated AI suggestions:', suggestions);
                   onSuggestionsGenerated(suggestions);
