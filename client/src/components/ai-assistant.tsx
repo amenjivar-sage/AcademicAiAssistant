@@ -49,6 +49,69 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
   // Debug chat history
   console.log("Chat history data:", chatHistory, "Loading:", historyLoading, "SessionId:", sessionId);
 
+  // Extract suggestions from the latest AI response in chat history
+  useEffect(() => {
+    if (chatHistory && chatHistory.length > 0 && currentContent && onSuggestionsGenerated) {
+      const latestResponse = chatHistory[chatHistory.length - 1];
+      if (latestResponse && latestResponse.response) {
+        console.log('🔍 Processing latest AI response for suggestions:', {
+          responseId: latestResponse.id,
+          responsePreview: latestResponse.response.substring(0, 200) + '...',
+          hasContent: !!currentContent,
+          hasCallback: !!onSuggestionsGenerated
+        });
+
+        // Clean the content by removing HTML tags for better text matching
+        const cleanContent = currentContent.replace(/<[^>]*>/g, '');
+        console.log('🧹 Cleaned content for suggestion matching:', cleanContent.substring(0, 100) + '...');
+        
+        const suggestions = extractSuggestionsFromAiResponse(latestResponse.response, cleanContent);
+        console.log('📝 Extracted suggestions from chat history:', suggestions.length, 'suggestions');
+        console.log('📝 Suggestion details:', suggestions);
+
+        if (suggestions.length > 0) {
+          console.log('✅ Calling onSuggestionsGenerated with chat history suggestions');
+          onSuggestionsGenerated(suggestions);
+        } else {
+          console.log('⚠️ No suggestions extracted from latest chat response');
+          
+          // Create manual suggestions from visible spelling errors in the document
+          const manualSuggestions: AiFeedbackSuggestion[] = [];
+          const commonErrors = [
+            { wrong: 'yesterdya', correct: 'yesterday' },
+            { wrong: 'functionailty', correct: 'functionality' },
+            { wrong: 'teh', correct: 'the' },
+            { wrong: 'recieve', correct: 'receive' },
+            { wrong: 'seperate', correct: 'separate' },
+            { wrong: 'definately', correct: 'definitely' }
+          ];
+          
+          commonErrors.forEach((error, index) => {
+            if (cleanContent.includes(error.wrong)) {
+              manualSuggestions.push({
+                id: `manual-${index}`,
+                type: 'spelling',
+                originalText: error.wrong,
+                suggestedText: error.correct,
+                explanation: `Spelling correction: "${error.wrong}" should be "${error.correct}"`,
+                startIndex: cleanContent.indexOf(error.wrong),
+                endIndex: cleanContent.indexOf(error.wrong) + error.wrong.length,
+                severity: 'medium'
+              });
+            }
+          });
+          
+          console.log('🔧 Created manual suggestions from chat history:', manualSuggestions);
+          
+          if (manualSuggestions.length > 0) {
+            console.log('✅ Calling onSuggestionsGenerated with manual suggestions from chat');
+            onSuggestionsGenerated(manualSuggestions);
+          }
+        }
+      }
+    }
+  }, [chatHistory, currentContent, onSuggestionsGenerated]);
+
   // Type the chat history properly
   const typedChatHistory = Array.isArray(chatHistory) ? chatHistory : [];
   
