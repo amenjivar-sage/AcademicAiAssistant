@@ -585,8 +585,7 @@ Text to check: ${cleanContent}`
                       const content = cleanContent.toLowerCase();
                       return content.includes(original) || 
                              content.includes(original.replace(/'/g, '')) || // Match without apostrophe
-                             content.includes(original.replace(/'/g, "'")) || // Match with different apostrophe
-                             content.includes(original.replace(/'/g, '''));   // Match curly apostrophe
+                             content.includes(original.replace(/'/g, "'")); // Match with different apostrophe
                     })
                     .map((error, index) => {
                       // Determine error type based on the correction
