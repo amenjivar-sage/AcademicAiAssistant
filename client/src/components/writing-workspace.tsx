@@ -1303,50 +1303,14 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
         {/* AI Assistant Sidebar */}
         {showAiSidebar && (
           <div className={`${isAiSidebarMinimized ? 'w-16' : 'w-96'} border-l bg-white flex flex-col h-full transition-all duration-300`}>
-            <div className="p-4 border-b">
-              <div className="flex items-center justify-between">
-                {!isAiSidebarMinimized && <h3 className="font-semibold">ZoË</h3>}
-                <div className="flex gap-1">
-                  {!isAiSidebarMinimized && (
-                    <Button
-                      onClick={() => setIsAiSidebarMinimized(true)}
-                      variant="ghost"
-                      size="sm"
-                      title="Minimize ZoË"
-                      className="hover:bg-gray-100"
-                    >
-                      ←
-                    </Button>
-                  )}
-                  {isAiSidebarMinimized && (
-                    <Button
-                      onClick={() => setIsAiSidebarMinimized(false)}
-                      variant="ghost"
-                      size="sm"
-                      title="Expand ZoË"
-                      className="hover:bg-gray-100"
-                    >
-                      →
-                    </Button>
-                  )}
-                  <Button
-                    onClick={() => setShowAiSidebar(false)}
-                    variant="ghost"
-                    size="sm"
-                    title="Close ZoË"
-                    className="hover:bg-gray-100"
-                  >
-                    ×
-                  </Button>
-                </div>
-              </div>
-            </div>
             {!isAiSidebarMinimized && (
               <div className="flex-1 overflow-hidden">
                 <AiAssistant
                   sessionId={sessionId}
                   currentContent={content}
                   onSuggestionsGenerated={handleAiSuggestionsGenerated}
+                  onMinimize={() => setIsAiSidebarMinimized(true)}
+                  onClose={() => setShowAiSidebar(false)}
                 />
               </div>
             )}

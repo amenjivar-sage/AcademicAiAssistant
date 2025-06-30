@@ -358,14 +358,14 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
                   Conversation History
                 </h4>
                 {displayChatHistory.map((interaction: any, index: number) => (
-                  <div key={index} className="space-y-2">
-                    <div className="bg-blue-50 p-3 rounded-lg">
-                      <p className="text-sm font-medium text-blue-900 mb-1">You asked:</p>
-                      <p className="text-sm text-blue-800">{interaction.prompt}</p>
+                  <div key={index} className="space-y-3">
+                    <div className="bg-blue-50 p-4 rounded-lg">
+                      <p className="text-sm font-medium text-blue-900 mb-2">You asked:</p>
+                      <p className="text-sm text-blue-800 leading-relaxed">{interaction.prompt}</p>
                     </div>
-                    <div className="bg-purple-50 p-3 rounded-lg">
-                      <p className="text-sm font-medium text-purple-900 mb-2">ZoË replied:</p>
-                      <div className="text-sm text-purple-800 whitespace-pre-line leading-relaxed bg-white p-3 rounded-lg border w-full">
+                    <div className="bg-purple-50 p-4 rounded-lg">
+                      <p className="text-sm font-medium text-purple-900 mb-3">ZoË replied:</p>
+                      <div className="text-sm text-purple-800 whitespace-pre-line leading-relaxed bg-white p-4 rounded-lg border w-full">
                         {interaction.response}
                       </div>
                     </div>
@@ -428,7 +428,7 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
           </div>
         </TabsContent>
 
-        <TabsContent value="prompts" className="overflow-y-auto" style={{ height: 'calc(100vh - 260px)', padding: '12px' }}>
+        <TabsContent value="prompts" className="overflow-y-auto" style={{ height: 'calc(100vh - 180px)', padding: '12px' }}>
           <h4 className="font-medium text-gray-700 mb-3 text-sm">Quick Writing Help</h4>
           
 
@@ -504,9 +504,26 @@ export default function AiAssistant({ sessionId, currentContent, onSuggestionsGe
 
       </Tabs>
       
-      {/* AI Disclosure */}
-      <div className="mt-4">
-        <AiDisclosure variant="compact" />
+      {/* Collapsible AI Disclosure */}
+      <div className="border-t bg-gray-50">
+        <Button
+          onClick={() => setIsDisclosureCollapsed(!isDisclosureCollapsed)}
+          variant="ghost"
+          size="sm"
+          className="w-full flex items-center justify-between p-2 h-auto"
+        >
+          <span className="text-xs text-gray-600">AI Disclosure</span>
+          {isDisclosureCollapsed ? (
+            <ChevronDown className="h-3 w-3 text-gray-400" />
+          ) : (
+            <ChevronUp className="h-3 w-3 text-gray-400" />
+          )}
+        </Button>
+        {!isDisclosureCollapsed && (
+          <div className="px-3 pb-3">
+            <AiDisclosure variant="compact" />
+          </div>
+        )}
       </div>
     </div>
   );
