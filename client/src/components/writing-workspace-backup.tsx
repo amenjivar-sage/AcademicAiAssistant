@@ -81,13 +81,13 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     
     // Remove the suggestion from the list
     setAiSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
-  }, [content, setContent, setIsUserTyping, lastTypingTime, typingTimeoutRef, setAiSuggestions]);
+  }, [content]);
   
   // Handle dismissing AI suggestions
   const handleDismissSuggestion = useCallback((suggestionId: string) => {
     console.log('❌ Dismissing suggestion:', suggestionId);
     setAiSuggestions(prev => prev.filter(s => s.id !== suggestionId));
-  }, [setAiSuggestions]);
+  }, []);
 
   // Function to highlight text that has teacher comments
   const highlightCommentedText = (content: string, comments: any[]): string => {
