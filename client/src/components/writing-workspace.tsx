@@ -462,6 +462,11 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   // AI Suggestion handlers
   const handleAiSuggestionsGenerated = useCallback((suggestions: any[]) => {
     console.log('📝 Received AI suggestions in WritingWorkspace:', suggestions);
+    
+    // Clear any existing suggestions first to avoid conflicts
+    setAiSuggestions([]);
+    
+    // Add new suggestions
     setAiSuggestions(suggestions);
     setShowAiSuggestions(true);
     toast({
@@ -495,6 +500,25 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   const handleCloseSuggestions = useCallback(() => {
     setShowAiSuggestions(false);
   }, []);
+
+  const handleClearAllSuggestions = useCallback(() => {
+    console.log('🧹 Manually clearing all AI suggestions and highlights');
+    
+    // Clear AI suggestions
+    setAiSuggestions([]);
+    setShowAiSuggestions(false);
+    
+    // Remove all yellow highlighting from content
+    const cleanContent = content.replace(
+      /<span[^>]*style="background-color:\s*rgb\(254,\s*243,\s*199\)[^"]*"[^>]*>(.*?)<\/span>/gi,
+      '$1'
+    );
+    
+    if (cleanContent !== content) {
+      console.log('🧹 Removing old highlights from content');
+      setContent(cleanContent);
+    }
+  }, [content]);
 
   // Auto-filter AI suggestions when content changes (remove suggestions for corrected words)
   useEffect(() => {
@@ -788,6 +812,16 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                 Saved {lastSaved.toLocaleTimeString()}
               </div>
             )}
+            
+            <Button 
+              onClick={handleClearAllSuggestions}
+              variant="outline" 
+              size="sm" 
+              className="gap-2"
+              title="Clear all AI suggestions and highlights"
+            >
+              Clear Highlights
+            </Button>
             
             <Dialog>
               <DialogTrigger asChild>
