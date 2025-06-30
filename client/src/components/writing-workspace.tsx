@@ -487,11 +487,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     // Add new suggestions
     setAiSuggestions(suggestions);
     setShowAiSuggestions(true);
-    toast({
-      title: "AI Suggestions Available",
-      description: `${suggestions.length} writing suggestions generated.`,
-    });
-  }, [toast]);
+  }, []);
 
   const handleApplyAllSuggestions = useCallback(async () => {
     console.log('✅ Applying all suggestions');
@@ -520,7 +516,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   }, []);
 
   const handleClearAllSuggestions = useCallback(() => {
-    console.log('🧹 Manually clearing all AI suggestions and highlights');
+    console.log('🧹 Manually clearing all AI suggestions, highlights, and chat history');
     
     // Clear AI suggestions
     setAiSuggestions([]);
@@ -536,7 +532,18 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       console.log('🧹 Removing old highlights from content');
       setContent(cleanContent);
     }
-  }, [content]);
+    
+    // Clear chat history to prevent repeated grammar checks
+    if (sessionId && queryClient) {
+      console.log('🧹 Clearing chat history for session:', sessionId);
+      queryClient.setQueryData([`/api/session/${sessionId}/interactions`], []);
+    }
+    
+    toast({
+      title: "Cleared",
+      description: "All AI suggestions and highlights have been removed.",
+    });
+  }, [content, sessionId, queryClient, toast]);
 
   // Auto-clear old AI suggestions when content changes significantly
   useEffect(() => {
