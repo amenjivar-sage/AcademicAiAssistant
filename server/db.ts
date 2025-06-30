@@ -10,7 +10,7 @@ if (!process.env.DATABASE_URL) {
 
 export const pool = new Pool({ 
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL?.includes('neon.tech') ? { rejectUnauthorized: false } : false,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
   max: 10, // Reduced from 20 to be more conservative
   idleTimeoutMillis: 30000, // Reduced from 60000
   connectionTimeoutMillis: 10000,

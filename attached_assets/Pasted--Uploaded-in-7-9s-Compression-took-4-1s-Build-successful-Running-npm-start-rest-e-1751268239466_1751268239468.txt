@@ -1,0 +1,63 @@
+==> Uploaded in 7.9s. Compression took 4.1s
+==> Build successful 🎉
+==> Running 'npm start'
+> rest-express@1.0.0 start
+> NODE_ENV=production node dist/index.js
+Running database migrations...
+Migration failed: error: SSL/TLS required
+    at /opt/render/project/src/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async withRetry (file:///opt/render/project/src/dist/index.js:1188:14)
+    at async runMigrations (file:///opt/render/project/src/dist/index.js:3897:5)
+    at async file:///opt/render/project/src/dist/index.js:4109:3 {
+  length: 37,
+  severity: 'FATAL',
+  code: '28000',
+  detail: undefined,
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: undefined,
+  line: undefined,
+  routine: undefined
+}
+node:internal/process/promises:394
+    triggerUncaughtException(err, true /* fromPromise */);
+    ^
+error: SSL/TLS required
+    at /opt/render/project/src/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async withRetry (file:///opt/render/project/src/dist/index.js:1188:14)
+    at async runMigrations (file:///opt/render/project/src/dist/index.js:3897:5)
+    at async file:///opt/render/project/src/dist/index.js:4109:3 {
+  length: 37,
+  severity: 'FATAL',
+  code: '28000',
+  detail: undefined,
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: undefined,
+  line: undefined,
+  routine: undefined
+}
+Node.js v22.16.0
+==> No open ports detected, continuing to scan...
+==> Docs on specifying a port: https://render.com/docs/web-services#port-binding
+==> Exited with status 1
+==> Common ways to troubleshoot your deploy: https://render.com/docs/troubleshooting-deploys
+==> Running 'npm start'
