@@ -740,65 +740,52 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
           return;
         }
         
-        console.log('Looking for pasted text in document:', pastedText.substring(0, 100));
+        console.log('Processing paste:', pastedText);
         
-        // Clean up both the document and pasted text for matching
-        const cleanDocument = result.replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
-        const cleanPasted = pastedText.replace(/\s+/g, ' ').trim();
+        // Split pasted text into sentences/paragraphs and match them individually
+        const pastedSentences = pastedText.split(/\n\n|\. /).filter((s: string) => s.trim().length > 0);
         
-        console.log('Clean document:', cleanDocument.substring(0, 200));
-        console.log('Clean pasted:', cleanPasted.substring(0, 100));
-        
-        // If the pasted text exists in the document, highlight it
-        if (cleanDocument.includes(cleanPasted)) {
-          console.log('✓ Found pasted text in document, highlighting');
+        pastedSentences.forEach((sentence: string) => {
+          const cleanSentence = sentence.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
           
-          // Now find the actual text in the HTML version and highlight it
-          // We need to match the text while preserving HTML formatting
-          const words = cleanPasted.split(/\s+/);
-          
-          // Create a pattern that matches the text with possible HTML tags in between
-          let pattern = '';
-          for (let i = 0; i < words.length; i++) {
-            const word = words[i].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            pattern += word;
-            if (i < words.length - 1) {
-              // Allow HTML tags and whitespace between words
-              pattern += '(?:<[^>]*>)*\\s+(?:<[^>]*>)*';
+          if (cleanSentence.length > 10) {
+            console.log('Looking for sentence in content:', cleanSentence.substring(0, 50) + '...');
+            
+            // Strategy 1: Try exact matching first
+            if (result.includes(cleanSentence)) {
+              console.log('✓ Found exact sentence match');
+              result = result.replace(cleanSentence, `<span style="background-color: #fee2e2; border: 2px solid #dc2626; padding: 2px 4px; border-radius: 3px; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected on ${new Date(paste.timestamp).toLocaleString()}">${cleanSentence}</span>`);
+              return;
             }
-          }
-          
-          console.log('Created regex pattern:', pattern);
-          
-          try {
-            const regex = new RegExp(`(${pattern})`, 'gi');
-            console.log('Testing regex against content...');
             
-            const matches = result.match(regex);
-            console.log('Regex matches:', matches);
-            
-            if (matches) {
-              result = result.replace(regex, (match) => {
-                // Don't double-highlight
-                if (match.includes('background-color: #fecaca')) {
-                  console.log('Skipping already highlighted content');
-                  return match;
-                }
+            // Strategy 2: Look for distinctive word sequences (3-5 words)
+            const words = cleanSentence.split(/\s+/).filter((w: string) => w.length > 2);
+            if (words.length >= 4) {
+              for (let i = 0; i <= words.length - 4; i++) {
+                const phrase = words.slice(i, i + 4).join(' ');
+                const phraseWords = phrase.split(' ').map((w: string) => w.replace(/[^\w]/g, '')).filter((w: string) => w.length > 0);
                 
-                console.log('✓ Highlighting match:', match.substring(0, 100));
-                return `<span style="background-color: #fecaca; border: 2px solid #f87171; color: #991b1b; font-weight: 600; padding: 2px 4px; border-radius: 3px;" title="Copy-pasted content detected">${match}</span>`;
-              });
-              
-              console.log('✓ Highlighted pasted content');
-            } else {
-              console.log('✗ No regex matches found');
+                if (phraseWords.length >= 3) {
+                  // Create a flexible pattern that allows for minor variations
+                  const pattern = phraseWords.map((word: string) => 
+                    word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+                  ).join('\\s+\\w*\\s*');
+                  
+                  const regex = new RegExp(`\\b${pattern}\\b`, 'gi');
+                  const matches = result.match(regex);
+                  
+                  if (matches && matches.length > 0) {
+                    console.log('✓ Found phrase match:', matches[0]);
+                    result = result.replace(regex, (match: string) => {
+                      return `<span style="background-color: #fee2e2; border: 2px solid #dc2626; padding: 2px 4px; border-radius: 3px; color: #991b1b; font-weight: 600;" title="Copy-pasted phrase detected on ${new Date(paste.timestamp).toLocaleString()}">${match}</span>`;
+                    });
+                    break; // Only highlight one match per phrase to avoid over-highlighting
+                  }
+                }
+              }
             }
-          } catch (e) {
-            console.log('Regex error:', e);
           }
-        } else {
-          console.log('✗ Pasted text not found in document');
-        }
+        });
       }
     });
 
