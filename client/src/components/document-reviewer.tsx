@@ -277,22 +277,8 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                     >
                       {renderContentWithHighlights()}
                     </div>
-                    
-                    {/* Floating Comment Form */}
-                    {showCommentForm && selectedText && (
-                      <div 
-                        className="fixed z-50 bg-white border border-blue-200 rounded-lg shadow-lg p-4 w-80 max-h-72 overflow-y-auto"
-                        style={{
-                          left: `${selectedText.x}px`,
-                          top: `${selectedText.y}px`,
-                          maxWidth: '320px',
-                          maxHeight: '280px'
-                        }}
-                      >
-                        <div className="space-y-3">
-                          <div className="bg-blue-50 p-2 rounded text-sm">
-                            <strong>Selected:</strong> "{selectedText.text}"
-                          </div>
+                  </div>
+                </TabsContent>
                           
                           <Form {...commentForm}>
                             <form onSubmit={commentForm.handleSubmit(handleAddComment)} className="space-y-3">
