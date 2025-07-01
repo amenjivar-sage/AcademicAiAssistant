@@ -84,6 +84,7 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
       // Get position of selection for floating comment form
       const rect = range.getBoundingClientRect();
       const containerRect = contentRef.current!.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
       
       // Calculate position relative to the content
       const preCaretRange = range.cloneRange();
@@ -92,12 +93,43 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
       const startIndex = preCaretRange.toString().length;
       const endIndex = startIndex + selectedText.length;
 
+      // Calculate optimal position with viewport boundary checking
+      const commentPanelHeight = 280; // Estimated height of comment panel
+      const commentPanelWidth = 320; // Width of comment panel (w-80)
+      
+      // Start with default positioning to the right and below selection
+      let x = rect.right + 10;
+      let y = rect.top;
+      
+      // Check if panel would go beyond viewport bottom
+      const panelBottomY = rect.top + commentPanelHeight;
+      if (panelBottomY > viewportHeight - 50) { // 50px padding from bottom
+        // Position above the selection instead
+        y = rect.top - commentPanelHeight - 10;
+        
+        // If still too high, position it at a safe distance from top
+        if (y < 0) {
+          y = Math.max(10, viewportHeight - commentPanelHeight - 10);
+        }
+      }
+      
+      // Check if panel would go beyond viewport right edge
+      if (rect.right + commentPanelWidth > window.innerWidth - 20) {
+        // Position to the left of selection
+        x = rect.left - commentPanelWidth - 10;
+        
+        // If still too far left, position it safely within viewport
+        if (x < 0) {
+          x = Math.max(10, window.innerWidth - commentPanelWidth - 20);
+        }
+      }
+
       setSelectedText({
         text: selectedText,
         start: startIndex,
         end: endIndex,
-        x: rect.right - containerRect.left + 10, // Position to the right of selection
-        y: rect.top - containerRect.top,
+        x: x,
+        y: y,
       });
       setShowCommentForm(true);
     }
@@ -249,11 +281,11 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                     {/* Floating Comment Form */}
                     {showCommentForm && selectedText && (
                       <div 
-                        className="absolute z-10 bg-white border border-blue-200 rounded-lg shadow-lg p-4 w-80"
+                        className="fixed z-50 bg-white border border-blue-200 rounded-lg shadow-lg p-4 w-80 max-h-72"
                         style={{
                           left: `${selectedText.x}px`,
                           top: `${selectedText.y}px`,
-                          transform: selectedText.x > 400 ? 'translateX(-100%)' : 'translateX(0)'
+                          maxWidth: '320px'
                         }}
                       >
                         <div className="space-y-3">
