@@ -547,6 +547,7 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
               }
             }
           });
+          }
         }
       }
     });
