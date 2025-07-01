@@ -718,77 +718,88 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
   // Simple function to highlight pasted content in red
   const highlightPastedContentSimple = (content: string): string => {
     if (!session.pastedContent || !Array.isArray(session.pastedContent) || session.pastedContent.length === 0) {
+      console.log('No pasted content found');
       return content;
     }
 
+    console.log('=== SIMPLE PASTE TRACKING START ===');
+    console.log('🔍 NEW SIMPLE HIGHLIGHTER CALLED 🔍');
+    console.log('Pasted content:', session.pastedContent);
+    console.log('Document content to process:', content.substring(0, 200));
+
     let result = content;
     
-    console.log('Highlighting pasted content. Session pasted content:', session.pastedContent);
-    console.log('Document content:', content);
-    
-    // Apply red highlighting to each pasted segment
+    // For each thing that was pasted, find it in the document and highlight it
     session.pastedContent.forEach((paste: any) => {
-      if (paste.text && paste.text.trim()) {
-        console.log('Processing paste:', paste.text);
+      if (paste && paste.text && typeof paste.text === 'string') {
+        const pastedText = paste.text.trim();
         
-        // Split pasted text into sentences/paragraphs and match them individually
-        const pastedSentences = paste.text.split(/\n\n|\. /).filter((s: string) => s.trim().length > 0);
+        // Skip very short pastes (likely accidental or spell corrections)
+        if (pastedText.length < 15) {
+          console.log('Skipping short paste:', pastedText);
+          return;
+        }
         
-        pastedSentences.forEach((sentence: string) => {
-          const cleanSentence = sentence.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
+        console.log('Looking for pasted text in document:', pastedText.substring(0, 100));
+        
+        // Clean up both the document and pasted text for matching
+        const cleanDocument = result.replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ');
+        const cleanPasted = pastedText.replace(/\s+/g, ' ').trim();
+        
+        // If the pasted text exists in the document, highlight it
+        if (cleanDocument.includes(cleanPasted)) {
+          console.log('✓ Found pasted text in document, highlighting');
           
-          if (cleanSentence.length > 10) {
-            console.log('Looking for sentence in content:', cleanSentence.substring(0, 50) + '...');
-            
-            // Strategy 1: Try exact matching first
-            if (result.includes(cleanSentence)) {
-              console.log('✓ Found exact sentence match');
-              result = result.replace(cleanSentence, `<span style="background-color: #fee2e2; border: 2px solid #dc2626; padding: 2px 4px; border-radius: 3px; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected on ${new Date(paste.timestamp).toLocaleString()}">${cleanSentence}</span>`);
-              return;
+          // Now find the actual text in the HTML version and highlight it
+          // We need to match the text while preserving HTML formatting
+          const words = cleanPasted.split(/\s+/);
+          
+          // Create a pattern that matches the text with possible HTML tags in between
+          let pattern = '';
+          for (let i = 0; i < words.length; i++) {
+            const word = words[i].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            pattern += word;
+            if (i < words.length - 1) {
+              // Allow HTML tags and whitespace between words
+              pattern += '(?:<[^>]*>)*\\s+(?:<[^>]*>)*';
             }
-            
-            // Strategy 2: Look for distinctive word sequences (3-5 words)
-            const words = cleanSentence.split(/\s+/).filter(w => w.length > 2);
-            if (words.length >= 4) {
-              for (let i = 0; i <= words.length - 4; i++) {
-                const phrase = words.slice(i, i + 4).join(' ');
-                const phraseWords = phrase.split(' ').map(w => w.replace(/[^\w]/g, '')).filter(w => w.length > 0);
-                
-                if (phraseWords.length >= 3) {
-                  // Create a flexible pattern that allows for minor variations
-                  const pattern = phraseWords.map(word => 
-                    word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-                  ).join('\\s+\\w*\\s*');
-                  
-                  const regex = new RegExp(`\\b${pattern}\\b`, 'gi');
-                  const matches = result.match(regex);
-                  
-                  if (matches && matches.length > 0) {
-                    console.log('✓ Found phrase match:', matches[0]);
-                    result = result.replace(regex, (match) => {
-                      return `<span style="background-color: #fee2e2; border: 2px solid #dc2626; padding: 2px 4px; border-radius: 3px; color: #991b1b; font-weight: 600;" title="Copy-pasted phrase detected on ${new Date(paste.timestamp).toLocaleString()}">${match}</span>`;
-                    });
-                    break; // Only highlight one match per phrase to avoid over-highlighting
-                  }
-                }
-              }
-            }
-            
-            // Strategy 3: Individual distinctive words (fallback)
-            const distinctiveWords = words.filter(word => 
-              word.length > 6 && 
-              !/^(the|and|that|this|with|from|they|have|will|been|were|said|each|which|their|time|about|after|before|here|when|where|why|how|all|any|may|had|has|was|his|her|him|she|you|can|now|get|way|use|man|new|just|old|see|come|make|many|over|such|take|than|only|think|know|work|life|also|back|little|good|right|still|way|even|another|while|because|without|since|against|around|between)$/i.test(word)
-            ).slice(0, 3);
-            
-            // Individual word highlighting disabled to prevent spell-check false positives
-            // Instead, focus only on phrase-level detection (5+ consecutive words)
-            console.log('Individual word highlighting disabled - only detecting substantial phrases');
           }
-        });
+          
+          console.log('Created regex pattern:', pattern);
+          
+          try {
+            const regex = new RegExp(`(${pattern})`, 'gi');
+            console.log('Testing regex against content...');
+            
+            const matches = result.match(regex);
+            console.log('Regex matches:', matches);
+            
+            if (matches) {
+              result = result.replace(regex, (match) => {
+                // Don't double-highlight
+                if (match.includes('background-color: #fecaca')) {
+                  console.log('Skipping already highlighted content');
+                  return match;
+                }
+                
+                console.log('✓ Highlighting match:', match.substring(0, 100));
+                return `<span style="background-color: #fecaca; border: 2px solid #f87171; color: #991b1b; font-weight: 600; padding: 2px 4px; border-radius: 3px;" title="Copy-pasted content detected">${match}</span>`;
+              });
+              
+              console.log('✓ Highlighted pasted content');
+            } else {
+              console.log('✗ No regex matches found');
+            }
+          } catch (e) {
+            console.log('Regex error:', e);
+          }
+        } else {
+          console.log('✗ Pasted text not found in document');
+        }
       }
     });
 
-    console.log('Final highlighted result:', result);
+    console.log('=== SIMPLE PASTE TRACKING END ===');
     return result;
   };
 
@@ -875,7 +886,7 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
     if (!session.content) return <p className="text-gray-500">No content available</p>;
 
     // First apply red highlighting for copy-pasted content using simple approach
-    let contentWithPasteHighlights = highlightPastedContent(session.content, session.pastedContent || []);
+    let contentWithPasteHighlights = highlightPastedContentSimple(session.content);
     
     // Add page breaks for teachers to see page count
     contentWithPasteHighlights = addPageBreaksForTeacher(contentWithPasteHighlights);
