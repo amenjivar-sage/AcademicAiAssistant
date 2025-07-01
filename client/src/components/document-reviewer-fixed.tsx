@@ -3,6 +3,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { highlightPastedContent } from './simple-paste-highlighter';
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -873,8 +874,8 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
   const renderContentWithHighlights = () => {
     if (!session.content) return <p className="text-gray-500">No content available</p>;
 
-    // First apply red highlighting for copy-pasted content
-    let contentWithPasteHighlights = highlightPastedContentSimple(session.content);
+    // First apply red highlighting for copy-pasted content using simple approach
+    let contentWithPasteHighlights = highlightPastedContent(session.content, session.pastedContent || []);
     
     // Add page breaks for teachers to see page count
     contentWithPasteHighlights = addPageBreaksForTeacher(contentWithPasteHighlights);
