@@ -288,7 +288,17 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
         return item.text || item.content || item.value || '';
       }
       return '';
-    }).filter((pastedText: string) => pastedText && pastedText.length > 10);
+    }).filter((pastedText: string) => {
+      // Filter out spell-check related content - look for patterns that indicate single word corrections
+      if (!pastedText || pastedText.length <= 10) return false;
+      
+      // Exclude very short texts that are likely spell corrections
+      const words = pastedText.trim().split(/\s+/);
+      if (words.length <= 2) return false;
+      
+      // Only include substantial content that's likely to be external copy-paste
+      return pastedText.length > 20;
+    });
 
     console.log('Extracted pasted texts:', pastedTexts);
 
@@ -303,12 +313,24 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
         console.log('Processing pasted text:', pastedText);
         console.log('Current document content:', result);
         
-        // Try exact match first
-        if (result.includes(pastedText)) {
-          const escapedText = pastedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-          const regex = new RegExp(escapedText, 'gi');
-          result = result.replace(regex, `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected">${pastedText}</span>`);
-          console.log('✓ Applied exact match highlighting for:', pastedText.substring(0, 50));
+        // Try case-insensitive exact match first  
+        const lowerDocument = result.toLowerCase();
+        const lowerPasted = pastedText.toLowerCase();
+        
+        if (lowerDocument.includes(lowerPasted)) {
+          // Find the exact position and match case in original document
+          const startIndex = lowerDocument.indexOf(lowerPasted);
+          if (startIndex !== -1) {
+            const actualText = result.substring(startIndex, startIndex + pastedText.length);
+            const beforeText = result.substring(0, startIndex);
+            const afterText = result.substring(startIndex + pastedText.length);
+            
+            result = beforeText + 
+              `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected">${actualText}</span>` + 
+              afterText;
+            
+            console.log('✓ Applied case-insensitive exact match highlighting for:', pastedText.substring(0, 50));
+          }
         } else {
           // Try comprehensive phrase matching for complete detection
           console.log('No exact match - trying phrase detection for:', pastedText.substring(0, 100));
@@ -435,15 +457,18 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                         if (cleanPastedWord === docWord) {
                           exactMatches += 1;
                         }
-                        // Only check for non-spell-check related similarities
+                        // Enhanced spell-check detection to prevent false positives
                         else if (cleanPastedWord.length >= 3 && docWord.length >= 3) {
-                          // Skip obvious spell check corrections to avoid false positives
+                          // Comprehensive spell check detection
                           const commonSpellCheckPairs = [
                             ['mispelled', 'misspelled'], ['recieve', 'receive'], ['seperate', 'separate'],
                             ['definately', 'definitely'], ['occured', 'occurred'], ['necesary', 'necessary'],
                             ['beleive', 'believe'], ['freind', 'friend'], ['wierd', 'weird'],
                             ['teh', 'the'], ['adn', 'and'], ['wich', 'which'], ['alot', 'a lot'],
-                            ['there', 'their'], ['your', 'you\'re'], ['its', 'it\'s']
+                            ['there', 'their'], ['your', 'you\'re'], ['its', 'it\'s'],
+                            ['writting', 'writing'], ['workin', 'working'], ['goin', 'going'],
+                            ['doin', 'doing'], ['comin', 'coming'], ['somethin', 'something'],
+                            ['nothin', 'nothing'], ['anythin', 'anything'], ['everythin', 'everything']
                           ];
                           
                           // Check if this is a known spell check correction pair
@@ -452,13 +477,18 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                             (cleanPastedWord === right && docWord === wrong)
                           );
                           
+                          // Additional check: single character differences that indicate spell corrections
+                          const isLikelySpellCorrection = Math.abs(cleanPastedWord.length - docWord.length) <= 1 &&
+                            cleanPastedWord.substring(0, Math.min(3, cleanPastedWord.length)) === 
+                            docWord.substring(0, Math.min(3, docWord.length));
+                          
                           // Only count as similarity match if it's NOT a spell check correction
-                          if (!isSpellCheckCorrection) {
+                          if (!isSpellCheckCorrection && !isLikelySpellCorrection) {
                             const rootMatch = cleanPastedWord.substring(0, 3) === docWord.substring(0, 3) &&
                                             Math.abs(cleanPastedWord.length - docWord.length) <= 2;
                             
                             if (rootMatch) {
-                              closeMatches += 0.5; // Reduced weight for non-spell-check similarities
+                              closeMatches += 0.3; // Further reduced weight to minimize false positives
                             }
                           }
                         }
@@ -471,10 +501,11 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                     console.log('Match analysis for sentence:', docSentTrimmed, 
                                'Exact:', exactMatches, 'Close:', closeMatches, 'Percentage:', matchPercentage);
                     
-                    // Stricter criteria to reduce false positives from spell-checked content
-                    const meetsThreshold = matchPercentage >= 0.75; // Require 75% similarity (increased from 60%)
-                    const hasEnoughExactMatches = exactMatches >= Math.max(3, Math.floor(pastedWords.length * 0.60)); // Require 60% exact matches (increased from 40%)
-                    const hasMinLength = pastedWords.length >= 5 && docWords.length >= 5; // Require longer sentences
+                    // Much stricter criteria to eliminate spell-check false positives
+                    const meetsThreshold = matchPercentage >= 0.85; // Require 85% similarity (increased from 75%)
+                    const hasEnoughExactMatches = exactMatches >= Math.max(4, Math.floor(pastedWords.length * 0.75)); // Require 75% exact matches (increased from 60%)
+                    const hasMinLength = pastedWords.length >= 6 && docWords.length >= 6; // Require longer sentences
+                    const hasSubstantialContent = pastedWords.length >= 8; // Must be substantial content, not just a few words
                     
                     console.log('Criteria check for:', docSentTrimmed);
                     console.log('- Meets threshold (60%):', meetsThreshold, matchPercentage);
@@ -490,7 +521,7 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                       totalMatchedWords += exactMatches + (closeMatches * 0.5);
                     }
                     
-                    if (meetsThreshold && hasEnoughExactMatches && hasMinLength) {
+                    if (meetsThreshold && hasEnoughExactMatches && hasMinLength && hasSubstantialContent) {
                       console.log('✓ All criteria met, proceeding with highlighting checks for:', docSentTrimmed.substring(0, 100));
                       
                       try {
