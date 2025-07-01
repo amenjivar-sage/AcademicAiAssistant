@@ -140,10 +140,32 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
     });
   };
 
+  // Delete comment mutation
+  const deleteCommentMutation = useMutation({
+    mutationFn: async (commentId: string) => {
+      const response = await apiRequest("DELETE", `/api/sessions/${session.id}/comments/${commentId}`);
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/sessions/${session.id}/comments`] });
+      setActiveComment(null);
+      toast({
+        title: "Comment Deleted",
+        description: "The feedback comment has been removed.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete comment. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
   // Remove a comment
   const handleRemoveComment = (commentId: string) => {
-    setComments(prev => prev.filter(c => c.id !== commentId));
-    setActiveComment(null);
+    deleteCommentMutation.mutate(commentId);
   };
 
   // Render content with highlights
@@ -281,17 +303,33 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                                 )}
                               />
                               <div className="flex gap-2">
-                                <Button type="submit" size="sm" className="flex-1">
-                                  <Plus className="h-3 w-3 mr-1" />
-                                  Save
+                                <Button 
+                                  type="submit" 
+                                  size="sm" 
+                                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+                                  disabled={addCommentMutation.isPending}
+                                >
+                                  {addCommentMutation.isPending ? (
+                                    <>
+                                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
+                                      Saving...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Plus className="h-3 w-3 mr-1" />
+                                      Save Comment
+                                    </>
+                                  )}
                                 </Button>
                                 <Button
                                   type="button"
                                   variant="outline"
                                   size="sm"
+                                  disabled={addCommentMutation.isPending}
                                   onClick={() => {
                                     setShowCommentForm(false);
                                     setSelectedText(null);
+                                    commentForm.reset();
                                     window.getSelection()?.removeAllRanges();
                                   }}
                                 >
