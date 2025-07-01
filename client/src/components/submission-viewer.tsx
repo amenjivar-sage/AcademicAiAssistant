@@ -92,39 +92,51 @@ export default function SubmissionViewer({ sessionId, onClose }: SubmissionViewe
         if (contentIndex === -1) {
           // Try fuzzy matching for spell-corrected content
           // Split pasted text into words and find sequences
-          const pastedWords = pastedText.split(/\s+/).filter(word => word.length > 3);
+          const pastedWords = pastedText.split(/\s+/).filter(word => word.length > 2);
           
           if (pastedWords.length >= 2) {
             // Look for sequences of at least 2 words from the paste
             for (let i = 0; i < pastedWords.length - 1; i++) {
-              const wordSequence = pastedWords.slice(i, i + Math.min(4, pastedWords.length - i)).join('\\s+');
-              const regex = new RegExp(wordSequence.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
-              const match = content.match(regex);
+              const wordSequence = pastedWords.slice(i, i + Math.min(3, pastedWords.length - i)).join('\\s+');
+              const regex = new RegExp(wordSequence.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+              let match;
               
-              if (match && match.index !== undefined) {
-                // Found a word sequence, highlight the broader context
+              while ((match = regex.exec(content)) !== null) {
+                // Found a word sequence, highlight just the matched portion
                 const sequenceStart = match.index;
                 const sequenceEnd = match.index + match[0].length;
                 
-                // Expand to include more context around the match
-                const expandedStart = Math.max(0, sequenceStart - 50);
-                const expandedEnd = Math.min(content.length, sequenceEnd + 50);
-                
                 highlights.push({
-                  start: expandedStart,
-                  end: expandedEnd,
+                  start: sequenceStart,
+                  end: sequenceEnd,
                   type: 'paste',
-                  text: content.slice(expandedStart, expandedEnd)
+                  text: content.slice(sequenceStart, sequenceEnd)
                 });
                 
                 console.log(`Added fuzzy highlight for paste ${index}:`, {
                   originalText: pastedText.substring(0, 50) + '...',
                   matchedSequence: match[0],
-                  start: expandedStart,
-                  end: expandedEnd
+                  start: sequenceStart,
+                  end: sequenceEnd
                 });
-                break;
               }
+            }
+            
+            // Also try matching distinctive phrases like "Equity & Fairness"
+            const phrases = pastedText.match(/[A-Z][a-z]+\s*[&]\s*[A-Z][a-z]+|[A-Z][a-z]+\s+[a-z]+\s+[a-z]+\s+[a-z]+/g);
+            if (phrases) {
+              phrases.forEach(phrase => {
+                const phraseIndex = content.toLowerCase().indexOf(phrase.toLowerCase());
+                if (phraseIndex !== -1) {
+                  highlights.push({
+                    start: phraseIndex,
+                    end: phraseIndex + phrase.length,
+                    type: 'paste',
+                    text: phrase
+                  });
+                  console.log(`Added phrase highlight:`, phrase);
+                }
+              });
             }
           }
         } else {
@@ -277,10 +289,9 @@ export default function SubmissionViewer({ sessionId, onClose }: SubmissionViewe
                 <Card>
                   <CardContent className="p-4">
                     {session.content ? (
-                      <div 
-                        className="whitespace-pre-wrap prose max-w-none"
-                        dangerouslySetInnerHTML={{ __html: session.content }}
-                      />
+                      <div className="prose max-w-none">
+                        {renderContentWithHighlights(session.content, session.pastedContent || [])}
+                      </div>
                     ) : (
                       <p className="text-gray-500 italic">No content submitted</p>
                     )}
