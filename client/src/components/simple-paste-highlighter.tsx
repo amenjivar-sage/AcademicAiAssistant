@@ -5,8 +5,9 @@ export function highlightPastedContent(content: string, pastedContent: any[]): s
     return content;
   }
 
-  console.log('=== SIMPLE PASTE TRACKING ===');
+  console.log('=== SIMPLE PASTE TRACKING START ===');
   console.log('Pasted content:', pastedContent);
+  console.log('Document content to process:', content.substring(0, 200));
 
   let result = content;
   
