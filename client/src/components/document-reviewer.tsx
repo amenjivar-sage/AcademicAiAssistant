@@ -19,7 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MessageCircle, X, Plus, Edit3, Bot } from "lucide-react";
+import { MessageCircle, X, Plus, Edit3, Bot, GripHorizontal } from "lucide-react";
 import AiChatViewer from "./ai-chat-viewer";
 import type { WritingSession } from "@shared/schema";
 
@@ -278,20 +278,40 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                       {renderContentWithHighlights()}
                     </div>
                     
-                    {/* Floating Comment Form */}
+                    {/* Floating Comment Form - Compact & Repositioned */}
                     {showCommentForm && selectedText && (
                       <div 
-                        className="absolute z-50 bg-white border border-blue-200 rounded-lg shadow-lg p-4 w-80 max-h-72 overflow-y-auto"
+                        className="fixed z-50 bg-white border border-blue-200 rounded-lg shadow-xl w-80 resize overflow-hidden"
                         style={{
-                          left: `${selectedText.x}px`,
-                          top: `${selectedText.y}px`,
+                          left: `${Math.min(selectedText.x, window.innerWidth - 340)}px`,
+                          top: `${Math.max(10, Math.min(selectedText.y, window.innerHeight - 200))}px`,
                           maxWidth: '320px',
-                          maxHeight: '280px'
+                          minHeight: '180px',
+                          maxHeight: '300px'
                         }}
                       >
-                        <div className="space-y-3">
-                          <div className="bg-blue-50 p-2 rounded text-sm">
-                            <strong>Selected:</strong> "{selectedText.text}"
+                        {/* Header */}
+                        <div className="bg-blue-50 px-3 py-2 border-b flex items-center justify-between">
+                          <div className="text-xs text-blue-700 font-medium">Add Feedback</div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0"
+                            onClick={() => {
+                              setShowCommentForm(false);
+                              setSelectedText(null);
+                              window.getSelection()?.removeAllRanges();
+                            }}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                        
+                        {/* Content */}
+                        <div className="p-3 space-y-3">
+                          <div className="bg-gray-50 p-2 rounded text-xs">
+                            <strong>Selected:</strong> "{selectedText.text.length > 50 ? selectedText.text.substring(0, 50) + '...' : selectedText.text}"
                           </div>
                           
                           <Form {...commentForm}>
@@ -304,7 +324,7 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                                     <FormControl>
                                       <Textarea
                                         placeholder="Add your feedback here..."
-                                        className="min-h-16 text-sm"
+                                        className="min-h-16 text-sm resize-none"
                                         autoFocus
                                         {...field}
                                       />
@@ -313,26 +333,17 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                                   </FormItem>
                                 )}
                               />
-                              <div className="flex gap-2">
-                                <Button type="submit" size="sm" className="flex-1">
-                                  <Plus className="h-3 w-3 mr-1" />
-                                  Save
-                                </Button>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => {
-                                    setShowCommentForm(false);
-                                    setSelectedText(null);
-                                    window.getSelection()?.removeAllRanges();
-                                  }}
-                                >
-                                  <X className="h-3 w-3" />
-                                </Button>
-                              </div>
+                              <Button type="submit" size="sm" className="w-full">
+                                <Plus className="h-3 w-3 mr-1" />
+                                Save Comment
+                              </Button>
                             </form>
                           </Form>
+                        </div>
+                        
+                        {/* Resize Handle */}
+                        <div className="absolute bottom-0 right-0 w-4 h-4 cursor-nw-resize">
+                          <GripHorizontal className="h-3 w-3 text-gray-400 rotate-45" />
                         </div>
                       </div>
                     )}
