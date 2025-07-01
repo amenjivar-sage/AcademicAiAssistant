@@ -93,35 +93,35 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
       const startIndex = preCaretRange.toString().length;
       const endIndex = startIndex + selectedText.length;
 
-      // Calculate optimal position with viewport boundary checking
+      // Calculate optimal position relative to container with safe boundaries
       const commentPanelHeight = 280; // Estimated height of comment panel
       const commentPanelWidth = 320; // Width of comment panel (w-80)
       
-      // Start with default positioning to the right and below selection
-      let x = rect.right + 10;
-      let y = rect.top;
+      // Position relative to the content container
+      let x = rect.right - containerRect.left + 10;
+      let y = rect.top - containerRect.top;
       
-      // Check if panel would go beyond viewport bottom
-      const panelBottomY = rect.top + commentPanelHeight;
-      if (panelBottomY > viewportHeight - 50) { // 50px padding from bottom
-        // Position above the selection instead
-        y = rect.top - commentPanelHeight - 10;
-        
-        // If still too high, position it at a safe distance from top
-        if (y < 0) {
-          y = Math.max(10, viewportHeight - commentPanelHeight - 10);
+      // Check boundaries and adjust position to keep panel visible and accessible
+      const containerWidth = containerRect.width;
+      const containerHeight = containerRect.height;
+      
+      // If panel would extend beyond right edge, position to the left
+      if (x + commentPanelWidth > containerWidth - 20) {
+        x = rect.left - containerRect.left - commentPanelWidth - 10;
+        // If still too far left, position at a safe distance from left edge
+        if (x < 10) {
+          x = Math.max(10, containerWidth - commentPanelWidth - 10);
         }
       }
       
-      // Check if panel would go beyond viewport right edge
-      if (rect.right + commentPanelWidth > window.innerWidth - 20) {
-        // Position to the left of selection
-        x = rect.left - commentPanelWidth - 10;
-        
-        // If still too far left, position it safely within viewport
-        if (x < 0) {
-          x = Math.max(10, window.innerWidth - commentPanelWidth - 20);
-        }
+      // If panel would extend beyond bottom, position above the selection
+      if (y + commentPanelHeight > containerHeight - 100) { // 100px buffer for save button
+        y = Math.max(10, y - commentPanelHeight - 10);
+      }
+      
+      // Ensure panel stays within safe top boundary
+      if (y < 10) {
+        y = 10;
       }
 
       setSelectedText({
@@ -281,7 +281,7 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                     {/* Floating Comment Form */}
                     {showCommentForm && selectedText && (
                       <div 
-                        className="fixed z-50 bg-white border border-blue-200 rounded-lg shadow-lg p-4 w-80 max-h-72 overflow-y-auto"
+                        className="absolute z-50 bg-white border border-blue-200 rounded-lg shadow-lg p-4 w-80 max-h-72 overflow-y-auto"
                         style={{
                           left: `${selectedText.x}px`,
                           top: `${selectedText.y}px`,
