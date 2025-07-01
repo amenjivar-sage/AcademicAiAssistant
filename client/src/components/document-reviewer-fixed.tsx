@@ -303,40 +303,66 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
         console.log('Processing pasted text:', pastedText);
         console.log('Current document content:', result);
         
-        // Try exact match first (case insensitive and flexible punctuation)
-        const normalizedPastedText = pastedText.replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim();
-        const normalizedDocument = result.replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ');
-        
+        // Try exact match first
         if (result.includes(pastedText)) {
-          // Perfect exact match
           const escapedText = pastedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
           const regex = new RegExp(escapedText, 'gi');
-          result = result.replace(regex, `<span style="background-color: #fef2f2; border-left: 4px solid #dc2626; padding: 1px 3px; color: #991b1b; font-weight: 500;" title="Copy-pasted content detected">${pastedText}</span>`);
+          result = result.replace(regex, `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected">${pastedText}</span>`);
           console.log('✓ Applied exact match highlighting for:', pastedText.substring(0, 50));
-        } else if (normalizedDocument.toLowerCase().includes(normalizedPastedText.toLowerCase())) {
-          // Flexible match (ignoring punctuation differences)
-          console.log('✓ Found flexible match for:', pastedText.substring(0, 50));
-          
-          // Find the actual position in the original text
-          const words = normalizedPastedText.split(/\s+/);
-          if (words.length >= 2) {
-            // Create a regex that matches the sequence of words with flexible spacing/punctuation
-            const wordPattern = words.map(word => word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('\\s*[.,!?;:]*\\s*');
-            const flexibleRegex = new RegExp(wordPattern, 'gi');
-            
-            result = result.replace(flexibleRegex, (match) => {
-              if (!match.includes('background-color: #fef2f2')) {
-                return `<span style="background-color: #fef2f2; border-left: 4px solid #dc2626; padding: 1px 3px; color: #991b1b; font-weight: 500;" title="Copy-pasted content detected">${match}</span>`;
-              }
-              return match;
-            });
-          }
         } else {
-          // Simple but effective approach for spell-corrected content
-          // Split the pasted text into overlapping phrases and look for similar content
-          const sentences = pastedText.split(/[.!?]+/).filter(s => s.trim().length > 10);
+          // Try comprehensive phrase matching for complete detection
+          console.log('No exact match - trying phrase detection for:', pastedText.substring(0, 100));
           
-          sentences.forEach((sentence: string) => {
+          // First, try to find longer phrases (10+ words) that might match with minor changes
+          const longPhrases = [];
+          const words = pastedText.split(/\s+/).filter(w => w.length > 2);
+          
+          // Create overlapping phrases of different lengths for comprehensive coverage
+          for (let length = Math.min(words.length, 15); length >= 5; length--) {
+            for (let i = 0; i <= words.length - length; i++) {
+              const phrase = words.slice(i, i + length).join(' ');
+              if (phrase.length > 30) { // Only meaningful phrases
+                longPhrases.push(phrase);
+              }
+            }
+          }
+          
+          // Try to match each long phrase in the document
+          let foundMatch = false;
+          longPhrases.forEach(phrase => {
+            if (!foundMatch) {
+              // Create flexible regex for the phrase
+              const phraseWords = phrase.split(/\s+/);
+              const flexiblePattern = phraseWords.map(word => 
+                word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+              ).join('\\s+');
+              
+              try {
+                const phraseRegex = new RegExp(flexiblePattern, 'gi');
+                const matches = result.match(phraseRegex);
+                
+                if (matches && matches.length > 0) {
+                  console.log('✓ Found long phrase match:', phrase.substring(0, 50));
+                  result = result.replace(phraseRegex, (match) => {
+                    if (!match.includes('background-color: #fecaca')) {
+                      return `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected">${match}</span>`;
+                    }
+                    return match;
+                  });
+                  foundMatch = true;
+                }
+              } catch (e) {
+                console.log('Regex error for phrase:', phrase.substring(0, 30));
+              }
+            }
+          });
+          
+          if (!foundMatch) {
+            // Simple but effective approach for spell-corrected content
+            // Split the pasted text into overlapping phrases and look for similar content
+            const sentences = pastedText.split(/[.!?]+/).filter((s: string) => s.trim().length > 10);
+          
+            sentences.forEach((sentence: string) => {
             const trimmedSentence = sentence.trim();
             if (trimmedSentence) {
               console.log('Looking for sentence:', trimmedSentence);
