@@ -332,72 +332,73 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
             });
           }
         } else {
-          // Comprehensive pasted content detection - prioritize whole text highlighting
-          console.log('✓ No exact match - attempting comprehensive detection for:', pastedText.substring(0, 100));
+          // Simple but effective approach for spell-corrected content
+          // Split the pasted text into overlapping phrases and look for similar content
+          const sentences = pastedText.split(/[.!?]+/).filter(s => s.trim().length > 10);
           
-          // First, try to find large chunks of the pasted text (phrases, sentences, paragraphs)
-          const normalizedCleanDoc = result.replace(/<[^>]*>/g, '').replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').toLowerCase();
-          const normalizedPastedClean = normalizedPastedText.toLowerCase();
-          
-          // Try to find substantial portions of the pasted text
-          let foundLargeMatch = false;
-          
-          // Check for 70%+ of the pasted content appearing in sequence
-          if (normalizedPastedClean.length > 50) {
-            const pastedWords = normalizedPastedClean.split(/\s+/);
-            const totalWords = pastedWords.length;
-            
-            // Look for sequences of at least 70% of the words in order
-            for (let startIdx = 0; startIdx <= totalWords - Math.floor(totalWords * 0.7); startIdx++) {
-              const endIdx = Math.min(startIdx + Math.floor(totalWords * 0.9), totalWords);
-              const subsequence = pastedWords.slice(startIdx, endIdx).join(' ');
+          sentences.forEach((sentence: string) => {
+            const trimmedSentence = sentence.trim();
+            if (trimmedSentence) {
+              console.log('Looking for sentence:', trimmedSentence);
               
-              if (normalizedCleanDoc.includes(subsequence)) {
-                console.log(`✓ Found large subsequence match (${endIdx - startIdx} words):`, subsequence.substring(0, 100));
-                
-                // Now find this in the original document and highlight it
-                const originalWords = subsequence.split(/\s+/);
-                const pattern = originalWords.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('\\s*[.,!?;:]*\\s*');
-                const subsequenceRegex = new RegExp(pattern, 'gi');
-                
-                result = result.replace(subsequenceRegex, (match) => {
-                  if (!match.includes('background-color: #fef2f2')) {
-                    foundLargeMatch = true;
-                    return `<span style="background-color: #fef2f2; border-left: 4px solid #dc2626; padding: 1px 3px; color: #991b1b; font-weight: 500;" title="Copy-pasted content detected (${Math.round(((endIdx - startIdx) / totalWords) * 100)}% match)">${match}</span>`;
-                  }
-                  return match;
-                });
-              }
-            }
-          }
-          
-          // If no large match found, try individual sentence matching as fallback
-          if (!foundLargeMatch) {
-            console.log('No large match found, trying individual sentence detection...');
-            const sentences = pastedText.split(/[.!?]+/).filter(s => s.trim().length > 15);
-            
-            sentences.forEach((sentence: string) => {
-              const trimmedSentence = sentence.trim();
-              console.log('Looking for sentence in content:', trimmedSentence.substring(0, 50) + '...');
+              // Get significant words from the pasted sentence (clean punctuation)
+              const pastedWords = trimmedSentence.split(/\s+/)
+                .filter(w => w.length >= 3)
+                .map(w => w.toLowerCase().replace(/[.,!?;]/g, ''));
               
-              // Try flexible sentence matching
-              const sentenceWords = trimmedSentence.split(/\s+/).filter(w => w.length >= 3);
-              if (sentenceWords.length >= 4) {
-                // Create a flexible pattern to match the sentence
-                const wordPattern = sentenceWords.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('\\s*[.,!?;:]*\\s*');
-                const sentenceRegex = new RegExp(wordPattern, 'gi');
+              console.log('Pasted words:', pastedWords);
+              
+              if (pastedWords.length >= 4) {
+                // Get clean document text (without HTML highlighting) for accurate comparison
+                const cleanDocumentText = result.replace(/<span[^>]*style="background-color: #fecaca[^>]*>([^<]*)<\/span>/gi, '$1');
+                const documentSentences = cleanDocumentText.split(/[.!?]+/).filter(s => s.trim().length > 10);
                 
-                result = result.replace(sentenceRegex, (match) => {
-                  if (!match.includes('background-color: #fef2f2')) {
-                    console.log('✓ Found sentence match:', match.substring(0, 50));
-                    return `<span style="background-color: #fef2f2; border-left: 4px solid #dc2626; padding: 1px 3px; color: #991b1b; font-weight: 500;" title="Copy-pasted sentence detected">${match}</span>`;
+                // Additional safeguard: only check content that comes after the paste detection area
+                // This helps avoid flagging content that was written before the paste
+                const pasteStart = session.copyPasteData?.[0]?.startIndex || 0;
+                
+                documentSentences.forEach((docSent: string) => {
+                  const docSentTrimmed = docSent.trim();
+                  
+                  // Skip sentences that appear before the paste area (likely original work)
+                  const sentencePosition = cleanDocumentText.indexOf(docSentTrimmed);
+                  if (sentencePosition >= 0 && sentencePosition < pasteStart - 50) {
+                    console.log('Skipping sentence before paste area:', docSentTrimmed);
+                    return;
                   }
-                  return match;
-                });
-              }
-            });
-          }
-        }
+                  
+                  // Skip content that shows signs of recent spell checking (multiple corrected words)
+                  const hasSpellCheckMarkers = /\b(misspelled|receive|separate|definitely|occurred|necessary|believe|friend|weird|which)\b/i.test(docSentTrimmed);
+                  if (hasSpellCheckMarkers) {
+                    console.log('Skipping content with spell check markers:', docSentTrimmed.substring(0, 30));
+                    return;
+                  }
+                  
+                  // Skip already highlighted content - be more precise
+                  const sentenceStart = docSentTrimmed.substring(0, Math.min(15, docSentTrimmed.length));
+                  const isAlreadyHighlighted = result.includes(`<span style="background-color: #fecaca`) && 
+                                             result.includes(`>${sentenceStart}`) && 
+                                             result.includes(`${sentenceStart}</span>`);
+                  if (isAlreadyHighlighted) {
+                    console.log('Skipping already highlighted content:', docSentTrimmed.substring(0, 30));
+                    return;
+                  }
+                  
+                  // Add debug logging for sentence analysis
+                  console.log('Analyzing document sentence:', docSentTrimmed);
+                  
+                  const docWords = docSentTrimmed.split(/\s+/)
+                    .filter(w => w.length >= 3)
+                    .map(w => w.toLowerCase().replace(/[.,!?;]/g, ''));
+                  
+                  if (docWords.length >= 5) {
+                    // More precise matching - require exact or very close matches for most words
+                    let exactMatches = 0;
+                    let closeMatches = 0;
+                    
+                    // Simple approach: if pasted content and document content have similar structure, it's likely copy-pasted
+                    const pastedStructure = pastedWords.join(' ').replace(/[.,!?;]/g, '').toLowerCase();
+                    const docStructure = docWords.join(' ').replace(/[.,!?;]/g, '').toLowerCase();
                     
                     // Count how many pasted words have matches in the document sentence
                     pastedWords.forEach((pastedWord: string) => {
