@@ -46,13 +46,20 @@ export function highlightPastedContent(content: string, pastedContent: any[]): s
           }
         }
         
+        console.log('Created regex pattern:', pattern);
+        
         try {
           const regex = new RegExp(`(${pattern})`, 'gi');
+          console.log('Testing regex against content...');
           
-          if (result.match(regex)) {
+          const matches = result.match(regex);
+          console.log('Regex matches:', matches);
+          
+          if (matches) {
             result = result.replace(regex, (match) => {
               // Don't double-highlight
               if (match.includes('background-color: #fecaca')) {
+                console.log('Skipping already highlighted content');
                 return match;
               }
               
@@ -61,6 +68,8 @@ export function highlightPastedContent(content: string, pastedContent: any[]): s
             });
             
             console.log('✓ Highlighted pasted content');
+          } else {
+            console.log('✗ No regex matches found');
           }
         } catch (e) {
           console.log('Regex error:', e);
