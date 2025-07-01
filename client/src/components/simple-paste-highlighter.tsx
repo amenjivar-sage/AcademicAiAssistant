@@ -6,6 +6,7 @@ export function highlightPastedContent(content: string, pastedContent: any[]): s
   }
 
   console.log('=== SIMPLE PASTE TRACKING START ===');
+  console.log('🔍 NEW SIMPLE HIGHLIGHTER CALLED 🔍');
   console.log('Pasted content:', pastedContent);
   console.log('Document content to process:', content.substring(0, 200));
 
