@@ -281,11 +281,12 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
                     {/* Floating Comment Form */}
                     {showCommentForm && selectedText && (
                       <div 
-                        className="fixed z-50 bg-white border border-blue-200 rounded-lg shadow-lg p-4 w-80 max-h-72"
+                        className="fixed z-50 bg-white border border-blue-200 rounded-lg shadow-lg p-4 w-80 max-h-72 overflow-y-auto"
                         style={{
                           left: `${selectedText.x}px`,
                           top: `${selectedText.y}px`,
-                          maxWidth: '320px'
+                          maxWidth: '320px',
+                          maxHeight: '280px'
                         }}
                       >
                         <div className="space-y-3">
