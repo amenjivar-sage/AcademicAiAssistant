@@ -320,38 +320,54 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
         console.log('Current document content:', result);
         
         // Try exact and near-exact matches first (handles complete phrases properly)
-        const cleanDocument = result.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').toLowerCase();
+        const cleanDocument = result.replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').replace(/\s+/g, ' ').toLowerCase();
         const cleanPasted = pastedText.replace(/\s+/g, ' ').toLowerCase().trim();
+        
+        console.log('Clean document:', cleanDocument.substring(0, 200));
+        console.log('Clean pasted:', cleanPasted);
         
         if (cleanDocument.includes(cleanPasted)) {
           console.log('✓ Found complete phrase match for:', pastedText.substring(0, 80));
           
-          // Find the phrase in the original text with proper case
-          const words = pastedText.trim().split(/\s+/);
-          if (words.length >= 5) { // Only highlight substantial phrases (5+ words)
+          // Instead of using regex, do a more precise HTML-aware replacement
+          // First, decode HTML entities in the result for matching
+          const decodedResult = result.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+          
+          // Find the exact position of the pasted text in decoded content
+          const decodedClean = decodedResult.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ');
+          const pastedIndex = decodedClean.toLowerCase().indexOf(cleanPasted);
+          
+          if (pastedIndex !== -1) {
+            // Extract the actual text with proper capitalization
+            const actualText = decodedClean.substring(pastedIndex, pastedIndex + cleanPasted.length);
+            console.log('✓ Found actual text to highlight:', actualText);
             
-            // Create a flexible regex that matches the phrase allowing for minor variations
-            const flexiblePattern = words.map(word => 
-              word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-            ).join('\\s+');
+            // Now replace in the HTML version, preserving HTML structure
+            // Look for this text pattern in the HTML and replace it
+            const escapedActual = actualText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/&/g, '&amp;');
             
             try {
-              const phraseRegex = new RegExp(flexiblePattern, 'gi');
-              const matches = result.match(phraseRegex);
+              // Create pattern that works with HTML entities
+              const htmlPattern = escapedActual.replace(/&amp;/g, '(?:&amp;|&)');
+              const htmlRegex = new RegExp(htmlPattern, 'i');
               
-              if (matches && matches.length > 0) {
-                console.log('✓ Highlighting complete phrase:', pastedText.substring(0, 80));
-                result = result.replace(phraseRegex, (match) => {
+              if (result.match(htmlRegex)) {
+                console.log('✓ Highlighting complete phrase in HTML:', actualText.substring(0, 80));
+                result = result.replace(htmlRegex, (match) => {
                   if (!match.includes('background-color: #fecaca')) {
                     return `<span style="background-color: #fecaca; border: 2px solid #f87171; color: #991b1b; font-weight: 600; padding: 3px 6px; border-radius: 4px;" title="Copy-pasted content detected">${match}</span>`;
                   }
                   return match;
                 });
+                return; // Exit early if we successfully highlighted
               }
             } catch (e) {
-              console.log('Regex error for phrase:', pastedText.substring(0, 50));
+              console.log('HTML regex error:', e);
             }
           }
+        } else {
+          console.log('✗ Complete phrase not found in document');
+        }
         } else {
           // Try comprehensive phrase matching for complete detection
           console.log('No exact match - trying phrase detection for:', pastedText.substring(0, 100));
@@ -599,7 +615,6 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
               }
             }
           });
-          }
         }
       }
     });
