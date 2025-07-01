@@ -289,15 +289,21 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
       }
       return '';
     }).filter((pastedText: string) => {
-      // Filter out spell-check related content - look for patterns that indicate single word corrections
-      if (!pastedText || pastedText.length <= 10) return false;
+      // Filter out spell-check related content completely
+      if (!pastedText || pastedText.length <= 15) return false;
       
       // Exclude very short texts that are likely spell corrections
       const words = pastedText.trim().split(/\s+/);
-      if (words.length <= 2) return false;
+      if (words.length <= 3) return false;
       
-      // Only include substantial content that's likely to be external copy-paste
-      return pastedText.length > 20;
+      // Check for common spell-check patterns (single words with common typos)
+      const isLikelySpellCheck = words.length === 1 || 
+        /\b(workin|writting|goin|doin|comin|somethin|nothin|anythin|everythin)\b/i.test(pastedText);
+      
+      if (isLikelySpellCheck) return false;
+      
+      // Only include substantial content that's likely to be external copy-paste (sentences/paragraphs)
+      return pastedText.length > 30 && words.length >= 5;
     });
 
     console.log('Extracted pasted texts:', pastedTexts);
@@ -313,23 +319,38 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
         console.log('Processing pasted text:', pastedText);
         console.log('Current document content:', result);
         
-        // Try case-insensitive exact match first  
-        const lowerDocument = result.toLowerCase();
-        const lowerPasted = pastedText.toLowerCase();
+        // Try exact and near-exact matches first (handles complete phrases properly)
+        const cleanDocument = result.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').toLowerCase();
+        const cleanPasted = pastedText.replace(/\s+/g, ' ').toLowerCase().trim();
         
-        if (lowerDocument.includes(lowerPasted)) {
-          // Find the exact position and match case in original document
-          const startIndex = lowerDocument.indexOf(lowerPasted);
-          if (startIndex !== -1) {
-            const actualText = result.substring(startIndex, startIndex + pastedText.length);
-            const beforeText = result.substring(0, startIndex);
-            const afterText = result.substring(startIndex + pastedText.length);
+        if (cleanDocument.includes(cleanPasted)) {
+          console.log('✓ Found complete phrase match for:', pastedText.substring(0, 80));
+          
+          // Find the phrase in the original text with proper case
+          const words = pastedText.trim().split(/\s+/);
+          if (words.length >= 5) { // Only highlight substantial phrases (5+ words)
             
-            result = beforeText + 
-              `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected">${actualText}</span>` + 
-              afterText;
+            // Create a flexible regex that matches the phrase allowing for minor variations
+            const flexiblePattern = words.map(word => 
+              word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+            ).join('\\s+');
             
-            console.log('✓ Applied case-insensitive exact match highlighting for:', pastedText.substring(0, 50));
+            try {
+              const phraseRegex = new RegExp(flexiblePattern, 'gi');
+              const matches = result.match(phraseRegex);
+              
+              if (matches && matches.length > 0) {
+                console.log('✓ Highlighting complete phrase:', pastedText.substring(0, 80));
+                result = result.replace(phraseRegex, (match) => {
+                  if (!match.includes('background-color: #fecaca')) {
+                    return `<span style="background-color: #fecaca; border: 2px solid #f87171; color: #991b1b; font-weight: 600; padding: 3px 6px; border-radius: 4px;" title="Copy-pasted content detected">${match}</span>`;
+                  }
+                  return match;
+                });
+              }
+            } catch (e) {
+              console.log('Regex error for phrase:', pastedText.substring(0, 50));
+            }
           }
         } else {
           // Try comprehensive phrase matching for complete detection
@@ -743,18 +764,9 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
               !/^(the|and|that|this|with|from|they|have|will|been|were|said|each|which|their|time|about|after|before|here|when|where|why|how|all|any|may|had|has|was|his|her|him|she|you|can|now|get|way|use|man|new|just|old|see|come|make|many|over|such|take|than|only|think|know|work|life|also|back|little|good|right|still|way|even|another|while|because|without|since|against|around|between)$/i.test(word)
             ).slice(0, 3);
             
-            distinctiveWords.forEach(word => {
-              const cleanWord = word.replace(/[^\w]/g, '');
-              if (cleanWord.length > 5) {
-                const wordRegex = new RegExp(`\\b${cleanWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
-                if (result.match(wordRegex)) {
-                  console.log('✓ Found distinctive word:', cleanWord);
-                  result = result.replace(wordRegex, (match) => {
-                    return `<span style="background-color: #fef2f2; border-left: 4px solid #dc2626; padding: 1px 3px; color: #991b1b; font-weight: 500;" title="Copy-pasted word detected">${match}</span>`;
-                  });
-                }
-              }
-            });
+            // Individual word highlighting disabled to prevent spell-check false positives
+            // Instead, focus only on phrase-level detection (5+ consecutive words)
+            console.log('Individual word highlighting disabled - only detecting substantial phrases');
           }
         });
       }
