@@ -79,7 +79,7 @@ export default function SubmissionViewer({ sessionId, onClose }: SubmissionViewe
 
     const highlights: { start: number; end: number; type: string; text: string }[] = [];
 
-    // Add copy-paste highlights with fuzzy text matching
+    // Add copy-paste highlights with comprehensive text matching
     pastedContent.forEach((paste, index) => {
       console.log(`Processing paste ${index}:`, paste);
       
@@ -89,58 +89,8 @@ export default function SubmissionViewer({ sessionId, onClose }: SubmissionViewe
         // Try exact match first
         let contentIndex = content.indexOf(pastedText);
         
-        if (contentIndex === -1) {
-          // Try fuzzy matching for spell-corrected content
-          // Split pasted text into words and find sequences
-          const pastedWords = pastedText.split(/\s+/).filter(word => word.length > 2);
-          
-          if (pastedWords.length >= 2) {
-            // Look for sequences of at least 2 words from the paste
-            for (let i = 0; i < pastedWords.length - 1; i++) {
-              const wordSequence = pastedWords.slice(i, i + Math.min(3, pastedWords.length - i)).join('\\s+');
-              const regex = new RegExp(wordSequence.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-              let match;
-              
-              while ((match = regex.exec(content)) !== null) {
-                // Found a word sequence, highlight just the matched portion
-                const sequenceStart = match.index;
-                const sequenceEnd = match.index + match[0].length;
-                
-                highlights.push({
-                  start: sequenceStart,
-                  end: sequenceEnd,
-                  type: 'paste',
-                  text: content.slice(sequenceStart, sequenceEnd)
-                });
-                
-                console.log(`Added fuzzy highlight for paste ${index}:`, {
-                  originalText: pastedText.substring(0, 50) + '...',
-                  matchedSequence: match[0],
-                  start: sequenceStart,
-                  end: sequenceEnd
-                });
-              }
-            }
-            
-            // Also try matching distinctive phrases like "Equity & Fairness"
-            const phrases = pastedText.match(/[A-Z][a-z]+\s*[&]\s*[A-Z][a-z]+|[A-Z][a-z]+\s+[a-z]+\s+[a-z]+\s+[a-z]+/g);
-            if (phrases) {
-              phrases.forEach(phrase => {
-                const phraseIndex = content.toLowerCase().indexOf(phrase.toLowerCase());
-                if (phraseIndex !== -1) {
-                  highlights.push({
-                    start: phraseIndex,
-                    end: phraseIndex + phrase.length,
-                    type: 'paste',
-                    text: phrase
-                  });
-                  console.log(`Added phrase highlight:`, phrase);
-                }
-              });
-            }
-          }
-        } else {
-          // Exact match found
+        if (contentIndex !== -1) {
+          // Exact match found - highlight the entire pasted text
           highlights.push({
             start: contentIndex,
             end: contentIndex + pastedText.length,
@@ -152,6 +102,85 @@ export default function SubmissionViewer({ sessionId, onClose }: SubmissionViewe
             end: contentIndex + pastedText.length,
             text: pastedText.substring(0, 50) + '...'
           });
+        } else {
+          // No exact match - try comprehensive fuzzy matching
+          console.log(`No exact match found for paste: "${pastedText}"`);
+          
+          // Try sentence-by-sentence matching to catch longer phrases
+          const sentences = pastedText.split(/[.!?]+/).filter(s => s.trim().length > 10);
+          
+          sentences.forEach(sentence => {
+            const trimmedSentence = sentence.trim();
+            const sentenceIndex = content.toLowerCase().indexOf(trimmedSentence.toLowerCase());
+            
+            if (sentenceIndex !== -1) {
+              // Found sentence match
+              highlights.push({
+                start: sentenceIndex,
+                end: sentenceIndex + trimmedSentence.length,
+                type: 'paste',
+                text: trimmedSentence
+              });
+              console.log(`Added sentence highlight:`, trimmedSentence.substring(0, 50) + '...');
+            } else {
+              // Break sentence into overlapping word sequences for comprehensive detection
+              const words = trimmedSentence.split(/\s+/).filter(w => w.length > 2);
+              
+              if (words.length >= 2) {
+                // Try overlapping sequences of 4, 3, then 2 words for maximum coverage
+                for (let seqLength = Math.min(4, words.length); seqLength >= 2; seqLength--) {
+                  for (let i = 0; i <= words.length - seqLength; i++) {
+                    const wordSequence = words.slice(i, i + seqLength);
+                    const searchPattern = wordSequence.join('\\s+');
+                    const regex = new RegExp(searchPattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+                    
+                    let match;
+                    while ((match = regex.exec(content)) !== null) {
+                      // Check if this overlaps with existing highlights
+                      const isOverlapping = highlights.some(h => 
+                        (match.index >= h.start && match.index < h.end) ||
+                        (match.index + match[0].length > h.start && match.index + match[0].length <= h.end)
+                      );
+                      
+                      if (!isOverlapping) {
+                        highlights.push({
+                          start: match.index,
+                          end: match.index + match[0].length,
+                          type: 'paste',
+                          text: match[0]
+                        });
+                        console.log(`Added word sequence highlight (${seqLength} words):`, match[0]);
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          });
+          
+          // Also try matching distinctive phrases like "Equity & Fairness"
+          const specialPhrases = pastedText.match(/[A-Z][a-z]+\s*[&]\s*[A-Z][a-z]+/g);
+          if (specialPhrases) {
+            specialPhrases.forEach(phrase => {
+              const phraseIndex = content.toLowerCase().indexOf(phrase.toLowerCase());
+              if (phraseIndex !== -1) {
+                // Check if already highlighted
+                const isAlreadyHighlighted = highlights.some(h => 
+                  phraseIndex >= h.start && phraseIndex + phrase.length <= h.end
+                );
+                
+                if (!isAlreadyHighlighted) {
+                  highlights.push({
+                    start: phraseIndex,
+                    end: phraseIndex + phrase.length,
+                    type: 'paste',
+                    text: phrase
+                  });
+                  console.log(`Added special phrase highlight:`, phrase);
+                }
+              }
+            });
+          }
         }
       } else {
         console.log(`Invalid paste data for paste ${index}:`, {

@@ -303,11 +303,34 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
         console.log('Processing pasted text:', pastedText);
         console.log('Current document content:', result);
         
-        // Try exact match first
+        // Try exact match first (case insensitive and flexible punctuation)
+        const normalizedPastedText = pastedText.replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim();
+        const normalizedDocument = result.replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ');
+        
         if (result.includes(pastedText)) {
+          // Perfect exact match
           const escapedText = pastedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
           const regex = new RegExp(escapedText, 'gi');
-          result = result.replace(regex, `<span style="background-color: #fecaca; border-bottom: 2px solid #f87171; color: #991b1b; font-weight: 600;" title="Copy-pasted content detected">${pastedText}</span>`);
+          result = result.replace(regex, `<span style="background-color: #fef2f2; border-left: 4px solid #dc2626; padding: 1px 3px; color: #991b1b; font-weight: 500;" title="Copy-pasted content detected">${pastedText}</span>`);
+          console.log('✓ Applied exact match highlighting for:', pastedText.substring(0, 50));
+        } else if (normalizedDocument.toLowerCase().includes(normalizedPastedText.toLowerCase())) {
+          // Flexible match (ignoring punctuation differences)
+          console.log('✓ Found flexible match for:', pastedText.substring(0, 50));
+          
+          // Find the actual position in the original text
+          const words = normalizedPastedText.split(/\s+/);
+          if (words.length >= 2) {
+            // Create a regex that matches the sequence of words with flexible spacing/punctuation
+            const wordPattern = words.map(word => word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('\\s*[.,!?;:]*\\s*');
+            const flexibleRegex = new RegExp(wordPattern, 'gi');
+            
+            result = result.replace(flexibleRegex, (match) => {
+              if (!match.includes('background-color: #fef2f2')) {
+                return `<span style="background-color: #fef2f2; border-left: 4px solid #dc2626; padding: 1px 3px; color: #991b1b; font-weight: 500;" title="Copy-pasted content detected">${match}</span>`;
+              }
+              return match;
+            });
+          }
         } else {
           // Simple but effective approach for spell-corrected content
           // Split the pasted text into overlapping phrases and look for similar content
