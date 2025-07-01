@@ -743,8 +743,11 @@ export default function DocumentReviewer({ session, onGradeSubmit, isSubmitting 
         console.log('Looking for pasted text in document:', pastedText.substring(0, 100));
         
         // Clean up both the document and pasted text for matching
-        const cleanDocument = result.replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ');
+        const cleanDocument = result.replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
         const cleanPasted = pastedText.replace(/\s+/g, ' ').trim();
+        
+        console.log('Clean document:', cleanDocument.substring(0, 200));
+        console.log('Clean pasted:', cleanPasted.substring(0, 100));
         
         // If the pasted text exists in the document, highlight it
         if (cleanDocument.includes(cleanPasted)) {
