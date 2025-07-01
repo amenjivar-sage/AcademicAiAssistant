@@ -31,21 +31,32 @@ export function highlightPastedContent(content: string, pastedContent: any[]): s
       if (cleanDocument.includes(cleanPasted)) {
         console.log('✓ Found pasted text in document, highlighting');
         
-        // Find the pasted text in the HTML and wrap it in a red highlight
-        // Handle HTML entities properly
-        const textToFind = cleanPasted.replace(/&/g, '(?:&amp;|&)');
-        const escapedText = textToFind.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        // Now find the actual text in the HTML version and highlight it
+        // We need to match the text while preserving HTML formatting
+        const words = cleanPasted.split(/\s+/);
+        
+        // Create a pattern that matches the text with possible HTML tags in between
+        let pattern = '';
+        for (let i = 0; i < words.length; i++) {
+          const word = words[i].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          pattern += word;
+          if (i < words.length - 1) {
+            // Allow HTML tags and whitespace between words
+            pattern += '(?:<[^>]*>)*\\s+(?:<[^>]*>)*';
+          }
+        }
         
         try {
-          const regex = new RegExp(escapedText, 'gi');
+          const regex = new RegExp(`(${pattern})`, 'gi');
           
           if (result.match(regex)) {
             result = result.replace(regex, (match) => {
               // Don't double-highlight
-              if (match.includes('style="background-color: #fecaca')) {
+              if (match.includes('background-color: #fecaca')) {
                 return match;
               }
               
+              console.log('✓ Highlighting match:', match.substring(0, 100));
               return `<span style="background-color: #fecaca; border: 2px solid #f87171; color: #991b1b; font-weight: 600; padding: 2px 4px; border-radius: 3px;" title="Copy-pasted content detected">${match}</span>`;
             });
             
