@@ -680,6 +680,16 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     };
   }, []);
 
+  // Fetch current user data
+  const { data: user } = useQuery({
+    queryKey: ['current-user'],
+    queryFn: async () => {
+      const response = await fetch('/api/auth/profile');
+      if (!response.ok) throw new Error('Failed to fetch user');
+      return response.json();
+    }
+  });
+
   // Fetch session data
   const { data: session, isLoading: sessionLoading } = useQuery({
     queryKey: ['writing-session', sessionId],
@@ -1407,8 +1417,11 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
 
             <DocumentDownload 
               content={content}
-              studentName="Student"
+              studentName={user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : 'Student'}
               assignmentTitle={assignment?.title}
+              headerText={(savedSettings || headerFooterSettings).header}
+              footerText={(savedSettings || headerFooterSettings).footer}
+              showPageNumbers={(savedSettings || headerFooterSettings).pageNumbers}
             />
 
             {!isSubmitted && !isGraded && (
