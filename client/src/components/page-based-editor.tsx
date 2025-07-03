@@ -233,7 +233,7 @@ export default function PageBasedEditor({
                 Page Settings
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-80">
+            <PopoverContent className="w-80 max-h-96 overflow-y-auto">
               <div className="space-y-4">
                 <div className="font-medium text-sm">Header & Footer Options</div>
                 
@@ -379,9 +379,9 @@ export default function PageBasedEditor({
                 </div>
 
                 {/* Save Button */}
-                <div className="flex items-center justify-between pt-4 border-t">
+                <div className="flex items-center justify-between pt-4 border-t border-gray-200 bg-gray-50 -mx-6 -mb-6 px-6 py-4 rounded-b-lg">
                   <div className="text-xs text-gray-500">
-                    {savedSettings ? 'Settings saved' : 'Settings not saved'}
+                    {savedSettings ? '✓ Settings saved' : '⚠ Settings not saved'}
                   </div>
                   <Button
                     onClick={handleSaveSettings}
