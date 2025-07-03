@@ -15,7 +15,6 @@ import { ArrowLeft, Settings, Send, AlertTriangle, Shield, FileText, MessageSqua
 import { apiRequest } from '@/lib/queryClient';
 import CopyPasteDetector from './copy-paste-detector';
 import { RichTextEditor, RichTextEditorHandle } from './rich-text-editor-simple';
-import PageBasedEditor from './page-based-editor';
 import DocumentDownload from './document-download';
 import AiAssistant from './ai-assistant';
 import { PDFExport } from './pdf-export';
@@ -175,7 +174,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   const [isSpellCheckActive, setIsSpellCheckActive] = useState(false);
   const [spellErrors, setSpellErrors] = useState<any[]>([]);
 
-  // const contentRef = useRef<RichTextEditorHandle>(null); // Not needed for PageBasedEditor
+  const contentRef = useRef<RichTextEditorHandle>(null);
   const formatRef = useRef<((command: string, value?: string) => void) | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -961,32 +960,6 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                     <Label htmlFor="pageNumbers">Show page numbers</Label>
                   </div>
                 </div>
-                <div className="flex justify-end gap-2 mt-6">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => {
-                      // Reset to default settings
-                      setHeaderFooterSettings({
-                        header: "",
-                        footer: "",
-                        pageNumbers: false
-                      });
-                    }}
-                  >
-                    Clear All
-                  </Button>
-                  <Button 
-                    onClick={() => {
-                      toast({
-                        title: "Settings Saved",
-                        description: "Header and footer settings have been applied to your document.",
-                      });
-                    }}
-                  >
-                    <Save className="h-4 w-4 mr-2" />
-                    Save Settings
-                  </Button>
-                </div>
               </DialogContent>
             </Dialog>
 
@@ -1228,7 +1201,8 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
             className="min-h-full"
           >
             <div className="relative">
-              <PageBasedEditor
+              <RichTextEditor
+                ref={contentRef}
                 content={(() => {
                   let displayContent = content;
                   
@@ -1243,7 +1217,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                 onContentChange={(newContent) => {
                   // Prevent infinite loops by checking if content actually changed
                   if (newContent !== content) {
-                    console.log('Content changed from page editor:', newContent);
+                    console.log('Content changed from rich editor:', newContent);
                     setContent(newContent);
                     
                     // Mark user as typing and reset the typing timeout
@@ -1260,9 +1234,9 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                     }, 3000);
                   }
                 }}
-                disabled={session?.status === 'graded'}
+                onTextSelection={setSelectedText}
+                readOnly={session?.status === 'graded'}
                 placeholder="Start writing your assignment..."
-                headerFooterSettings={headerFooterSettings}
               />
               
 
