@@ -1,7 +1,7 @@
 import React from 'react';
 import { Download, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Document, Packer, Paragraph, TextRun, Header, Footer, AlignmentType, HeadingLevel } from 'docx';
+import { Document, Packer, Paragraph, TextRun, Header, Footer, AlignmentType, HeadingLevel, PageNumber } from 'docx';
 import { saveAs } from 'file-saver';
 
 interface DocumentDownloadProps {
@@ -12,6 +12,8 @@ interface DocumentDownloadProps {
   headerText?: string;
   footerText?: string;
   showPageNumbers?: boolean;
+  headerAlignment?: 'left' | 'center' | 'right';
+  footerAlignment?: 'left' | 'center' | 'right';
   className?: string;
   variant?: 'default' | 'outline' | 'ghost';
   size?: 'default' | 'sm' | 'lg';
@@ -25,6 +27,8 @@ export default function DocumentDownload({
   headerText,
   footerText,
   showPageNumbers = true,
+  headerAlignment = 'left',
+  footerAlignment = 'center',
   className,
   variant = 'outline',
   size = 'sm'
@@ -212,10 +216,20 @@ export default function DocumentDownload({
           headerElements.push(new TextRun({ text: headerText, size: 20 }));
         }
 
+        // Convert alignment string to AlignmentType
+        const getAlignment = (align: string) => {
+          switch (align) {
+            case 'left': return AlignmentType.LEFT;
+            case 'center': return AlignmentType.CENTER;
+            case 'right': return AlignmentType.RIGHT;
+            default: return AlignmentType.LEFT;
+          }
+        };
+
         headerParagraphs.push(
           new Paragraph({
             children: headerElements,
-            alignment: AlignmentType.LEFT
+            alignment: getAlignment(headerAlignment)
           })
         );
       }
@@ -232,12 +246,23 @@ export default function DocumentDownload({
         }
         if (showPageNumbers) {
           footerElements.push(new TextRun({ text: 'Page ', size: 20 }));
+          footerElements.push(PageNumber.CURRENT);
         }
+
+        // Convert alignment string to AlignmentType
+        const getAlignment = (align: string) => {
+          switch (align) {
+            case 'left': return AlignmentType.LEFT;
+            case 'center': return AlignmentType.CENTER;
+            case 'right': return AlignmentType.RIGHT;
+            default: return AlignmentType.CENTER;
+          }
+        };
 
         footerParagraphs.push(
           new Paragraph({
             children: footerElements,
-            alignment: AlignmentType.CENTER
+            alignment: getAlignment(footerAlignment)
           })
         );
       }

@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, Settings, Send, AlertTriangle, Shield, FileText, MessageSquare, Download, Save, CheckCircle, GraduationCap, Trophy, Type, Bold, Italic, Underline, ChevronDown, ChevronUp, SpellCheck } from 'lucide-react';
@@ -166,7 +167,9 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   const [headerFooterSettings, setHeaderFooterSettings] = useState({
     header: "",
     footer: "",
-    pageNumbers: false
+    pageNumbers: false,
+    headerAlignment: 'left' as 'left' | 'center' | 'right',
+    footerAlignment: 'center' as 'left' | 'center' | 'right'
   });
   const [savedSettings, setSavedSettings] = useState<typeof headerFooterSettings | null>(null);
   const [showSaveSuccess, setShowSaveSuccess] = useState(false);
@@ -971,6 +974,42 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                     />
                   </div>
                   
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="headerAlignment">Header Alignment</Label>
+                      <Select 
+                        value={headerFooterSettings.headerAlignment} 
+                        onValueChange={(value) => setHeaderFooterSettings(prev => ({ ...prev, headerAlignment: value as 'left' | 'center' | 'right' }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="left">Left</SelectItem>
+                          <SelectItem value="center">Center</SelectItem>
+                          <SelectItem value="right">Right</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="footerAlignment">Footer Alignment</Label>
+                      <Select 
+                        value={headerFooterSettings.footerAlignment} 
+                        onValueChange={(value) => setHeaderFooterSettings(prev => ({ ...prev, footerAlignment: value as 'left' | 'center' | 'right' }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="left">Left</SelectItem>
+                          <SelectItem value="center">Center</SelectItem>
+                          <SelectItem value="right">Right</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
                   <div className="flex items-center space-x-2">
                     <Switch
                       id="pageNumbers"
@@ -1422,6 +1461,8 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
               headerText={(savedSettings || headerFooterSettings).header}
               footerText={(savedSettings || headerFooterSettings).footer}
               showPageNumbers={(savedSettings || headerFooterSettings).pageNumbers}
+              headerAlignment={(savedSettings || headerFooterSettings).headerAlignment}
+              footerAlignment={(savedSettings || headerFooterSettings).footerAlignment}
             />
 
             {!isSubmitted && !isGraded && (
