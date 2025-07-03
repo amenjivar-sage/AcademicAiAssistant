@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Settings, Send, AlertTriangle, Shield, FileText, MessageSquare, Download, Save, GraduationCap, Trophy, Type, Bold, Italic, Underline, ChevronDown, ChevronUp, SpellCheck } from 'lucide-react';
+import { ArrowLeft, Settings, Send, AlertTriangle, Shield, FileText, MessageSquare, Download, Save, CheckCircle, GraduationCap, Trophy, Type, Bold, Italic, Underline, ChevronDown, ChevronUp, SpellCheck } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import CopyPasteDetector from './copy-paste-detector';
 import { RichTextEditor, RichTextEditorHandle } from './rich-text-editor-simple';
@@ -168,6 +168,16 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     footer: "",
     pageNumbers: false
   });
+  const [savedSettings, setSavedSettings] = useState<typeof headerFooterSettings | null>(null);
+  const [showSaveSuccess, setShowSaveSuccess] = useState(false);
+
+  // Handler for saving header/footer settings
+  const handleSaveSettings = () => {
+    setSavedSettings({ ...headerFooterSettings });
+    setShowSaveSuccess(true);
+    setTimeout(() => setShowSaveSuccess(false), 2000);
+  };
+
   const [showFormattingToolbox, setShowFormattingToolbox] = useState(false);
   const [isFormattingMinimized, setIsFormattingMinimized] = useState(false);
   const [selectedText, setSelectedText] = useState('');
@@ -958,6 +968,31 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                       onCheckedChange={(checked) => setHeaderFooterSettings(prev => ({ ...prev, pageNumbers: checked }))}
                     />
                     <Label htmlFor="pageNumbers">Show page numbers</Label>
+                  </div>
+                  
+                  {/* Save Button */}
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-200 bg-gray-50 -mx-6 -mb-6 px-6 py-4 rounded-b-lg">
+                    <div className="text-xs text-gray-500">
+                      {savedSettings ? '✓ Settings saved' : '⚠ Settings not saved'}
+                    </div>
+                    <Button
+                      onClick={handleSaveSettings}
+                      size="sm"
+                      variant={showSaveSuccess ? "default" : "outline"}
+                      className="flex items-center gap-2"
+                    >
+                      {showSaveSuccess ? (
+                        <>
+                          <CheckCircle className="h-4 w-4" />
+                          Saved!
+                        </>
+                      ) : (
+                        <>
+                          <Save className="h-4 w-4" />
+                          Save Settings
+                        </>
+                      )}
+                    </Button>
                   </div>
                 </div>
               </DialogContent>
