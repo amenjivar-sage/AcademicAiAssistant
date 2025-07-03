@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { FileText, Settings, User, Hash } from 'lucide-react';
+import { FileText, Settings, User, Hash, Save, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -58,6 +58,10 @@ export default function PageBasedEditor({
     footerPosition: 'center'
   });
 
+  // Saved settings state
+  const [savedSettings, setSavedSettings] = useState<PageSettings | null>(null);
+  const [showSaveSuccess, setShowSaveSuccess] = useState(false);
+
   // Update page settings based on headerFooterSettings prop
   useEffect(() => {
     if (headerFooterSettings) {
@@ -69,6 +73,17 @@ export default function PageBasedEditor({
       }));
     }
   }, [headerFooterSettings]);
+
+  // Save current page settings
+  const handleSaveSettings = () => {
+    setSavedSettings({ ...pageSettings });
+    setShowSaveSuccess(true);
+    
+    // Auto-hide success message after 2 seconds
+    setTimeout(() => {
+      setShowSaveSuccess(false);
+    }, 2000);
+  };
   
   // Calculate word count and page breaks
   const words = content.trim().split(/\s+/).filter(word => word.length > 0);
@@ -362,6 +377,31 @@ export default function PageBasedEditor({
                     </div>
                   )}
                 </div>
+
+                {/* Save Button */}
+                <div className="flex items-center justify-between pt-4 border-t">
+                  <div className="text-xs text-gray-500">
+                    {savedSettings ? 'Settings saved' : 'Settings not saved'}
+                  </div>
+                  <Button
+                    onClick={handleSaveSettings}
+                    size="sm"
+                    variant={showSaveSuccess ? "default" : "outline"}
+                    className="flex items-center gap-2"
+                  >
+                    {showSaveSuccess ? (
+                      <>
+                        <Check className="h-4 w-4" />
+                        Saved!
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4" />
+                        Save Settings
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
             </PopoverContent>
           </Popover>
@@ -384,19 +424,43 @@ export default function PageBasedEditor({
       <div className="page-container">
         <div className="bg-white rounded-lg shadow-lg border border-gray-200 min-h-[11in] relative">
           {/* Header */}
-          {(pageSettings.headerText || (pageSettings.showStudentName && pageSettings.studentName) || pageSettings.showPageNumbersInHeader) && (
+          {(savedSettings && (savedSettings.headerText || (savedSettings.showStudentName && savedSettings.studentName) || savedSettings.showPageNumbersInHeader)) && (
             <div className="px-16 pt-8 pb-4 border-b border-gray-200">
-              {renderHeaderFooterContent(
-                pageSettings.studentName,
-                pageSettings.headerText,
-                1,
-                pageSettings.namePosition,
-                pageSettings.headerPosition,
-                pageSettings.pageNumberPosition,
-                pageSettings.showStudentName,
-                !!pageSettings.headerText,
-                pageSettings.showPageNumbersInHeader
-              )}
+              <div className="flex justify-between items-center w-full text-sm text-gray-600">
+                <div className="flex-1 text-left">
+                  {savedSettings.showStudentName && savedSettings.namePosition === 'left' && (
+                    <span className="mr-2">{savedSettings.studentName}</span>
+                  )}
+                  {savedSettings.headerText && savedSettings.headerPosition === 'left' && (
+                    <span className="mr-2">{savedSettings.headerText}</span>
+                  )}
+                  {savedSettings.showPageNumbersInHeader && savedSettings.pageNumberPosition === 'left' && (
+                    <span className="mr-2">1</span>
+                  )}
+                </div>
+                <div className="flex-1 text-center">
+                  {savedSettings.showStudentName && savedSettings.namePosition === 'center' && (
+                    <span className="mx-1">{savedSettings.studentName}</span>
+                  )}
+                  {savedSettings.headerText && savedSettings.headerPosition === 'center' && (
+                    <span className="mx-1">{savedSettings.headerText}</span>
+                  )}
+                  {savedSettings.showPageNumbersInHeader && savedSettings.pageNumberPosition === 'center' && (
+                    <span className="mx-1">1</span>
+                  )}
+                </div>
+                <div className="flex-1 text-right">
+                  {savedSettings.showStudentName && savedSettings.namePosition === 'right' && (
+                    <span className="ml-2">{savedSettings.studentName}</span>
+                  )}
+                  {savedSettings.headerText && savedSettings.headerPosition === 'right' && (
+                    <span className="ml-2">{savedSettings.headerText}</span>
+                  )}
+                  {savedSettings.showPageNumbersInHeader && savedSettings.pageNumberPosition === 'right' && (
+                    <span className="ml-2">1</span>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 
@@ -439,7 +503,6 @@ export default function PageBasedEditor({
               content={content}
               onContentChange={handleContentChange}
               placeholder={placeholder}
-              disabled={disabled}
               onFormatRef={onFormatRef}
               className="w-full h-full min-h-[9in] resize-none border-none outline-none bg-transparent text-gray-900 relative z-0"
               style={{
@@ -452,20 +515,35 @@ export default function PageBasedEditor({
           </div>
 
           {/* Footer */}
-          {(pageSettings.footerText || pageSettings.showPageNumbers) && (
+          {(savedSettings && (savedSettings.footerText || savedSettings.showPageNumbers)) && (
             <div className="absolute bottom-8 left-16 right-16 z-20">
               <div className="border-t border-gray-200 pt-4 bg-white">
-                {renderHeaderFooterContent(
-                  pageSettings.studentName,
-                  pageSettings.footerText,
-                  estimatedPages,
-                  pageSettings.namePosition,
-                  pageSettings.footerPosition,
-                  pageSettings.pageNumberPosition,
-                  false,
-                  !!pageSettings.footerText,
-                  pageSettings.showPageNumbers
-                )}
+                <div className="flex justify-between items-center w-full text-sm text-gray-600">
+                  <div className="flex-1 text-left">
+                    {savedSettings.footerText && savedSettings.footerPosition === 'left' && (
+                      <span className="mr-2">{savedSettings.footerText}</span>
+                    )}
+                    {savedSettings.showPageNumbers && savedSettings.pageNumberPosition === 'left' && (
+                      <span className="mr-2">{estimatedPages}</span>
+                    )}
+                  </div>
+                  <div className="flex-1 text-center">
+                    {savedSettings.footerText && savedSettings.footerPosition === 'center' && (
+                      <span className="mx-1">{savedSettings.footerText}</span>
+                    )}
+                    {savedSettings.showPageNumbers && savedSettings.pageNumberPosition === 'center' && (
+                      <span className="mx-1">{estimatedPages}</span>
+                    )}
+                  </div>
+                  <div className="flex-1 text-right">
+                    {savedSettings.footerText && savedSettings.footerPosition === 'right' && (
+                      <span className="ml-2">{savedSettings.footerText}</span>
+                    )}
+                    {savedSettings.showPageNumbers && savedSettings.pageNumberPosition === 'right' && (
+                      <span className="ml-2">{estimatedPages}</span>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           )}
