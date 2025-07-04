@@ -9,15 +9,16 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Settings, Send, AlertTriangle, Shield, FileText, MessageSquare, Download, Save, GraduationCap, Trophy, Type, Bold, Italic, Underline, ChevronDown, ChevronUp, SpellCheck } from 'lucide-react';
+import { ArrowLeft, Settings, Send, AlertTriangle, Shield, FileText, MessageSquare, Download, Save, CheckCircle, GraduationCap, Trophy, Type, Bold, Italic, Underline, ChevronDown, ChevronUp, SpellCheck } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import CopyPasteDetector from './copy-paste-detector';
 import { RichTextEditor, RichTextEditorHandle } from './rich-text-editor-simple';
 import DocumentDownload from './document-download';
 import AiAssistant from './ai-assistant';
-import { PDFExport } from './pdf-export';
+
 import BubbleSpellCheckPanel from './bubble-spell-check-panel';
 import SimpleHighlighter from './simple-highlighter';
 import SpellCheckSuggestionsPanel, { SpellCheckSuggestion } from './spell-check-suggestions-panel';
@@ -54,106 +55,26 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   const [showAiSuggestions, setShowAiSuggestions] = useState(false);
   const [spellCheckSuggestions, setSpellCheckSuggestions] = useState<SpellCheckSuggestion[]>([]);
   const [showSpellCheckSuggestions, setShowSpellCheckSuggestions] = useState(false);
-  
-  // Handle applying AI suggestions
-  const handleApplySuggestion = useCallback((suggestion: any) => {
-    console.log('🔄 Applying suggestion:', suggestion.originalText, '→', suggestion.suggestedText);
-    
-    const updatedContent = content.replace(
-      new RegExp(suggestion.originalText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'),
-      suggestion.suggestedText
-    );
-    
-    if (updatedContent !== content) {
-      console.log('✅ Content updated, applying change');
-      setContent(updatedContent);
-      
-      // Mark user as typing to prevent auto-save conflicts
-      setIsUserTyping(true);
-      lastTypingTime.current = Date.now();
-      
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
+
+
+
+  // Auto-cleanup highlights on initial load
+  useEffect(() => {
+    if (content && content.includes('style="background-color: rgb(254, 243, 199)')) {
+      console.log('🧹 Auto-cleaning old highlights immediately');
+      const cleanContent = content.replace(
+        /<span[^>]*style="background-color:\s*rgb\(254,\s*243,\s*199\)[^"]*"[^>]*>(.*?)<\/span>/gi,
+        '$1'
+      );
+      if (cleanContent !== content) {
+        console.log('🧹 Cleaned content:', cleanContent);
+        setContent(cleanContent);
+        // Also clear any old AI suggestions since they don't match current content
+        setAiSuggestions([]);
+        setShowAiSuggestions(false);
       }
-      
-      // Clear typing flag after suggestion applies
-      typingTimeoutRef.current = setTimeout(() => {
-        setIsUserTyping(false);
-      }, 1000);
     }
-    
-    // Remove the suggestion from the list
-    setAiSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
   }, [content]);
-  
-  // Handle dismissing AI suggestions
-  const handleDismissSuggestion = useCallback((suggestionId: string) => {
-    console.log('❌ Dismissing suggestion:', suggestionId);
-    setAiSuggestions(prev => prev.filter(s => s.id !== suggestionId));
-  }, []);
-
-  // Handle spell check suggestions
-  const handleApplySpellCheckSuggestion = useCallback((suggestion: SpellCheckSuggestion) => {
-    console.log('🔄 Applying spell check suggestion:', suggestion.originalText, '→', suggestion.suggestedText);
-    
-    const originalText = suggestion.originalText;
-    const suggestedText = suggestion.suggestedText;
-    const escapedOriginal = originalText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    
-    // Try multiple replacement strategies for different HTML contexts
-    let updatedContent = content;
-    
-    // 1. Try direct word boundary replacement first
-    const wordBoundaryRegex = new RegExp(`\\b${escapedOriginal}\\b`, 'gi');
-    const directReplacement = updatedContent.replace(wordBoundaryRegex, suggestedText);
-    
-    if (directReplacement !== updatedContent) {
-      console.log('✅ Direct replacement successful');
-      setContent(directReplacement);
-      // Remove the applied suggestion
-      setSpellCheckSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
-      return;
-    }
-    
-    // 2. Try HTML-aware replacement
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = updatedContent;
-    
-    const replaceInTextNodes = (node: Node) => {
-      if (node.nodeType === Node.TEXT_NODE) {
-        const textContent = node.textContent || '';
-        const textRegex = new RegExp(`\\b${escapedOriginal}\\b`, 'gi');
-        if (textRegex.test(textContent)) {
-          const newContent = textContent.replace(textRegex, suggestedText);
-          node.textContent = newContent;
-          console.log('✅ HTML-aware replacement successful');
-        }
-      } else {
-        node.childNodes.forEach(child => replaceInTextNodes(child));
-      }
-    };
-    
-    replaceInTextNodes(tempDiv);
-    const htmlAwareReplacement = tempDiv.innerHTML;
-    
-    if (htmlAwareReplacement !== updatedContent) {
-      setContent(htmlAwareReplacement);
-      setSpellCheckSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
-      return;
-    }
-    
-    console.warn('⚠️ Spell check replacement failed for:', originalText);
-  }, [content]);
-
-  const handleDismissSpellCheckSuggestion = useCallback((suggestionId: string) => {
-    console.log('❌ Dismissing spell check suggestion:', suggestionId);
-    setSpellCheckSuggestions(prev => prev.filter(s => s.id !== suggestionId));
-  }, []);
-
-  const handleApplyAllSpellCheckSuggestions = useCallback(() => {
-    console.log('✅ Applying all spell check suggestions');
-    spellCheckSuggestions.forEach(suggestion => handleApplySpellCheckSuggestion(suggestion));
-  }, [spellCheckSuggestions, handleApplySpellCheckSuggestion]);
 
   // Function to highlight text that has teacher comments
   const highlightCommentedText = (content: string, comments: any[]): string => {
@@ -246,8 +167,20 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   const [headerFooterSettings, setHeaderFooterSettings] = useState({
     header: "",
     footer: "",
-    pageNumbers: false
+    pageNumbers: false,
+    headerAlignment: 'left' as 'left' | 'center' | 'right',
+    footerAlignment: 'center' as 'left' | 'center' | 'right'
   });
+  const [savedSettings, setSavedSettings] = useState<typeof headerFooterSettings | null>(null);
+  const [showSaveSuccess, setShowSaveSuccess] = useState(false);
+
+  // Handler for saving header/footer settings
+  const handleSaveSettings = () => {
+    setSavedSettings({ ...headerFooterSettings });
+    setShowSaveSuccess(true);
+    setTimeout(() => setShowSaveSuccess(false), 2000);
+  };
+
   const [showFormattingToolbox, setShowFormattingToolbox] = useState(false);
   const [isFormattingMinimized, setIsFormattingMinimized] = useState(false);
   const [selectedText, setSelectedText] = useState('');
@@ -263,7 +196,302 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   // Track if user is currently typing to prevent cursor jumping
   const [isUserTyping, setIsUserTyping] = useState(false);
   const typingTimeoutRef = useRef<NodeJS.Timeout>();
+
+  // Handler for applying individual spell check suggestions
+  const handleApplySpellCheckSuggestion = useCallback((suggestion: SpellCheckSuggestion) => {
+    console.log('🔄 Applying spell check suggestion:', suggestion.originalText, '→', suggestion.suggestedText);
+    
+    const originalText = suggestion.originalText;
+    const suggestedText = suggestion.suggestedText;
+    const escapedOriginal = originalText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    
+    // Try multiple replacement strategies for different HTML contexts
+    let updatedContent = content;
+    
+    // 1. Try direct word boundary replacement first
+    const wordBoundaryRegex = new RegExp(`\\b${escapedOriginal}\\b`, 'gi');
+    const directReplacement = updatedContent.replace(wordBoundaryRegex, suggestedText);
+    
+    if (directReplacement !== updatedContent) {
+      console.log('✅ Direct replacement successful');
+      setContent(directReplacement);
+      // Remove the applied suggestion
+      setSpellCheckSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
+      return;
+    }
+    
+    // 2. Try HTML-aware replacement
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = updatedContent;
+    
+    const replaceInTextNodes = (node: Node) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const textContent = node.textContent || '';
+        const textRegex = new RegExp(`\\b${escapedOriginal}\\b`, 'gi');
+        if (textRegex.test(textContent)) {
+          const newContent = textContent.replace(textRegex, suggestedText);
+          node.textContent = newContent;
+          console.log('✅ HTML-aware replacement successful');
+        }
+      } else {
+        node.childNodes.forEach(child => replaceInTextNodes(child));
+      }
+    };
+    
+    replaceInTextNodes(tempDiv);
+    const htmlAwareReplacement = tempDiv.innerHTML;
+    
+    if (htmlAwareReplacement !== updatedContent) {
+      setContent(htmlAwareReplacement);
+      setSpellCheckSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
+      return;
+    }
+    
+    console.warn('⚠️ Spell check replacement failed for:', originalText);
+    toast({
+      title: "Replacement Failed", 
+      description: `Could not find "${originalText}" in document to replace.`,
+      variant: "destructive"
+    });
+  }, [content, toast]);
+
+  // Handler for dismissing spell check suggestions
+  const handleDismissSpellCheckSuggestion = useCallback((suggestionId: string) => {
+    setSpellCheckSuggestions(prev => prev.filter(s => s.id !== suggestionId));
+  }, []);
+
+  // Handler for applying all spell check suggestions
+  const handleApplyAllSpellCheckSuggestions = useCallback(() => {
+    console.log('🔄 Applying all spell check suggestions:', spellCheckSuggestions.length);
+    
+    let updatedContent = content;
+    let appliedCount = 0;
+    
+    // Apply all suggestions
+    spellCheckSuggestions.forEach(suggestion => {
+      const originalText = suggestion.originalText;
+      const suggestedText = suggestion.suggestedText;
+      const escapedOriginal = originalText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      
+      // Try direct replacement
+      const wordBoundaryRegex = new RegExp(`\\b${escapedOriginal}\\b`, 'gi');
+      const newContent = updatedContent.replace(wordBoundaryRegex, suggestedText);
+      
+      if (newContent !== updatedContent) {
+        updatedContent = newContent;
+        appliedCount++;
+      }
+    });
+    
+    if (appliedCount > 0) {
+      setContent(updatedContent);
+      setSpellCheckSuggestions([]);
+      toast({
+        title: "Suggestions Applied",
+        description: `Applied ${appliedCount} out of ${spellCheckSuggestions.length} spelling corrections.`,
+      });
+    } else {
+      toast({
+        title: "No Changes Applied",
+        description: "Could not apply any suggestions. The text may have changed.",
+        variant: "destructive"
+      });
+    }
+  }, [content, spellCheckSuggestions, toast]);
   const lastTypingTime = useRef<number>(Date.now());
+
+  // Function to clean up bold highlighting in content
+  const cleanupBoldHighlighting = useCallback((content: string) => {
+    // Replace all strong tags with yellow highlighting to span tags
+    return content.replace(
+      /<strong style="background-color: rgb\(254, 243, 199\);">(.*?)<\/strong>/gi,
+      '<span style="background-color: rgb(254, 243, 199);">$1</span>'
+    );
+  }, []);
+
+  // Handle applying AI suggestions
+  const handleApplySuggestion = useCallback((suggestion: any) => {
+    console.log('🔄 Applying suggestion:', suggestion.originalText, '→', suggestion.suggestedText);
+    console.log('📄 Current content length:', content.length);
+    console.log('🎯 Content preview:', content.substring(0, 200) + '...');
+    
+    // Check if the original text exists anywhere in content (for debugging)
+    const originalExists = content.toLowerCase().includes(suggestion.originalText.toLowerCase());
+    console.log('🔍 Original text exists in content:', originalExists);
+    
+    if (originalExists) {
+      // Find all positions where the text appears
+      const regex = new RegExp(suggestion.originalText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+      const matches: RegExpExecArray[] = [];
+      let match;
+      while ((match = regex.exec(content)) !== null) {
+        matches.push(match);
+      }
+      console.log('🎯 Found', matches.length, 'potential matches at positions:', matches.map(m => m.index));
+      
+      // Show context around each match
+      matches.forEach((match, i) => {
+        if (match.index !== undefined) {
+          const start = Math.max(0, match.index - 30);
+          const end = Math.min(content.length, match.index + match[0].length + 30);
+          const context = content.substring(start, end);
+          console.log(`🔍 Match ${i + 1} context: "${context}"`);
+        }
+      });
+    }
+    
+    // First clean up any bold highlighting
+    let workingContent = cleanupBoldHighlighting(content);
+    console.log('🧹 Cleaned up bold highlighting:', workingContent !== content);
+    
+    // Work with both HTML content and clean text to ensure proper replacement
+    const originalText = suggestion.originalText;
+    const suggestedText = suggestion.suggestedText;
+    
+    // First try direct HTML replacement (case insensitive)
+    const escapedOriginal = originalText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const directRegex = new RegExp(`\\b${escapedOriginal}\\b`, 'gi');
+    let updatedContent = workingContent.replace(directRegex, suggestedText);
+    console.log('🔍 Direct replacement result - changed:', updatedContent !== workingContent);
+    
+    // If no change, try replacing within text nodes while preserving HTML structure
+    if (updatedContent === workingContent) {
+      console.log('🔍 Direct replacement failed, trying HTML-aware replacement...');
+      
+      // Create a temporary div to parse HTML
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = workingContent;
+      
+      // Function to replace text in text nodes
+      const replaceInTextNodes = (node: Node) => {
+        if (node.nodeType === Node.TEXT_NODE) {
+          const textContent = node.textContent || '';
+          const textRegex = new RegExp(`\\b${escapedOriginal}\\b`, 'gi');
+          if (textRegex.test(textContent)) {
+            const newContent = textContent.replace(textRegex, suggestedText);
+            node.textContent = newContent;
+            console.log('✏️ Replaced in text node:', textContent, '→', newContent);
+          }
+        } else {
+          // Recursively process child nodes
+          node.childNodes.forEach(child => replaceInTextNodes(child));
+        }
+      };
+      
+      // Process all text nodes
+      replaceInTextNodes(tempDiv);
+      updatedContent = tempDiv.innerHTML;
+      console.log('🔍 HTML-aware replacement result - changed:', updatedContent !== workingContent);
+    }
+    
+    // If still no change, try handling highlighted text specifically
+    if (updatedContent === workingContent) {
+      console.log('🔍 HTML-aware replacement failed, trying highlighted text replacement...');
+      
+      // Look for the word wrapped in highlighting tags and replace with span (non-bold)
+      const highlightPatterns = [
+        // Yellow highlighting (copy-paste detection) - replace with span instead of strong
+        {
+          pattern: `<strong style="background-color: rgb\\(254, 243, 199\\);">${escapedOriginal}</strong>`,
+          replacement: `<span style="background-color: rgb(254, 243, 199);">${suggestedText}</span>`
+        },
+        // Any strong tag with background color - replace with span
+        {
+          pattern: `<strong([^>]*background-color[^>]*)>${escapedOriginal}</strong>`,
+          replacement: `<span$1>${suggestedText}</span>`
+        },
+        // Any strong tag with the word - replace with span
+        {
+          pattern: `<strong([^>]*)>${escapedOriginal}</strong>`,
+          replacement: `<span$1>${suggestedText}</span>`
+        },
+        // Any em tag with the word
+        {
+          pattern: `<em([^>]*)>${escapedOriginal}</em>`,
+          replacement: `<em$1>${suggestedText}</em>`
+        },
+        // Any span with background color
+        {
+          pattern: `<span([^>]*background-color[^>]*)>${escapedOriginal}</span>`,
+          replacement: `<span$1>${suggestedText}</span>`
+        },
+        // Try with span and specific yellow background
+        {
+          pattern: `<span style="background-color: rgb\\(254, 243, 199\\);">${escapedOriginal}</span>`,
+          replacement: `<span style="background-color: rgb(254, 243, 199);">${suggestedText}</span>`
+        }
+      ];
+      
+      for (const {pattern, replacement} of highlightPatterns) {
+        const highlightRegex = new RegExp(pattern, 'gi');
+        if (highlightRegex.test(workingContent)) {
+          console.log('🎯 Found highlighted word with pattern:', pattern);
+          updatedContent = workingContent.replace(highlightRegex, replacement);
+          if (updatedContent !== workingContent) {
+            console.log('✅ Successfully replaced highlighted text');
+            break;
+          }
+        }
+      }
+    }
+    
+    // If still no change, try more aggressive replacements
+    if (updatedContent === workingContent) {
+      console.log('🔍 Highlighted text replacement failed, trying more aggressive replacements...');
+      
+      // Try without word boundaries first
+      const simpleRegex = new RegExp(escapedOriginal, 'gi');
+      updatedContent = workingContent.replace(simpleRegex, suggestedText);
+      
+      // If still no change, try replacing partial words (for cases like incomplete highlighting)
+      if (updatedContent === workingContent) {
+        console.log('🔍 Simple replacement failed, trying partial word replacement...');
+        // This will catch cases where the word might be split across HTML tags
+        const partialRegex = new RegExp(originalText.split('').join('[^a-zA-Z]*'), 'gi');
+        const matches = workingContent.match(partialRegex);
+        if (matches) {
+          console.log('🎯 Found partial matches:', matches);
+          updatedContent = workingContent.replace(partialRegex, suggestedText);
+        }
+      }
+    }
+    
+    if (updatedContent !== workingContent) {
+      console.log('✅ Content updated, applying change');
+      setContent(updatedContent);
+      
+      // Mark user as typing to prevent auto-save conflicts
+      setIsUserTyping(true);
+      lastTypingTime.current = Date.now();
+      
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      
+      // Clear typing flag after suggestion applies
+      typingTimeoutRef.current = setTimeout(() => {
+        setIsUserTyping(false);
+      }, 1000);
+      
+      // Log how many replacements were made
+      const testRegex = new RegExp(escapedOriginal, 'gi');
+      const matches = content.match(testRegex);
+      if (matches) {
+        console.log(`Applied ${matches.length} replacements of "${suggestion.originalText}" → "${suggestion.suggestedText}"`);
+      }
+    } else {
+      console.log('❌ No replacements made for:', suggestion.originalText);
+    }
+    
+    // Remove the suggestion from the list
+    setAiSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
+  }, [content]);
+  
+  // Handle dismissing AI suggestions
+  const handleDismissSuggestion = useCallback((suggestionId: string) => {
+    console.log('❌ Dismissing suggestion:', suggestionId);
+    setAiSuggestions(prev => prev.filter(s => s.id !== suggestionId));
+  }, []);
 
   // Create session mutation
   const createSessionMutation = useMutation({
@@ -372,24 +600,44 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
   // AI Suggestion handlers
   const handleAiSuggestionsGenerated = useCallback((suggestions: any[]) => {
     console.log('📝 Received AI suggestions in WritingWorkspace:', suggestions);
+    
+    // Clear any existing suggestions first to avoid conflicts
+    setAiSuggestions([]);
+    
+    // Add new suggestions
     setAiSuggestions(suggestions);
     setShowAiSuggestions(true);
-    toast({
-      title: "AI Suggestions Available",
-      description: `${suggestions.length} writing suggestions generated.`,
-    });
-  }, [toast]);
+  }, []);
 
   const handleApplyAllSuggestions = useCallback(async () => {
     console.log('✅ Applying all suggestions');
     let updatedContent = content;
     
-    // Apply all suggestions sequentially
+    // Apply all suggestions sequentially with better text matching
     aiSuggestions.forEach(suggestion => {
-      updatedContent = updatedContent.replace(
-        new RegExp(suggestion.originalText, 'gi'),
-        suggestion.suggestedText
-      );
+      console.log(`🔄 Applying: "${suggestion.originalText}" → "${suggestion.suggestedText}"`);
+      
+      // Escape special regex characters in the original text
+      const escapedOriginal = suggestion.originalText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      
+      // Use word boundaries to ensure exact word matches (not partial matches)
+      const wordBoundaryRegex = new RegExp(`\\b${escapedOriginal}\\b`, 'gi');
+      
+      // Check if the text exists before replacing
+      const matches = updatedContent.match(wordBoundaryRegex);
+      if (matches) {
+        console.log(`✅ Found ${matches.length} matches for "${suggestion.originalText}"`);
+        updatedContent = updatedContent.replace(wordBoundaryRegex, suggestion.suggestedText);
+      } else {
+        console.log(`⚠️ No matches found for "${suggestion.originalText}" in content`);
+        // Try fallback without word boundaries for contractions
+        const fallbackRegex = new RegExp(escapedOriginal, 'gi');
+        const fallbackMatches = updatedContent.match(fallbackRegex);
+        if (fallbackMatches) {
+          console.log(`✅ Found ${fallbackMatches.length} fallback matches for "${suggestion.originalText}"`);
+          updatedContent = updatedContent.replace(fallbackRegex, suggestion.suggestedText);
+        }
+      }
     });
     
     setContent(updatedContent);
@@ -406,6 +654,26 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
     setShowAiSuggestions(false);
   }, []);
 
+
+  // Auto-clear old AI suggestions when content changes significantly
+  useEffect(() => {
+    if (aiSuggestions.length === 0) return;
+    
+    // Clean content for text matching
+    const cleanContent = content.replace(/<[^>]*>/g, '').toLowerCase();
+    
+    // If content is completely different from suggestions, clear all suggestions
+    const anyValidSuggestions = aiSuggestions.some(suggestion => 
+      cleanContent.includes(suggestion.originalText.toLowerCase())
+    );
+    
+    if (!anyValidSuggestions) {
+      console.log('🧹 Clearing all AI suggestions - content completely changed');
+      setAiSuggestions([]);
+      setShowAiSuggestions(false);
+    }
+  }, [content, aiSuggestions.length]);
+
   // Cleanup typing timeout on unmount
   useEffect(() => {
     return () => {
@@ -414,6 +682,16 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       }
     };
   }, []);
+
+  // Fetch current user data
+  const { data: user } = useQuery({
+    queryKey: ['current-user'],
+    queryFn: async () => {
+      const response = await fetch('/api/auth/profile');
+      if (!response.ok) throw new Error('Failed to fetch user');
+      return response.json();
+    }
+  });
 
   // Fetch session data
   const { data: session, isLoading: sessionLoading } = useQuery({
@@ -663,6 +941,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
               </div>
             )}
             
+
             <Dialog>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-2">
@@ -695,6 +974,42 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                     />
                   </div>
                   
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="headerAlignment">Header Alignment</Label>
+                      <Select 
+                        value={headerFooterSettings.headerAlignment} 
+                        onValueChange={(value) => setHeaderFooterSettings(prev => ({ ...prev, headerAlignment: value as 'left' | 'center' | 'right' }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="left">Left</SelectItem>
+                          <SelectItem value="center">Center</SelectItem>
+                          <SelectItem value="right">Right</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="footerAlignment">Footer Alignment</Label>
+                      <Select 
+                        value={headerFooterSettings.footerAlignment} 
+                        onValueChange={(value) => setHeaderFooterSettings(prev => ({ ...prev, footerAlignment: value as 'left' | 'center' | 'right' }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="left">Left</SelectItem>
+                          <SelectItem value="center">Center</SelectItem>
+                          <SelectItem value="right">Right</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
                   <div className="flex items-center space-x-2">
                     <Switch
                       id="pageNumbers"
@@ -702,6 +1017,31 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                       onCheckedChange={(checked) => setHeaderFooterSettings(prev => ({ ...prev, pageNumbers: checked }))}
                     />
                     <Label htmlFor="pageNumbers">Show page numbers</Label>
+                  </div>
+                  
+                  {/* Save Button */}
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-200 bg-gray-50 -mx-6 -mb-6 px-6 py-4 rounded-b-lg">
+                    <div className="text-xs text-gray-500">
+                      {savedSettings ? '✓ Settings saved' : '⚠ Settings not saved'}
+                    </div>
+                    <Button
+                      onClick={handleSaveSettings}
+                      size="sm"
+                      variant={showSaveSuccess ? "default" : "outline"}
+                      className="flex items-center gap-2"
+                    >
+                      {showSaveSuccess ? (
+                        <>
+                          <CheckCircle className="h-4 w-4" />
+                          Saved!
+                        </>
+                      ) : (
+                        <>
+                          <Save className="h-4 w-4" />
+                          Save Settings
+                        </>
+                      )}
+                    </Button>
                   </div>
                 </div>
               </DialogContent>
@@ -817,7 +1157,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
                                     setShowSpellCheckSuggestions(true);
                                     toast({
                                       title: "Spell Check Complete",
-                                      description: `Found ${formattedSuggestions.length} spelling suggestions. Review them in the side panel.`,
+                                      description: `Found ${formattedSuggestions.length} spelling suggestions. Review them in the panel below.`,
                                     });
                                   } else {
                                     toast({
@@ -861,20 +1201,21 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
               </div>
             )}
 
-            {/* PDF Export */}
-            <PDFExport 
-              content={content}
-              title={title || assignment?.title || "Document"}
-            />
+
 
             <Button
               onClick={() => setShowAiSidebar(!showAiSidebar)}
               variant={showAiSidebar ? "default" : "outline"}
               size="sm"
               className="gap-2"
+              disabled={assignment?.aiPermissions === 'none'}
+              title={assignment?.aiPermissions === 'none' ? 'AI assistance is disabled for this assignment' : 'Open AI Assistant'}
             >
               <MessageSquare className="h-4 w-4" />
               ZoË
+              {assignment?.aiPermissions === 'none' && (
+                <span className="text-xs text-gray-400">(Disabled)</span>
+              )}
             </Button>
           </div>
         </div>
@@ -883,7 +1224,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
       {/* Main Content Area with Sidebar */}
       <div className="flex-1 flex overflow-hidden">
         {/* Writing Content */}
-        <div className={`flex-1 overflow-auto ${showSpellCheckSuggestions ? 'mr-80' : ''}`}>
+        <div className={`overflow-auto transition-all duration-300 ${showSpellCheckSuggestions && spellCheckSuggestions.length > 0 ? 'flex-1' : 'flex-1'}`}>
           {/* Grading Feedback Banner for Graded Assignments */}
           {session?.status === 'graded' && (
             <div className="bg-green-100 border-2 border-green-500 p-8 m-4 shadow-xl rounded-lg">
@@ -1040,65 +1381,16 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
         </div>
 
         {/* AI Assistant Sidebar */}
-        {/* Spell Check Suggestions Panel */}
-        {showSpellCheckSuggestions && (
-          <div className="w-80 border-l bg-white flex flex-col h-full fixed right-0 top-0 z-40 shadow-lg">
-            <SpellCheckSuggestionsPanel
-              suggestions={spellCheckSuggestions}
-              onApplySuggestion={handleApplySpellCheckSuggestion}
-              onDismissSuggestion={handleDismissSpellCheckSuggestion}
-              onApplyAll={handleApplyAllSpellCheckSuggestions}
-              onClose={() => setShowSpellCheckSuggestions(false)}
-            />
-          </div>
-        )}
-
         {showAiSidebar && (
           <div className={`${isAiSidebarMinimized ? 'w-16' : 'w-96'} border-l bg-white flex flex-col h-full transition-all duration-300`}>
-            <div className="p-4 border-b">
-              <div className="flex items-center justify-between">
-                {!isAiSidebarMinimized && <h3 className="font-semibold">ZoË</h3>}
-                <div className="flex gap-1">
-                  {!isAiSidebarMinimized && (
-                    <Button
-                      onClick={() => setIsAiSidebarMinimized(true)}
-                      variant="ghost"
-                      size="sm"
-                      title="Minimize ZoË"
-                      className="hover:bg-gray-100"
-                    >
-                      ←
-                    </Button>
-                  )}
-                  {isAiSidebarMinimized && (
-                    <Button
-                      onClick={() => setIsAiSidebarMinimized(false)}
-                      variant="ghost"
-                      size="sm"
-                      title="Expand ZoË"
-                      className="hover:bg-gray-100"
-                    >
-                      →
-                    </Button>
-                  )}
-                  <Button
-                    onClick={() => setShowAiSidebar(false)}
-                    variant="ghost"
-                    size="sm"
-                    title="Close ZoË"
-                    className="hover:bg-gray-100"
-                  >
-                    ×
-                  </Button>
-                </div>
-              </div>
-            </div>
             {!isAiSidebarMinimized && (
               <div className="flex-1 overflow-hidden">
                 <AiAssistant
                   sessionId={sessionId}
                   currentContent={content}
                   onSuggestionsGenerated={handleAiSuggestionsGenerated}
+                  onMinimize={() => setIsAiSidebarMinimized(true)}
+                  onClose={() => setShowAiSidebar(false)}
                 />
               </div>
             )}
@@ -1160,8 +1452,13 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
 
             <DocumentDownload 
               content={content}
-              studentName="Student"
+              studentName={user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : 'Student'}
               assignmentTitle={assignment?.title}
+              headerText={(savedSettings || headerFooterSettings).header}
+              footerText={(savedSettings || headerFooterSettings).footer}
+              showPageNumbers={(savedSettings || headerFooterSettings).pageNumbers}
+              headerAlignment={(savedSettings || headerFooterSettings).headerAlignment}
+              footerAlignment={(savedSettings || headerFooterSettings).footerAlignment}
             />
 
             {!isSubmitted && !isGraded && (
@@ -1238,8 +1535,118 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
           <div className="flex gap-2">
             <button
               onClick={() => {
+                console.log('🔥 Apply All clicked! Processing', aiSuggestions.length, 'suggestions');
+                console.log('📝 Suggestions to apply:', aiSuggestions.map(s => ({ original: s.originalText, suggested: s.suggestedText })));
                 aiSuggestions.forEach(suggestion => handleApplySuggestion(suggestion));
               }}
+              className="bg-green-500 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-600"
+            >
+              Apply All
+            </button>
+            <button
+              onClick={() => {
+                aiSuggestions.forEach(suggestion => handleDismissSuggestion(suggestion.id));
+              }}
+              className="bg-red-500 text-white px-4 py-2 rounded text-sm font-medium hover:bg-red-600"
+            >
+              Ignore All
+            </button>
+          </div>
+        </div>
+      )}
+
+        {/* AI Assistant Sidebar */}
+        {showAiSidebar && (
+          <div className={`${isAiSidebarMinimized ? 'w-16' : 'w-96'} border-l bg-white flex flex-col h-full transition-all duration-300`}>
+            {!isAiSidebarMinimized && (
+              <div className="flex-1 overflow-hidden">
+                <AiAssistant
+                  sessionId={sessionId}
+                  currentContent={content}
+                  onSuggestionsGenerated={handleAiSuggestionsGenerated}
+                  onMinimize={() => setIsAiSidebarMinimized(true)}
+                  onClose={() => setShowAiSidebar(false)}
+                />
+              </div>
+            )}
+            {isAiSidebarMinimized && (
+              <div className="flex-1 flex flex-col items-center p-2 gap-2">
+                <Button
+                  onClick={() => setIsAiSidebarMinimized(false)}
+                  variant="ghost"
+                  size="sm"
+                  className="w-full h-12 p-0"
+                  title="Expand AI Assistant"
+                >
+                  <div className="transform -rotate-90 whitespace-nowrap text-xs">
+                    AI Assistant
+                  </div>
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Spell Check Suggestions Side Panel */}
+        {showSpellCheckSuggestions && spellCheckSuggestions.length > 0 && (
+          <div className="w-96 border-l border-gray-200 bg-white overflow-auto">
+            <SpellCheckSuggestionsPanel
+              suggestions={spellCheckSuggestions}
+              onApplySuggestion={handleApplySpellCheckSuggestion}
+              onDismissSuggestion={handleDismissSpellCheckSuggestion}
+              onApplyAll={handleApplyAllSpellCheckSuggestions}
+              onClose={() => setShowSpellCheckSuggestions(false)}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* AI Suggestions Panel */}
+      {showAiSuggestions && aiSuggestions.length > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg p-4 z-40">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Brain className="h-5 w-5 text-blue-600" />
+              <span className="font-medium">AI Writing Suggestions</span>
+              <Badge variant="secondary">{aiSuggestions.length} suggestions</Badge>
+            </div>
+            <Button
+              onClick={handleCloseSuggestions}
+              variant="ghost"
+              size="sm"
+              className="gap-2"
+            >
+              <X className="h-4 w-4" />
+              Close
+            </Button>
+          </div>
+          
+          <div className="flex flex-wrap gap-2 mb-4">
+            {aiSuggestions.map((suggestion, index) => (
+              <span
+                key={index}
+                className="inline-flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1 rounded-lg text-sm border cursor-pointer hover:bg-blue-100"
+                onClick={() => handleApplySuggestion(suggestion)}
+              >
+                <span>"{suggestion.originalText}" → "{suggestion.suggestedText}"</span>
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDismissSuggestion(suggestion.id);
+                  }}
+                  variant="ghost"
+                  size="sm"
+                  className="h-4 w-4 p-0 hover:bg-blue-200"
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </span>
+            ))}
+          </div>
+          
+          <div className="flex gap-2">
+            <button
+              onClick={handleApplyAllSuggestions}
               className="bg-green-500 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-600"
             >
               Apply All
