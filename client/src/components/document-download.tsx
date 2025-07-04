@@ -204,16 +204,14 @@ export default function DocumentDownload({
 
       // Create header content
       const headerParagraphs = [];
-      if (studentName || headerText) {
+      if (headerText || studentName) {
         const headerElements = [];
-        if (studentName) {
-          headerElements.push(new TextRun({ text: studentName, size: 20 }));
-        }
-        if (headerText && studentName) {
-          headerElements.push(new TextRun({ text: ' - ', size: 20 }));
-        }
         if (headerText) {
+          // Use only the custom header text when provided
           headerElements.push(new TextRun({ text: headerText, size: 20 }));
+        } else if (studentName) {
+          // Only show student name if no custom header text is provided
+          headerElements.push(new TextRun({ text: studentName, size: 20 }));
         }
 
         // Convert alignment string to AlignmentType
