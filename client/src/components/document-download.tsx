@@ -1,7 +1,7 @@
 import React from 'react';
 import { Download, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Document, Packer, Paragraph, TextRun, Header, Footer, AlignmentType, HeadingLevel, PageNumber } from 'docx';
+import { Document, Packer, Paragraph, TextRun, Header, Footer, AlignmentType, HeadingLevel, PageNumber, NumberFormat } from 'docx';
 import { saveAs } from 'file-saver';
 
 interface DocumentDownloadProps {
@@ -245,8 +245,11 @@ export default function DocumentDownload({
           footerElements.push(new TextRun({ text: ' - ', size: 20 }));
         }
         if (showPageNumbers) {
-          footerElements.push(new TextRun({ text: 'Page ', size: 20 }));
-          footerElements.push(PageNumber.CURRENT);
+          // Create proper page numbering using TextRun children array
+          footerElements.push(new TextRun({ 
+            children: ['Page ', PageNumber.CURRENT],
+            size: 20 
+          }));
         }
 
         // Convert alignment string to AlignmentType
@@ -277,7 +280,11 @@ export default function DocumentDownload({
                 right: 1440,  // 1 inch
                 bottom: 1440, // 1 inch
                 left: 1440    // 1 inch
-              }
+              },
+              pageNumbers: showPageNumbers ? {
+                start: 1,
+                formatType: NumberFormat.DECIMAL,
+              } : undefined
             }
           },
           headers: headerParagraphs.length > 0 ? {
