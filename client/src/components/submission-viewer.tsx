@@ -1,10 +1,12 @@
 import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Eye, 
   User, 
@@ -15,7 +17,8 @@ import {
   GraduationCap,
   FileText,
   Clock,
-  CheckCircle
+  CheckCircle,
+  RotateCcw
 } from "lucide-react";
 
 interface SubmissionViewerProps {
@@ -24,6 +27,9 @@ interface SubmissionViewerProps {
 }
 
 export default function SubmissionViewer({ sessionId, onClose }: SubmissionViewerProps) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
   // Get writing session details
   const { data: session, isLoading: sessionLoading } = useQuery({
     queryKey: [`/api/writing-sessions/${sessionId}`],
@@ -50,6 +56,35 @@ export default function SubmissionViewer({ sessionId, onClose }: SubmissionViewe
   const { data: comments = [] } = useQuery({
     queryKey: [`/api/sessions/${sessionId}/comments`],
   });
+
+  // Mutation for reopening submission
+  const reopenMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest('POST', `/api/sessions/${sessionId}/reopen`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Document Reopened",
+        description: `Document has been reopened for ${student?.firstName} ${student?.lastName} to make corrections and resubmit.`,
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/writing-sessions/${sessionId}`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/teacher/all-writing-sessions'] });
+      onClose();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to reopen document",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleReopenSubmission = () => {
+    if (confirm(`Are you sure you want to reopen this document for ${student?.firstName} ${student?.lastName}? This will allow them to make corrections and resubmit.`)) {
+      reopenMutation.mutate();
+    }
+  };
 
   if (sessionLoading || !session) {
     return (
@@ -270,9 +305,23 @@ export default function SubmissionViewer({ sessionId, onClose }: SubmissionViewe
                 {assignment?.title} - {student?.firstName} {student?.lastName}
               </p>
             </div>
-            <Button variant="outline" onClick={onClose}>
-              Close
-            </Button>
+            <div className="flex gap-2">
+              {/* Show reopen button only for submitted or graded documents */}
+              {(session?.status === 'submitted' || session?.status === 'graded') && (
+                <Button 
+                  variant="outline" 
+                  onClick={handleReopenSubmission}
+                  disabled={reopenMutation.isPending}
+                  className="flex items-center gap-2"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  {reopenMutation.isPending ? 'Reopening...' : 'Reopen for Student'}
+                </Button>
+              )}
+              <Button variant="outline" onClick={onClose}>
+                Close
+              </Button>
+            </div>
           </div>
         </CardHeader>
 

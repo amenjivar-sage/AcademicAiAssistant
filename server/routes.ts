@@ -766,6 +766,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Reopen writing session for student corrections
+  app.post("/api/sessions/:sessionId/reopen", async (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.sessionId);
+      const currentUser = await getCurrentUser(req);
+      
+      if (!currentUser || currentUser.role !== 'teacher') {
+        return res.status(401).json({ message: "Teacher authentication required" });
+      }
+
+      console.log(`Teacher ${currentUser.id} reopening session ${sessionId} for student corrections`);
+      
+      const updatedSession = await storage.updateWritingSession(sessionId, {
+        status: "draft", // Change status back to draft so student can edit
+        grade: null, // Clear any existing grade
+        teacherFeedback: null // Clear teacher feedback so they can start fresh
+      });
+
+      if (!updatedSession) {
+        return res.status(404).json({ message: "Writing session not found" });
+      }
+
+      console.log(`Successfully reopened session ${sessionId}. Status: ${updatedSession.status}`);
+      res.json({ success: true, message: "Session reopened for student", session: updatedSession });
+    } catch (error) {
+      console.error("Error reopening session:", error);
+      res.status(500).json({ message: "Failed to reopen session" });
+    }
+  });
+
   // Get specific assignment by ID (must come before /assignments/teacher to avoid route conflicts)
   app.get("/api/assignments/:id", async (req, res) => {
     try {
