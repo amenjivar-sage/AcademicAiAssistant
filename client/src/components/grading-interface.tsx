@@ -26,7 +26,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { GraduationCap, FileText, Clock, CheckCircle, Star, BookOpen } from "lucide-react";
+import { GraduationCap, FileText, Clock, CheckCircle, Star, BookOpen, RotateCcw } from "lucide-react";
 import DocumentReviewer from "./document-reviewer-fixed";
 import DocumentDownload from "./document-download";
 import type { WritingSession, User } from "@shared/schema";
@@ -97,6 +97,33 @@ export default function GradingInterface({ assignmentId, children }: GradingInte
       form.reset();
     },
   });
+
+  // Mutation to reopen submission for student revision
+  const reopenSubmissionMutation = useMutation({
+    mutationFn: async (sessionId: number) => {
+      return apiRequest('POST', `/api/sessions/${sessionId}/reopen`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/assignments/${assignmentId}/submissions`] });
+      toast({
+        title: "Submission Reopened",
+        description: "The document has been returned to the student for revisions.",
+      });
+      setSelectedSubmission(null);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to reopen submission. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleReopenSubmission = () => {
+    if (!selectedSubmission) return;
+    reopenSubmissionMutation.mutate(selectedSubmission.id);
+  };
 
   const handleSelectSubmission = (submission: WritingSession & { student: User }) => {
     setSelectedSubmission(submission);
@@ -173,6 +200,18 @@ export default function GradingInterface({ assignmentId, children }: GradingInte
                   variant="outline"
                   size="sm"
                 />
+              )}
+              {selectedSubmission && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleReopenSubmission}
+                  disabled={reopenSubmissionMutation.isPending}
+                  className="flex items-center gap-2"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  {reopenSubmissionMutation.isPending ? "Reopening..." : "Return to Student"}
+                </Button>
               )}
             </div>
             {viewMode === "document" && (

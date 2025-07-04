@@ -309,7 +309,7 @@ export default function SubmissionViewer({ sessionId, onClose }: SubmissionViewe
               {/* Debug: Log session state */}
               {console.log('Session data in submission viewer:', session)}
               {/* Always show return to student button for any document that exists */}
-              {true && (
+              {session && (
                 <Button 
                   variant="outline" 
                   onClick={handleReopenSubmission}
