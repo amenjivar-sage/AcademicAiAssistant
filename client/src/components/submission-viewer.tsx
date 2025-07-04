@@ -306,6 +306,9 @@ export default function SubmissionViewer({ sessionId, onClose }: SubmissionViewe
               </p>
             </div>
             <div className="flex gap-2">
+              {/* Debug: Show session status */}
+              <span className="text-xs text-gray-500 mr-2">Status: {session?.status}</span>
+              
               {/* Show reopen button only for submitted or graded documents */}
               {(session?.status === 'submitted' || session?.status === 'graded') && (
                 <Button 
