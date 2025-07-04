@@ -47,8 +47,8 @@ export function highlightPastedContent(content: string, pastedContent: any[]): s
       
       // Method 3: Try sentence-by-sentence matching
       console.log('Fuzzy match failed, trying sentence matching...');
-      const sentences = cleanPasted.split(/[.!?]+/).filter(s => s.trim().length > 10);
-      sentences.forEach(sentence => {
+      const pastedSentences = cleanPasted.split(/[.!?]+/).filter((s: string) => s.trim().length > 10);
+      pastedSentences.forEach((sentence: string) => {
         const trimmedSentence = sentence.trim();
         console.log('Looking for sentence in content:', trimmedSentence.substring(0, 50) + '...');
         
@@ -73,6 +73,41 @@ export function highlightPastedContent(content: string, pastedContent: any[]): s
           result = highlightPhrase(result, phrase);
         }
       }
+      
+      // Method 5: Original simple sentence splitting approach (as additional layer)
+      console.log('Trying original sentence splitting approach...');
+      const originalSentences = cleanPasted.split(/[.!?]+/).filter((s: string) => s.trim().length > 10);
+      originalSentences.forEach((sentence: string) => {
+        const trimmedSentence = sentence.trim();
+        console.log('Looking for sentence in content:', trimmedSentence.substring(0, 50) + '...');
+        
+        // Try to find this sentence in the document
+        const docSentences = cleanDocument.split(/[.!?]+/);
+        docSentences.forEach(docSentence => {
+          const docTrimmed = docSentence.trim();
+          if (docTrimmed.length > 10 && cleanDocument.toLowerCase().includes(trimmedSentence.toLowerCase())) {
+            console.log('✓ Found sentence match via original method');
+            result = highlightOriginalSentence(result, trimmedSentence);
+          }
+        });
+      });
+      
+      // Method 6: Break into smaller chunks and look for partial matches
+      console.log('Trying chunk-based matching...');
+      const chunks = [];
+      for (let i = 0; i < words.length; i += 5) { // 5-word chunks
+        const chunk = words.slice(i, i + 5).join(' ');
+        if (chunk.trim().length > 20) {
+          chunks.push(chunk);
+        }
+      }
+      
+      chunks.forEach(chunk => {
+        if (cleanDocument.toLowerCase().includes(chunk.toLowerCase())) {
+          console.log('✓ Found chunk match:', chunk.substring(0, 50));
+          result = highlightChunk(result, chunk);
+        }
+      });
     }
   });
 
@@ -212,6 +247,36 @@ function highlightPhrase(content: string, phrase: string): string {
     });
   } catch (e) {
     console.log('Regex error in phrase match:', e);
+    return content;
+  }
+}
+
+// Helper function to highlight original sentence matches
+function highlightOriginalSentence(content: string, sentence: string): string {
+  const escapedSentence = sentence.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  try {
+    const regex = new RegExp(`(${escapedSentence})`, 'gi');
+    return content.replace(regex, (match) => {
+      if (match.includes('background-color: #fecaca')) return match;
+      return `<span style="background-color: #fecaca; border: 2px solid #f87171; color: #991b1b; font-weight: 600; padding: 2px 4px; border-radius: 3px;" title="Copy-pasted sentence detected">${match}</span>`;
+    });
+  } catch (e) {
+    console.log('Regex error in original sentence match:', e);
+    return content;
+  }
+}
+
+// Helper function to highlight chunks
+function highlightChunk(content: string, chunk: string): string {
+  const escapedChunk = chunk.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  try {
+    const regex = new RegExp(`(${escapedChunk})`, 'gi');
+    return content.replace(regex, (match) => {
+      if (match.includes('background-color: #fecaca')) return match;
+      return `<span style="background-color: #fecaca; border: 2px solid #f87171; color: #991b1b; font-weight: 600; padding: 2px 4px; border-radius: 3px;" title="Copy-pasted chunk detected">${match}</span>`;
+    });
+  } catch (e) {
+    console.log('Regex error in chunk match:', e);
     return content;
   }
 }
