@@ -18,7 +18,7 @@ import CopyPasteDetector from './copy-paste-detector';
 import { RichTextEditor, RichTextEditorHandle } from './rich-text-editor-simple';
 import DocumentDownload from './document-download';
 import AiAssistant from './ai-assistant';
-import { PDFExport } from './pdf-export';
+
 import BubbleSpellCheckPanel from './bubble-spell-check-panel';
 import SimpleHighlighter from './simple-highlighter';
 import SpellCheckSuggestionsPanel, { SpellCheckSuggestion } from './spell-check-suggestions-panel';
@@ -1201,11 +1201,7 @@ export default function WritingWorkspace({ sessionId: initialSessionId, assignme
               </div>
             )}
 
-            {/* PDF Export */}
-            <PDFExport 
-              content={content}
-              title={title || assignment?.title || "Document"}
-            />
+
 
             <Button
               onClick={() => setShowAiSidebar(!showAiSidebar)}
