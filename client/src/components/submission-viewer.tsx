@@ -306,8 +306,10 @@ export default function SubmissionViewer({ sessionId, onClose }: SubmissionViewe
               </p>
             </div>
             <div className="flex gap-2">
+              {/* Debug: Log session state */}
+              {console.log('Session data in submission viewer:', session)}
               {/* Always show return to student button for any document that exists */}
-              {session && (
+              {true && (
                 <Button 
                   variant="outline" 
                   onClick={handleReopenSubmission}
