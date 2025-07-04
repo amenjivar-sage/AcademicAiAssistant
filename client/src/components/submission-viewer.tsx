@@ -309,7 +309,7 @@ export default function SubmissionViewer({ sessionId, onClose }: SubmissionViewe
               {/* Debug: Show session status */}
               <span className="text-xs text-gray-500 mr-2">Status: {session?.status}</span>
               
-              {/* Show reopen button only for submitted or graded documents */}
+              {/* Show reopen button for submitted documents (needs grading) and graded documents */}
               {(session?.status === 'submitted' || session?.status === 'graded') && (
                 <Button 
                   variant="outline" 
