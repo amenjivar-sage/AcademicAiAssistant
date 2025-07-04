@@ -306,11 +306,8 @@ export default function SubmissionViewer({ sessionId, onClose }: SubmissionViewe
               </p>
             </div>
             <div className="flex gap-2">
-              {/* Debug: Show session status */}
-              <span className="text-xs text-gray-500 mr-2">Status: {session?.status}</span>
-              
-              {/* Show reopen button for submitted documents (needs grading) and graded documents */}
-              {(session?.status === 'submitted' || session?.status === 'graded') && (
+              {/* Always show return to student button for any document that exists */}
+              {session && (
                 <Button 
                   variant="outline" 
                   onClick={handleReopenSubmission}
@@ -318,7 +315,7 @@ export default function SubmissionViewer({ sessionId, onClose }: SubmissionViewe
                   className="flex items-center gap-2"
                 >
                   <RotateCcw className="h-4 w-4" />
-                  {reopenMutation.isPending ? 'Reopening...' : 'Reopen for Student'}
+                  {reopenMutation.isPending ? 'Returning...' : 'Return to Student'}
                 </Button>
               )}
               <Button variant="outline" onClick={onClose}>
