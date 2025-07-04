@@ -33,16 +33,16 @@ export function highlightPastedContent(content: string, pastedContent: any[]): s
       if (cleanDocument.includes(cleanPasted)) {
         console.log('✓ Found exact match, highlighting');
         result = highlightExactMatch(result, cleanPasted);
-        // Don't return, continue with other methods to catch partial matches
+        return;
       }
       
       // Method 2: Try fuzzy matching for spell-corrected text
-      console.log('Trying fuzzy matching...');
+      console.log('Exact match failed, trying fuzzy matching...');
       const fuzzyMatch = findFuzzyMatch(cleanDocument, cleanPasted);
       if (fuzzyMatch) {
         console.log('✓ Found fuzzy match:', fuzzyMatch.matchedText.substring(0, 100));
         result = highlightFuzzyMatch(result, fuzzyMatch.matchedText);
-        // Don't return, continue with other methods
+        return;
       }
       
       // Method 3: Try sentence-by-sentence matching
