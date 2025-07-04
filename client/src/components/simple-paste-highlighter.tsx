@@ -108,6 +108,56 @@ export function highlightPastedContent(content: string, pastedContent: any[]): s
           result = highlightChunk(result, chunk);
         }
       });
+      
+      // Method 7: Structural pattern matching (handles heavily spell-corrected text)
+      console.log('Trying structural pattern matching...');
+      const pastedWordCount = cleanPasted.split(/\s+/).length;
+      const docWords = cleanDocument.split(/\s+/);
+      
+      // Look for sequences with similar word count and structure
+      for (let i = 0; i <= docWords.length - pastedWordCount; i++) {
+        const docSequence = docWords.slice(i, i + pastedWordCount);
+        const sequenceText = docSequence.join(' ');
+        
+        // Check structural similarity (sentence patterns, punctuation, length)
+        const structuralSimilarity = calculateStructuralSimilarity(cleanPasted, sequenceText);
+        if (structuralSimilarity > 0.6) { // 60% structural similarity
+          console.log('✓ Found structural match (similarity:', structuralSimilarity + ')');
+          console.log('Original paste length:', cleanPasted.length, 'Found sequence length:', sequenceText.length);
+          result = highlightStructuralMatch(result, sequenceText);
+        }
+      }
+      
+      // Method 8: Word position pattern matching (for spell-corrected content)
+      console.log('Trying word position pattern matching...');
+      const pastedWords = cleanPasted.toLowerCase().split(/\s+/);
+      const commonWords = ['the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by'];
+      
+      // Find patterns of common words that stay the same after spell check
+      let patternMatches = 0;
+      for (let i = 0; i <= docWords.length - pastedWords.length; i++) {
+        const docSequence = docWords.slice(i, i + pastedWords.length);
+        let commonWordMatches = 0;
+        
+        for (let j = 0; j < pastedWords.length; j++) {
+          if (commonWords.includes(pastedWords[j]) && 
+              pastedWords[j] === docSequence[j]?.toLowerCase()) {
+            commonWordMatches++;
+          }
+        }
+        
+        // If we find a sequence with many matching common words in the same positions
+        if (commonWordMatches >= 3 && commonWordMatches / pastedWords.length > 0.3) {
+          console.log('✓ Found word position pattern match with', commonWordMatches, 'common words');
+          const sequenceText = docSequence.join(' ');
+          result = highlightPatternMatch(result, sequenceText);
+          patternMatches++;
+        }
+      }
+      
+      if (patternMatches > 0) {
+        console.log('✓ Found', patternMatches, 'word position pattern matches');
+      }
     }
   });
 
@@ -277,6 +327,55 @@ function highlightChunk(content: string, chunk: string): string {
     });
   } catch (e) {
     console.log('Regex error in chunk match:', e);
+    return content;
+  }
+}
+
+// Helper function to calculate structural similarity
+function calculateStructuralSimilarity(text1: string, text2: string): number {
+  // Compare length similarity
+  const lengthSimilarity = 1 - Math.abs(text1.length - text2.length) / Math.max(text1.length, text2.length);
+  
+  // Compare sentence structure (punctuation patterns)
+  const punctuation1 = text1.match(/[.!?,:;]/g) || [];
+  const punctuation2 = text2.match(/[.!?,:;]/g) || [];
+  const punctuationSimilarity = punctuation1.length === punctuation2.length ? 1 : 0.5;
+  
+  // Compare word count similarity
+  const words1 = text1.split(/\s+/).length;
+  const words2 = text2.split(/\s+/).length;
+  const wordCountSimilarity = 1 - Math.abs(words1 - words2) / Math.max(words1, words2);
+  
+  // Combined structural similarity
+  return (lengthSimilarity * 0.4 + punctuationSimilarity * 0.3 + wordCountSimilarity * 0.3);
+}
+
+// Helper function to highlight structural matches
+function highlightStructuralMatch(content: string, matchedText: string): string {
+  const escapedText = matchedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  try {
+    const regex = new RegExp(`(${escapedText})`, 'gi');
+    return content.replace(regex, (match) => {
+      if (match.includes('background-color: #fecaca')) return match;
+      return `<span style="background-color: #fecaca; border: 2px solid #f87171; color: #991b1b; font-weight: 600; padding: 2px 4px; border-radius: 3px;" title="Copy-pasted content detected (structural match)">${match}</span>`;
+    });
+  } catch (e) {
+    console.log('Regex error in structural match:', e);
+    return content;
+  }
+}
+
+// Helper function to highlight pattern matches
+function highlightPatternMatch(content: string, matchedText: string): string {
+  const escapedText = matchedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  try {
+    const regex = new RegExp(`(${escapedText})`, 'gi');
+    return content.replace(regex, (match) => {
+      if (match.includes('background-color: #fecaca')) return match;
+      return `<span style="background-color: #fecaca; border: 2px solid #f87171; color: #991b1b; font-weight: 600; padding: 2px 4px; border-radius: 3px;" title="Copy-pasted content detected (pattern match)">${match}</span>`;
+    });
+  } catch (e) {
+    console.log('Regex error in pattern match:', e);
     return content;
   }
 }
